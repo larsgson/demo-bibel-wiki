@@ -438,6 +438,16 @@ export default function StoryReaderIsland({
         }
       }
 
+      // Fix zero-duration entries (verse missing from timing data)
+      for (let i = 0; i < verseEntries.length; i++) {
+        const e = verseEntries[i]
+        if (e.audioUrl && e.startTime >= e.endTime) {
+          // Extend to next entry's start, or add 30s default
+          const next = verseEntries.slice(i + 1).find((n) => n.audioUrl === e.audioUrl && n.startTime > e.startTime)
+          e.endTime = next ? next.startTime : e.startTime + 30
+        }
+      }
+
       const primaryUrl = verseEntries.find((e) => e.audioUrl)?.audioUrl || null
 
       setAudioForChapter({
@@ -490,7 +500,7 @@ export default function StoryReaderIsland({
       // Find the first verse entry for this visual section that has timing
       const entries = $currentVerseEntries.get()
       const entryIdx = entries.findIndex(
-        (e) => e.sectionIndex === sectionIndex && e.endTime > e.startTime,
+        (e) => e.sectionIndex === sectionIndex && e.audioUrl,
       )
       if (entryIdx >= 0) {
         playVerse(entryIdx)
@@ -795,20 +805,15 @@ const contribRegistry: Record<string, { id: string; canon: "nt" | "ot" | "full" 
 
 const pkfAudioCache = new Map<string, any>()
 
-let _dbtChecked = false
-let _dbtAvailable = false
-async function isDbtAvailable(): Promise<boolean> {
-  if (_dbtChecked) return _dbtAvailable
-  _dbtChecked = true
-  try {
-    const r = await fetch("/.netlify/functions/dbt-proxy?type=audio&fileset_id=_probe&book_id=_&chapter_id=0")
-    _dbtAvailable = r.status !== 404
-  } catch { _dbtAvailable = false }
-  return _dbtAvailable
-}
+// DBT proxy availability — detected lazily on first real request
+let _dbtAvailable = true
+function markDbtUnavailable() { _dbtAvailable = false }
+function isDbtAvailable(): boolean { return _dbtAvailable }
 
 async function loadPkfMedia(langCode: string): Promise<any | null> {
   if (pkfAudioCache.has(langCode)) return pkfAudioCache.get(langCode)
+  // BSB-only languages have no PKF data
+  if (langCode === "eng") { pkfAudioCache.set(langCode, null); return null }
   try {
     const resp = await fetch(`/pkf/${langCode}/info.json`)
     if (!resp.ok) { pkfAudioCache.set(langCode, null); return null }
@@ -867,8 +872,8 @@ async function fetchAudioUrl(
     }
   } catch { /* fall through */ }
 
-  // 4. Try DBT proxy (skip if not available)
-  if (!await isDbtAvailable()) return null
+  // 4. Try DBT proxy (skip if previously returned 404)
+  if (!isDbtAvailable()) return null
 
   const params = new URLSearchParams({
     type: "audio",
@@ -878,11 +883,12 @@ async function fetchAudioUrl(
   })
   try {
     const resp = await fetch(`/.netlify/functions/dbt-proxy?${params}`)
+    if (resp.status === 404) { markDbtUnavailable(); return null }
     if (!resp.ok) return null
     const json = await resp.json()
-    const url = json.data?.[0]?.path || null
-    return url
+    return json.data?.[0]?.path || null
   } catch {
+    markDbtUnavailable()
     return null
   }
 }

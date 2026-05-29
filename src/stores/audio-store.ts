@@ -79,7 +79,9 @@ export function getAudioElements() {
       if ($audioPlayState.get() !== "idle") stopAll()
     })
     primaryAudio.addEventListener("timeupdate", onPrimaryTimeUpdate)
+    primaryAudio.addEventListener("ended", onPrimaryEnded)
     secondaryAudio!.addEventListener("timeupdate", onSecondaryTimeUpdate)
+    secondaryAudio!.addEventListener("ended", onSecondaryEnded)
   }
   return { primaryAudio: primaryAudio!, secondaryAudio: secondaryAudio! }
 }
@@ -205,6 +207,33 @@ function onSecondaryTimeUpdate() {
     secondaryAudio.pause()
     advanceToNextVerse()
   }
+}
+
+function onPrimaryEnded() {
+  if ($audioPlayState.get() !== "playing_primary") return
+  const entries = $currentVerseEntries.get()
+  const idx = $currentVerseIdx.get()
+
+  // Find next entry with a different audio URL (next chapter/file)
+  const currentUrl = entries[idx]?.audioUrl
+  let nextIdx = -1
+  for (let i = idx + 1; i < entries.length; i++) {
+    if (entries[i].audioUrl && entries[i].audioUrl !== currentUrl) {
+      nextIdx = i
+      break
+    }
+  }
+
+  if (nextIdx >= 0) {
+    playVerse(nextIdx)
+  } else {
+    stopAll()
+  }
+}
+
+function onSecondaryEnded() {
+  if ($audioPlayState.get() !== "playing_secondary") return
+  advanceToNextVerse()
 }
 
 // ---- Public actions ----
