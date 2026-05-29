@@ -1,0 +1,403 @@
+# The Grand Story - Portuguese locale
+
+title = "A Grande História"
+longTitle = "A Grande História da Bíblia"
+description = "Uma jornada pelos momentos-chave da Bíblia — do início ao fim."
+
+[01]
+title = "Cenas do Antigo Testamento"
+description = "A história do povo de Deus — como tudo começou, a sua jornada, e a promessa de um salvador que viria."
+
+[01.01]
+title = "No princípio"
+description = "Deus cria os céus e a terra, a luz e as trevas, e forma o homem do pó da terra."
+
+[01.02]
+title = "Do Éden a Babel"
+description = "A queda do homem no jardim, o grande dilúvio nos dias de Noé, e a dispersão dos povos na Torre de Babel."
+
+[01.03]
+title = "Abraão, Isaque e Jacó"
+description = "Deus chama Abraão e faz uma aliança com ele. A fé de Abraão é provada. Jacó luta com Deus e recebe um novo nome — Israel."
+
+[01.04]
+title = "José no Egito"
+description = "José é vendido pelos seus irmãos, ascende ao poder interpretando os sonhos do Faraó, e perdoa os seus irmãos quando vêm ao Egito."
+
+[01.05]
+title = "Moisés e o Êxodo"
+description = "Deus chama Moisés da sarça ardente. O cordeiro pascal salva Israel. O Mar Vermelho se abre. Deus dá os Dez Mandamentos no Sinai."
+
+[01.06]
+title = "Israel no deserto"
+description = "Deus provê maná do céu e água da rocha. Moisés ensina a Israel o grande mandamento: Amarás o SENHOR teu Deus."
+
+[01.07]
+title = "A Terra Prometida"
+description = "Josué conduz Israel à Terra Prometida. As muralhas de Jericó caem ao som das trombetas e ao grito do povo."
+
+[01.08]
+title = "Sansão e Dalila"
+description = "Sansão, o poderoso juiz, é traído por Dalila. A sua força é tirada, mas no seu último ato ele derruba o templo dos filisteus."
+
+[01.09]
+title = "A história de Rute"
+description = "Rute jura lealdade a Noemi: 'Onde tu fores, eu irei.' Boaz resgata Rute, e ela se torna antepassada do rei Davi."
+
+[01.10]
+title = "Samuel, Saul e Davi"
+description = "O menino Samuel ouve o chamado de Deus. O pastor Davi vence o gigante Golias. Deus faz uma aliança eterna com Davi."
+
+[01.11]
+title = "Salomão, o sábio"
+description = "Salomão pede sabedoria a Deus e a recebe. Ele constrói e dedica o Templo em Jerusalém como casa de oração para todas as nações."
+
+[01.12]
+title = "Elias, o profeta"
+description = "Elias desafia os profetas de Baal no monte Carmelo. Fogo cai do céu. Depois, Deus fala a Elias numa voz mansa e suave."
+
+[01.13]
+title = "A história de Jonas"
+description = "Jonas foge de Deus e é engolido por um grande peixe. Ele prega em Nínive, e a grande cidade se arrepende."
+
+[01.14]
+title = "Exílio e regresso"
+description = "Jerusalém cai nas mãos de Babilónia e o povo é levado para o exílio. O rei Ciro da Pérsia decreta o seu regresso."
+
+[01.15]
+title = "Uma profecia"
+description = "Isaías prediz um servo sofredor que carrega os pecados de muitos, e um governante prometido cujo reino não terá fim."
+
+[02]
+title = "Cenas do Novo Testamento"
+description = "Como Jesus mudou tudo — e o que se seguiu após a ressurreição."
+
+[02.01]
+title = "No princípio"
+description = "No princípio era o Verbo, e o Verbo estava com Deus, e o Verbo era Deus. O Verbo se fez carne e habitou entre nós."
+
+[02.02]
+title = "Jesus nasce"
+description = "Jesus nasce em Belém. Anjos anunciam grande alegria aos pastores nos campos: nasceu um Salvador."
+
+[02.03]
+title = "O curador"
+description = "Jesus cura um leproso com um toque. Ele perdoa e cura um paralítico descido pelo telhado pelos seus amigos."
+
+[02.04]
+title = "O mestre"
+description = "Jesus ensina as Bem-aventuranças no monte. Ele nomeia o maior mandamento. Ele conta a parábola do filho perdido."
+
+[02.05]
+title = "A Crucificação"
+description = "Jesus partilha a última ceia com os seus discípulos. É crucificado, morre, e ao terceiro dia ressuscita dos mortos."
+
+[02.06]
+title = "Atos dos apóstolos"
+description = "O Espírito Santo vem no Pentecostes com vento e fogo. Saulo encontra o Cristo ressuscitado no caminho de Damasco e é transformado."
+
+[02.07]
+title = "Uma visão"
+description = "João vê um novo céu e uma nova terra. Deus habitará com o seu povo. Não haverá mais morte, nem luto, nem dor."
+
+[01.02-1]
+title = "Do Éden a Babel (1)"
+
+[01.02-2]
+title = "Do Éden a Babel (2)"
+
+[01.03-1]
+title = "Abraão, Isaque e Jacó (1)"
+
+[01.03-2]
+title = "Abraão, Isaque e Jacó (2)"
+
+[01.04-1]
+title = "José no Egito (1)"
+
+[01.04-2]
+title = "José no Egito (2)"
+
+[01.04-3]
+title = "José no Egito (3)"
+
+[01.05-1]
+title = "Moisés e o Êxodo (1)"
+
+[01.05-2]
+title = "Moisés e o Êxodo (2)"
+
+[01.09-1]
+title = "A história de Rute (1)"
+
+[01.09-2]
+title = "A história de Rute (2)"
+
+[02.03-1]
+title = "O curador (1)"
+
+[02.03-2]
+title = "O curador (2)"
+
+[02.05-1]
+title = "A Crucificação (1)"
+
+[02.05-2]
+title = "A Crucificação (2)"
+
+[02.05-3]
+title = "A Crucificação (3)"
+
+[02.06-1]
+title = "Atos dos apóstolos (1)"
+
+[02.06-2]
+title = "Atos dos apóstolos (2)"
+
+# --- Subheaders (paragraph headings within stories) ---
+
+[01.01.1_1]
+p_hd = "Deus cria os céus e a terra"
+
+[01.02.3_1]
+p_hd = "A Queda"
+
+[01.02.6_5]
+p_hd = "O Dilúvio"
+
+[01.02.11_1]
+p_hd = "A Torre de Babel"
+
+[01.02-1.3_1]
+p_hd = "A Queda"
+
+[01.02-1.6_2]
+p_hd = "A maldade do homem"
+
+[01.02-1.7_2]
+p_hd = "O Dilúvio"
+
+[01.02-2.8_1]
+p_hd = "As águas recuam"
+
+[01.02-2.9_5]
+p_hd = "A aliança de Deus com Noé"
+
+[01.02-2.11_1]
+p_hd = "A Torre de Babel"
+
+[01.03.12_1]
+p_hd = "O chamado de Abraão"
+
+[01.03.15_5]
+p_hd = "A aliança de Deus com Abraão"
+
+[01.03.22_1]
+p_hd = "O sacrifício de Isaque"
+
+[01.03.32_24]
+p_hd = "O novo nome de Jacó — Israel"
+
+[01.03-1.12_2]
+p_hd = "O chamado de Abraão"
+
+[01.03-1.15_1]
+p_hd = "A aliança de Deus com Abraão"
+
+[01.03-2.22_1]
+p_hd = "O sacrifício de Isaque"
+
+[01.03-2.32_1]
+p_hd = "O novo nome de Jacó — Israel"
+
+[01.04.37_23]
+p_hd = "José vendido pelos irmãos"
+
+[01.04.41_14]
+p_hd = "José interpreta os sonhos do Faraó"
+
+[01.04.50_19]
+p_hd = "José perdoa os seus irmãos"
+
+[01.04-1.37_2]
+p_hd = "José vendido pelos irmãos"
+
+[01.04-1.39_1]
+p_hd = "José na casa de Potifar"
+
+[01.04-2.40_4]
+p_hd = "José na prisão"
+
+[01.04-2.41_1]
+p_hd = "José interpreta os sonhos do Faraó"
+
+[01.04-3.42_1]
+p_hd = "Os irmãos de José vão ao Egito"
+
+[01.04-3.44_1]
+p_hd = "O cálice de prata"
+
+[01.04-3.45_1]
+p_hd = "José se revela"
+
+[01.04-3.50_7]
+p_hd = "José perdoa os seus irmãos"
+
+[01.05.3_1]
+p_hd = "A sarça ardente"
+
+[01.05.12_1]
+p_hd = "A Páscoa"
+
+[01.05.14_21]
+p_hd = "A travessia do Mar Vermelho"
+
+[01.05.20_1]
+p_hd = "Os Dez Mandamentos"
+
+[01.05-1.3_1]
+p_hd = "A sarça ardente"
+
+[01.05-1.12_8]
+p_hd = "A Páscoa"
+
+[01.05-2.14_1]
+p_hd = "A travessia do Mar Vermelho"
+
+[01.05-2.20_1]
+p_hd = "Os Dez Mandamentos"
+
+[01.06.16_4]
+p_hd = "Maná do céu"
+
+[01.06.17_5]
+p_hd = "Água da rocha"
+
+[01.06.6_4]
+p_hd = "O Shemá"
+
+[01.07.6_15]
+p_hd = "A queda de Jericó"
+
+[01.08.16_15]
+p_hd = "Sansão e Dalila"
+
+[01.09.1_16]
+p_hd = "A lealdade de Rute"
+
+[01.09.4_9]
+p_hd = "Boaz resgata Rute"
+
+[01.09-1.1_2]
+p_hd = "A perda de Noemi"
+
+[01.09-1.2_3]
+p_hd = "Rute encontra Boaz"
+
+[01.09-2.3_1]
+p_hd = "Rute na eira"
+
+[01.09-2.4_1]
+p_hd = "Boaz resgata Rute"
+
+[01.10.3_4]
+p_hd = "O chamado de Samuel"
+
+[01.10.17_45]
+p_hd = "Davi e Golias"
+
+[01.10.7_12]
+p_hd = "A aliança de Deus com Davi"
+
+[01.11.3_9]
+p_hd = "Salomão pede sabedoria"
+
+[01.11.8_27]
+p_hd = "Dedicação do Templo"
+
+[01.12.18_36]
+p_hd = "Elias no monte Carmelo"
+
+[01.12.19_11]
+p_hd = "A voz mansa e suave"
+
+[01.13.1_15]
+p_hd = "Jonas e o grande peixe"
+
+[01.13.3_4]
+p_hd = "Nínive se arrepende"
+
+[01.14.25_8]
+p_hd = "A queda de Jerusalém"
+
+[01.14.1_1]
+p_hd = "O decreto de Ciro"
+
+[01.15.53_3]
+p_hd = "O servo sofredor"
+
+[01.15.9_6]
+p_hd = "O governante prometido"
+
+[02.01.1_1]
+p_hd = "O Verbo se fez carne"
+
+[02.02.2_1]
+p_hd = "O nascimento de Jesus"
+
+[02.03.1_40]
+p_hd = "Cura de um leproso"
+
+[02.03.2_1]
+p_hd = "Cura do paralítico"
+
+[02.03-1.1_4]
+p_hd = "O início do ministério de Jesus"
+
+[02.03-2.2_1]
+p_hd = "Cura do paralítico"
+
+[02.04.5_1]
+p_hd = "As Bem-aventuranças"
+
+[02.04.22_37]
+p_hd = "O maior mandamento"
+
+[02.04.15_11]
+p_hd = "O filho perdido"
+
+[02.05.26_26]
+p_hd = "A última ceia"
+
+[02.05.27_45]
+p_hd = "A Crucificação"
+
+[02.05.28_5]
+p_hd = "A Ressurreição"
+
+[02.05-1.26_3]
+p_hd = "A última ceia e a prisão"
+
+[02.05-2.27_1]
+p_hd = "A Crucificação"
+
+[02.05-3.28_1]
+p_hd = "A Ressurreição"
+
+[02.06.2_1]
+p_hd = "Pentecostes"
+
+[02.06.9_3]
+p_hd = "A conversão de Paulo"
+
+[02.06-1.2_1]
+p_hd = "Pentecostes"
+
+[02.06-2.9_2]
+p_hd = "A conversão de Paulo"
+
+[02.07.21_1]
+p_hd = "Novo céu e nova terra"
+
+[02.07.22_1]
+p_hd = "O rio da vida"

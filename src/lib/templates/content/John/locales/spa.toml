@@ -1,0 +1,414 @@
+# El Evangelio de Juan - Localización en español
+
+title = "El Evangelio de Juan"
+longTitle = "Las Buenas Nuevas según Juan"
+description = "El discípulo amado de Jesús, Juan, nos habla del que existía desde el principio. Por medio de Jesús, Dios nos dio gracia y verdad. Por medio de Él nos hacemos hijos de Dios."
+video_url = "https://www.youtube.com/embed/tMQGOEzlK6c"
+
+[01]
+title = "La Palabra entre nosotros"
+description = "Capítulos 1–12: Desde la encarnación del Verbo hasta la entrada de Jesús en Jerusalén"
+
+[01.01]
+title = "La Palabra Viva de Dios"
+description = "El Verbo de Dios se hizo carne y habitó entre nosotros. Juan el Bautista dio testimonio de él. Andrés se lo dijo a Simón Pedro y siguieron a Jesús."
+
+[01.02]
+title = "Bodas de Caná"
+description = "Jesús convirtió el agua en vino en una boda. Expulsó a los cambistas del templo. Dijo: \"Destruyan este templo y lo levantaré.\""
+
+[01.03]
+title = "Nicodemo"
+description = "Jesús le dijo a Nicodemo: \"Nace de nuevo. El que cree en el Hijo tendrá vida eterna.\" Juan el Bautista dijo: \"Él está por encima de todos.\""
+
+[01.04]
+title = "Mujer Samaritana"
+description = "Jesús habló con una mujer samaritana acerca de sus maridos. Ella dijo: \"¿Será éste el Cristo?\" Muchos creyeron. Sanó al hijo de un funcionario."
+
+[01.05]
+title = "Cojo Sanado"
+description = "Jesús sanó a un hombre en Betesda. Dijo: \"El Hijo sólo hace lo que ve hacer al Padre. Mis obras y las Escrituras dan testimonio.\""
+
+[01.06]
+title = "Pan de Vida"
+description = "Jesús alimentó a 5.000 hombres y caminó a través del mar. Dijo: \"Yo soy el pan de vida. Mi carne es verdadero alimento.\" Muchos discípulos se apartaron."
+
+[01.07]
+title = "Ríos de Agua Viva"
+description = "Jesús fue a la fiesta. La gente decía: \"¿Es éste el Cristo?\" Los sumos sacerdotes intentaron arrestarlo. Él gritó: \"Vengan y beban.\""
+
+[01.08]
+title = "Descendientes de Abraham"
+description = "Jesús no condenó a una mujer sorprendida en adulterio. Los fariseos lo interrogaron. Él dijo: \"Si Dios fuera su Padre, me amarían.\""
+
+[01.09]
+title = "Ciego Sanado"
+description = "Jesús curó a un ciego en sábado. Los fariseos llamaron al hombre y lo echaron fuera. Jesús dijo: \"He venido para que los ciegos vean.\""
+
+[01.10]
+title = "Rebaño-Pastor"
+description = "Jesús dijo: \"Yo soy el buen pastor. Yo doy mi vida por las ovejas.\" Le preguntaron: \"¿Eres tú el Cristo?\" Él dijo: \"Mis ovejas me siguen.\""
+
+[01.11]
+title = "Lázaro"
+description = "Lázaro murió. Jesús fue al sepulcro y dijo: \"Lázaro, sal fuera.\" Lázaro salió. Los sumos sacerdotes conspiraron para dar muerte a Jesús."
+
+[01.12]
+title = "Entrada a Jerusalén"
+description = "Jesús entró en Jerusalén a caballo. La multitud gritó: \"¡Hosanna!\" Él dijo: \"Es necesario que el Hijo del Hombre sea levantado. Yo he venido a salvar al mundo.\""
+
+[02]
+title = "Jesús y sus discípulos"
+description = "Capítulos 13–17: La Última Cena, discursos de despedida y la oración de Jesús"
+
+[02.13]
+title = "Lavado de Pies"
+description = "Jesús les lavó los pies a los discípulos. Dijo: \"Uno de ustedes me va a entregar.\" Judas se fue. Jesús dijo: \"Amaos los unos a los otros como yo os he amado.\""
+
+[02.14]
+title = "Camino-Verdad-Vida"
+description = "\"Yo soy el camino, la verdad y la vida. Yo estoy en el Padre y el Padre en mí. Él os dará el Espíritu Santo. No tengan miedo.\""
+
+[02.15]
+title = "Vid-Ramos"
+description = "\"Yo soy la vid, ustedes son los sarmientos. Ustedes son mis amigos si hacen lo que yo les mando. Si me persiguieron a mí, los perseguirán a ustedes.\""
+
+[02.16]
+title = "La Venida del Espíritu Santo"
+description = "\"El Espíritu convencerá al mundo de pecado. Él los guiará a toda la verdad. Su tristeza se convertirá en alegría. Yo voy al Padre.\""
+
+[02.17]
+title = "Cristo Partirá"
+description = "Jesús dijo: \"Padre, he revelado tu nombre a los que me diste. Santifícalos en la verdad. Que todos los que crean en mí sean uno.\""
+
+[03]
+title = "Cruz y Resurrección"
+description = "Capítulos 18–21: Arresto, crucifixión, resurrección y restauración"
+
+[03.18]
+title = "Arresto y Juicios"
+description = "Judas entregó a Jesús a los sumos sacerdotes. Pedro lo negó. Fue enviado ante Pilato. Jesús dijo: \"Mi reino no es de este mundo.\""
+
+[03.19]
+title = "Muerte por los pecados"
+description = "Los soldados tomaron a Jesús y lo crucificaron. Él dijo: \"Todo está cumplido.\" Entregó el espíritu. Un soldado le atravesó el costado con una lanza."
+
+[03.20]
+title = "Resurrección"
+description = "María fue al sepulcro y lo encontró vacío. Jesús la encontró. Se acercó y se puso en medio de los discípulos. Tomás dijo: \"¡Señor mío y Dios mío!\""
+
+[03.21]
+title = "Mar de Tiberio"
+description = "Jesús se apareció mientras los discípulos pescaban. Le dijo a Pedro: \"¿Me amas? Apacienta mis ovejas.\" El discípulo amado ha dado testimonio."
+
+[01.01.1]
+p_hd = "El Verbo se hizo carne"
+
+[01.01.19]
+p_hd = "Juan el Bautista niega ser el Mesías"
+
+[01.01.29]
+p_hd = "Juan da testimonio de Jesús"
+
+[01.01.35]
+p_hd = "Los discípulos de Juan siguen a Jesús"
+
+[01.01.43]
+p_hd = "Jesús llama a Felipe y Natanael"
+
+[01.02.1]
+p_hd = "Jesús convierte el agua en vino"
+
+[01.02.13]
+p_hd = "Jesús limpia los atrios del templo"
+
+[01.02.23]
+p_hd = "Jesús entiende a la gente"
+
+[01.03.1]
+p_hd = "Jesús enseña a Nicodemo"
+
+[01.03.22]
+p_hd = "Juan da testimonio de nuevo de Jesús"
+
+[01.04.1]
+p_hd = "Jesús habla con una samaritana"
+
+[01.04.27]
+p_hd = "Los discípulos se reúnen con Jesús"
+
+[01.04.39]
+p_hd = "Muchos samaritanos creen"
+
+[01.04.43]
+p_hd = "Jesús sana a un hijo del funcionario"
+
+[01.05.1]
+p_hd = "La curación en la piscina"
+
+[01.05.16]
+p_hd = "La autoridad del Hijo"
+
+[01.05.19]
+p_hd = "La autoridad de Jesús: la autoridad del Hijo"
+
+[01.05.31]
+p_hd = "Testimonios sobre Jesús"
+
+[01.06.1]
+p_hd = "Jesús alimenta a los cinco mil"
+
+[01.06.16]
+p_hd = "Jesús camina sobre el agua"
+
+[01.06.22]
+p_hd = "La multitud busca a Jesús"
+
+[01.06.25]
+p_hd = "Jesús, el pan de vida"
+
+[01.06.26]
+p_hd = "Jesucristo, el pan de vida"
+
+[01.06.35]
+p_hd = "El que cree tiene vida eterna"
+
+[01.06.48]
+p_hd = "El que come de este pan vivirá eternamente"
+
+[01.06.60]
+p_hd = "Muchos discípulos abandonan a Jesús"
+
+[01.06.67]
+p_hd = "La confesión de Pedro"
+
+[01.07.1]
+p_hd = "Jesús va a la Fiesta de los Tabernáculos"
+
+[01.07.10]
+p_hd = "Jesús en la Fiesta de los Tabernáculos en Jerusalén"
+
+[01.07.14]
+p_hd = "Jesús enseña en la Fiesta"
+
+[01.07.25]
+p_hd = "División sobre quién es Jesús"
+
+[01.07.37]
+p_hd = "Agua Viva"
+
+[01.07.40]
+p_hd = "¿Es Jesús el Mesías?"
+
+[01.07.45]
+p_hd = "Incredulidad de los líderes judíos"
+
+[01.08.1]
+p_hd = "Una mujer sorprendida en adulterio, Jesús no la condena"
+
+[01.08.12]
+p_hd = "Disputa sobre el testimonio de Jesús"
+
+[01.08.21]
+p_hd = "Disputa sobre quién es Jesús"
+
+[01.08.31]
+p_hd = "Disputa sobre de quiénes son hijos los oponentes de Jesús"
+
+[01.08.37]
+p_hd = "¿Hijos de Abraham o del diablo?"
+
+[01.08.48]
+p_hd = "Afirmaciones de Jesús sobre mismo"
+
+[01.09.1]
+p_hd = "Jesús sana a un hombre ciego de nacimiento"
+
+[01.09.13]
+p_hd = "Los fariseos investigan la curación"
+
+[01.09.24]
+p_hd = "Rechazo del hombre curado"
+
+[01.09.35]
+p_hd = "Ceguera espiritual"
+
+[01.10.1]
+p_hd = "El buen pastor y sus ovejas"
+
+[01.10.7]
+p_hd = "Jesucristo - la puerta de las ovejas"
+
+[01.10.11]
+p_hd = "Jesucristo - el buen pastor"
+
+[01.10.22]
+p_hd = "Otro conflicto sobre las afirmaciones de Jesús"
+
+[01.10.31]
+p_hd = "Acusación de blasfemia"
+
+[01.11.1]
+p_hd = "La muerte de Lázaro"
+
+[01.11.17]
+p_hd = "Jesús consuela a las hermanas de Lázaro"
+
+[01.11.28]
+p_hd = "Jesús llora"
+
+[01.11.38]
+p_hd = "Jesús resucita Lázaro resucita"
+
+[01.11.45]
+p_hd = "El complot para matar a Jesús"
+
+[01.12.1]
+p_hd = "Jesús ungido en Betania"
+
+[01.12.12]
+p_hd = "Jesús llega a Jerusalén como rey"
+
+[01.12.20]
+p_hd = "Jesús predice su muerte"
+
+[01.12.27]
+p_hd = "Jesús anuncia su muerte"
+
+[01.12.37]
+p_hd = "Creencia e incredulidad entre los judíos"
+
+[01.12.42]
+p_hd = "Consecuencias de la fe y la incredulidad"
+
+[02.13.1]
+p_hd = "Jesús lava los pies de sus discípulos"
+
+[02.13.12]
+p_hd = "Lavado de pies"
+
+[02.13.18]
+p_hd = "Jesús predice su traición"
+
+[02.13.21]
+p_hd = "Anuncio de traición"
+
+[02.13.31]
+p_hd = "Jesús predice la muerte de Pedro, negación"
+
+[02.13.33]
+p_hd = "El nuevo mandamiento"
+
+[02.13.36]
+p_hd = "Jesús anuncia que Pedro lo negará"
+
+[02.14.1]
+p_hd = "Jesús consuela a sus discípulos"
+
+[02.14.5]
+p_hd = "Jesús el camino hacia el Padre"
+
+[02.14.8]
+p_hd = "Quien ve al Hijo ve al Padre"
+
+[02.14.15]
+p_hd = "Jesús promete el Espíritu Santo"
+
+[02.14.25]
+p_hd = "Jesús dice: "
+
+[02.15.1]
+p_hd = "La vid y los sarmientos"
+
+[02.15.9]
+p_hd = "Permaneced en el amor de Jesús"
+
+[02.15.18]
+p_hd = "El mundo odia a los discípulos"
+
+[02.15.26]
+p_hd = "La obra del Espíritu Santo"
+
+[02.16.4]
+p_hd = "La obra del Espíritu Santo"
+
+[02.16.16]
+p_hd = "El dolor de los discípulos se convertirá en alegría"
+
+[02.16.25]
+p_hd = "La victoria de Jesús sobre el mundo"
+
+[02.17.1]
+p_hd = "Jesús ora para ser glorificado"
+
+[02.17.6]
+p_hd = "Jesús ora por sus discípulos"
+
+[02.17.20]
+p_hd = "Jesús ora por todos los creyentes"
+
+[03.18.1]
+p_hd = "Jesús arrestado"
+
+[03.18.12]
+p_hd = "Jesús ante Anás"
+
+[03.18.15]
+p_hd = "La primera negación de Pedro"
+
+[03.18.19]
+p_hd = "El sumo sacerdote interroga a Jesús"
+
+[03.18.25]
+p_hd = "La segunda y tercera negación de Pedro"
+
+[03.18.28]
+p_hd = "Jesús ante Pilato"
+
+[03.18.38]
+p_hd = "La condena de Jesús"
+
+[03.19.1]
+p_hd = "Jesús condenado a ser crucificado"
+
+[03.19.6]
+p_hd = "Jesús no responde a Pilato"
+
+[03.19.16]
+p_hd = "La crucifixión de Jesús"
+
+[03.19.28]
+p_hd = "La muerte de Jesús"
+
+[03.19.31]
+p_hd = "El que ella traspasó tiene«"
+
+[03.19.38]
+p_hd = "El entierro de Jesús"
+
+[03.20.1]
+p_hd = "El sepulcro vacío"
+
+[03.20.10]
+p_hd = "Jesús se aparece a María Magdalena"
+
+[03.20.19]
+p_hd = "Jesús se aparece a sus discípulos"
+
+[03.20.24]
+p_hd = "Jesús se aparece a Tomás"
+
+[03.20.30]
+p_hd = "El propósito del evangelio de Juan"
+
+[03.21.1]
+p_hd = "Jesús y la pesca milagrosa de pescado"
+
+[03.21.15]
+p_hd = "Jesús restituye a Pedro"
+
+[03.21.20]
+p_hd = "Pedro y el discípulo a quien Jesús amaba especialmente"
+
+[03.21.24]
+p_hd = "Palabras finales"

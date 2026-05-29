@@ -1,0 +1,90 @@
+level = "chapter"
+id = "01"
+canon = "ot"
+
+[image]
+filename = "Bible_OT.png"
+
+[[stories]]
+id = "01"
+image = "01_Ge_01_02_RG.jpg"
+
+[[stories]]
+id = "02-1"
+image = "01_Ge_03_01_RG.jpg"
+
+[[stories]]
+id = "02-2"
+image = "01_Ge_08_01_RG.jpg"
+
+[[stories]]
+id = "03-1"
+image = "01_Ge_12_05_RG.jpg"
+
+[[stories]]
+id = "03-2"
+image = "01_Ge_22_01_RG.jpg"
+
+[[stories]]
+id = "04-1"
+image = "01_Ge_37_02_RG.jpg"
+
+[[stories]]
+id = "04-2"
+image = "01_Ge_40_01_RG.jpg"
+
+[[stories]]
+id = "04-3"
+image = "01_Ge_42_01_RG.jpg"
+
+[[stories]]
+id = "05-1"
+image = "02_Ex_03_01_RG.jpg"
+
+[[stories]]
+id = "05-2"
+image = "02_Ex_14_14_RG.jpg"
+
+[[stories]]
+id = "06"
+image = "02_Ex_16_01_RG.jpg"
+
+[[stories]]
+id = "07"
+image = "06_Jo_06_12_RG.jpg"
+
+[[stories]]
+id = "08"
+image = "07_Ju_16_01_RG.jpg"
+
+[[stories]]
+id = "09-1"
+image = "08_Ru_01_01_RG.jpg"
+
+[[stories]]
+id = "09-2"
+image = "08_Ru_03_01_RG.jpg"
+
+[[stories]]
+id = "10"
+image = "09_1Sa_03_01_RG.jpg"
+
+[[stories]]
+id = "11"
+image = "11_1Ki_03_01_RG.jpg"
+
+[[stories]]
+id = "12"
+image = "11_1Ki_18_01_RG.jpg"
+
+[[stories]]
+id = "13"
+image = "32_Jon_01_01_RG.jpg"
+
+[[stories]]
+id = "14"
+image = "12_2Ki_25_01_RG.jpg"
+
+[[stories]]
+id = "15"
+image = "23_Is_07_01_RG.jpg"

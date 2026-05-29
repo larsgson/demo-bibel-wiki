@@ -1,0 +1,363 @@
+---
+import "../styles/global.css"
+
+interface Props {
+  title?: string
+}
+
+const { title = "Tu Biblia mexicana" } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen flex flex-col bg-[#fbfaf6] text-brand">
+    <header
+      class="sticky top-0 z-10 border-b"
+      style="background:rgb(0,11,99);border-color:rgba(0,11,99,0.4)"
+    >
+      <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <a href="/" class="text-white font-semibold tracking-tight text-lg">
+          Tu Biblia mexicana
+        </a>
+        <div class="flex items-center gap-2">
+          <a href="/eng/OBS" class="header-link">Stories</a>
+          <a href="/eng/browse" class="header-link">Browse</a>
+          <a href="/eng/search" class="header-link-icon" aria-label="AI search" title="AI search">
+            💬
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 px-4 pb-6 sm:pb-10 max-w-5xl w-full mx-auto">
+      <slot />
+    </main>
+
+    <footer
+      class="text-xs px-4 py-3 border-t"
+      style="color:rgba(0,11,99,0.55);border-color:rgba(0,11,99,0.12);background:rgba(255,255,255,0.4)"
+    >
+      <div class="max-w-5xl mx-auto">
+        Data from scriptureearth.org · CC BY-NC-ND 4.0 for included languages (see config/licenses.json).
+      </div>
+    </footer>
+
+    <!-- Focus panel (modal playing overlay) -->
+    <div class="focus-panel-backdrop" id="focus-backdrop" style="display:none"></div>
+    <div class="focus-panel" id="focus-panel" style="display:none">
+      <div class="focus-panel-content" id="focus-panel-content"></div>
+      <div class="focus-panel-controls" id="focus-panel-controls">
+        <button class="focus-panel-btn" id="focus-play-btn" aria-label="Play">
+          <svg id="fp-icon-play" width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg id="fp-icon-pause" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <button class="focus-panel-btn focus-panel-stop" id="focus-stop-btn" aria-label="Stop" style="display:none">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 6h12v12H6z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Audio toast notification -->
+    <div class="audio-toast" id="audio-toast" style="display:none"></div>
+
+    <!-- Mini player (floating bottom-right) -->
+    <div class="listen-player" id="listen-player" style="display:none">
+      <div class="listen-player-image" id="player-image"></div>
+      <div class="listen-player-overlay">
+        <div class="listen-player-content">
+          <button class="listen-player-btn" id="player-btn" aria-label="Play">
+            <svg id="player-icon-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg id="player-icon-pause" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <button class="listen-player-close" id="player-close" aria-label="Stop" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+      <div class="listen-player-pulse" id="player-pulse" style="display:none"></div>
+    </div>
+
+    <script>
+      import { initIsoFromUrl } from "../stores/iso-store"
+      import { initApiConfig } from "../stores/api-store"
+      import { initSearchMode } from "../stores/search-store"
+      import {
+        $audioPlayState,
+        $isPlaying,
+        $playerVisible,
+        $focusMode,
+        $pausedState,
+        $currentVerseIdx,
+        $currentVerseEntries,
+        $audioContext,
+        $audioPageStory,
+        $playerCardInfo,
+        playVerse,
+        pausePlayback,
+        resumePlayback,
+        stopAll,
+        unlockAudio,
+        $audioToast,
+      } from "../stores/audio-store"
+      import { t } from "../lib/bw/ui-locales"
+
+      initIsoFromUrl()
+      initApiConfig()
+      initSearchMode()
+
+      // iOS audio unlock on first interaction
+      const unlockEvents = ["touchstart", "click"] as const
+      function onFirstInteraction() {
+        unlockAudio()
+        for (const evt of unlockEvents) {
+          document.removeEventListener(evt, onFirstInteraction, true)
+        }
+      }
+      for (const evt of unlockEvents) {
+        document.addEventListener(evt, onFirstInteraction, true)
+      }
+
+      function initAudioUI() {
+        const focusBackdrop = document.getElementById("focus-backdrop")!
+        const focusPanel = document.getElementById("focus-panel")!
+        const focusPanelContent = document.getElementById("focus-panel-content")!
+        const focusPanelControls = document.getElementById("focus-panel-controls")!
+        const focusPlayBtn = document.getElementById("focus-play-btn")!
+        const focusStopBtn = document.getElementById("focus-stop-btn")!
+        const fpIconPlay = document.getElementById("fp-icon-play")!
+        const fpIconPause = document.getElementById("fp-icon-pause")!
+
+        const playerEl = document.getElementById("listen-player")!
+        const playerImage = document.getElementById("player-image")!
+        const playerBtn = document.getElementById("player-btn")!
+        const playerClose = document.getElementById("player-close")!
+        const playerPulse = document.getElementById("player-pulse")!
+        const playerIconPlay = document.getElementById("player-icon-play")!
+        const playerIconPause = document.getElementById("player-icon-pause")!
+
+        function populateFocusPanel(idx: number) {
+          const el = document.getElementById(`verse-${idx}`)
+          focusPanelContent.innerHTML = ""
+          if (el) {
+            const clone = el.cloneNode(true) as HTMLElement
+            clone.removeAttribute("id")
+            clone.removeAttribute("data-verse-idx")
+            clone.removeAttribute("data-clickable")
+            clone.style.cursor = "default"
+            clone.classList.remove("verse-focus-active")
+            focusPanelContent.appendChild(clone)
+            applyKenBurnsToImages()
+          }
+          focusPanel.scrollTop = 0
+        }
+
+        let lastKenBurnsVariant = 0
+        function applyKenBurnsToImages() {
+          const images = focusPanelContent.querySelectorAll(".listen-verse-images img")
+          if (!images.length) return
+          const entries = $currentVerseEntries.get()
+          const idx = $currentVerseIdx.get()
+          const entry = entries[idx]
+          const duration = entry ? Math.max(entry.endTime - entry.startTime, 5) : 10
+          const perImage = duration / images.length
+          images.forEach((img) => {
+            let variant = Math.floor(Math.random() * 4) + 1
+            if (variant === lastKenBurnsVariant) variant = (variant % 4) + 1
+            lastKenBurnsVariant = variant
+            img.classList.add(`ken-burns-${variant}`)
+            ;(img as HTMLElement).style.animation = `kenBurns${variant} ${perImage}s linear forwards`
+          })
+        }
+
+        function showFocusPanel(idx: number) {
+          populateFocusPanel(idx)
+          focusBackdrop.style.display = ""
+          focusPanel.style.display = ""
+        }
+
+        function hideFocusPanel() {
+          focusBackdrop.style.display = "none"
+          focusPanel.style.display = "none"
+          focusPanelContent.innerHTML = ""
+        }
+
+        function isOnAudioPage() {
+          const audioStory = $audioPageStory.get()
+          if (!audioStory) return false
+          const parts = window.location.pathname.split("/").filter(Boolean)
+          let pagePath: string
+          if (/^[a-z]{3}$/.test(parts[0] || "")) pagePath = parts.slice(1).join("/")
+          else pagePath = parts.join("/")
+          return pagePath === audioStory
+        }
+
+        function syncHighlight() {
+          document.querySelectorAll(".verse-focus-active").forEach((el) =>
+            el.classList.remove("verse-focus-active"),
+          )
+          const isActive = $audioPlayState.get() !== "idle" || !!$pausedState.get()
+          if (!isActive || !isOnAudioPage()) return
+          const entries = $currentVerseEntries.get()
+          const idx = $currentVerseIdx.get()
+          const sectionIdx = entries[idx]?.sectionIndex ?? idx
+          const card = document.getElementById(`verse-${sectionIdx}`)
+          if (card) card.classList.add("verse-focus-active")
+        }
+
+        function scrollToVerse(idx: number) {
+          const card = document.getElementById(`verse-${idx}`)
+          if (!card) return
+          const cardRect = card.getBoundingClientRect()
+          const viewportCenter = window.innerHeight / 2
+          const cardCenter = cardRect.top + cardRect.height / 2
+          const delta = cardCenter - viewportCenter
+          window.scrollBy({ top: delta, behavior: "smooth" })
+        }
+
+        $focusMode.subscribe((active: boolean) => {
+          if (active) {
+            document.body.classList.add("focus-mode")
+            playerEl.style.display = "none"
+            const idx = $currentVerseIdx.get()
+            requestAnimationFrame(() => scrollToVerse(idx))
+            showFocusPanel(idx)
+          } else {
+            document.body.classList.remove("focus-mode")
+            hideFocusPanel()
+            if ($playerVisible.get()) playerEl.style.display = ""
+          }
+          syncHighlight()
+        })
+
+        $playerVisible.subscribe((visible: boolean) => {
+          if ($focusMode.get()) { playerEl.style.display = "none" }
+          else { playerEl.style.display = visible ? "" : "none" }
+          if (!visible) playerImage.innerHTML = ""
+        })
+
+        $isPlaying.subscribe((playing: boolean) => {
+          fpIconPlay.style.display = playing ? "none" : ""
+          fpIconPause.style.display = playing ? "" : "none"
+          focusStopBtn.style.display = playing ? "none" : ""
+          focusPanelControls.classList.toggle("is-playing", playing)
+          playerIconPlay.style.display = playing ? "none" : ""
+          playerIconPause.style.display = playing ? "" : "none"
+          playerPulse.style.display = playing ? "" : "none"
+          playerClose.style.display = playing ? "none" : ""
+          document.body.classList.toggle("audio-paused", !playing)
+          syncHighlight()
+        })
+
+        $currentVerseIdx.subscribe((idx: number) => {
+          syncHighlight()
+          if ($audioPlayState.get() === "idle" && !$pausedState.get()) return
+          const entries = $currentVerseEntries.get()
+          const sectionIdx = entries[idx]?.sectionIndex ?? idx
+          if ($focusMode.get()) {
+            populateFocusPanel(sectionIdx)
+            scrollToVerse(sectionIdx)
+          }
+        })
+
+        $playerCardInfo.subscribe(({ title, imageUrl }) => {
+          if (imageUrl) playerImage.innerHTML = `<img src="${imageUrl}" alt="${title}">`
+        })
+
+        const toastEl = document.getElementById("audio-toast")!
+        let toastTimer: ReturnType<typeof setTimeout> | null = null
+        $audioToast.subscribe((key: string) => {
+          if (!key) { toastEl.style.display = "none"; return }
+          const langCode = window.location.pathname.split("/").filter(Boolean)[0] || "en"
+          toastEl.textContent = t(langCode, `audioPlayer.${key}`)
+          toastEl.style.display = "block"
+          if (toastTimer) clearTimeout(toastTimer)
+          toastTimer = setTimeout(() => $audioToast.set(""), 4000)
+        })
+
+        function togglePlayPause() {
+          if ($audioPlayState.get() === "idle") {
+            if ($pausedState.get()) resumePlayback()
+            else playVerse($currentVerseIdx.get())
+          } else {
+            pausePlayback()
+          }
+          unlockAudio()
+        }
+
+        focusPlayBtn.addEventListener("click", (e) => { e.stopPropagation(); togglePlayPause() })
+        focusStopBtn.addEventListener("click", (e) => { e.stopPropagation(); stopAll() })
+        focusBackdrop.addEventListener("click", () => $focusMode.set(false))
+
+        playerEl.addEventListener("click", () => $focusMode.set(true))
+        playerBtn.addEventListener("click", (e) => { e.stopPropagation(); togglePlayPause() })
+        playerClose.addEventListener("click", (e) => { e.stopPropagation(); stopAll() })
+
+        window.addEventListener("wheel", () => { if ($focusMode.get()) $focusMode.set(false) })
+        window.addEventListener("touchmove", () => { if ($focusMode.get()) $focusMode.set(false) })
+
+        window.addEventListener("focus-panel-refresh", ((e: CustomEvent) => {
+          if (!$focusMode.get()) return
+          const idx = e.detail?.idx ?? $currentVerseIdx.get()
+          document.body.classList.add("focus-mode")
+          playerEl.style.display = "none"
+          requestAnimationFrame(() => scrollToVerse(idx))
+          showFocusPanel(idx)
+        }) as EventListener)
+      }
+
+      if (!(window as any).__audioUIInitialized) {
+        ;(window as any).__audioUIInitialized = true
+        initAudioUI()
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  .header-link {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    transition: background 160ms ease, color 160ms ease;
+  }
+  .header-link:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+  .header-link-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: background 160ms ease;
+  }
+  .header-link-icon:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+</style>

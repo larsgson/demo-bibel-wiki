@@ -1,0 +1,9 @@
+{
+  "name": "Tu Biblia mexicana",
+  "short_name": "Biblia MX",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfaf6",
+  "theme_color": "#000B63",
+  "icons": []
+}

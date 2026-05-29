@@ -1,0 +1,414 @@
+# Johannesevangeliet - Norwegian locale
+
+title = "Johannesevangeliet"
+longTitle = "Det glade budskap ifølge Johannes"
+description = "Jesu elskede disippel Johannes forteller om ham som var fra begynnelsen. Gjennom Jesus ga Gud oss nåde og sannhet. Gjennom ham blir vi Guds barn."
+video_url = "https://www.youtube.com/embed/XWpCBMJ2xMo"
+
+[01]
+title = "Ordet blant oss"
+description = "Kapittel 1–12: Fra Ordets inkarnasjon til Jesu inntog i Jerusalem"
+
+[01.01]
+title = "Guds levende Ord"
+description = "Guds Ord ble kjød og tok bolig blant oss. Døperen Johannes vitnet om ham. Andreas fortalte Simon Peter, og de fulgte Jesus."
+
+[01.02]
+title = "Bryllupet i Kana"
+description = "Jesus forvandlet vann til vin på et bryllup. Han drev ut pengevekslerne fra tempelet. Han sa: «Bryt ned dette tempelet, og jeg skal reise det opp.»"
+
+[01.03]
+title = "Nikodemus"
+description = "Jesus sa til Nikodemus: «Du må bli født på ny. Den som tror på Sønnen, skal ha evig liv.» Døperen Johannes sa: «Han er over alle.»"
+
+[01.04]
+title = "Den samaritanske kvinnen"
+description = "Jesus talte med en samaritansk kvinne om hennes menn. Hun sa: «Kan dette være Messias?» Mange kom til tro. Han helbredet en embetsmanns sønn."
+
+[01.05]
+title = "Den lamme helbredes"
+description = "Jesus helbredet en mann ved Betesda. Han sa: «Sønnen gjør bare det han ser Faderen gjøre. Mine gjerninger og Skriftene vitner om meg.»"
+
+[01.06]
+title = "Livets brød"
+description = "Jesus mettet 5 000 menn og gikk på vannet. Han sa: «Jeg er livets brød. Mitt kjød er virkelig mat.» Mange disipler vendte tilbake."
+
+[01.07]
+title = "Strømmer av levende vann"
+description = "Jesus gikk til høytiden. Folket sa: «Er dette Messias?» Øversteprestene forsøkte å gripe ham. Han ropte: «Kom og drikk.»"
+
+[01.08]
+title = "Abrahams etterkommere"
+description = "Jesus fordømte ikke en kvinne grepet for ekteskapsbrudd. Fariseerne utfordret ham. Han sa: «Om Gud var deres Far, ville dere elske meg.»"
+
+[01.09]
+title = "Den blinde helbredes"
+description = "Jesus helbredet en blind mann på sabbaten. Fariseerne kalte inn mannen og kastet ham ut. Jesus sa: «Jeg er kommet for at blinde skal se.»"
+
+[01.10]
+title = "Hyrde og fårefold"
+description = "Jesus sa: «Jeg er den gode hyrden. Jeg gir mitt liv for fårene.» De spurte: «Er du Messias?» Han sa: «Mine får følger meg.»"
+
+[01.11]
+title = "Lasarus"
+description = "Lasarus døde. Jesus gikk til graven og sa: «Lasarus, kom ut.» Lasarus kom ut. Øversteprestene planla å drepe Jesus."
+
+[01.12]
+title = "Inntoget i Jerusalem"
+description = "Jesus red inn i Jerusalem. Folket ropte: «Hosianna!» Han sa: «Menneskesønnen må opphøyes. Jeg er kommet for å frelse verden.»"
+
+[02]
+title = "Jesus og hans disipler"
+description = "Kapittel 13–17: Det siste måltidet, avskjedstalene og Jesu bønn"
+
+[02.13]
+title = "Fotvaskingen"
+description = "Jesus vasket disiplenes føtter. Han sa: «En av dere skal forråde meg.» Judas gikk ut. Jesus sa: «Elsk hverandre som jeg har elsket dere.»"
+
+[02.14]
+title = "Veien, sannheten og livet"
+description = "«Jeg er veien, sannheten og livet. Jeg er i Faderen og Faderen i meg. Han skal gi dere Den hellige ånd. Vær ikke redde.»"
+
+[02.15]
+title = "Vintreet og grenene"
+description = "«Jeg er vintreet, dere er grenene. Dere er mine venner om dere gjør det jeg befaler. Om de forfulgte meg, skal de også forfølge dere.»"
+
+[02.16]
+title = "Den hellige ånds komme"
+description = "«Ånden skal overbevise verden om synd. Han skal lede dere til hele sannheten. Deres sorg skal vendes til glede. Jeg går til Faderen.»"
+
+[02.17]
+title = "Jesu bønn for sine disipler"
+description = "Jesus sa: «Far, jeg har åpenbart ditt navn for dem du ga meg. Hellige dem i sannheten. Må alle som tror på meg, være ett.»"
+
+[03]
+title = "Korset og oppstandelsen"
+description = "Kapittel 18–21: Arrestasjon, korsfestelse, oppstandelse og gjenopprettelse"
+
+[03.18]
+title = "Arrestasjon og rettssak"
+description = "Judas forrådte Jesus til øversteprestene. Peter fornektet ham. Han ble ført for Pilatus. Jesus sa: «Mitt rike er ikke av denne verden.»"
+
+[03.19]
+title = "Død for syndene"
+description = "Soldatene tok Jesus og korsfestet ham. Han sa: «Det er fullbrakt.» Han ga opp sin ånd. En soldat stakk ham i siden med et spyd."
+
+[03.20]
+title = "Oppstandelsen"
+description = "Maria gikk til graven og fant den tom. Jesus møtte henne. Han kom og sto blant disiplene. Tomas sa: «Min Herre og min Gud!»"
+
+[03.21]
+title = "Tiberiassjøen"
+description = "Jesus viste seg da disiplene fisket. Han sa til Peter: «Elsker du meg? Vær hyrde for mine får.» Den elskede disippelen har vitnet."
+
+[01.01.1]
+p_hd = "Ordet ble kjød"
+
+[01.01.19]
+p_hd = "Døperen Johannes nekter for at han er Messias"
+
+[01.01.29]
+p_hd = "Johannes vitner om Jesus"
+
+[01.01.35]
+p_hd = "Johannes' disipler følger Jesus"
+
+[01.01.43]
+p_hd = "Jesus kaller Filip og Natanael"
+
+[01.02.1]
+p_hd = "Jesus forvandler vann til vin"
+
+[01.02.13]
+p_hd = "Jesus renser tempelet"
+
+[01.02.23]
+p_hd = "Jesus kjenner menneskene"
+
+[01.03.1]
+p_hd = "Jesus underviser Nikodemus"
+
+[01.03.22]
+p_hd = "Johannes vitner igjen om Jesus"
+
+[01.04.1]
+p_hd = "Jesus taler med en samaritansk kvinne"
+
+[01.04.27]
+p_hd = "Disiplene vender tilbake til Jesus"
+
+[01.04.39]
+p_hd = "Mange samaritanere tror"
+
+[01.04.43]
+p_hd = "Jesus helbreder en embetsmanns sønn"
+
+[01.05.1]
+p_hd = "Helbredelsen ved dammen"
+
+[01.05.16]
+p_hd = "Sønnens fullmakt"
+
+[01.05.19]
+p_hd = "Jesus"
+
+[01.05.31]
+p_hd = "Vitnesbyrd om Jesus"
+
+[01.06.1]
+p_hd = "Jesus metter fem tusen"
+
+[01.06.16]
+p_hd = "Jesus går på vannet"
+
+[01.06.22]
+p_hd = "Folkemengden søker Jesus"
+
+[01.06.25]
+p_hd = "Jesus, livets brød"
+
+[01.06.26]
+p_hd = "Jesus Kristus — livets brød"
+
+[01.06.35]
+p_hd = "Den som tror har evig liv"
+
+[01.06.48]
+p_hd = "Den som spiser dette brødet skal leve evig"
+
+[01.06.60]
+p_hd = "Mange disipler forlater Jesus"
+
+[01.06.67]
+p_hd = "Peter"
+
+[01.07.1]
+p_hd = "Jesus går til løvhyttefesten"
+
+[01.07.10]
+p_hd = "Jesus ved løvhyttefesten i Jerusalem"
+
+[01.07.14]
+p_hd = "Jesus underviser på høytiden"
+
+[01.07.25]
+p_hd = "Delte meninger om hvem Jesus er"
+
+[01.07.37]
+p_hd = "Levende vann"
+
+[01.07.40]
+p_hd = "Er Jesus Messias?"
+
+[01.07.45]
+p_hd = "De jødiske ledernes vantro"
+
+[01.08.1]
+p_hd = "En kvinne grepet for ekteskapsbrudd, Jesus fordømmer henne ikke"
+
+[01.08.12]
+p_hd = "Strid om Jesu vitnesbyrd"
+
+[01.08.21]
+p_hd = "Strid om hvem Jesus er"
+
+[01.08.31]
+p_hd = "Strid om hvem Jesu motstandere er barn av"
+
+[01.08.37]
+p_hd = "Abrahams barn eller djevelens barn?"
+
+[01.08.48]
+p_hd = "Jesu påstander om seg selv"
+
+[01.09.1]
+p_hd = "Jesus helbreder en mann som var født blind"
+
+[01.09.13]
+p_hd = "Fariseerne undersøker helbredelsen"
+
+[01.09.24]
+p_hd = "Den helbredede mannen kastes ut"
+
+[01.09.35]
+p_hd = "Åndelig blindhet"
+
+[01.10.1]
+p_hd = "Den gode hyrden og hans får"
+
+[01.10.7]
+p_hd = "Jesus Kristus — døren til fårene"
+
+[01.10.11]
+p_hd = "Jesus Kristus — den gode hyrden"
+
+[01.10.22]
+p_hd = "Fortsatt strid om Jesu krav"
+
+[01.10.31]
+p_hd = "Anklage for blasfemi"
+
+[01.11.1]
+p_hd = "Lasarus' død"
+
+[01.11.17]
+p_hd = "Jesus trøster Lasarus' søstre"
+
+[01.11.28]
+p_hd = "Jesus gråter"
+
+[01.11.38]
+p_hd = "Jesus vekker Lasarus opp fra de døde"
+
+[01.11.45]
+p_hd = "Planen om å drepe Jesus"
+
+[01.12.1]
+p_hd = "Jesus salves i Betania"
+
+[01.12.12]
+p_hd = "Jesus kommer til Jerusalem som konge"
+
+[01.12.20]
+p_hd = "Jesus forutsier sin død"
+
+[01.12.27]
+p_hd = "Jesus kunngjør sin død"
+
+[01.12.37]
+p_hd = "Tro og vantro blant jødene"
+
+[01.12.42]
+p_hd = "Følgene av tro og vantro"
+
+[02.13.1]
+p_hd = "Jesus vasker disiplenes føtter"
+
+[02.13.12]
+p_hd = "Fotvaskingen"
+
+[02.13.18]
+p_hd = "Jesus forutsier sitt forræderi"
+
+[02.13.21]
+p_hd = "Forræderiet kunngjøres"
+
+[02.13.31]
+p_hd = "Jesus forutsier Peters fornektelse"
+
+[02.13.33]
+p_hd = "Det nye budet"
+
+[02.13.36]
+p_hd = "Jesus kunngjør at Peter skal fornekte ham"
+
+[02.14.1]
+p_hd = "Jesus trøster sine disipler"
+
+[02.14.5]
+p_hd = "Jesus, veien til Faderen"
+
+[02.14.8]
+p_hd = "Den som ser Sønnen ser Faderen"
+
+[02.14.15]
+p_hd = "Jesus lover Den hellige ånd"
+
+[02.14.25]
+p_hd = "Jesus sier: "
+
+[02.15.1]
+p_hd = "Vintreet og grenene"
+
+[02.15.9]
+p_hd = "Bli i Jesu kjærlighet"
+
+[02.15.18]
+p_hd = "Verden hater disiplene"
+
+[02.15.26]
+p_hd = "Den hellige ånds verk"
+
+[02.16.4]
+p_hd = "Den hellige ånds verk"
+
+[02.16.16]
+p_hd = "Disiplenes sorg skal vendes til glede"
+
+[02.16.25]
+p_hd = "Jesus"
+
+[02.17.1]
+p_hd = "Jesus ber om å bli herliggjort"
+
+[02.17.6]
+p_hd = "Jesus ber for sine disipler"
+
+[02.17.20]
+p_hd = "Jesus ber for alle troende"
+
+[03.18.1]
+p_hd = "Jesus arresteres"
+
+[03.18.12]
+p_hd = "Jesus for Hannas"
+
+[03.18.15]
+p_hd = "Peters første fornektelse"
+
+[03.18.19]
+p_hd = "Øverstepresten forhører Jesus"
+
+[03.18.25]
+p_hd = "Peters andre og tredje fornektelse"
+
+[03.18.28]
+p_hd = "Jesus for Pilatus"
+
+[03.18.38]
+p_hd = "Jesu dom"
+
+[03.19.1]
+p_hd = "Jesus dømmes til korsfestelse"
+
+[03.19.6]
+p_hd = "Jesus svarer ikke Pilatus"
+
+[03.19.16]
+p_hd = "Jesu korsfestelse"
+
+[03.19.28]
+p_hd = "Jesu død"
+
+[03.19.31]
+p_hd = "Den som de har gjennomboret"
+
+[03.19.38]
+p_hd = "Jesu begravelse"
+
+[03.20.1]
+p_hd = "Den tomme graven"
+
+[03.20.10]
+p_hd = "Jesus viser seg for Maria Magdalena"
+
+[03.20.19]
+p_hd = "Jesus viser seg for sine disipler"
+
+[03.20.24]
+p_hd = "Jesus viser seg for Tomas"
+
+[03.20.30]
+p_hd = "Hensikten med Johannesevangeliet"
+
+[03.21.1]
+p_hd = "Jesus og det store fiskefangsten"
+
+[03.21.15]
+p_hd = "Jesus gjenoppretter Peter"
+
+[03.21.20]
+p_hd = "Peter og den disippelen som Jesus elsket spesielt"
+
+[03.21.24]
+p_hd = "Sluttord"

@@ -1,0 +1,54 @@
+level = "chapter"
+id = "01"
+canon = "nt"
+
+[image]
+filename = "VB-John1v14.jpg"
+
+[[stories]]
+id = "01"
+image = "VB-John1v14.jpg"
+
+[[stories]]
+id = "02"
+image = "VB-John2v3.jpg"
+
+[[stories]]
+id = "03"
+image = "VB-John3v2.jpg"
+
+[[stories]]
+id = "04"
+image = "VB-John4v37.jpg"
+
+[[stories]]
+id = "05"
+image = "VB-John5v2.jpg"
+
+[[stories]]
+id = "06"
+image = "VB-John6v36.jpg"
+
+[[stories]]
+id = "07"
+image = "VB-John7v28.jpg"
+
+[[stories]]
+id = "08"
+image = "VB-John8v2b.jpg"
+
+[[stories]]
+id = "09"
+image = "VB-John9v11b.jpg"
+
+[[stories]]
+id = "10"
+image = "VB-John10v2.jpg"
+
+[[stories]]
+id = "11"
+image = "VB-John11v38b-39a.jpg"
+
+[[stories]]
+id = "12"
+image = "VB-John12v2b.jpg"

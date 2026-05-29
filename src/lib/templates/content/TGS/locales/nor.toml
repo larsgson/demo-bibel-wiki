@@ -1,0 +1,405 @@
+# The Grand Story - Norwegian locale
+
+title = "Den store fortellingen"
+longTitle = "Bibelens store fortelling"
+description = "En reise gjennom Bibelens viktigste øyeblikk — fra begynnelsen til slutten."
+
+[01]
+title = "Scener fra Det gamle testamentet"
+description = "Fortellingen om Guds folk — hvordan alt begynte, deres reise, og løftet om en kommende frelser."
+
+[01.01]
+title = "I begynnelsen"
+description = "Gud skaper himmel og jord, lys og mørke, og former mennesket av jordens støv."
+
+[01.02]
+title = "Fra Eden til Babel"
+description = "Menneskets fall i Edens hage, den store flommen på Noahs tid, og folkenes spredning ved Babels tårn."
+
+[01.03]
+title = "Abraham, Isak og Jakob"
+description = "Gud kaller Abraham og slutter en pakt med ham. Abrahams tro prøves. Jakob bryter med Gud og får et nytt navn — Israel."
+
+[01.04]
+title = "Josef i Egypt"
+description = "Josef selges av sine brødre, stiger til makten ved å tyde Faraos drømmer, og tilgir sine brødre når de kommer til Egypt."
+
+[01.05]
+title = "Moses og utgangen fra Egypt"
+description = "Gud kaller Moses fra den brennende busken. Påskelammet redder Israel. Rødehavet deler seg. Gud gir De ti bud ved Sinai."
+
+[01.06]
+title = "Israel i ørkenen"
+description = "Gud gir manna fra himmelen og vann fra klippen. Moses lærer Israel det store budet: Du skal elske Herren din Gud."
+
+[01.07]
+title = "Det lovede land"
+description = "Josva leder Israel inn i det lovede land. Jerikos murer faller ved lyden av basuner og folkets rop."
+
+[01.08]
+title = "Samson og Dalila"
+description = "Samson, den mektige dommeren, forrådes av Dalila. Hans styrke tas fra ham, men i sin siste gjerning styrter han filisternes tempel."
+
+[01.09]
+title = "Fortellingen om Rut"
+description = "Rut lover Noomi troskap: 'Hvor du går, vil jeg gå.' Boas løser Rut, og hun blir stammor til kong David."
+
+[01.10]
+title = "Samuel, Saul og David"
+description = "Gutten Samuel hører Guds stemme. Gjeteren David beseirer kjempen Goliat. Gud slutter en evig pakt med David."
+
+[01.11]
+title = "Salomo den vise"
+description = "Salomo ber Gud om visdom og får den. Han bygger og innvier Tempelet i Jerusalem som et bønnehus for alle folk."
+
+[01.12]
+title = "Elia profeten"
+description = "Elia utfordrer Baals profeter på fjellet Karmel. Ild faller fra himmelen. Senere taler Gud til Elia i en stille susen."
+
+[01.13]
+title = "Fortellingen om Jona"
+description = "Jona flykter fra Gud og svelges av en stor fisk. Han forkynner i Ninive, og den store byen omvender seg."
+
+[01.14]
+title = "Fangenskap og tilbakekomst"
+description = "Jerusalem faller for Babylon og folket føres i fangenskap. Kong Kyros av Persia befaler deres tilbakevending."
+
+[01.15]
+title = "En profeti"
+description = "Jesaja forutsier en lidende tjener som bærer manges synder, og en lovet hersker hvis rike aldri skal ta slutt."
+
+[02]
+title = "Scener fra Det nye testamentet"
+description = "Hvordan Jesus forandret alt — og hva som fulgte etter oppstandelsen."
+
+[02.01]
+title = "I begynnelsen"
+description = "I begynnelsen var Ordet, og Ordet var hos Gud, og Ordet var Gud. Og Ordet ble kjød og tok bolig blant oss."
+
+[02.02]
+title = "Jesus blir født"
+description = "Jesus blir født i Betlehem. Engler forkynner stor glede for gjetere på markene: en Frelser er født."
+
+[02.03]
+title = "Helbrederen"
+description = "Jesus helbreder en spedalsk med en berøring. Han tilgir og helbreder en lam mann som vennene hans senket ned gjennom taket."
+
+[02.04]
+title = "Læreren"
+description = "Jesus underviser om Saligprisningene på fjellet. Han nevner det største budet. Han forteller lignelsen om den bortkomne sønnen."
+
+[02.05]
+title = "Korsfestelsen"
+description = "Jesus deler det siste måltidet med disiplene. Han korsfestes, dør, og på tredje dagen oppstår han fra de døde."
+
+[02.06]
+title = "Apostlenes gjerninger"
+description = "Den hellige ånd kommer ved pinse med vind og ild. Saulus møter den oppstandne Kristus på veien til Damaskus og forvandles."
+
+[02.07]
+title = "Et syn"
+description = "Johannes ser en ny himmel og en ny jord. Gud skal bo hos sitt folk. Døden skal ikke finnes mer, heller ikke sorg eller smerte."
+
+# --- Split stories ---
+
+[01.02-1]
+title = "Fra Eden til Babel (1)"
+
+[01.02-2]
+title = "Fra Eden til Babel (2)"
+
+[01.03-1]
+title = "Abraham, Isak og Jakob (1)"
+
+[01.03-2]
+title = "Abraham, Isak og Jakob (2)"
+
+[01.04-1]
+title = "Josef i Egypt (1)"
+
+[01.04-2]
+title = "Josef i Egypt (2)"
+
+[01.04-3]
+title = "Josef i Egypt (3)"
+
+[01.05-1]
+title = "Moses og utgangen fra Egypt (1)"
+
+[01.05-2]
+title = "Moses og utgangen fra Egypt (2)"
+
+[01.09-1]
+title = "Fortellingen om Rut (1)"
+
+[01.09-2]
+title = "Fortellingen om Rut (2)"
+
+[02.03-1]
+title = "Helbrederen (1)"
+
+[02.03-2]
+title = "Helbrederen (2)"
+
+[02.05-1]
+title = "Korsfestelsen (1)"
+
+[02.05-2]
+title = "Korsfestelsen (2)"
+
+[02.05-3]
+title = "Korsfestelsen (3)"
+
+[02.06-1]
+title = "Apostlenes gjerninger (1)"
+
+[02.06-2]
+title = "Apostlenes gjerninger (2)"
+
+# --- Subheaders (paragraph headings within stories) ---
+
+[01.01.1_1]
+p_hd = "Gud skaper himmel og jord"
+
+[01.02.3_1]
+p_hd = "Syndefallet"
+
+[01.02.6_5]
+p_hd = "Syndfloden"
+
+[01.02.11_1]
+p_hd = "Babels tårn"
+
+[01.02-1.3_1]
+p_hd = "Syndefallet"
+
+[01.02-1.6_2]
+p_hd = "Menneskets ondskap"
+
+[01.02-1.7_2]
+p_hd = "Syndfloden"
+
+[01.02-2.8_1]
+p_hd = "Vannene trekker seg tilbake"
+
+[01.02-2.9_5]
+p_hd = "Guds pakt med Noah"
+
+[01.02-2.11_1]
+p_hd = "Babels tårn"
+
+[01.03.12_1]
+p_hd = "Abrahams kall"
+
+[01.03.15_5]
+p_hd = "Guds pakt med Abraham"
+
+[01.03.22_1]
+p_hd = "Isaks offer"
+
+[01.03.32_24]
+p_hd = "Jakobs nye navn — Israel"
+
+[01.03-1.12_2]
+p_hd = "Abrahams kall"
+
+[01.03-1.15_1]
+p_hd = "Guds pakt med Abraham"
+
+[01.03-2.22_1]
+p_hd = "Isaks offer"
+
+[01.03-2.32_1]
+p_hd = "Jakobs nye navn — Israel"
+
+[01.04.37_23]
+p_hd = "Josef selges av sine brødre"
+
+[01.04.41_14]
+p_hd = "Josef tyder Faraos drømmer"
+
+[01.04.50_19]
+p_hd = "Josef tilgir sine brødre"
+
+[01.04-1.37_2]
+p_hd = "Josef selges av sine brødre"
+
+[01.04-1.39_1]
+p_hd = "Josef i Potifars hus"
+
+[01.04-2.40_4]
+p_hd = "Josef i fengselet"
+
+[01.04-2.41_1]
+p_hd = "Josef tyder Faraos drømmer"
+
+[01.04-3.42_1]
+p_hd = "Josefs brødre kommer til Egypt"
+
+[01.04-3.44_1]
+p_hd = "Sølvbegeret"
+
+[01.04-3.45_1]
+p_hd = "Josef gir seg til kjenne"
+
+[01.04-3.50_7]
+p_hd = "Josef tilgir sine brødre"
+
+[01.05.3_1]
+p_hd = "Den brennende busken"
+
+[01.05.12_1]
+p_hd = "Påsken"
+
+[01.05.14_21]
+p_hd = "Overgangen over Rødehavet"
+
+[01.05.20_1]
+p_hd = "De ti bud"
+
+[01.05-1.3_1]
+p_hd = "Den brennende busken"
+
+[01.05-1.12_8]
+p_hd = "Påsken"
+
+[01.05-2.14_1]
+p_hd = "Overgangen over Rødehavet"
+
+[01.05-2.20_1]
+p_hd = "De ti bud"
+
+[01.06.16_4]
+p_hd = "Manna fra himmelen"
+
+[01.06.17_5]
+p_hd = "Vann fra klippen"
+
+[01.06.6_4]
+p_hd = "Shema"
+
+[01.07.6_15]
+p_hd = "Jerikos fall"
+
+[01.08.16_15]
+p_hd = "Samson og Dalila"
+
+[01.09.1_16]
+p_hd = "Ruts troskap"
+
+[01.09.4_9]
+p_hd = "Boas løser Rut"
+
+[01.09-1.1_2]
+p_hd = "Noomis tap"
+
+[01.09-1.2_3]
+p_hd = "Rut møter Boas"
+
+[01.09-2.3_1]
+p_hd = "Rut på treskeplassen"
+
+[01.09-2.4_1]
+p_hd = "Boas løser Rut"
+
+[01.10.3_4]
+p_hd = "Samuels kall"
+
+[01.10.17_45]
+p_hd = "David og Goliat"
+
+[01.10.7_12]
+p_hd = "Guds pakt med David"
+
+[01.11.3_9]
+p_hd = "Salomo ber om visdom"
+
+[01.11.8_27]
+p_hd = "Innvielse av Tempelet"
+
+[01.12.18_36]
+p_hd = "Elia på fjellet Karmel"
+
+[01.12.19_11]
+p_hd = "Den stille susen"
+
+[01.13.1_15]
+p_hd = "Jona og den store fisken"
+
+[01.13.3_4]
+p_hd = "Ninive omvender seg"
+
+[01.14.25_8]
+p_hd = "Jerusalems fall"
+
+[01.14.1_1]
+p_hd = "Kyros' edikt"
+
+[01.15.53_3]
+p_hd = "Den lidende tjener"
+
+[01.15.9_6]
+p_hd = "Den lovede hersker"
+
+[02.01.1_1]
+p_hd = "Ordet ble kjød"
+
+[02.02.2_1]
+p_hd = "Jesu fødsel"
+
+[02.03.1_40]
+p_hd = "Helbredelse av en spedalsk"
+
+[02.03.2_1]
+p_hd = "Helbredelse av den lamme"
+
+[02.03-1.1_4]
+p_hd = "Begynnelsen av Jesu tjeneste"
+
+[02.03-2.2_1]
+p_hd = "Helbredelse av den lamme"
+
+[02.04.5_1]
+p_hd = "Saligprisningene"
+
+[02.04.22_37]
+p_hd = "Det største budet"
+
+[02.04.15_11]
+p_hd = "Den bortkomne sønnen"
+
+[02.05.26_26]
+p_hd = "Det siste måltidet"
+
+[02.05.27_45]
+p_hd = "Korsfestelsen"
+
+[02.05.28_5]
+p_hd = "Oppstandelsen"
+
+[02.05-1.26_3]
+p_hd = "Det siste måltidet og arrestasjonen"
+
+[02.05-2.27_1]
+p_hd = "Korsfestelsen"
+
+[02.05-3.28_1]
+p_hd = "Oppstandelsen"
+
+[02.06.2_1]
+p_hd = "Pinse"
+
+[02.06.9_3]
+p_hd = "Paulus' omvendelse"
+
+[02.06-1.2_1]
+p_hd = "Pinse"
+
+[02.06-2.9_2]
+p_hd = "Paulus' omvendelse"
+
+[02.07.21_1]
+p_hd = "Ny himmel og ny jord"
+
+[02.07.22_1]
+p_hd = "Livets elv"

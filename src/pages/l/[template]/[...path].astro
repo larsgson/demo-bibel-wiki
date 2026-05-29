@@ -1,0 +1,112 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro"
+import StoryReaderIsland from "../../../components/StoryReaderIsland"
+import NavigationGridIsland from "../../../components/NavigationGridIsland"
+import {
+  loadAllTemplates,
+  loadLocaleData,
+  loadMarkdownContent,
+  loadAllLocaleData,
+  findMissingStoryIds,
+  extractStoryTestaments,
+  getTemplateThemeCSS,
+} from "../../../lib/bw/template-utils"
+
+export function getStaticPaths() {
+  const templates = loadAllTemplates()
+  const paths: any[] = []
+
+  for (const [name, structure] of Object.entries(templates)) {
+    const engLocale = loadLocaleData(name, "eng")
+    const allLocales = loadAllLocaleData(name)
+    const missingStoryIds = findMissingStoryIds(name)
+    const storyTestaments = extractStoryTestaments(name)
+
+    // Template index
+    paths.push({
+      params: { template: name, path: undefined },
+      props: {
+        pageType: "category" as const,
+        templateName: name,
+        structure,
+        categoryId: structure.categories[0]?.id,
+        engLocale,
+        allLocales,
+        missingStoryIds,
+        storyTestaments,
+        layoutTheme: structure.layoutTheme,
+      },
+    })
+
+    for (const cat of structure.categories) {
+      paths.push({
+        params: { template: name, path: cat.id },
+        props: {
+          pageType: "category" as const,
+          templateName: name,
+          structure,
+          categoryId: cat.id,
+          engLocale,
+          allLocales,
+          missingStoryIds,
+          storyTestaments,
+          layoutTheme: structure.layoutTheme,
+        },
+      })
+
+      for (const story of cat.stories) {
+        paths.push({
+          params: { template: name, path: `${cat.id}/${story.id}` },
+          props: {
+            pageType: "story" as const,
+            templateName: name,
+            categoryId: cat.id,
+            storyId: story.id,
+            engLocale,
+            markdownContent: loadMarkdownContent(name, cat.id, story.id) || "",
+            allLocales,
+            layoutTheme: structure.layoutTheme,
+            imageConfig: structure.imageConfig,
+          },
+        })
+      }
+    }
+  }
+
+  return paths
+}
+
+const props = Astro.props
+const pageTitle = props.engLocale?.bookTitle || props.templateName
+---
+
+<BaseLayout title={`${pageTitle} — Tu Biblia mexicana`}>
+  {props.pageType === "category" ? (
+    <div class="max-w-4xl mx-auto p-4">
+      <NavigationGridIsland
+        client:load
+        templateName={props.templateName}
+        structure={props.structure}
+        engLocale={props.engLocale}
+        allLocales={props.allLocales}
+        defaultCategoryId={props.categoryId}
+        missingStoryIds={props.missingStoryIds}
+        storyTestaments={props.storyTestaments}
+        imageConfig={props.structure.imageConfig}
+      />
+    </div>
+  ) : (
+    <div class="max-w-3xl mx-auto p-4">
+      <StoryReaderIsland
+        client:only="react"
+        templateName={props.templateName}
+        categoryId={props.categoryId}
+        storyId={props.storyId}
+        engLocale={props.engLocale}
+        markdownContent={props.markdownContent}
+        allLocales={props.allLocales}
+        imageConfig={props.imageConfig}
+      />
+    </div>
+  )}
+</BaseLayout>

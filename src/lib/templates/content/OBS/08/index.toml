@@ -1,0 +1,36 @@
+level = "category"
+id = "08"
+beg = 36
+count = 7
+canon = "nt"
+
+[image]
+filename = "000-07.png"
+
+[[stories]]
+id = "36"
+image = "obs-en-36-01.jpg"
+
+[[stories]]
+id = "37"
+image = "obs-en-37-01.jpg"
+
+[[stories]]
+id = "38"
+image = "obs-en-38-01.jpg"
+
+[[stories]]
+id = "39"
+image = "obs-en-39-01.jpg"
+
+[[stories]]
+id = "40"
+image = "obs-en-40-01.jpg"
+
+[[stories]]
+id = "41"
+image = "obs-en-41-01.jpg"
+
+[[stories]]
+id = "42"
+image = "obs-en-42-01.jpg"

@@ -1,0 +1,403 @@
+# The Grand Story - Romanian locale
+
+title = "Marea Poveste"
+longTitle = "Marea Poveste a Bibliei"
+description = "O călătorie prin momentele-cheie ale Bibliei — de la început până la sfârșit."
+
+[01]
+title = "Scene din Vechiul Testament"
+description = "Povestea poporului lui Dumnezeu — cum a început totul, călătoria lor, și promisiunea unui mântuitor care va veni."
+
+[01.01]
+title = "La început"
+description = "Dumnezeu creează cerurile și pământul, lumina și întunericul, și îl formează pe om din țărâna pământului."
+
+[01.02]
+title = "De la Eden la Babel"
+description = "Căderea omului în grădină, marele potop în zilele lui Noe, și împrăștierea popoarelor la Turnul Babel."
+
+[01.03]
+title = "Avraam, Isaac și Iacov"
+description = "Dumnezeu îl cheamă pe Avraam și face un legământ cu el. Credința lui Avraam este pusă la încercare. Iacov se luptă cu Dumnezeu și primește un nume nou — Israel."
+
+[01.04]
+title = "Iosif în Egipt"
+description = "Iosif este vândut de frații săi, ajunge la putere interpretând visele lui Faraon, și își iartă frații când vin în Egipt."
+
+[01.05]
+title = "Moise și Exodul"
+description = "Dumnezeu îl cheamă pe Moise din rugul aprins. Mielul de Paște salvează pe Israel. Marea Roșie se desparte. Dumnezeu dă Cele Zece Porunci la Sinai."
+
+[01.06]
+title = "Israel în pustie"
+description = "Dumnezeu dă mană din cer și apă din stâncă. Moise îl învață pe Israel marea poruncă: Să iubești pe Domnul Dumnezeul tău."
+
+[01.07]
+title = "Țara Promisă"
+description = "Iosua conduce pe Israel în Țara Promisă. Zidurile Ierihonului cad la sunetul trâmbițelor și la strigătul poporului."
+
+[01.08]
+title = "Samson și Dalila"
+description = "Samson, judecătorul cel puternic, este trădat de Dalila. Puterea îi este luată, dar în ultimul său act el dărâmă templul filistenilor."
+
+[01.09]
+title = "Povestea Rutei"
+description = 'Rut îi jură credință Naomiei: „Unde vei merge tu, voi merge și eu." Boaz o răscumpără pe Rut, și ea devine strămoașa regelui David.'
+
+[01.10]
+title = "Samuel, Saul și David"
+description = "Copilul Samuel aude chemarea lui Dumnezeu. Păstorul David îl învinge pe uriașul Goliat. Dumnezeu face un legământ veșnic cu David."
+
+[01.11]
+title = "Solomon cel înțelept"
+description = "Solomon îi cere lui Dumnezeu înțelepciune și o primește. El construiește și dedică Templul din Ierusalim ca o casă de rugăciune pentru toate popoarele."
+
+[01.12]
+title = "Ilie profetul"
+description = "Ilie îi provoacă pe profeții lui Baal pe Muntele Carmel. Foc cade din cer. Mai târziu, Dumnezeu îi vorbește lui Ilie într-un glas blând și subțire."
+
+[01.13]
+title = "Povestea lui Iona"
+description = "Iona fuge de Dumnezeu și este înghițit de un pește mare. El predică în Ninive, și marea cetate se pocăiește."
+
+[01.14]
+title = "Exilul și întoarcerea"
+description = "Ierusalimul cade în mâna Babilonului și poporul este dus în robie. Împăratul Cirus al Persiei hotărăște întoarcerea lor."
+
+[01.15]
+title = "O profeție"
+description = "Isaia vestește un rob suferind care poartă păcatele multora, și un conducător promis al cărui împărăție nu va avea sfârșit."
+
+[02]
+title = "Scene din Noul Testament"
+description = "Cum a schimbat Isus totul — și ce a urmat după înviere."
+
+[02.01]
+title = "La început"
+description = "La început era Cuvântul, și Cuvântul era cu Dumnezeu, și Cuvântul era Dumnezeu. Cuvântul S-a făcut trup și a locuit printre noi."
+
+[02.02]
+title = "Isus se naște"
+description = "Isus se naște în Betleem. Îngerii vestesc păstorilor de pe câmpuri o mare bucurie: S-a născut un Mântuitor."
+
+[02.03]
+title = "Vindecătorul"
+description = "Isus vindecă un lepros printr-o atingere. El iartă și vindecă un paralitic coborât prin acoperiș de prietenii săi."
+
+[02.04]
+title = "Învățătorul"
+description = "Isus predică Fericirile pe munte. El numește cea mai mare poruncă. El spune pilda fiului risipitor."
+
+[02.05]
+title = "Răstignirea"
+description = "Isus împarte Cina cea de Taină cu ucenicii săi. Este răstignit, moare, și a treia zi înviază din morți."
+
+[02.06]
+title = "Faptele apostolilor"
+description = "Duhul Sfânt vine la Cincizecime cu vânt și foc. Saul Îl întâlnește pe Cristosul cel înviat pe drumul Damascului și este transformat."
+
+[02.07]
+title = "O viziune"
+description = "Ioan vede un cer nou și un pământ nou. Dumnezeu va locui cu poporul Său. Nu va mai fi moarte, nici jale, nici durere."
+
+[01.02-1]
+title = "De la Eden la Babel (1)"
+
+[01.02-2]
+title = "De la Eden la Babel (2)"
+
+[01.03-1]
+title = "Avraam, Isaac și Iacov (1)"
+
+[01.03-2]
+title = "Avraam, Isaac și Iacov (2)"
+
+[01.04-1]
+title = "Iosif în Egipt (1)"
+
+[01.04-2]
+title = "Iosif în Egipt (2)"
+
+[01.04-3]
+title = "Iosif în Egipt (3)"
+
+[01.05-1]
+title = "Moise și Exodul (1)"
+
+[01.05-2]
+title = "Moise și Exodul (2)"
+
+[01.09-1]
+title = "Povestea Rutei (1)"
+
+[01.09-2]
+title = "Povestea Rutei (2)"
+
+[02.03-1]
+title = "Vindecătorul (1)"
+
+[02.03-2]
+title = "Vindecătorul (2)"
+
+[02.05-1]
+title = "Răstignirea (1)"
+
+[02.05-2]
+title = "Răstignirea (2)"
+
+[02.05-3]
+title = "Răstignirea (3)"
+
+[02.06-1]
+title = "Faptele apostolilor (1)"
+
+[02.06-2]
+title = "Faptele apostolilor (2)"
+
+# --- Subheaders (paragraph headings within stories) ---
+
+[01.01.1_1]
+p_hd = "Dumnezeu creează cerurile și pământul"
+
+[01.02.3_1]
+p_hd = "Căderea"
+
+[01.02.6_5]
+p_hd = "Potopul"
+
+[01.02.11_1]
+p_hd = "Turnul Babel"
+
+[01.02-1.3_1]
+p_hd = "Căderea"
+
+[01.02-1.6_2]
+p_hd = "Răutatea omului"
+
+[01.02-1.7_2]
+p_hd = "Potopul"
+
+[01.02-2.8_1]
+p_hd = "Apele se retrag"
+
+[01.02-2.9_5]
+p_hd = "Legământul lui Dumnezeu cu Noe"
+
+[01.02-2.11_1]
+p_hd = "Turnul Babel"
+
+[01.03.12_1]
+p_hd = "Chemarea lui Avraam"
+
+[01.03.15_5]
+p_hd = "Legământul lui Dumnezeu cu Avraam"
+
+[01.03.22_1]
+p_hd = "Jertfa lui Isaac"
+
+[01.03.32_24]
+p_hd = "Noul nume al lui Iacov — Israel"
+
+[01.03-1.12_2]
+p_hd = "Chemarea lui Avraam"
+
+[01.03-1.15_1]
+p_hd = "Legământul lui Dumnezeu cu Avraam"
+
+[01.03-2.22_1]
+p_hd = "Jertfa lui Isaac"
+
+[01.03-2.32_1]
+p_hd = "Noul nume al lui Iacov — Israel"
+
+[01.04.37_23]
+p_hd = "Iosif vândut de frații săi"
+
+[01.04.41_14]
+p_hd = "Iosif interpretează visele lui Faraon"
+
+[01.04.50_19]
+p_hd = "Iosif își iartă frații"
+
+[01.04-1.37_2]
+p_hd = "Iosif vândut de frații săi"
+
+[01.04-1.39_1]
+p_hd = "Iosif în casa lui Potifar"
+
+[01.04-2.40_4]
+p_hd = "Iosif în închisoare"
+
+[01.04-2.41_1]
+p_hd = "Iosif interpretează visele lui Faraon"
+
+[01.04-3.42_1]
+p_hd = "Frații lui Iosif vin în Egipt"
+
+[01.04-3.44_1]
+p_hd = "Cupa de argint"
+
+[01.04-3.45_1]
+p_hd = "Iosif se face cunoscut"
+
+[01.04-3.50_7]
+p_hd = "Iosif își iartă frații"
+
+[01.05.3_1]
+p_hd = "Rugul aprins"
+
+[01.05.12_1]
+p_hd = "Paștele"
+
+[01.05.14_21]
+p_hd = "Traversarea Mării Roșii"
+
+[01.05.20_1]
+p_hd = "Cele Zece Porunci"
+
+[01.05-1.3_1]
+p_hd = "Rugul aprins"
+
+[01.05-1.12_8]
+p_hd = "Paștele"
+
+[01.05-2.14_1]
+p_hd = "Traversarea Mării Roșii"
+
+[01.05-2.20_1]
+p_hd = "Cele Zece Porunci"
+
+[01.06.16_4]
+p_hd = "Mana din cer"
+
+[01.06.17_5]
+p_hd = "Apă din stâncă"
+
+[01.06.6_4]
+p_hd = "Shema"
+
+[01.07.6_15]
+p_hd = "Căderea Ierihonului"
+
+[01.08.16_15]
+p_hd = "Samson și Dalila"
+
+[01.09.1_16]
+p_hd = "Credincioșia Rutei"
+
+[01.09.4_9]
+p_hd = "Boaz o răscumpără pe Rut"
+
+[01.09-1.1_2]
+p_hd = "Pierderea Naomiei"
+
+[01.09-1.2_3]
+p_hd = "Rut îl întâlnește pe Boaz"
+
+[01.09-2.3_1]
+p_hd = "Rut la aria de treierat"
+
+[01.09-2.4_1]
+p_hd = "Boaz o răscumpără pe Rut"
+
+[01.10.3_4]
+p_hd = "Chemarea lui Samuel"
+
+[01.10.17_45]
+p_hd = "David și Goliat"
+
+[01.10.7_12]
+p_hd = "Legământul lui Dumnezeu cu David"
+
+[01.11.3_9]
+p_hd = "Solomon cere înțelepciune"
+
+[01.11.8_27]
+p_hd = "Dedicarea Templului"
+
+[01.12.18_36]
+p_hd = "Ilie pe Muntele Carmel"
+
+[01.12.19_11]
+p_hd = "Glasul blând și subțire"
+
+[01.13.1_15]
+p_hd = "Iona și peștele cel mare"
+
+[01.13.3_4]
+p_hd = "Ninive se pocăiește"
+
+[01.14.25_8]
+p_hd = "Căderea Ierusalimului"
+
+[01.14.1_1]
+p_hd = "Decretul lui Cirus"
+
+[01.15.53_3]
+p_hd = "Robul suferind"
+
+[01.15.9_6]
+p_hd = "Conducătorul promis"
+
+[02.01.1_1]
+p_hd = "Cuvântul S-a făcut trup"
+
+[02.02.2_1]
+p_hd = "Nașterea lui Isus"
+
+[02.03.1_40]
+p_hd = "Vindecarea unui lepros"
+
+[02.03.2_1]
+p_hd = "Vindecarea paraliticului"
+
+[02.03-1.1_4]
+p_hd = "Începutul slujirii lui Isus"
+
+[02.03-2.2_1]
+p_hd = "Vindecarea paraliticului"
+
+[02.04.5_1]
+p_hd = "Fericirile"
+
+[02.04.22_37]
+p_hd = "Cea mai mare poruncă"
+
+[02.04.15_11]
+p_hd = "Fiul risipitor"
+
+[02.05.26_26]
+p_hd = "Cina cea de Taină"
+
+[02.05.27_45]
+p_hd = "Răstignirea"
+
+[02.05.28_5]
+p_hd = "Învierea"
+
+[02.05-1.26_3]
+p_hd = "Cina cea de Taină și arestarea"
+
+[02.05-2.27_1]
+p_hd = "Răstignirea"
+
+[02.05-3.28_1]
+p_hd = "Învierea"
+
+[02.06.2_1]
+p_hd = "Cincizecimea"
+
+[02.06.9_3]
+p_hd = "Convertirea lui Pavel"
+
+[02.06-1.2_1]
+p_hd = "Cincizecimea"
+
+[02.06-2.9_2]
+p_hd = "Convertirea lui Pavel"
+
+[02.07.21_1]
+p_hd = "Cer nou și pământ nou"
+
+[02.07.22_1]
+p_hd = "Râul vieții"

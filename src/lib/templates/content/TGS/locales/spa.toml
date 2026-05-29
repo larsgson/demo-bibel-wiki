@@ -1,0 +1,403 @@
+# The Grand Story - Spanish locale
+
+title = "La Gran Historia"
+longTitle = "La Gran Historia de la Biblia"
+description = "Un recorrido por los momentos clave de la Biblia — de principio a fin."
+
+[01]
+title = "Escenas del Antiguo Testamento"
+description = "La historia del pueblo de Dios — cómo comenzó todo, su camino, y la promesa de un salvador que vendría."
+
+[01.01]
+title = "En el principio"
+description = "Dios crea los cielos y la tierra, la luz y las tinieblas, y forma al hombre del polvo de la tierra."
+
+[01.02]
+title = "Del Edén a Babel"
+description = "La caída del hombre en el huerto, el gran diluvio en los días de Noé, y la dispersión de los pueblos en la Torre de Babel."
+
+[01.03]
+title = "Abraham, Isaac y Jacob"
+description = "Dios llama a Abraham y hace un pacto con él. La fe de Abraham es probada. Jacob lucha con Dios y recibe un nombre nuevo — Israel."
+
+[01.04]
+title = "José en Egipto"
+description = "José es vendido por sus hermanos, asciende al poder interpretando los sueños del Faraón, y perdona a sus hermanos cuando vienen a Egipto."
+
+[01.05]
+title = "Moisés y el Éxodo"
+description = "Dios llama a Moisés desde la zarza ardiente. El cordero pascual salva a Israel. El Mar Rojo se abre. Dios da los Diez Mandamientos en el Sinaí."
+
+[01.06]
+title = "Israel en el desierto"
+description = "Dios provee maná del cielo y agua de la roca. Moisés enseña a Israel el gran mandamiento: Amarás al SEÑOR tu Dios."
+
+[01.07]
+title = "La Tierra Prometida"
+description = "Josué conduce a Israel a la Tierra Prometida. Las murallas de Jericó caen al sonido de las trompetas y el clamor del pueblo."
+
+[01.08]
+title = "Sansón y Dalila"
+description = "Sansón, el poderoso juez, es traicionado por Dalila. Su fuerza le es quitada, pero en su último acto derriba el templo de los filisteos."
+
+[01.09]
+title = "La historia de Rut"
+description = "Rut jura lealtad a Noemí: 'Donde tú vayas, yo iré.' Booz redime a Rut, y ella se convierte en antepasada del rey David."
+
+[01.10]
+title = "Samuel, Saúl y David"
+description = "El niño Samuel oye el llamado de Dios. El pastor David vence al gigante Goliat. Dios hace un pacto eterno con David."
+
+[01.11]
+title = "Salomón el sabio"
+description = "Salomón pide a Dios sabiduría y la recibe. Construye y dedica el Templo en Jerusalén como casa de oración para todas las naciones."
+
+[01.12]
+title = "Elías el profeta"
+description = "Elías desafía a los profetas de Baal en el monte Carmelo. Cae fuego del cielo. Después, Dios habla a Elías en un silbo apacible y delicado."
+
+[01.13]
+title = "La historia de Jonás"
+description = "Jonás huye de Dios y es tragado por un gran pez. Predica en Nínive, y la gran ciudad se arrepiente."
+
+[01.14]
+title = "Exilio y regreso"
+description = "Jerusalén cae ante Babilonia y el pueblo es llevado al exilio. El rey Ciro de Persia decreta su regreso."
+
+[01.15]
+title = "Una profecía"
+description = "Isaías anuncia un siervo sufriente que lleva los pecados de muchos, y un gobernante prometido cuyo reino no tendrá fin."
+
+[02]
+title = "Escenas del Nuevo Testamento"
+description = "Cómo Jesús lo cambió todo — y lo que siguió tras la resurrección."
+
+[02.01]
+title = "En el principio"
+description = "En el principio era el Verbo, y el Verbo era con Dios, y el Verbo era Dios. Y el Verbo se hizo carne y habitó entre nosotros."
+
+[02.02]
+title = "Jesús nace"
+description = "Jesús nace en Belén. Los ángeles anuncian gran gozo a los pastores en los campos: ha nacido un Salvador."
+
+[02.03]
+title = "El sanador"
+description = "Jesús sana a un leproso con un toque. Perdona y sana a un paralítico bajado por el techo por sus amigos."
+
+[02.04]
+title = "El maestro"
+description = "Jesús enseña las Bienaventuranzas en el monte. Nombra el mandamiento más grande. Cuenta la parábola del hijo pródigo."
+
+[02.05]
+title = "La Crucifixión"
+description = "Jesús comparte la última cena con sus discípulos. Es crucificado, muere, y al tercer día resucita de entre los muertos."
+
+[02.06]
+title = "Hechos de los apóstoles"
+description = "El Espíritu Santo viene en Pentecostés con viento y fuego. Saulo encuentra al Cristo resucitado en el camino a Damasco y es transformado."
+
+[02.07]
+title = "Una visión"
+description = "Juan ve un cielo nuevo y una tierra nueva. Dios morará con su pueblo. No habrá más muerte, ni llanto, ni dolor."
+
+[01.02-1]
+title = "Del Edén a Babel (1)"
+
+[01.02-2]
+title = "Del Edén a Babel (2)"
+
+[01.03-1]
+title = "Abraham, Isaac y Jacob (1)"
+
+[01.03-2]
+title = "Abraham, Isaac y Jacob (2)"
+
+[01.04-1]
+title = "José en Egipto (1)"
+
+[01.04-2]
+title = "José en Egipto (2)"
+
+[01.04-3]
+title = "José en Egipto (3)"
+
+[01.05-1]
+title = "Moisés y el Éxodo (1)"
+
+[01.05-2]
+title = "Moisés y el Éxodo (2)"
+
+[01.09-1]
+title = "La historia de Rut (1)"
+
+[01.09-2]
+title = "La historia de Rut (2)"
+
+[02.03-1]
+title = "El sanador (1)"
+
+[02.03-2]
+title = "El sanador (2)"
+
+[02.05-1]
+title = "La Crucifixión (1)"
+
+[02.05-2]
+title = "La Crucifixión (2)"
+
+[02.05-3]
+title = "La Crucifixión (3)"
+
+[02.06-1]
+title = "Hechos de los apóstoles (1)"
+
+[02.06-2]
+title = "Hechos de los apóstoles (2)"
+
+# --- Subheaders (paragraph headings within stories) ---
+
+[01.01.1_1]
+p_hd = "Dios crea los cielos y la tierra"
+
+[01.02.3_1]
+p_hd = "La Caída"
+
+[01.02.6_5]
+p_hd = "El Diluvio"
+
+[01.02.11_1]
+p_hd = "La Torre de Babel"
+
+[01.02-1.3_1]
+p_hd = "La Caída"
+
+[01.02-1.6_2]
+p_hd = "La maldad del hombre"
+
+[01.02-1.7_2]
+p_hd = "El Diluvio"
+
+[01.02-2.8_1]
+p_hd = "Las aguas se retiran"
+
+[01.02-2.9_5]
+p_hd = "El pacto de Dios con Noé"
+
+[01.02-2.11_1]
+p_hd = "La Torre de Babel"
+
+[01.03.12_1]
+p_hd = "El llamado de Abraham"
+
+[01.03.15_5]
+p_hd = "El pacto de Dios con Abraham"
+
+[01.03.22_1]
+p_hd = "El sacrificio de Isaac"
+
+[01.03.32_24]
+p_hd = "El nuevo nombre de Jacob — Israel"
+
+[01.03-1.12_2]
+p_hd = "El llamado de Abraham"
+
+[01.03-1.15_1]
+p_hd = "El pacto de Dios con Abraham"
+
+[01.03-2.22_1]
+p_hd = "El sacrificio de Isaac"
+
+[01.03-2.32_1]
+p_hd = "El nuevo nombre de Jacob — Israel"
+
+[01.04.37_23]
+p_hd = "José vendido por sus hermanos"
+
+[01.04.41_14]
+p_hd = "José interpreta los sueños del Faraón"
+
+[01.04.50_19]
+p_hd = "José perdona a sus hermanos"
+
+[01.04-1.37_2]
+p_hd = "José vendido por sus hermanos"
+
+[01.04-1.39_1]
+p_hd = "José en la casa de Potifar"
+
+[01.04-2.40_4]
+p_hd = "José en prisión"
+
+[01.04-2.41_1]
+p_hd = "José interpreta los sueños del Faraón"
+
+[01.04-3.42_1]
+p_hd = "Los hermanos de José van a Egipto"
+
+[01.04-3.44_1]
+p_hd = "La copa de plata"
+
+[01.04-3.45_1]
+p_hd = "José se da a conocer"
+
+[01.04-3.50_7]
+p_hd = "José perdona a sus hermanos"
+
+[01.05.3_1]
+p_hd = "La zarza ardiente"
+
+[01.05.12_1]
+p_hd = "La Pascua"
+
+[01.05.14_21]
+p_hd = "El cruce del Mar Rojo"
+
+[01.05.20_1]
+p_hd = "Los Diez Mandamientos"
+
+[01.05-1.3_1]
+p_hd = "La zarza ardiente"
+
+[01.05-1.12_8]
+p_hd = "La Pascua"
+
+[01.05-2.14_1]
+p_hd = "El cruce del Mar Rojo"
+
+[01.05-2.20_1]
+p_hd = "Los Diez Mandamientos"
+
+[01.06.16_4]
+p_hd = "Maná del cielo"
+
+[01.06.17_5]
+p_hd = "Agua de la roca"
+
+[01.06.6_4]
+p_hd = "El Shemá"
+
+[01.07.6_15]
+p_hd = "La caída de Jericó"
+
+[01.08.16_15]
+p_hd = "Sansón y Dalila"
+
+[01.09.1_16]
+p_hd = "La lealtad de Rut"
+
+[01.09.4_9]
+p_hd = "Booz redime a Rut"
+
+[01.09-1.1_2]
+p_hd = "La pérdida de Noemí"
+
+[01.09-1.2_3]
+p_hd = "Rut conoce a Booz"
+
+[01.09-2.3_1]
+p_hd = "Rut en la era"
+
+[01.09-2.4_1]
+p_hd = "Booz redime a Rut"
+
+[01.10.3_4]
+p_hd = "El llamado de Samuel"
+
+[01.10.17_45]
+p_hd = "David y Goliat"
+
+[01.10.7_12]
+p_hd = "El pacto de Dios con David"
+
+[01.11.3_9]
+p_hd = "Salomón pide sabiduría"
+
+[01.11.8_27]
+p_hd = "Dedicación del Templo"
+
+[01.12.18_36]
+p_hd = "Elías en el monte Carmelo"
+
+[01.12.19_11]
+p_hd = "El silbo apacible y delicado"
+
+[01.13.1_15]
+p_hd = "Jonás y el gran pez"
+
+[01.13.3_4]
+p_hd = "Nínive se arrepiente"
+
+[01.14.25_8]
+p_hd = "La caída de Jerusalén"
+
+[01.14.1_1]
+p_hd = "El decreto de Ciro"
+
+[01.15.53_3]
+p_hd = "El siervo sufriente"
+
+[01.15.9_6]
+p_hd = "El gobernante prometido"
+
+[02.01.1_1]
+p_hd = "El Verbo se hizo carne"
+
+[02.02.2_1]
+p_hd = "El nacimiento de Jesús"
+
+[02.03.1_40]
+p_hd = "Sanación de un leproso"
+
+[02.03.2_1]
+p_hd = "Sanación del paralítico"
+
+[02.03-1.1_4]
+p_hd = "El comienzo del ministerio de Jesús"
+
+[02.03-2.2_1]
+p_hd = "Sanación del paralítico"
+
+[02.04.5_1]
+p_hd = "Las Bienaventuranzas"
+
+[02.04.22_37]
+p_hd = "El mandamiento más grande"
+
+[02.04.15_11]
+p_hd = "El hijo pródigo"
+
+[02.05.26_26]
+p_hd = "La última cena"
+
+[02.05.27_45]
+p_hd = "La Crucifixión"
+
+[02.05.28_5]
+p_hd = "La Resurrección"
+
+[02.05-1.26_3]
+p_hd = "La última cena y el arresto"
+
+[02.05-2.27_1]
+p_hd = "La Crucifixión"
+
+[02.05-3.28_1]
+p_hd = "La Resurrección"
+
+[02.06.2_1]
+p_hd = "Pentecostés"
+
+[02.06.9_3]
+p_hd = "La conversión de Pablo"
+
+[02.06-1.2_1]
+p_hd = "Pentecostés"
+
+[02.06-2.9_2]
+p_hd = "La conversión de Pablo"
+
+[02.07.21_1]
+p_hd = "Cielo nuevo y tierra nueva"
+
+[02.07.22_1]
+p_hd = "El río de la vida"

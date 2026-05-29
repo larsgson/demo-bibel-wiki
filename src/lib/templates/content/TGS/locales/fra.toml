@@ -1,0 +1,403 @@
+# The Grand Story - French locale
+
+title = "La grande histoire"
+longTitle = "La grande histoire de la Bible"
+description = "Un parcours à travers les moments clés de la Bible — du début à la fin."
+
+[01]
+title = "Scènes de l'Ancien Testament"
+description = "L'histoire du peuple de Dieu — comment tout a commencé, leur parcours, et la promesse d'un sauveur à venir."
+
+[01.01]
+title = "Au commencement"
+description = "Dieu crée les cieux et la terre, la lumière et les ténèbres, et forme l'homme de la poussière du sol."
+
+[01.02]
+title = "D'Éden à Babel"
+description = "La chute de l'homme dans le jardin, le grand déluge au temps de Noé, et la dispersion des peuples à la tour de Babel."
+
+[01.03]
+title = "Abraham, Isaac et Jacob"
+description = "Dieu appelle Abraham et conclut une alliance avec lui. La foi d'Abraham est mise à l'épreuve. Jacob lutte avec Dieu et reçoit un nouveau nom — Israël."
+
+[01.04]
+title = "Joseph en Égypte"
+description = "Joseph est vendu par ses frères, accède au pouvoir en interprétant les songes de Pharaon, et pardonne à ses frères quand ils viennent en Égypte."
+
+[01.05]
+title = "Moïse et l'Exode"
+description = "Dieu appelle Moïse depuis le buisson ardent. L'agneau pascal sauve Israël. La mer Rouge s'ouvre. Dieu donne les Dix Commandements au Sinaï."
+
+[01.06]
+title = "Israël dans le désert"
+description = "Dieu donne la manne du ciel et l'eau du rocher. Moïse enseigne à Israël le grand commandement : Tu aimeras l'Éternel ton Dieu."
+
+[01.07]
+title = "La Terre promise"
+description = "Josué conduit Israël dans la Terre promise. Les murailles de Jéricho s'écroulent au son des trompettes et au cri du peuple."
+
+[01.08]
+title = "Samson et Dalila"
+description = "Samson, le puissant juge, est trahi par Dalila. Sa force lui est enlevée, mais dans son dernier acte il renverse le temple des Philistins."
+
+[01.09]
+title = "L'histoire de Ruth"
+description = "Ruth jure fidélité à Naomi : « Où tu iras, j'irai. » Boaz rachète Ruth, et elle devient ancêtre du roi David."
+
+[01.10]
+title = "Samuel, Saül et David"
+description = "Le jeune Samuel entend l'appel de Dieu. Le berger David vainc le géant Goliath. Dieu conclut une alliance éternelle avec David."
+
+[01.11]
+title = "Salomon le sage"
+description = "Salomon demande à Dieu la sagesse et la reçoit. Il bâtit et consacre le Temple à Jérusalem comme maison de prière pour toutes les nations."
+
+[01.12]
+title = "Élie le prophète"
+description = "Élie défie les prophètes de Baal sur le mont Carmel. Le feu tombe du ciel. Plus tard, Dieu parle à Élie dans un murmure doux et léger."
+
+[01.13]
+title = "L'histoire de Jonas"
+description = "Jonas fuit devant Dieu et est englouti par un grand poisson. Il prêche à Ninive, et la grande ville se repent."
+
+[01.14]
+title = "Exil et retour"
+description = "Jérusalem tombe aux mains de Babylone et le peuple est emmené en captivité. Le roi Cyrus de Perse décrète leur retour."
+
+[01.15]
+title = "Une prophétie"
+description = "Ésaïe annonce un serviteur souffrant qui porte les péchés de beaucoup, et un souverain promis dont le règne n'aura pas de fin."
+
+[02]
+title = "Scènes du Nouveau Testament"
+description = "Comment Jésus a tout changé — et ce qui a suivi après la résurrection."
+
+[02.01]
+title = "Au commencement"
+description = "Au commencement était la Parole, et la Parole était avec Dieu, et la Parole était Dieu. La Parole a été faite chair et elle a habité parmi nous."
+
+[02.02]
+title = "Jésus est né"
+description = "Jésus naît à Bethléem. Les anges annoncent une grande joie aux bergers dans les champs : un Sauveur est né."
+
+[02.03]
+title = "Le guérisseur"
+description = "Jésus guérit un lépreux par un toucher. Il pardonne et guérit un paralytique descendu par le toit par ses amis."
+
+[02.04]
+title = "L'enseignant"
+description = "Jésus enseigne les Béatitudes sur la montagne. Il nomme le plus grand commandement. Il raconte la parabole du fils perdu."
+
+[02.05]
+title = "La Crucifixion"
+description = "Jésus partage la dernière Cène avec ses disciples. Il est crucifié, meurt, et le troisième jour il ressuscite d'entre les morts."
+
+[02.06]
+title = "Actes des apôtres"
+description = "Le Saint-Esprit descend à la Pentecôte avec le vent et le feu. Saul rencontre le Christ ressuscité sur le chemin de Damas et est transformé."
+
+[02.07]
+title = "Une vision"
+description = "Jean voit un nouveau ciel et une nouvelle terre. Dieu habitera avec son peuple. Il n'y aura plus ni mort, ni deuil, ni douleur."
+
+[01.02-1]
+title = "D'Éden à Babel (1)"
+
+[01.02-2]
+title = "D'Éden à Babel (2)"
+
+[01.03-1]
+title = "Abraham, Isaac et Jacob (1)"
+
+[01.03-2]
+title = "Abraham, Isaac et Jacob (2)"
+
+[01.04-1]
+title = "Joseph en Égypte (1)"
+
+[01.04-2]
+title = "Joseph en Égypte (2)"
+
+[01.04-3]
+title = "Joseph en Égypte (3)"
+
+[01.05-1]
+title = "Moïse et l'Exode (1)"
+
+[01.05-2]
+title = "Moïse et l'Exode (2)"
+
+[01.09-1]
+title = "L'histoire de Ruth (1)"
+
+[01.09-2]
+title = "L'histoire de Ruth (2)"
+
+[02.03-1]
+title = "Le guérisseur (1)"
+
+[02.03-2]
+title = "Le guérisseur (2)"
+
+[02.05-1]
+title = "La Crucifixion (1)"
+
+[02.05-2]
+title = "La Crucifixion (2)"
+
+[02.05-3]
+title = "La Crucifixion (3)"
+
+[02.06-1]
+title = "Actes des apôtres (1)"
+
+[02.06-2]
+title = "Actes des apôtres (2)"
+
+# --- Subheaders (paragraph headings within stories) ---
+
+[01.01.1_1]
+p_hd = "Dieu crée les cieux et la terre"
+
+[01.02.3_1]
+p_hd = "La Chute"
+
+[01.02.6_5]
+p_hd = "Le Déluge"
+
+[01.02.11_1]
+p_hd = "La tour de Babel"
+
+[01.02-1.3_1]
+p_hd = "La Chute"
+
+[01.02-1.6_2]
+p_hd = "La méchanceté de l'homme"
+
+[01.02-1.7_2]
+p_hd = "Le Déluge"
+
+[01.02-2.8_1]
+p_hd = "Le retrait des eaux"
+
+[01.02-2.9_5]
+p_hd = "L'alliance de Dieu avec Noé"
+
+[01.02-2.11_1]
+p_hd = "La tour de Babel"
+
+[01.03.12_1]
+p_hd = "L'appel d'Abraham"
+
+[01.03.15_5]
+p_hd = "L'alliance de Dieu avec Abraham"
+
+[01.03.22_1]
+p_hd = "Le sacrifice d'Isaac"
+
+[01.03.32_24]
+p_hd = "Le nouveau nom de Jacob — Israël"
+
+[01.03-1.12_2]
+p_hd = "L'appel d'Abraham"
+
+[01.03-1.15_1]
+p_hd = "L'alliance de Dieu avec Abraham"
+
+[01.03-2.22_1]
+p_hd = "Le sacrifice d'Isaac"
+
+[01.03-2.32_1]
+p_hd = "Le nouveau nom de Jacob — Israël"
+
+[01.04.37_23]
+p_hd = "Joseph vendu par ses frères"
+
+[01.04.41_14]
+p_hd = "Joseph interprète les songes de Pharaon"
+
+[01.04.50_19]
+p_hd = "Joseph pardonne à ses frères"
+
+[01.04-1.37_2]
+p_hd = "Joseph vendu par ses frères"
+
+[01.04-1.39_1]
+p_hd = "Joseph dans la maison de Potiphar"
+
+[01.04-2.40_4]
+p_hd = "Joseph en prison"
+
+[01.04-2.41_1]
+p_hd = "Joseph interprète les songes de Pharaon"
+
+[01.04-3.42_1]
+p_hd = "Les frères de Joseph viennent en Égypte"
+
+[01.04-3.44_1]
+p_hd = "La coupe d'argent"
+
+[01.04-3.45_1]
+p_hd = "Joseph se fait reconnaître"
+
+[01.04-3.50_7]
+p_hd = "Joseph pardonne à ses frères"
+
+[01.05.3_1]
+p_hd = "Le buisson ardent"
+
+[01.05.12_1]
+p_hd = "La Pâque"
+
+[01.05.14_21]
+p_hd = "La traversée de la mer Rouge"
+
+[01.05.20_1]
+p_hd = "Les Dix Commandements"
+
+[01.05-1.3_1]
+p_hd = "Le buisson ardent"
+
+[01.05-1.12_8]
+p_hd = "La Pâque"
+
+[01.05-2.14_1]
+p_hd = "La traversée de la mer Rouge"
+
+[01.05-2.20_1]
+p_hd = "Les Dix Commandements"
+
+[01.06.16_4]
+p_hd = "La manne du ciel"
+
+[01.06.17_5]
+p_hd = "L'eau du rocher"
+
+[01.06.6_4]
+p_hd = "Le Shema"
+
+[01.07.6_15]
+p_hd = "La chute de Jéricho"
+
+[01.08.16_15]
+p_hd = "Samson et Dalila"
+
+[01.09.1_16]
+p_hd = "La fidélité de Ruth"
+
+[01.09.4_9]
+p_hd = "Boaz rachète Ruth"
+
+[01.09-1.1_2]
+p_hd = "La perte de Naomi"
+
+[01.09-1.2_3]
+p_hd = "Ruth rencontre Boaz"
+
+[01.09-2.3_1]
+p_hd = "Ruth sur l'aire de battage"
+
+[01.09-2.4_1]
+p_hd = "Boaz rachète Ruth"
+
+[01.10.3_4]
+p_hd = "L'appel de Samuel"
+
+[01.10.17_45]
+p_hd = "David et Goliath"
+
+[01.10.7_12]
+p_hd = "L'alliance de Dieu avec David"
+
+[01.11.3_9]
+p_hd = "Salomon demande la sagesse"
+
+[01.11.8_27]
+p_hd = "Dédicace du Temple"
+
+[01.12.18_36]
+p_hd = "Élie sur le mont Carmel"
+
+[01.12.19_11]
+p_hd = "Le murmure doux et léger"
+
+[01.13.1_15]
+p_hd = "Jonas et le grand poisson"
+
+[01.13.3_4]
+p_hd = "Ninive se repent"
+
+[01.14.25_8]
+p_hd = "La chute de Jérusalem"
+
+[01.14.1_1]
+p_hd = "Le décret de Cyrus"
+
+[01.15.53_3]
+p_hd = "Le serviteur souffrant"
+
+[01.15.9_6]
+p_hd = "Le souverain promis"
+
+[02.01.1_1]
+p_hd = "La Parole faite chair"
+
+[02.02.2_1]
+p_hd = "La naissance de Jésus"
+
+[02.03.1_40]
+p_hd = "Guérison d'un lépreux"
+
+[02.03.2_1]
+p_hd = "Guérison du paralytique"
+
+[02.03-1.1_4]
+p_hd = "Le début du ministère de Jésus"
+
+[02.03-2.2_1]
+p_hd = "Guérison du paralytique"
+
+[02.04.5_1]
+p_hd = "Les Béatitudes"
+
+[02.04.22_37]
+p_hd = "Le plus grand commandement"
+
+[02.04.15_11]
+p_hd = "Le fils perdu"
+
+[02.05.26_26]
+p_hd = "La dernière Cène"
+
+[02.05.27_45]
+p_hd = "La Crucifixion"
+
+[02.05.28_5]
+p_hd = "La Résurrection"
+
+[02.05-1.26_3]
+p_hd = "La dernière Cène et l'arrestation"
+
+[02.05-2.27_1]
+p_hd = "La Crucifixion"
+
+[02.05-3.28_1]
+p_hd = "La Résurrection"
+
+[02.06.2_1]
+p_hd = "La Pentecôte"
+
+[02.06.9_3]
+p_hd = "La conversion de Paul"
+
+[02.06-1.2_1]
+p_hd = "La Pentecôte"
+
+[02.06-2.9_2]
+p_hd = "La conversion de Paul"
+
+[02.07.21_1]
+p_hd = "Nouveau ciel et nouvelle terre"
+
+[02.07.22_1]
+p_hd = "Le fleuve de vie"

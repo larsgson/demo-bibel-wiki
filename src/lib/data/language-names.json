@@ -1,0 +1,514 @@
+{
+  "_meta": {
+    "total": 135,
+    "source_all_langs": "example/ALL-langs-compact.json",
+    "schema": "iso → { n?: English name, v?: vernacular name, d?: direction (rtl), s?: script }. Either or both may be present. Consumers must fall back n↔v when only one exists."
+  },
+  "names": {
+    "amu": {
+      "n": "Amuzgo de Guerrero",
+      "v": "Ñomndaa"
+    },
+    "azd": {
+      "v": "Meshikan"
+    },
+    "azg": {
+      "n": "San Pedro Amuzgo",
+      "v": "Amuzgo, San Pedro Amuzgos"
+    },
+    "azz": {
+      "n": "Highland Puebla Nahuatl",
+      "v": "Nahuatlahtolli"
+    },
+    "cco": {
+      "n": "Chinantec, Comaltepec"
+    },
+    "chd": {
+      "n": "Highland Oaxaca Chontal"
+    },
+    "chf": {
+      "n": "Chontal, Tabasco"
+    },
+    "chq": {
+      "n": "Quiotepec Chinantec"
+    },
+    "chz": {
+      "n": "Chinantec de Ozumacin",
+      "v": "Chinanteco, Ozumacín"
+    },
+    "cle": {
+      "n": "Chinanteco de San Juan Lealao",
+      "v": "Chinanteco, Lealao"
+    },
+    "cnl": {
+      "n": "Chinanteco de San Juan Lalana",
+      "v": "Chinanteco, Lalana"
+    },
+    "cnt": {
+      "n": "Chinanteco de Tepetotutla",
+      "v": "Chinanteco, Tepetotutla"
+    },
+    "cok": {
+      "n": "Cora, Santa Teresa"
+    },
+    "cpa": {
+      "n": "Chinanteco de Palantla",
+      "v": "Chinanteco, Palantla"
+    },
+    "cso": {
+      "n": "Chinanteco de Sochiapan",
+      "v": "Chinanteco, Sochiapam"
+    },
+    "cta": {
+      "n": "Tataltepec Chatino"
+    },
+    "ctp": {
+      "n": "Chatino Zona Alta (Occidental)"
+    },
+    "ctu": {
+      "n": "Chol Tumbala",
+      "v": "Chol, Tumbalá"
+    },
+    "cuc": {
+      "n": "Chinanteco de Usila",
+      "v": "Chinanteco, Usila"
+    },
+    "cut": {
+      "n": "Teutila Cuicatec"
+    },
+    "cux": {
+      "n": "Cuicatec, Tepeuxila: Papalo",
+      "v": "Cuicateco de Santa María Pápalo"
+    },
+    "huv": {
+      "n": "Huave de San Mateo del Mar",
+      "v": "Huave, San Mateo del Mar"
+    },
+    "jmx": {
+      "v": "Mixteco Coicoyán"
+    },
+    "knj": {
+      "n": "Akateco",
+      "v": "K’anjob’al"
+    },
+    "lac": {
+      "n": "Lacandón"
+    },
+    "maj": {
+      "n": "Jalapa De Díaz Mazatec",
+      "v": "Kinꞌekꞌatiya, Ntaxjo̱"
+    },
+    "maq": {
+      "n": "Chiquihuitlán Mazatec",
+      "v": "Hne naja, Nne nangui ngaxni"
+    },
+    "mau": {
+      "n": "Huautla Mazatec"
+    },
+    "maz": {
+      "n": "Central Mazahua",
+      "v": "Mazahua, Central"
+    },
+    "mbz": {
+      "n": "Amoltepec Mixtec",
+      "v": "Mixteco, Amoltepec"
+    },
+    "mco": {
+      "n": "Mixe de Coatlan",
+      "v": "Mixe, Coatlán"
+    },
+    "mdv": {
+      "n": "Mixteco, Santa Lucía Monteverde",
+      "v": "Sasau"
+    },
+    "meh": {
+      "n": "Mixtec, Southwestern Tlaxiaco",
+      "v": "Tu̱ꞌun káꞌánꞌ kájí"
+    },
+    "mfy": {
+      "n": "Mayo"
+    },
+    "mie": {
+      "n": "Mixteco de Ocotepec",
+      "v": "Mixteco, Ocotepec"
+    },
+    "mig": {
+      "n": "Mixtec San Miguel El Grande",
+      "v": "Sahin sau"
+    },
+    "mih": {
+      "n": "Mixteco de Mechoacán",
+      "v": "Tu’un savi"
+    },
+    "mil": {
+      "n": "Mixteco de Penoles",
+      "v": "Tnúhu dàú"
+    },
+    "mim": {
+      "n": "Alacatlatzala Mixtec",
+      "v": "Mixteco, Alacatlatzala"
+    },
+    "mio": {
+      "n": "Mixteco, Pinotepa Nacional",
+      "v": "Tuhun Ñuun Ñucaan"
+    },
+    "mir": {
+      "n": "Mixe, Guichicovi",
+      "v": "Ayuuk"
+    },
+    "mit": {
+      "n": "Mixteco del Sur de Puebla",
+      "v": "Da'an davi"
+    },
+    "mix": {
+      "v": "Mixteco Mixtepec"
+    },
+    "miy": {
+      "n": "Ayutla Mixtec",
+      "v": "Mixteco, Ayutla"
+    },
+    "miz": {
+      "n": "Coatzospan Mixtec",
+      "v": "Mixteco, Coatzospan"
+    },
+    "mjc": {
+      "n": "Mixteco, San Juan Colorado",
+      "v": "Tu’un sav"
+    },
+    "mks": {
+      "n": "Mixteco, Silacayoapan",
+      "v": "Tu̱hun ndáhví"
+    },
+    "mpm": {
+      "n": "Mixteco de Santiago Yosundúa",
+      "v": "Mixteco, Yosondúa"
+    },
+    "mto": {
+      "n": "Mixe Totontepec",
+      "v": "Mixe, Totontepec"
+    },
+    "mxb": {
+      "n": "Mixteco de Tezoatlan",
+      "v": "To̱ꞌon ndaꞌí"
+    },
+    "mxq": {
+      "n": "Juquila Mixe",
+      "v": "Mixe, Juquila"
+    },
+    "mxt": {
+      "n": "Jamiltepec Mixtec",
+      "v": "Mixteco, Jamiltepec"
+    },
+    "mxv": {
+      "n": "Mixteco, Metlatónoc",
+      "v": "Mixteco, Metlatónoc y Cochoapa"
+    },
+    "mza": {
+      "n": "Mixteco, Zacatepeco",
+      "v": "Tu’un va’a"
+    },
+    "nch": {
+      "n": "Central Huasteca Nahuatl",
+      "v": "Nāhuatlahtōlli"
+    },
+    "ncj": {
+      "n": "Nahuatl Norte Puebla",
+      "v": "Mexicatl"
+    },
+    "ncl": {
+      "n": "Michoacán Nahuatl",
+      "v": "Náhuatl, Michoacán"
+    },
+    "ngu": {
+      "n": "Guerrero Nahuatl",
+      "v": "Nauatlajtojli"
+    },
+    "nhe": {
+      "n": "Eastern Huasteca Nahuatl",
+      "v": "Mexkatl"
+    },
+    "nhg": {
+      "n": "Tetelcingo Nahuatl"
+    },
+    "nhi": {
+      "n": "Nahuatl Tenango",
+      "v": "Mehcanohtlahtol"
+    },
+    "nhw": {
+      "n": "Nahuatl Huasteca, Western",
+      "v": "Nahuatl"
+    },
+    "nhy": {
+      "n": "Náhuatl, Norte de Oaxaca",
+      "v": "Nāhuatlahtōlli"
+    },
+    "npl": {
+      "n": "Nahuatl, Southeastern Puebla",
+      "v": "Náhuatl, Sureste de Puebla"
+    },
+    "nsu": {
+      "n": "Nahuatl, Sierra Negra",
+      "v": "Nahuatlajtoli"
+    },
+    "ntp": {
+      "n": "Northern Tepehuan",
+      "v": "Tepehuán del Norte"
+    },
+    "nuz": {
+      "v": "Náhuatl Tlamacazapa"
+    },
+    "ood": {
+      "n": "O’othham",
+      "v": "Oʼodham ha-ñeʼokĭ"
+    },
+    "otm": {
+      "n": "Otomí de la Sierra"
+    },
+    "otn": {
+      "n": "Otomi, Tenango",
+      "v": "Otomí de Tenango"
+    },
+    "otq": {
+      "n": "Otomí de Querétaro",
+      "v": "Otomí, Querétaro"
+    },
+    "ots": {
+      "n": "Estado de México Otomi"
+    },
+    "pls": {
+      "n": "Ngigua, San Marcos Tlacoyalco"
+    },
+    "pmq": {
+      "v": "Pame del norte"
+    },
+    "poe": {
+      "n": "Ngiva, San Juan Atzingo",
+      "v": "Popoloca, San Juan Atzingo"
+    },
+    "pps": {
+      "n": "Ngigua, San Luis Temalacayuca",
+      "v": "Popoloca, San Luís Temalacayuca"
+    },
+    "stp": {
+      "n": "Southeastern Tepehuan",
+      "v": "Tepehuán, Sureste"
+    },
+    "tac": {
+      "n": "Lowland Tarahumara",
+      "v": "Tarahumara, Baja"
+    },
+    "tcf": {
+      "v": "Me'phaa Malinaltepec"
+    },
+    "tee": {
+      "n": "Huehuetla Tepehua",
+      "v": "Tepehua, Huehuetla"
+    },
+    "tku": {
+      "n": "Upper Necaxa Totonac"
+    },
+    "toc": {
+      "n": "Coyutla Totonac",
+      "v": "Totonaco, Coyutla"
+    },
+    "toj": {
+      "n": "Tojolabal"
+    },
+    "too": {
+      "n": "Xicotepec De Juárez Totonac"
+    },
+    "tos": {
+      "n": "Highland Totonac",
+      "v": "Totonaco, Sierra"
+    },
+    "tpl": {
+      "v": "Me'phaa Tlacoapa"
+    },
+    "tpp": {
+      "n": "Pisaflores Tepehua",
+      "v": "Tepehua, Pisaflores"
+    },
+    "tpt": {
+      "n": "Tepehua Tlachichilco",
+      "v": "Tepehua, Tlachichilco"
+    },
+    "tpx": {
+      "v": "Me'phaa Teocuitlapa"
+    },
+    "tqt": {
+      "v": "Xinolatépetl Totonaco"
+    },
+    "trc": {
+      "n": "Copala Triqui",
+      "v": "Xnaꞌánj nu̱ꞌ"
+    },
+    "trq": {
+      "n": "Triqui Itunyoso",
+      "v": "Triqui, San Martin Itunyoso"
+    },
+    "trs": {
+      "n": "Chicahuaxtla Triqui",
+      "v": "Triqui, Chicahuaxtla"
+    },
+    "var": {
+      "v": "Huarijío"
+    },
+    "vmj": {
+      "n": "Mixtec Ixtayutla",
+      "v": "Mixteco, Ixtayutla"
+    },
+    "vmy": {
+      "n": "Ayautla Mazatec",
+      "v": "Enre naxinanda nguifi"
+    },
+    "vmz": {
+      "v": "Mazateco de Mazatlán"
+    },
+    "xta": {
+      "n": "Alcozauca Mixtec",
+      "v": "Tu̱'un sâvi"
+    },
+    "xtd": {
+      "n": "Diuxi-Tilantongo Mixtec",
+      "v": "Mixteco, Diuxi-Tilantongo"
+    },
+    "xtj": {
+      "v": "Mixteco Teita"
+    },
+    "xtn": {
+      "n": "Mixteco del Norte de Tlaxiaco",
+      "v": "Mixteco, Norte de Tlaxiaco"
+    },
+    "yaq": {
+      "n": "Yaqui"
+    },
+    "zaa": {
+      "n": "Sierra de Juárez Zapotec",
+      "v": "Titsaꞌ"
+    },
+    "zab": {
+      "n": "Western Tlacolula Valley Zapotec",
+      "v": "Dixza"
+    },
+    "zac": {
+      "n": "Ocotlán Zapotec",
+      "v": "Dizë́"
+    },
+    "zad": {
+      "n": "Zapotec de Yaganiza",
+      "v": "Xtillꞌchonaꞌ"
+    },
+    "zai": {
+      "n": "Zapoteco del Istmo",
+      "v": "Diidxazá"
+    },
+    "zam": {
+      "n": "Miahuatlán Zapotec",
+      "v": "Diiste"
+    },
+    "zao": {
+      "n": "Ozolotepec Zapotec",
+      "v": "Dizte chaan zha Ozolotepec"
+    },
+    "zaq": {
+      "n": "Aloápam Zapotec",
+      "v": "Tisa"
+    },
+    "zar": {
+      "n": "Rincón Zapotec",
+      "v": "Didza Xidza"
+    },
+    "zas": {
+      "n": "Santo Domingo Albarradas Zapotec",
+      "v": "Diidxzaj"
+    },
+    "zat": {
+      "n": "Zapotec, Tabaa"
+    },
+    "zav": {
+      "n": "Yatzachi Zapotec",
+      "v": "Dižə’əxon"
+    },
+    "zaw": {
+      "n": "Mitla Zapotec",
+      "v": "Didxsaj"
+    },
+    "zca": {
+      "n": "Coatecas Altas Zapotec",
+      "v": "Diꞌzhzë"
+    },
+    "zos": {
+      "n": "Francisco León Zoque",
+      "v": "Zoque, Francisco León"
+    },
+    "zpc": {
+      "n": "Choapan Zapotec",
+      "v": "Diꞌidzaꞌ xidzaꞌ"
+    },
+    "zpg": {
+      "n": "Guevea De Humboldt Zapotec",
+      "v": "Didz-rieꞌ"
+    },
+    "zpi": {
+      "n": "Santa María Quiegolani Zapotec",
+      "v": "Disa"
+    },
+    "zpl": {
+      "n": "Lachixío Zapotec",
+      "v": "Dialu"
+    },
+    "zpm": {
+      "n": "Mixtepec Zapotec",
+      "v": "Diidz-zë"
+    },
+    "zpo": {
+      "n": "Amatlán Zapotec",
+      "v": "Dizhze"
+    },
+    "zpq": {
+      "n": "Zapoteco de Zoogocho",
+      "v": "Diža'xon"
+    },
+    "zpt": {
+      "n": "San Vicente Coatlán Zapotec",
+      "v": "Dizhnde"
+    },
+    "zpu": {
+      "n": "Yalálag Zapotec",
+      "v": "Dill Gurall ke Yararꞌj"
+    },
+    "zpv": {
+      "n": "Chichicapan Zapotec",
+      "v": "Dxiꞌzah"
+    },
+    "zpz": {
+      "n": "Texmelucan Zapotec",
+      "v": "Rixhquei"
+    },
+    "zsr": {
+      "n": "Zapotec, Rincon Sur",
+      "v": "Didzaꞌ"
+    },
+    "ztl": {
+      "n": "Lapaguía-Guivini Zapotec"
+    },
+    "ztp": {
+      "n": "Loxicha Zapotec"
+    },
+    "ztq": {
+      "n": "Quioquitani-Quierí Zapotec",
+      "v": "Tiitssë"
+    },
+    "zts": {
+      "v": "Zapoteco de Tilquiapam"
+    },
+    "zty": {
+      "n": "Yatee Zapotec",
+      "v": "Zapoteco, Yatée"
+    },
+    "eng": {
+      "n": "English",
+      "v": "English"
+    }
+  }
+}

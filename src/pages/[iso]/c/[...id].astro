@@ -1,0 +1,36 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro"
+import { getIsoPaths } from "../../../lib/prerender"
+import { ChunkView } from "../../../components/chunk/ChunkView"
+import "../../../styles/chunk.css"
+
+export function getStaticPaths() {
+  return getIsoPaths().map((p) => ({
+    ...p,
+    params: { ...p.params, id: "placeholder" },
+  }))
+}
+
+const { iso, id } = Astro.params
+const chunkId = id ? decodeURIComponent(id) : ""
+---
+
+<BaseLayout title="Resource">
+  <div class="chunk-page">
+    <nav class="chunk-nav">
+      <a href={`/${iso}/browse`}>&larr; Browse</a>
+    </nav>
+    <ChunkView client:load chunkId={chunkId} iso={iso} />
+  </div>
+</BaseLayout>
+
+<style>
+  .chunk-page { padding: 1rem 0; }
+  .chunk-nav { margin-bottom: 1rem; max-width: 700px; margin-left: auto; margin-right: auto; }
+  .chunk-nav a {
+    font-size: 0.85rem;
+    color: rgb(0, 11, 99);
+    text-decoration: none;
+  }
+  .chunk-nav a:hover { text-decoration: underline; }
+</style>

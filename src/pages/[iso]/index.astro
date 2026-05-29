@@ -1,0 +1,77 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro"
+import Reader from "../../lib/reader/Reader.svelte"
+import { languages, languagesByIso, regionForIso } from "../../lib/data/regions"
+import { loadInfo } from "../../lib/data/pkfInfo"
+import { captionModeFor } from "../../lib/data/figureCaptions"
+import { displayName } from "../../lib/data/languageNames"
+import { getIsoPaths } from "../../lib/prerender"
+
+export function getStaticPaths() {
+  return getIsoPaths()
+}
+
+const { iso } = Astro.params
+const lang = languagesByIso.get(iso)
+
+// BSB English is not in the PKF manifest — handle as a special case
+const isBsb = iso === "eng" || lang?.type === "bsb"
+
+if (!lang && !isBsb) {
+  return Astro.redirect("/")
+}
+const info = isBsb ? null : await loadInfo(iso)
+
+const pkfAsset = info?.assets.find((a) => a.kind === "pkf") ?? null
+const catalogAsset = pkfAsset
+  ? info?.assets.find((a) => a.kind === "json" && a.base === pkfAsset.base) ?? null
+  : null
+
+const pkfUrl = pkfAsset ? `/pkf/${iso}/${pkfAsset.name}` : null
+const catalogUrl = isBsb
+  ? "/bsb/catalog.json"
+  : catalogAsset
+    ? `/pkf/${iso}/${catalogAsset.name}`
+    : null
+const docSetId = isBsb ? "eng_bsb" : (pkfAsset?.base ?? null)
+const styleUrl = info?.style_delta ? `/pkf/${iso}/${info.style_delta}` : null
+const region = regionForIso(iso)
+const title = `${displayName(iso)} — ${region?.displayName ?? ""}`.trim()
+const media = info?.media ?? { videos: [], audio: { base_url: null, items: [] } }
+const figureUrls = info?.figure_urls ?? {}
+const captionMode = captionModeFor(iso)
+
+const hasReader = !!(catalogUrl && docSetId)
+---
+
+<BaseLayout title={title}>
+  {hasReader ? (
+    isBsb ? (
+      <Reader
+        client:load
+        iso={iso}
+        docSetId={docSetId}
+        pkfUrl=""
+        catalogUrl={catalogUrl}
+        bsbMode={true}
+        media={media}
+      />
+    ) : (
+      <Reader
+        client:load
+        iso={iso}
+        docSetId={docSetId}
+        pkfUrl={pkfUrl ?? ""}
+        catalogUrl={catalogUrl}
+        styleUrl={styleUrl}
+        figureUrls={figureUrls}
+        captionMode={captionMode}
+        media={media}
+      />
+    )
+  ) : (
+    <div class="py-8 text-brand/60">
+      No PKF / catalog asset found for this language.
+    </div>
+  )}
+</BaseLayout>

@@ -1,0 +1,16 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro"
+import { getIsoPaths } from "../../lib/prerender"
+import { SearchIsland } from "../../components/search/SearchIsland"
+import "../../styles/search.css"
+
+export function getStaticPaths() {
+  return getIsoPaths()
+}
+
+const { iso } = Astro.params
+---
+
+<BaseLayout title="AI Search">
+  <SearchIsland client:load iso={iso} />
+</BaseLayout>

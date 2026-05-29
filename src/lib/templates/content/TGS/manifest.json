@@ -1,0 +1,198 @@
+{
+  "files": [
+    {
+      "path": "01/01.md",
+      "size": 1181
+    },
+    {
+      "path": "01/02-1.md",
+      "size": 1357
+    },
+    {
+      "path": "01/02-2.md",
+      "size": 1227
+    },
+    {
+      "path": "01/03-1.md",
+      "size": 1152
+    },
+    {
+      "path": "01/03-2.md",
+      "size": 928
+    },
+    {
+      "path": "01/04-1.md",
+      "size": 1748
+    },
+    {
+      "path": "01/04-2.md",
+      "size": 1803
+    },
+    {
+      "path": "01/04-3.md",
+      "size": 1561
+    },
+    {
+      "path": "01/05-1.md",
+      "size": 1134
+    },
+    {
+      "path": "01/05-2.md",
+      "size": 903
+    },
+    {
+      "path": "01/06.md",
+      "size": 739
+    },
+    {
+      "path": "01/07.md",
+      "size": 406
+    },
+    {
+      "path": "01/08.md",
+      "size": 663
+    },
+    {
+      "path": "01/09-1.md",
+      "size": 1171
+    },
+    {
+      "path": "01/09-2.md",
+      "size": 640
+    },
+    {
+      "path": "01/10.md",
+      "size": 1045
+    },
+    {
+      "path": "01/11.md",
+      "size": 948
+    },
+    {
+      "path": "01/12.md",
+      "size": 754
+    },
+    {
+      "path": "01/13.md",
+      "size": 797
+    },
+    {
+      "path": "01/14.md",
+      "size": 494
+    },
+    {
+      "path": "01/15.md",
+      "size": 218
+    },
+    {
+      "path": "01/index.toml",
+      "size": 1195
+    },
+    {
+      "path": "02/01.md",
+      "size": 280
+    },
+    {
+      "path": "02/02.md",
+      "size": 1148
+    },
+    {
+      "path": "02/03-1.md",
+      "size": 910
+    },
+    {
+      "path": "02/03-2.md",
+      "size": 1018
+    },
+    {
+      "path": "02/04.md",
+      "size": 1540
+    },
+    {
+      "path": "02/05-1.md",
+      "size": 1914
+    },
+    {
+      "path": "02/05-2.md",
+      "size": 1108
+    },
+    {
+      "path": "02/05-3.md",
+      "size": 470
+    },
+    {
+      "path": "02/06-1.md",
+      "size": 671
+    },
+    {
+      "path": "02/06-2.md",
+      "size": 1569
+    },
+    {
+      "path": "02/07.md",
+      "size": 270
+    },
+    {
+      "path": "02/index.toml",
+      "size": 662
+    },
+    {
+      "path": "index.toml",
+      "size": 708
+    },
+    {
+      "path": "locales/arb.toml",
+      "size": 10237
+    },
+    {
+      "path": "locales/deu.toml",
+      "size": 9166
+    },
+    {
+      "path": "locales/eng.toml",
+      "size": 12339
+    },
+    {
+      "path": "locales/fra.toml",
+      "size": 9168
+    },
+    {
+      "path": "locales/hin.toml",
+      "size": 16489
+    },
+    {
+      "path": "locales/nor.toml",
+      "size": 8485
+    },
+    {
+      "path": "locales/por.toml",
+      "size": 8651
+    },
+    {
+      "path": "locales/ron.toml",
+      "size": 9072
+    },
+    {
+      "path": "locales/rus.toml",
+      "size": 12146
+    },
+    {
+      "path": "locales/spa.toml",
+      "size": 8960
+    },
+    {
+      "path": "locales/swe.toml",
+      "size": 8607
+    },
+    {
+      "path": "source/icon_overrides.toml",
+      "size": 2642
+    },
+    {
+      "path": "source/story.txt",
+      "size": 2992
+    }
+  ],
+  "total_files": 48,
+  "total_size": 153286
+}

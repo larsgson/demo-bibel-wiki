@@ -1,0 +1,54 @@
+[build]
+  command = "pnpm run build"
+  publish = "dist"
+
+[dev]
+  framework = "astro"
+  port = 8888
+  functionsPort = 9999
+
+[functions]
+  directory = "netlify/functions"
+
+# Non-prerendered ISOs fall through to the generic /l/ pages.
+# Netlify serves static files first, so prerendered pages take priority.
+[[redirects]]
+  from = "/:iso/:template/:cat/:story"
+  to = "/l/:template/:cat/:story?lang=:iso"
+  status = 200
+
+[[redirects]]
+  from = "/:iso/:template/:cat"
+  to = "/l/:template/:cat?lang=:iso"
+  status = 200
+
+[[redirects]]
+  from = "/:iso/:template"
+  to = "/l/:template?lang=:iso"
+  status = 200
+
+[[redirects]]
+  from = "/:iso/browse/*"
+  to = "/l/browse/:splat?lang=:iso"
+  status = 200
+
+[[redirects]]
+  from = "/:iso/search"
+  to = "/l/search?lang=:iso"
+  status = 200
+
+[[redirects]]
+  from = "/:iso/c/*"
+  to = "/l/c/:splat?lang=:iso"
+  status = 200
+
+[[redirects]]
+  from = "/:iso"
+  to = "/l/?lang=:iso"
+  status = 200
+
+# Immutable hashed Astro assets
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

@@ -1,0 +1,20 @@
+level = "category"
+id = "10"
+beg = 48
+count = 3
+canon = "nt"
+
+[image]
+filename = "66_Re_21_01.png"
+
+[[stories]]
+id = "48"
+image = "obs-en-48-01.jpg"
+
+[[stories]]
+id = "49"
+image = "obs-en-49-01.jpg"
+
+[[stories]]
+id = "50"
+image = "obs-en-50-01.jpg"

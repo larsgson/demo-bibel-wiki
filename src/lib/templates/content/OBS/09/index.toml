@@ -1,0 +1,28 @@
+level = "category"
+id = "09"
+beg = 43
+count = 5
+canon = "nt"
+
+[image]
+filename = "00-08a.png"
+
+[[stories]]
+id = "43"
+image = "obs-en-43-01.jpg"
+
+[[stories]]
+id = "44"
+image = "obs-en-44-01.jpg"
+
+[[stories]]
+id = "45"
+image = "obs-en-45-01.jpg"
+
+[[stories]]
+id = "46"
+image = "obs-en-46-01.jpg"
+
+[[stories]]
+id = "47"
+image = "obs-en-47-01.jpg"

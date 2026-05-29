@@ -1,0 +1,21 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro"
+import { ChunkView } from "../../../components/chunk/ChunkView"
+import "../../../styles/chunk.css"
+
+export function getStaticPaths() {
+  return [{ params: { id: "placeholder" } }]
+}
+
+const { id } = Astro.params
+const chunkId = id ? decodeURIComponent(id) : ""
+---
+
+<BaseLayout title="Resource">
+  <div class="chunk-page" style="padding:1rem 0">
+    <nav style="margin-bottom:1rem;max-width:700px;margin-left:auto;margin-right:auto">
+      <a href="javascript:history.back()" style="font-size:0.85rem;color:rgb(0,11,99);text-decoration:none">&larr; Back</a>
+    </nav>
+    <ChunkView client:only="react" chunkId={chunkId} iso="" />
+  </div>
+</BaseLayout>

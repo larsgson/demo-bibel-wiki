@@ -1,0 +1,133 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro"
+import LanguageSearch from "../lib/components/LanguageSearch.svelte"
+import { regions, pkfSizeBytes } from "../lib/data/regions"
+import { displayName, altName } from "../lib/data/languageNames"
+import { formatKB } from "../lib/data/pkfInfo"
+
+const regionsData = regions.map((r) => ({
+  id: r.id,
+  displayName: r.displayName,
+  languages: r.available.map((iso) => ({
+    iso,
+    name: displayName(iso),
+    alt: altName(iso),
+    sizeBytes: pkfSizeBytes(iso),
+  })),
+}))
+
+const seen = new Set<string>()
+const allLanguages: Array<{
+  iso: string
+  name: string
+  alt?: string
+  regionId: string
+  regionName: string
+}> = []
+for (const r of regionsData) {
+  for (const lang of r.languages) {
+    if (seen.has(lang.iso)) continue
+    seen.add(lang.iso)
+    allLanguages.push({
+      iso: lang.iso,
+      name: lang.name,
+      alt: lang.alt,
+      regionId: r.id,
+      regionName: r.displayName,
+    })
+  }
+}
+allLanguages.sort((a, b) => a.name.localeCompare(b.name))
+
+const totalLangs = regionsData.reduce((s, r) => s + r.languages.length, 0)
+---
+
+<BaseLayout title="Tu Biblia mexicana">
+  <section class="mb-8">
+    <h1
+      class="text-3xl sm:text-4xl font-bold tracking-tight"
+      style="color:rgb(0,11,99);letter-spacing:-0.02em"
+    >
+      Mexico
+    </h1>
+    <p class="mt-2 text-sm" style="color:rgba(0,11,99,0.65)">
+      {totalLangs} Scripture translations across {regionsData.length} language regions.
+      Search by name or ISO code, or browse by region below.
+    </p>
+  </section>
+
+  <div class="mb-6">
+    <LanguageSearch client:load languages={allLanguages} />
+  </div>
+
+  <!-- English BSB -->
+  <div class="mb-6">
+    <a
+      href="/eng"
+      class="lang-card"
+      style="display:inline-flex;gap:0.5rem;align-items:center;text-decoration:none"
+    >
+      <span class="lang-name">English (BSB)</span>
+      <span class="lang-iso">eng</span>
+    </a>
+  </div>
+
+  <div class="space-y-3" id="regions-container">
+    {regionsData.map((region) => (
+      <details class="region-acc" id={region.id} data-id={region.id}>
+        <summary>
+          <span class="region-chevron" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
+              <path d="M7 5l6 5-6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="region-title">{region.displayName}</span>
+          <span class="region-count">{region.languages.length}</span>
+        </summary>
+
+        <div class="region-body">
+          {region.languages.length === 0 ? (
+            <p class="text-sm" style="color:rgba(0,11,99,0.55)">
+              No Scripture data available.
+            </p>
+          ) : (
+            <ul class="lang-grid">
+              {region.languages.map((lang) => (
+                <li>
+                  <a href={`/${lang.iso}`} class="lang-card">
+                    <span class="lang-name">{lang.name}</span>
+                    {lang.alt && <span class="lang-alt">{lang.alt}</span>}
+                    <span class="lang-meta">
+                      <span class="lang-iso">{lang.iso}</span>
+                      <span>{formatKB(lang.sizeBytes)}</span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </details>
+    ))}
+  </div>
+
+  <script>
+    const container = document.getElementById("regions-container")
+    if (container) {
+      const accs = Array.from(container.querySelectorAll<HTMLDetailsElement>(".region-acc"))
+      function closeOthers(opened: HTMLDetailsElement) {
+        for (const d of accs) if (d !== opened && d.open) d.open = false
+      }
+      for (const d of accs) d.addEventListener("toggle", () => { if (d.open) closeOthers(d) })
+
+      const hash = decodeURIComponent(location.hash.replace(/^#/, ""))
+      if (hash) {
+        const match = accs.find((d) => d.dataset.id === hash)
+        if (match) {
+          match.open = true
+          match.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+      }
+    }
+  </script>
+</BaseLayout>

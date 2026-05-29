@@ -1,0 +1,20 @@
+level = "category"
+id = "05"
+beg = 20
+count = 3
+canon = "ot"
+
+[image]
+filename = "000-06.png"
+
+[[stories]]
+id = "20"
+image = "obs-en-20-01.jpg"
+
+[[stories]]
+id = "21"
+image = "obs-en-21-01.jpg"
+
+[[stories]]
+id = "22"
+image = "obs-en-22-01.jpg"

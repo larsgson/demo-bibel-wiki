@@ -1,0 +1,403 @@
+# The Grand Story - German locale
+
+title = "Die große Geschichte"
+longTitle = "Die große Geschichte der Bibel"
+description = "Eine Reise durch Schlüsselmomente der Bibel — von Anfang bis Ende."
+
+[01]
+title = "Szenen aus dem Alten Testament"
+description = "Die Geschichte von Gottes Volk — wie alles begann, ihr Weg und die Verheißung eines kommenden Retters."
+
+[01.01]
+title = "Am Anfang"
+description = "Gott erschafft den Himmel und die Erde, Licht und Finsternis, und formt den Menschen aus dem Staub der Erde."
+
+[01.02]
+title = "Von Eden bis Babel"
+description = "Der Sündenfall im Garten, die große Sintflut in den Tagen Noahs und die Zerstreuung der Völker beim Turmbau zu Babel."
+
+[01.03]
+title = "Abraham, Isaak und Jakob"
+description = "Gott beruft Abraham und schließt einen Bund mit ihm. Abrahams Glaube wird geprüft. Jakob ringt mit Gott und empfängt einen neuen Namen — Israel."
+
+[01.04]
+title = "Josef in Ägypten"
+description = "Josef wird von seinen Brüdern verkauft, steigt durch die Deutung von Pharaos Träumen zur Macht auf und vergibt seinen Brüdern, als sie nach Ägypten kommen."
+
+[01.05]
+title = "Mose und der Auszug"
+description = "Gott beruft Mose aus dem brennenden Dornbusch. Das Passalamm rettet Israel. Das Rote Meer teilt sich. Gott gibt die Zehn Gebote am Sinai."
+
+[01.06]
+title = "Israel in der Wüste"
+description = "Gott gibt Manna vom Himmel und Wasser aus dem Felsen. Mose lehrt Israel das große Gebot: Du sollst den HERRN, deinen Gott, lieben."
+
+[01.07]
+title = "Das verheißene Land"
+description = "Josua führt Israel in das verheißene Land. Die Mauern von Jericho fallen beim Klang der Posaunen und dem Ruf des Volkes."
+
+[01.08]
+title = "Simson und Delila"
+description = "Simson, der mächtige Richter, wird von Delila verraten. Seine Kraft wird ihm genommen, doch in seiner letzten Tat reißt er den Tempel der Philister nieder."
+
+[01.09]
+title = "Die Geschichte von Rut"
+description = "Rut gelobt Noomi Treue: ‚Wo du hingehst, da will auch ich hingehen.' Boas löst Rut ein, und sie wird eine Vorfahrin König Davids."
+
+[01.10]
+title = "Samuel, Saul und David"
+description = "Der Knabe Samuel hört Gottes Ruf. Der Hirte David besiegt den Riesen Goliat. Gott schließt einen ewigen Bund mit David."
+
+[01.11]
+title = "Salomo der Weise"
+description = "Salomo bittet Gott um Weisheit und empfängt sie. Er baut den Tempel in Jerusalem und weiht ihn als Haus des Gebets für alle Völker."
+
+[01.12]
+title = "Elia der Prophet"
+description = "Elia fordert die Propheten des Baal auf dem Berg Karmel heraus. Feuer fällt vom Himmel. Später spricht Gott zu Elia in einem stillen, sanften Säuseln."
+
+[01.13]
+title = "Die Geschichte von Jona"
+description = "Jona flieht vor Gott und wird von einem großen Fisch verschlungen. Er predigt in Ninive, und die große Stadt tut Buße."
+
+[01.14]
+title = "Exil und Rückkehr"
+description = "Jerusalem fällt an Babylon und das Volk wird ins Exil geführt. König Kyrus von Persien ordnet ihre Rückkehr an."
+
+[01.15]
+title = "Eine Prophezeiung"
+description = "Jesaja sagt einen leidenden Knecht voraus, der die Sünden vieler trägt, und einen verheißenen Herrscher, dessen Reich kein Ende haben wird."
+
+[02]
+title = "Szenen aus dem Neuen Testament"
+description = "Wie Jesus alles veränderte — und was nach der Auferstehung geschah."
+
+[02.01]
+title = "Am Anfang"
+description = "Im Anfang war das Wort, und das Wort war bei Gott, und Gott war das Wort. Und das Wort ward Fleisch und wohnte unter uns."
+
+[02.02]
+title = "Jesus wird geboren"
+description = "Jesus wird in Bethlehem geboren. Engel verkünden den Hirten auf den Feldern große Freude: Ein Heiland ist geboren."
+
+[02.03]
+title = "Der Heiler"
+description = "Jesus heilt einen Aussätzigen durch eine Berührung. Er vergibt einem Gelähmten und heilt ihn, den seine Freunde durch das Dach hinabgelassen haben."
+
+[02.04]
+title = "Der Lehrer"
+description = "Jesus lehrt die Seligpreisungen auf dem Berg. Er nennt das größte Gebot. Er erzählt das Gleichnis vom verlorenen Sohn."
+
+[02.05]
+title = "Die Kreuzigung"
+description = "Jesus feiert das letzte Abendmahl mit seinen Jüngern. Er wird gekreuzigt, stirbt, und am dritten Tag ersteht er von den Toten."
+
+[02.06]
+title = "Taten der Apostel"
+description = "Der Heilige Geist kommt an Pfingsten mit Wind und Feuer. Saulus begegnet dem auferstandenen Christus auf dem Weg nach Damaskus und wird verwandelt."
+
+[02.07]
+title = "Eine Vision"
+description = "Johannes sieht einen neuen Himmel und eine neue Erde. Gott wird bei seinem Volk wohnen. Es wird keinen Tod, keine Trauer und keinen Schmerz mehr geben."
+
+[01.02-1]
+title = "Von Eden bis Babel (1)"
+
+[01.02-2]
+title = "Von Eden bis Babel (2)"
+
+[01.03-1]
+title = "Abraham, Isaak und Jakob (1)"
+
+[01.03-2]
+title = "Abraham, Isaak und Jakob (2)"
+
+[01.04-1]
+title = "Josef in Ägypten (1)"
+
+[01.04-2]
+title = "Josef in Ägypten (2)"
+
+[01.04-3]
+title = "Josef in Ägypten (3)"
+
+[01.05-1]
+title = "Mose und der Auszug (1)"
+
+[01.05-2]
+title = "Mose und der Auszug (2)"
+
+[01.09-1]
+title = "Die Geschichte von Rut (1)"
+
+[01.09-2]
+title = "Die Geschichte von Rut (2)"
+
+[02.03-1]
+title = "Der Heiler (1)"
+
+[02.03-2]
+title = "Der Heiler (2)"
+
+[02.05-1]
+title = "Die Kreuzigung (1)"
+
+[02.05-2]
+title = "Die Kreuzigung (2)"
+
+[02.05-3]
+title = "Die Kreuzigung (3)"
+
+[02.06-1]
+title = "Taten der Apostel (1)"
+
+[02.06-2]
+title = "Taten der Apostel (2)"
+
+# --- Subheaders (paragraph headings within stories) ---
+
+[01.01.1_1]
+p_hd = "Gott erschafft Himmel und Erde"
+
+[01.02.3_1]
+p_hd = "Der Sündenfall"
+
+[01.02.6_5]
+p_hd = "Die Sintflut"
+
+[01.02.11_1]
+p_hd = "Der Turmbau zu Babel"
+
+[01.02-1.3_1]
+p_hd = "Der Sündenfall"
+
+[01.02-1.6_2]
+p_hd = "Die Bosheit des Menschen"
+
+[01.02-1.7_2]
+p_hd = "Die Sintflut"
+
+[01.02-2.8_1]
+p_hd = "Die Wasser weichen zurück"
+
+[01.02-2.9_5]
+p_hd = "Gottes Bund mit Noah"
+
+[01.02-2.11_1]
+p_hd = "Der Turmbau zu Babel"
+
+[01.03.12_1]
+p_hd = "Berufung Abrahams"
+
+[01.03.15_5]
+p_hd = "Gottes Bund mit Abraham"
+
+[01.03.22_1]
+p_hd = "Die Opferung Isaaks"
+
+[01.03.32_24]
+p_hd = "Jakobs neuer Name — Israel"
+
+[01.03-1.12_2]
+p_hd = "Berufung Abrahams"
+
+[01.03-1.15_1]
+p_hd = "Gottes Bund mit Abraham"
+
+[01.03-2.22_1]
+p_hd = "Die Opferung Isaaks"
+
+[01.03-2.32_1]
+p_hd = "Jakobs neuer Name — Israel"
+
+[01.04.37_23]
+p_hd = "Josef von seinen Brüdern verkauft"
+
+[01.04.41_14]
+p_hd = "Josef deutet Pharaos Träume"
+
+[01.04.50_19]
+p_hd = "Josef vergibt seinen Brüdern"
+
+[01.04-1.37_2]
+p_hd = "Josef von seinen Brüdern verkauft"
+
+[01.04-1.39_1]
+p_hd = "Josef in Potifars Haus"
+
+[01.04-2.40_4]
+p_hd = "Josef im Gefängnis"
+
+[01.04-2.41_1]
+p_hd = "Josef deutet Pharaos Träume"
+
+[01.04-3.42_1]
+p_hd = "Josefs Brüder kommen nach Ägypten"
+
+[01.04-3.44_1]
+p_hd = "Der silberne Becher"
+
+[01.04-3.45_1]
+p_hd = "Josef gibt sich zu erkennen"
+
+[01.04-3.50_7]
+p_hd = "Josef vergibt seinen Brüdern"
+
+[01.05.3_1]
+p_hd = "Der brennende Dornbusch"
+
+[01.05.12_1]
+p_hd = "Das Passafest"
+
+[01.05.14_21]
+p_hd = "Durchzug durch das Rote Meer"
+
+[01.05.20_1]
+p_hd = "Die Zehn Gebote"
+
+[01.05-1.3_1]
+p_hd = "Der brennende Dornbusch"
+
+[01.05-1.12_8]
+p_hd = "Das Passafest"
+
+[01.05-2.14_1]
+p_hd = "Durchzug durch das Rote Meer"
+
+[01.05-2.20_1]
+p_hd = "Die Zehn Gebote"
+
+[01.06.16_4]
+p_hd = "Manna vom Himmel"
+
+[01.06.17_5]
+p_hd = "Wasser aus dem Felsen"
+
+[01.06.6_4]
+p_hd = "Das Schma"
+
+[01.07.6_15]
+p_hd = "Der Fall Jerichos"
+
+[01.08.16_15]
+p_hd = "Simson und Delila"
+
+[01.09.1_16]
+p_hd = "Ruts Treue"
+
+[01.09.4_9]
+p_hd = "Boas löst Rut ein"
+
+[01.09-1.1_2]
+p_hd = "Noomis Verlust"
+
+[01.09-1.2_3]
+p_hd = "Rut begegnet Boas"
+
+[01.09-2.3_1]
+p_hd = "Rut auf der Tenne"
+
+[01.09-2.4_1]
+p_hd = "Boas löst Rut ein"
+
+[01.10.3_4]
+p_hd = "Samuels Berufung"
+
+[01.10.17_45]
+p_hd = "David und Goliat"
+
+[01.10.7_12]
+p_hd = "Gottes Bund mit David"
+
+[01.11.3_9]
+p_hd = "Salomo bittet um Weisheit"
+
+[01.11.8_27]
+p_hd = "Einweihung des Tempels"
+
+[01.12.18_36]
+p_hd = "Elia auf dem Berg Karmel"
+
+[01.12.19_11]
+p_hd = "Das stille, sanfte Säuseln"
+
+[01.13.1_15]
+p_hd = "Jona und der große Fisch"
+
+[01.13.3_4]
+p_hd = "Ninive tut Buße"
+
+[01.14.25_8]
+p_hd = "Der Fall Jerusalems"
+
+[01.14.1_1]
+p_hd = "Der Erlass des Kyrus"
+
+[01.15.53_3]
+p_hd = "Der leidende Knecht"
+
+[01.15.9_6]
+p_hd = "Der verheißene Herrscher"
+
+[02.01.1_1]
+p_hd = "Das Wort ward Fleisch"
+
+[02.02.2_1]
+p_hd = "Die Geburt Jesu"
+
+[02.03.1_40]
+p_hd = "Heilung eines Aussätzigen"
+
+[02.03.2_1]
+p_hd = "Heilung des Gelähmten"
+
+[02.03-1.1_4]
+p_hd = "Der Beginn von Jesu Wirken"
+
+[02.03-2.2_1]
+p_hd = "Heilung des Gelähmten"
+
+[02.04.5_1]
+p_hd = "Die Seligpreisungen"
+
+[02.04.22_37]
+p_hd = "Das größte Gebot"
+
+[02.04.15_11]
+p_hd = "Der verlorene Sohn"
+
+[02.05.26_26]
+p_hd = "Das letzte Abendmahl"
+
+[02.05.27_45]
+p_hd = "Die Kreuzigung"
+
+[02.05.28_5]
+p_hd = "Die Auferstehung"
+
+[02.05-1.26_3]
+p_hd = "Das letzte Abendmahl und Verhaftung"
+
+[02.05-2.27_1]
+p_hd = "Die Kreuzigung"
+
+[02.05-3.28_1]
+p_hd = "Die Auferstehung"
+
+[02.06.2_1]
+p_hd = "Pfingsten"
+
+[02.06.9_3]
+p_hd = "Die Bekehrung des Paulus"
+
+[02.06-1.2_1]
+p_hd = "Pfingsten"
+
+[02.06-2.9_2]
+p_hd = "Die Bekehrung des Paulus"
+
+[02.07.21_1]
+p_hd = "Neuer Himmel und neue Erde"
+
+[02.07.22_1]
+p_hd = "Der Strom des Lebens"

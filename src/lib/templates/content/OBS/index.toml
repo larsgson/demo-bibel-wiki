@@ -1,0 +1,21 @@
+level = "collection"
+
+[images]
+base_url = "https://cdn.door43.org/obs/jpg/2160px"
+thumbs_url = "https://cdn.door43.org/obs/jpg/360px"
+# Full image: {base_url}/{filename}
+# Thumbnail:  {thumbs_url}/{filename}
+
+# List of category directories in order
+categories = [
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10"
+]

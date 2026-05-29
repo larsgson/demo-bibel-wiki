@@ -1,0 +1,42 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro"
+import Reader from "../../lib/reader/Reader.svelte"
+import { ReaderLoader } from "../../components/ReaderLoader"
+---
+
+<BaseLayout title="Tu Biblia mexicana">
+  <div id="reader-root"></div>
+  <ReaderLoader client:only="react" />
+</BaseLayout>
+
+<script>
+  // ReaderLoader renders a #reader-mount div with data attributes.
+  // Once it appears, mount the Svelte Reader.
+  const root = document.getElementById("reader-root")!
+
+  const observer = new MutationObserver(async () => {
+    const mount = document.getElementById("reader-mount")
+    if (!mount) return
+    observer.disconnect()
+
+    const { mount: svelteMount } = await import("svelte")
+    const { default: Reader } = await import("../../lib/reader/Reader.svelte")
+
+    root.innerHTML = ""
+    svelteMount(Reader, {
+      target: root,
+      props: {
+        iso: mount.dataset.iso!,
+        docSetId: mount.dataset.docSetId!,
+        pkfUrl: mount.dataset.pkfUrl!,
+        catalogUrl: mount.dataset.catalogUrl!,
+        styleUrl: mount.dataset.styleUrl || null,
+        figureUrls: JSON.parse(mount.dataset.figureUrls || "{}"),
+        captionMode: mount.dataset.captionMode || "hide",
+        media: JSON.parse(mount.dataset.media || "{}"),
+        bsbMode: mount.dataset.bsbMode === "true",
+      },
+    })
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
+</script>

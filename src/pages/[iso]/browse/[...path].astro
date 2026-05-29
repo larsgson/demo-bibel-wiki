@@ -1,0 +1,27 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro"
+import { getIsoPaths } from "../../../lib/prerender"
+import { BrowseIsland } from "../../../components/browse/BrowseIsland"
+import "../../../styles/browse.css"
+
+export function getStaticPaths() {
+  return getIsoPaths().map((p) => ({
+    ...p,
+    params: { ...p.params, path: undefined },
+  }))
+}
+
+const { iso, path } = Astro.params
+const segments = path ? path.split("/").filter(Boolean) : []
+const tree = segments[0] ?? ""
+const treePath = segments.slice(1)
+---
+
+<BaseLayout title="Browse">
+  <BrowseIsland
+    client:load
+    iso={iso}
+    initialTree={tree}
+    initialPath={treePath}
+  />
+</BaseLayout>

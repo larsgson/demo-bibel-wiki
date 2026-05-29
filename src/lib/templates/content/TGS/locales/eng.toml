@@ -1,0 +1,494 @@
+# The Grand Story - English locale
+
+title = "The Grand Story"
+longTitle = "The Grand Story of the Bible"
+description = "A journey through key moments in the Bible — from start to finish."
+
+[01]
+title = "Scenes from the Old Testament"
+description = "The story of God's people — how it all began, their journey, and the promise of a coming saviour."
+
+[01.01]
+title = "In the beginning"
+description = "God creates the heavens and the earth, light and darkness, and forms man from the dust of the ground."
+
+[01.02]
+title = "From Eden to Babel"
+description = "The fall of man in the Garden, the great flood in the days of Noah, and the scattering of peoples at the Tower of Babel."
+
+[01.03]
+title = "Abraham, Isaac and Jacob"
+description = "God calls Abraham and makes a covenant with him. Abraham's faith is tested. Jacob wrestles with God and receives a new name — Israel."
+
+[01.04]
+title = "Joseph in Egypt"
+description = "Joseph is sold by his brothers, rises to power by interpreting Pharaoh's dreams, and forgives his brothers when they come to Egypt."
+
+[01.05]
+title = "Moses and the Exodus"
+description = "God calls Moses from the burning bush. The Passover lamb saves Israel. The Red Sea parts. God gives the Ten Commandments at Sinai."
+
+[01.06]
+title = "Israel in the wilderness"
+description = "God provides manna from heaven and water from the rock. Moses teaches Israel the great commandment: Love the LORD your God."
+
+[01.07]
+title = "The Promised Land"
+description = "Joshua leads Israel into the Promised Land. The walls of Jericho fall at the sound of trumpets and the shout of the people."
+
+[01.08]
+title = "Samson and Delilah"
+description = "Samson, the mighty judge, is betrayed by Delilah. His strength is taken, but in his final act he brings down the Philistine temple."
+
+[01.09]
+title = "The story of Ruth"
+description = "Ruth pledges loyalty to Naomi: 'Where you go I will go.' Boaz redeems Ruth, and she becomes an ancestor of King David."
+
+[01.10]
+title = "Samuel, Saul and David"
+description = "The boy Samuel hears God's call. The shepherd David defeats the giant Goliath. God makes an everlasting covenant with David."
+
+[01.11]
+title = "Solomon the sage"
+description = "Solomon asks God for wisdom and receives it. He builds and dedicates the Temple in Jerusalem as a house of prayer for all nations."
+
+[01.12]
+title = "Elijah the prophet"
+description = "Elijah challenges the prophets of Baal on Mount Carmel. Fire falls from heaven. Later, God speaks to Elijah in a still small voice."
+
+[01.13]
+title = "The story of Jonah"
+description = "Jonah flees from God and is swallowed by a great fish. He preaches to Nineveh, and the great city repents."
+
+[01.14]
+title = "Exile and return"
+description = "Jerusalem falls to Babylon and the people are carried into exile. King Cyrus of Persia decrees their return."
+
+[01.15]
+title = "A prophecy"
+description = "Isaiah foretells a suffering servant who bears the sins of many, and a promised ruler whose kingdom will have no end."
+
+[02]
+title = "Scenes from the New Testament"
+description = "How Jesus changed everything — and what followed after the resurrection."
+
+[02.01]
+title = "In the beginning"
+description = "In the beginning was the Word, and the Word was with God, and the Word was God. The Word became flesh and dwelt among us."
+
+[02.02]
+title = "Jesus is born"
+description = "Jesus is born in Bethlehem. Angels announce great joy to shepherds in the fields: a Saviour has been born."
+
+[02.03]
+title = "The healer"
+description = "Jesus heals a man with leprosy with a touch. He forgives and heals a paralytic lowered through the roof by his friends."
+
+[02.04]
+title = "The teacher"
+description = "Jesus teaches the Beatitudes on the mountain. He names the greatest commandment. He tells the parable of the lost son."
+
+[02.05]
+title = "The Crucifixion"
+description = "Jesus shares the Last Supper with his disciples. He is crucified, dies, and on the third day rises from the dead."
+
+[02.06]
+title = "Acts of the apostles"
+description = "The Holy Spirit comes at Pentecost with wind and fire. Saul meets the risen Christ on the road to Damascus and is transformed."
+
+[02.07]
+title = "A vision"
+description = "John sees a new heaven and a new earth. God will dwell with his people. There will be no more death or mourning or pain."
+
+# --- Subheaders (paragraph headings within stories) ---
+
+[01.01.1_1]
+p_hd = "God creates the heavens and the earth"
+
+[01.02.3_1]
+p_hd = "The Fall"
+
+[01.02.6_5]
+p_hd = "The Flood"
+
+[01.02.11_1]
+p_hd = "Tower of Babel"
+
+[01.03.12_1]
+p_hd = "Call of Abraham"
+
+[01.03.15_5]
+p_hd = "God's covenant with Abraham"
+
+[01.03.22_1]
+p_hd = "The sacrifice of Isaac"
+
+[01.03.32_24]
+p_hd = "Jacob's new name — Israel"
+
+[01.04.37_23]
+p_hd = "Joseph sold by his brothers"
+
+[01.04.41_14]
+p_hd = "Joseph interprets Pharaoh's dreams"
+
+[01.04.50_19]
+p_hd = "Joseph forgives his brothers"
+
+[01.05.3_1]
+p_hd = "The burning bush"
+
+[01.05.12_1]
+p_hd = "The Passover"
+
+[01.05.14_21]
+p_hd = "Crossing the Red Sea"
+
+[01.05.20_1]
+p_hd = "The Ten Commandments"
+
+[01.06.16_4]
+p_hd = "Manna from heaven"
+
+[01.06.17_5]
+p_hd = "Water from the rock"
+
+[01.06.6_4]
+p_hd = "The Shema"
+
+[01.07.6_15]
+p_hd = "The fall of Jericho"
+
+[01.08.16_15]
+p_hd = "Samson and Delilah"
+
+[01.09.1_16]
+p_hd = "Ruth's loyalty"
+
+[01.09.4_9]
+p_hd = "Boaz redeems Ruth"
+
+[01.10.3_4]
+p_hd = "Samuel's call"
+
+[01.10.17_45]
+p_hd = "David and Goliath"
+
+[01.10.7_12]
+p_hd = "God's covenant with David"
+
+[01.11.3_9]
+p_hd = "Solomon asks for wisdom"
+
+[01.11.8_27]
+p_hd = "Dedication of the Temple"
+
+[01.12.18_36]
+p_hd = "Elijah on Mount Carmel"
+
+[01.12.19_11]
+p_hd = "The still small voice"
+
+[01.13.1_15]
+p_hd = "Jonah and the great fish"
+
+[01.13.3_4]
+p_hd = "Nineveh repents"
+
+[01.14.25_8]
+p_hd = "The fall of Jerusalem"
+
+[01.14.1_1]
+p_hd = "The decree of Cyrus"
+
+[01.15.53_3]
+p_hd = "The suffering servant"
+
+[01.15.9_6]
+p_hd = "The promised ruler"
+
+[02.01.1_1]
+p_hd = "The Word became flesh"
+
+[02.02.2_1]
+p_hd = "The birth of Jesus"
+
+[02.03.1_40]
+p_hd = "Healing a leper"
+
+[02.03.2_1]
+p_hd = "Healing the paralytic"
+
+[02.04.5_1]
+p_hd = "The Beatitudes"
+
+[02.04.22_37]
+p_hd = "The greatest commandment"
+
+[02.04.15_11]
+p_hd = "The lost son"
+
+[02.05.26_26]
+p_hd = "The Last Supper"
+
+[02.05.27_45]
+p_hd = "The Crucifixion"
+
+[02.05.28_5]
+p_hd = "The Resurrection"
+
+[02.06.2_1]
+p_hd = "Pentecost"
+
+[02.06.9_3]
+p_hd = "The conversion of Paul"
+
+[02.07.21_1]
+p_hd = "New Heaven and New Earth"
+
+[02.07.22_1]
+p_hd = "The river of life"
+
+
+[01.02-1]
+title = "From Eden to Babel (1)"
+description = "The fall of man in the Garden, the great flood in the days of Noah, and the scattering of peoples at the Tower of Babel."
+
+[01.02-2]
+title = "From Eden to Babel (2)"
+description = "The fall of man in the Garden, the great flood in the days of Noah, and the scattering of peoples at the Tower of Babel."
+
+[01.03-1]
+title = "Abraham, Isaac and Jacob (1)"
+description = "God calls Abraham and makes a covenant with him. Abraham's faith is tested. Jacob wrestles with God and receives a new name — Israel."
+
+[01.03-2]
+title = "Abraham, Isaac and Jacob (2)"
+description = "God calls Abraham and makes a covenant with him. Abraham's faith is tested. Jacob wrestles with God and receives a new name — Israel."
+
+[01.04-1]
+title = "Joseph in Egypt (1)"
+description = "Joseph is sold by his brothers, rises to power by interpreting Pharaoh's dreams, and forgives his brothers when they come to Egypt."
+
+[01.04-2]
+title = "Joseph in Egypt (2)"
+description = "Joseph is sold by his brothers, rises to power by interpreting Pharaoh's dreams, and forgives his brothers when they come to Egypt."
+
+[01.04-3]
+title = "Joseph in Egypt (3)"
+description = "Joseph is sold by his brothers, rises to power by interpreting Pharaoh's dreams, and forgives his brothers when they come to Egypt."
+
+[01.05-1]
+title = "Moses and the Exodus (1)"
+description = "God calls Moses from the burning bush. The Passover lamb saves Israel. The Red Sea parts. God gives the Ten Commandments at Sinai."
+
+[01.05-2]
+title = "Moses and the Exodus (2)"
+description = "God calls Moses from the burning bush. The Passover lamb saves Israel. The Red Sea parts. God gives the Ten Commandments at Sinai."
+
+[01.09-1]
+title = "The story of Ruth (1)"
+description = "Ruth pledges loyalty to Naomi: 'Where you go I will go.' Boaz redeems Ruth, and she becomes an ancestor of King David."
+
+[01.09-2]
+title = "The story of Ruth (2)"
+description = "Ruth pledges loyalty to Naomi: 'Where you go I will go.' Boaz redeems Ruth, and she becomes an ancestor of King David."
+
+[02.03-1]
+title = "The healer (1)"
+description = "Jesus heals a man with leprosy with a touch. He forgives and heals a paralytic lowered through the roof by his friends."
+
+[02.03-2]
+title = "The healer (2)"
+description = "Jesus heals a man with leprosy with a touch. He forgives and heals a paralytic lowered through the roof by his friends."
+
+[02.05-1]
+title = "The Crucifixion (1)"
+description = "Jesus shares the Last Supper with his disciples. He is crucified, dies, and on the third day rises from the dead."
+
+[02.05-2]
+title = "The Crucifixion (2)"
+description = "Jesus shares the Last Supper with his disciples. He is crucified, dies, and on the third day rises from the dead."
+
+[02.05-3]
+title = "The Crucifixion (3)"
+description = "Jesus shares the Last Supper with his disciples. He is crucified, dies, and on the third day rises from the dead."
+
+[02.06-1]
+title = "Acts of the apostles (1)"
+description = "The Holy Spirit comes at Pentecost with wind and fire. Saul meets the risen Christ on the road to Damascus and is transformed."
+
+[02.06-2]
+title = "Acts of the apostles (2)"
+description = "The Holy Spirit comes at Pentecost with wind and fire. Saul meets the risen Christ on the road to Damascus and is transformed."
+
+[01.01.1_2]
+p_hd = "God creates the heavens and the earth"
+
+[01.01.2_7]
+p_hd = "God creates man and woman"
+
+[01.02-1.3_1]
+p_hd = "The Fall"
+
+[01.02-1.6_2]
+p_hd = "The wickedness of man"
+
+[01.02-1.7_2]
+p_hd = "The Flood"
+
+[01.02-2.11_1]
+p_hd = "Tower of Babel"
+
+[01.02-2.8_1]
+p_hd = "The waters recede"
+
+[01.02-2.9_5]
+p_hd = "God's covenant with Noah"
+
+[01.03-1.12_2]
+p_hd = "Call of Abraham"
+
+[01.03-1.15_1]
+p_hd = "God's covenant with Abraham"
+
+[01.03-2.22_1]
+p_hd = "The sacrifice of Isaac"
+
+[01.03-2.32_1]
+p_hd = "Jacob's new name — Israel"
+
+[01.04-1.37_2]
+p_hd = "Joseph sold by his brothers"
+
+[01.04-1.39_1]
+p_hd = "Joseph in Potiphar's house"
+
+[01.04-2.40_4]
+p_hd = "Joseph in prison"
+
+[01.04-2.41_1]
+p_hd = "Joseph interprets Pharaoh's dreams"
+
+[01.04-3.42_1]
+p_hd = "Joseph's brothers come to Egypt"
+
+[01.04-3.44_1]
+p_hd = "The silver cup"
+
+[01.04-3.45_1]
+p_hd = "Joseph reveals himself"
+
+[01.04-3.50_7]
+p_hd = "Joseph forgives his brothers"
+
+[01.05-1.12_8]
+p_hd = "The Passover"
+
+[01.05-1.3_1]
+p_hd = "The burning bush"
+
+[01.05-2.14_1]
+p_hd = "Crossing the Red Sea"
+
+[01.05-2.20_1]
+p_hd = "The Ten Commandments"
+
+[01.06.16_2]
+p_hd = "Manna from heaven"
+
+[01.06.17_1]
+p_hd = "Water from the rock"
+
+[01.06.6_7]
+p_hd = "The Shema"
+
+[01.07.6_1]
+p_hd = "The fall of Jericho"
+
+[01.08.16_4]
+p_hd = "Samson and Delilah"
+
+[01.09-1.1_2]
+p_hd = "Naomi's loss"
+
+[01.09-1.2_3]
+p_hd = "Ruth meets Boaz"
+
+[01.09-2.3_1]
+p_hd = "Ruth at the threshing floor"
+
+[01.09-2.4_1]
+p_hd = "Boaz redeems Ruth"
+
+[01.10.17_4]
+p_hd = "David and Goliath"
+
+[01.10.3_5]
+p_hd = "Samuel's call"
+
+[01.10.7_5]
+p_hd = "God's covenant with David"
+
+[01.11.3_4]
+p_hd = "Solomon asks for wisdom"
+
+[01.11.8_4]
+p_hd = "Dedication of the Temple"
+
+[01.12.18_18]
+p_hd = "Elijah on Mount Carmel"
+
+[01.12.19_19]
+p_hd = "Elisha follows Elijah"
+
+[01.13.1_1]
+p_hd = "Jonah flees from God"
+
+[01.13.2_10]
+p_hd = "Jonah and the great fish"
+
+[01.13.3_3]
+p_hd = "Nineveh repents"
+
+[01.13.4_1]
+p_hd = "God's compassion"
+
+[01.14.1_2]
+p_hd = "The decree of Cyrus"
+
+[01.14.25_3]
+p_hd = "The fall of Jerusalem"
+
+[02.02.2_4]
+p_hd = "The birth of Jesus"
+
+[02.03-1.1_4]
+p_hd = "The beginning of Jesus' ministry"
+
+[02.03-2.2_1]
+p_hd = "Healing the paralytic"
+
+[02.04.15_2]
+p_hd = "The lost son"
+
+[02.04.22_15]
+p_hd = "The Pharisees question Jesus"
+
+[02.04.5_2]
+p_hd = "The Beatitudes"
+
+[02.05-1.26_3]
+p_hd = "The Last Supper and arrest"
+
+[02.05-2.27_1]
+p_hd = "The Crucifixion"
+
+[02.05-3.28_1]
+p_hd = "The Resurrection"
+
+[02.06-1.2_1]
+p_hd = "Pentecost"
+
+[02.06-2.9_2]
+p_hd = "The conversion of Paul"

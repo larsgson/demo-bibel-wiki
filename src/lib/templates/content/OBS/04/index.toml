@@ -1,0 +1,28 @@
+level = "category"
+id = "04"
+beg = 15
+count = 5
+canon = "ot"
+
+[image]
+filename = "00-03a.png"
+
+[[stories]]
+id = "15"
+image = "obs-en-15-01.jpg"
+
+[[stories]]
+id = "16"
+image = "obs-en-16-01.jpg"
+
+[[stories]]
+id = "17"
+image = "obs-en-17-01.jpg"
+
+[[stories]]
+id = "18"
+image = "obs-en-18-01.jpg"
+
+[[stories]]
+id = "19"
+image = "obs-en-19-01.jpg"

@@ -1,0 +1,414 @@
+# Johannesevangeliet - Svensk lokalisering
+
+title = "Johannesevangeliet"
+longTitle = "Det glada budskapet enligt Johannes"
+description = "Jesu älskade lärjunge Johannes berättar om den som var från begynnelsen. Genom Jesus gav Gud oss nåd och sanning. Genom honom blir vi Guds barn."
+video_url = "https://www.youtube.com/embed/XWpCBMJ2xMo"
+
+[01]
+title = "Ordet bland oss"
+description = "Kapitel 1–12: Från Ordets inkarnation till Jesu intåg i Jerusalem"
+
+[01.01]
+title = "Guds levande Ord"
+description = "Guds Ord blev kött och bodde bland oss. Johannes Döparen vittnade om honom. Andreas berättade för Simon Petrus och de följde Jesus."
+
+[01.02]
+title = "Bröllopet i Kana"
+description = "Jesus förvandlade vatten till vin på ett bröllop. Han drev ut månglarna ur templet. Han sade: \"Bryt ner detta tempel och jag ska resa upp det.\""
+
+[01.03]
+title = "Nikodemus"
+description = "Jesus sade till Nikodemus: \"Du måste födas på nytt. Den som tror på Sonen ska ha evigt liv.\" Johannes Döparen sade: \"Han är över alla.\""
+
+[01.04]
+title = "Den samariska kvinnan"
+description = "Jesus talade med en samarisk kvinna om hennes män. Hon sade: \"Kan detta vara Messias?\" Många kom till tro. Han botade en ämbetsmans son."
+
+[01.05]
+title = "Den lame botas"
+description = "Jesus botade en man vid Betesda. Han sade: \"Sonen gör bara det han ser Fadern göra. Mina gärningar och Skrifterna vittnar om mig.\""
+
+[01.06]
+title = "Livets bröd"
+description = "Jesus mättade 5 000 män och gick på vattnet. Han sade: \"Jag är livets bröd. Mitt kött är verklig mat.\" Många lärjungar vände tillbaka."
+
+[01.07]
+title = "Strömmar av levande vatten"
+description = "Jesus gick till högtiden. Folket sade: \"Är detta Messias?\" Översteprästerna försökte gripa honom. Han ropade: \"Kom och drick.\""
+
+[01.08]
+title = "Abrahams ättlingar"
+description = "Jesus fördömde inte en kvinna som gripits för äktenskapsbrott. Fariseerna ifrågasatte honom. Han sade: \"Om Gud vore er Fader, skulle ni älska mig.\""
+
+[01.09]
+title = "Den blinde botas"
+description = "Jesus botade en blind man på sabbaten. Fariseerna kallade in mannen och kastade ut honom. Jesus sade: \"Jag har kommit för att blinda ska se.\""
+
+[01.10]
+title = "Fåraherde och fårfålla"
+description = "Jesus sade: \"Jag är den gode herden. Jag ger mitt liv för fåren.\" De frågade: \"Är du Messias?\" Han sade: \"Mina får följer mig.\""
+
+[01.11]
+title = "Lasarus"
+description = "Lasarus dog. Jesus gick till graven och sade: \"Lasarus, kom ut.\" Lasarus kom ut. Översteprästerna planerade att döda Jesus."
+
+[01.12]
+title = "Intåget i Jerusalem"
+description = "Jesus red in i Jerusalem. Folket ropade: \"Hosianna!\" Han sade: \"Människosonen måste upphöjas. Jag har kommit för att rädda världen.\""
+
+[02]
+title = "Jesus och hans lärjungar"
+description = "Kapitel 13–17: Den sista måltiden, avskedstalen och Jesu bön"
+
+[02.13]
+title = "Fottvagningen"
+description = "Jesus tvättade lärjungarnas fötter. Han sade: \"En av er ska förråda mig.\" Judas gick ut. Jesus sade: \"Älska varandra som jag har älskat er.\""
+
+[02.14]
+title = "Vägen, sanningen och livet"
+description = "\"Jag är vägen, sanningen och livet. Jag är i Fadern och Fadern i mig. Han ska ge er den helige Ande. Var inte rädda.\""
+
+[02.15]
+title = "Vinstocken och grenarna"
+description = "\"Jag är vinstocken, ni är grenarna. Ni är mina vänner om ni gör vad jag befaller. Om de förföljde mig, ska de också förfölja er.\""
+
+[02.16]
+title = "Den helige Andes ankomst"
+description = "\"Anden ska överbevisa världen om synd. Han ska leda er in i hela sanningen. Er sorg ska vändas till glädje. Jag går till Fadern.\""
+
+[02.17]
+title = "Jesu bön för sina lärjungar"
+description = "Jesus sade: \"Fader, jag har uppenbarat ditt namn för dem du gav mig. Helga dem i sanningen. Må alla som tror på mig vara ett.\""
+
+[03]
+title = "Korset och uppståndelsen"
+description = "Kapitel 18–21: Gripande, korsfästelse, uppståndelse och upprättelse"
+
+[03.18]
+title = "Gripande och rättegång"
+description = "Judas förrådde Jesus till översteprästerna. Petrus förnekade honom. Han fördes inför Pilatus. Jesus sade: \"Mitt rike är inte av denna världen.\""
+
+[03.19]
+title = "Död för synderna"
+description = "Soldaterna tog Jesus och korsfäste honom. Han sade: \"Det är fullbordat.\" Han gav upp sin ande. En soldat stack honom i sidan med ett spjut."
+
+[03.20]
+title = "Uppståndelsen"
+description = "Maria gick till graven och fann den tom. Jesus mötte henne. Han kom och stod bland lärjungarna. Tomas sade: \"Min Herre och min Gud!\""
+
+[03.21]
+title = "Tiberias sjö"
+description = "Jesus visade sig när lärjungarna fiskade. Han sade till Petrus: \"Älskar du mig? Var herde för mina får.\" Den älskade lärjungen har vittnat."
+
+[01.01.1]
+p_hd = "Ordet blev kött"
+
+[01.01.19]
+p_hd = "Johannes Döparen förnekar att han är Messias"
+
+[01.01.29]
+p_hd = "Johannes vittnar om Jesus"
+
+[01.01.35]
+p_hd = "Johannes lärjungar följer Jesus"
+
+[01.01.43]
+p_hd = "Jesus kallar Filippus och Natanael"
+
+[01.02.1]
+p_hd = "Jesus förvandlar vatten till vin"
+
+[01.02.13]
+p_hd = "Jesus rensar templet"
+
+[01.02.23]
+p_hd = "Jesus känner människorna"
+
+[01.03.1]
+p_hd = "Jesus undervisar Nikodemus"
+
+[01.03.22]
+p_hd = "Johannes vittnar åter om Jesus"
+
+[01.04.1]
+p_hd = "Jesus talar med en samarisk kvinna"
+
+[01.04.27]
+p_hd = "Lärjungarna återvänder till Jesus"
+
+[01.04.39]
+p_hd = "Många samarier tror"
+
+[01.04.43]
+p_hd = "Jesus botar en ämbetsmans son"
+
+[01.05.1]
+p_hd = "Botandet vid dammen"
+
+[01.05.16]
+p_hd = "Sonens fullmakt"
+
+[01.05.19]
+p_hd = "Jesus"
+
+[01.05.31]
+p_hd = "Vittnesmål om Jesus"
+
+[01.06.1]
+p_hd = "Jesus mättar fem tusen"
+
+[01.06.16]
+p_hd = "Jesus går på vattnet"
+
+[01.06.22]
+p_hd = "Folkmassan söker Jesus"
+
+[01.06.25]
+p_hd = "Jesus, livets bröd"
+
+[01.06.26]
+p_hd = "Jesus Kristus – livets bröd"
+
+[01.06.35]
+p_hd = "Den som tror har evigt liv"
+
+[01.06.48]
+p_hd = "Den som äter detta bröd ska leva för evigt"
+
+[01.06.60]
+p_hd = "Många lärjungar överger Jesus"
+
+[01.06.67]
+p_hd = "Petrus"
+
+[01.07.1]
+p_hd = "Jesus går till lövhyddohögtiden"
+
+[01.07.10]
+p_hd = "Jesus på lövhyddohögtiden i Jerusalem"
+
+[01.07.14]
+p_hd = "Jesus undervisar på högtiden"
+
+[01.07.25]
+p_hd = "Delade meningar om vem Jesus är"
+
+[01.07.37]
+p_hd = "Levande vatten"
+
+[01.07.40]
+p_hd = "Är Jesus Messias?"
+
+[01.07.45]
+p_hd = "De judiska ledarnas otro"
+
+[01.08.1]
+p_hd = "En kvinna gripen för äktenskapsbrott, Jesus fördömer henne inte"
+
+[01.08.12]
+p_hd = "Tvist om Jesu vittnesbörd"
+
+[01.08.21]
+p_hd = "Tvist om vem Jesus är"
+
+[01.08.31]
+p_hd = "Tvist om vilkas barn Jesu motståndare är"
+
+[01.08.37]
+p_hd = "Abrahams barn eller djävulens barn?"
+
+[01.08.48]
+p_hd = "Jesu påståenden om sig själv"
+
+[01.09.1]
+p_hd = "Jesus botar en man som var född blind"
+
+[01.09.13]
+p_hd = "Fariseerna undersöker botandet"
+
+[01.09.24]
+p_hd = "Den botade mannen kastas ut"
+
+[01.09.35]
+p_hd = "Andlig blindhet"
+
+[01.10.1]
+p_hd = "Den gode herden och hans får"
+
+[01.10.7]
+p_hd = "Jesus Kristus – dörren till fåren"
+
+[01.10.11]
+p_hd = "Jesus Kristus – den gode herden"
+
+[01.10.22]
+p_hd = "Fortsatt strid om Jesu anspråk"
+
+[01.10.31]
+p_hd = "Anklagelse för hädelse"
+
+[01.11.1]
+p_hd = "Lasarus död"
+
+[01.11.17]
+p_hd = "Jesus tröstar Lasarus systrar"
+
+[01.11.28]
+p_hd = "Jesus gråter"
+
+[01.11.38]
+p_hd = "Jesus uppväcker Lasarus från de döda"
+
+[01.11.45]
+p_hd = "Planen att döda Jesus"
+
+[01.12.1]
+p_hd = "Jesus smörjs i Betania"
+
+[01.12.12]
+p_hd = "Jesus kommer till Jerusalem som konung"
+
+[01.12.20]
+p_hd = "Jesus förutsäger sin död"
+
+[01.12.27]
+p_hd = "Jesus kungör sin död"
+
+[01.12.37]
+p_hd = "Tro och otro bland judarna"
+
+[01.12.42]
+p_hd = "Följderna av tro och otro"
+
+[02.13.1]
+p_hd = "Jesus tvättar lärjungarnas fötter"
+
+[02.13.12]
+p_hd = "Fottvagningen"
+
+[02.13.18]
+p_hd = "Jesus förutsäger sitt förräderi"
+
+[02.13.21]
+p_hd = "Förräderiet tillkännages"
+
+[02.13.31]
+p_hd = "Jesus förutsäger Petrus förnekelse"
+
+[02.13.33]
+p_hd = "Det nya budet"
+
+[02.13.36]
+p_hd = "Jesus tillkännager att Petrus ska förneka honom"
+
+[02.14.1]
+p_hd = "Jesus tröstar sina lärjungar"
+
+[02.14.5]
+p_hd = "Jesus, vägen till Fadern"
+
+[02.14.8]
+p_hd = "Den som ser Sonen ser Fadern"
+
+[02.14.15]
+p_hd = "Jesus lovar den helige Ande"
+
+[02.14.25]
+p_hd = "Jesus säger: "
+
+[02.15.1]
+p_hd = "Vinstocken och grenarna"
+
+[02.15.9]
+p_hd = "Förbli i Jesu kärlek"
+
+[02.15.18]
+p_hd = "Världen hatar lärjungarna"
+
+[02.15.26]
+p_hd = "Den helige Andes verk"
+
+[02.16.4]
+p_hd = "Den helige Andes verk"
+
+[02.16.16]
+p_hd = "Lärjungarnas sorg ska vändas till glädje"
+
+[02.16.25]
+p_hd = "Jesus"
+
+[02.17.1]
+p_hd = "Jesus ber om att bli förhärligad"
+
+[02.17.6]
+p_hd = "Jesus ber för sina lärjungar"
+
+[02.17.20]
+p_hd = "Jesus ber för alla troende"
+
+[03.18.1]
+p_hd = "Jesus grips"
+
+[03.18.12]
+p_hd = "Jesus inför Hannas"
+
+[03.18.15]
+p_hd = "Petrus första förnekelse"
+
+[03.18.19]
+p_hd = "Översteprästen förhör Jesus"
+
+[03.18.25]
+p_hd = "Petrus andra och tredje förnekelse"
+
+[03.18.28]
+p_hd = "Jesus inför Pilatus"
+
+[03.18.38]
+p_hd = "Jesu dom"
+
+[03.19.1]
+p_hd = "Jesus döms till korsfästelse"
+
+[03.19.6]
+p_hd = "Jesus svarar inte Pilatus"
+
+[03.19.16]
+p_hd = "Jesu korsfästelse"
+
+[03.19.28]
+p_hd = "Jesu död"
+
+[03.19.31]
+p_hd = "Den som de har genomborrat"
+
+[03.19.38]
+p_hd = "Jesu begravning"
+
+[03.20.1]
+p_hd = "Den tomma graven"
+
+[03.20.10]
+p_hd = "Jesus visar sig för Maria Magdalena"
+
+[03.20.19]
+p_hd = "Jesus visar sig för sina lärjungar"
+
+[03.20.24]
+p_hd = "Jesus visar sig för Tomas"
+
+[03.20.30]
+p_hd = "Syftet med Johannesevangeliet"
+
+[03.21.1]
+p_hd = "Jesus och det stora fiskfånget"
+
+[03.21.15]
+p_hd = "Jesus upprättar Petrus"
+
+[03.21.20]
+p_hd = "Petrus och den lärjunge som Jesus särskilt älskade"
+
+[03.21.24]
+p_hd = "Slutord"

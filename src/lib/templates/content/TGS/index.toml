@@ -1,0 +1,23 @@
+level = "collection"
+
+[images]
+base_url = "https://filedn.com/lD0GfuMvTstXgqaJfpLL87S/sweet_images/jpg"
+# Backup source: https://github.com/nicoljs/Sweet-Publishing-Illustrations
+path_pattern = "{book}/{filename}"
+thumbs_pattern = "{book}/thumbs/{filename}"
+medium_pattern = "{book}/610px/{filename}"
+# book = first two chars of filename (e.g. "01" from "01_Ge_01_02_RG.jpg")
+# Full image:  {base_url}/{book}/{filename}          (~1-7 MB)
+# Medium:      {base_url}/{book}/610px/{filename}    (~170-240 KB)
+# Thumbnail:   {base_url}/{book}/thumbs/{filename}   (~5-7 KB)
+
+[image]
+filename = "01_Ge_01_01_RG.jpg"
+
+[[categories]]
+id = "01"
+image = "Bible_OT.png"
+
+[[categories]]
+id = "02"
+image = "Bible_NT.png"

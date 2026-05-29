@@ -1,0 +1,814 @@
+/*
+ * Reader baseline stylesheet.
+ *
+ * The scripture-body rules are modelled on Scripture Earth's sab-app.css
+ * (light theme values), adapted to use CSS custom properties so per-language
+ * delta.css files can tweak typography and so alternative themes can be
+ * dropped in later by redefining the variables. Class names match the SE /
+ * SAB conventions exactly (.p, .q, .q1, .q2, .s, .mt, .v, .c-drop, .wj, ...)
+ * so markup emitted by the Sofria renderer styles identically to what SE
+ * ships.
+ */
+
+:root {
+    --TextColor: #000000;
+    --TitlesColor: #000B63;
+    --VerseNumberColor: #1976D2;
+    --BackgroundColor: #FFFFFF;
+    --TextHighlightColor: #FFFF99;
+    --LinkColor: #000B63;
+    --FootnoteBackgroundColor: #F0F0F0;
+    --CrossRefColor: #2E7D32;
+    --WordsOfJesusColor: #D32F2F;
+}
+
+/* Per-theme variable overrides — applied on .reader-root[data-theme=…].
+ * Values lifted from Scripture Earth's sab-app.css so the palette matches
+ * their "Sepia" and "Dark" themes exactly. */
+.reader-root[data-theme="sepia"] {
+    --TextColor: #5A4129;
+    --TitlesColor: #513A24;
+    --VerseNumberColor: #8D6E63;
+    --BackgroundColor: #ECDDC4;
+    --TextHighlightColor: #FFE082;
+    --LinkColor: #513A24;
+    --FootnoteBackgroundColor: #D7C9AE;
+    --CrossRefColor: #5D4037;
+    --WordsOfJesusColor: #B71C1C;
+}
+.reader-root[data-theme="dark"] {
+    --TextColor: #E0E0E0;
+    --TitlesColor: #FFFFFF;
+    --VerseNumberColor: #BBDEFB;
+    --BackgroundColor: #121212;
+    --TextHighlightColor: #404040;
+    --LinkColor: #BBDEFB;
+    --FootnoteBackgroundColor: #242424;
+    --CrossRefColor: #A5D6A7;
+    --WordsOfJesusColor: #EF9A9A;
+}
+
+.reader-root {
+    color: var(--TextColor);
+    background: var(--BackgroundColor);
+    line-height: 1.55;
+}
+
+/* Paragraph markers — USFM indentation conventions copied from SE's sab-app.css. */
+.reader-body p {
+    margin: 0;
+}
+.reader-body p.p   { padding-inline-start: 0; padding-top: 12px; text-indent: 3%; }
+.reader-body p.m   { padding-inline-start: 0; padding-top: 12px; text-indent: 0; }
+.reader-body p.mi  { padding-inline-start: 1em; padding-top: 12px; text-indent: 0; }
+.reader-body p.pi,
+.reader-body p.pi1 { padding-inline-start: 1em; padding-top: 12px; text-indent: 3%; }
+.reader-body p.pi2 { padding-inline-start: 2em; padding-top: 12px; text-indent: 3%; }
+.reader-body p.q,
+.reader-body p.q1  { padding-inline-start: 20%; padding-inline-end: 2%; text-indent: -15%; }
+.reader-body p.q2  { padding-inline-start: 20%; padding-inline-end: 2%; text-indent: -8%; }
+.reader-body p.q3  { padding-inline-start: 20%; padding-inline-end: 2%; text-indent: -5%; }
+.reader-body p.qr  { text-align: end; font-style: italic; padding-top: 4px; }
+.reader-body p.qc  { text-align: center; font-style: italic; padding-top: 4px; }
+.reader-body p.sp  { font-style: italic; padding-top: 8px; }
+.reader-body p.d   { font-style: italic; text-align: center; padding-top: 8px; }
+.reader-body p.cls { text-align: end; font-style: italic; }
+.reader-body p.lh  { padding-top: 0; }
+.reader-body p.b   { padding-top: 0.6em; }
+
+/* Major titles and section headings — centred, bolded, in the titles color. */
+.reader-body h2.mt, .reader-body p.mt,
+.reader-body h2.mt1, .reader-body p.mt1 {
+    text-align: center; color: var(--TitlesColor);
+    font-weight: 700; font-size: 150%; line-height: 1;
+    padding-top: 16px; padding-bottom: 4px;
+    page-break-after: avoid;
+}
+.reader-body h2.mt2, .reader-body p.mt2 {
+    text-align: center; color: var(--TitlesColor);
+    font-weight: 700; font-size: 120%; padding-top: 8px;
+}
+.reader-body h2.mt3, .reader-body p.mt3 {
+    text-align: center; color: var(--TitlesColor);
+    font-weight: 400; font-size: 100%; padding-top: 4px;
+}
+.reader-body h3.ms, .reader-body h3.ms1, .reader-body p.ms {
+    text-align: center; color: var(--TitlesColor);
+    font-weight: 700; font-size: 120%;
+    padding-top: 30px; padding-bottom: 8px;
+    page-break-after: avoid;
+}
+.reader-body h3.ms2, .reader-body p.ms2 {
+    text-align: center; color: var(--TitlesColor);
+    font-weight: 700; font-size: 110%;
+    padding-top: 18px; padding-bottom: 4px;
+}
+.reader-body h3.s, .reader-body h3.s1 {
+    text-align: center; color: var(--TitlesColor);
+    font-weight: 700; font-size: 110%;
+    padding-top: 30px; padding-bottom: 2px;
+    page-break-after: avoid;
+}
+.reader-body h3.s2 {
+    text-align: center; color: var(--TitlesColor);
+    font-weight: 700; font-size: 100%;
+    padding-top: 20px; padding-bottom: 2px;
+}
+.reader-body h3.s3 {
+    text-align: center; color: var(--TitlesColor);
+    font-weight: 700; font-size: 95%;
+    padding-top: 14px; padding-bottom: 2px;
+}
+.reader-body p.r, .reader-body p.sr {
+    text-align: center; font-style: italic; font-size: 90%;
+    padding-top: 14px; padding-bottom: 2px;
+    page-break-after: avoid;
+}
+.reader-body p.mr {
+    text-align: center; font-style: italic; font-size: 95%;
+    padding-top: 14px; padding-bottom: 2px;
+}
+
+/* Verse number — SE's relative-position technique (not <sup>) so baseline
+ * shift is controlled by CSS. */
+.reader-body .v {
+    color: var(--VerseNumberColor);
+    font-size: 70%;
+    position: relative;
+    bottom: .3em;
+    line-height: normal;
+    font-weight: 600;
+    margin-inline-end: 0.15em;
+    user-select: none;
+}
+
+/* Verse-block wrapper around each verse's content. Kept inline so the
+ * paragraph flow isn't disrupted; selected state highlights the verse. */
+.reader-body .verse-block {
+    /* default inline flow */
+}
+.reader-body .verse-block.selected {
+    background-color: var(--TextHighlightColor);
+}
+
+/* Chapter drop-cap — large, floated left, spanning roughly two lines. */
+.reader-body .c-drop {
+    float: inline-start;
+    position: relative;
+    padding-inline-end: 0.25em;
+    color: var(--TitlesColor);
+    font-size: 280%;
+    font-weight: 700;
+    font-style: normal;
+    line-height: 0.9;
+    user-select: none;
+}
+.reader-body .c {
+    color: var(--TitlesColor);
+    font-weight: 700;
+    font-size: 140%;
+}
+
+/* Character styles (USFM) — class names match SE exactly. */
+.reader-body .wj   { color: var(--WordsOfJesusColor); }
+.reader-body .nd   { font-variant: small-caps; }
+.reader-body .k    { font-weight: 700; }
+.reader-body .bd   { font-weight: 700; }
+.reader-body .bdit { font-weight: 700; font-style: italic; }
+.reader-body .it   { font-style: italic; }
+.reader-body .em   { font-style: italic; }
+.reader-body .add  { font-style: italic; }
+.reader-body .tl   { font-style: italic; }
+.reader-body .bk   { font-style: italic; }
+.reader-body .sls  { font-style: italic; }
+.reader-body .qt   { color: #37474F; }
+.reader-body .ord  { vertical-align: super; font-size: 75%; }
+
+/* Links */
+.reader-body .reflink,
+.reader-body .ref-link {
+    color: var(--LinkColor);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--LinkColor);
+    cursor: pointer;
+}
+
+/* Footnote and cross-ref callers — rendered as <button> so popover clicks
+ * are easy to wire and keyboard navigation works by default. */
+.reader-body .note-caller,
+.reader-body .xref-caller {
+    background: transparent;
+    border: 0;
+    padding: 0 0.15em;
+    margin: 0 0.05em;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 78%;
+    font-weight: 700;
+    vertical-align: super;
+    line-height: 0;
+    color: var(--CrossRefColor);
+}
+.reader-body .note-caller { color: var(--CrossRefColor); }
+.reader-body .xref-caller { color: var(--LinkColor); }
+.reader-body .note-caller:hover,
+.reader-body .xref-caller:hover { text-decoration: underline; }
+.reader-body .note-caller:focus-visible,
+.reader-body .xref-caller:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+}
+
+/* Footnote / xref / glossary popover — bottom-pinned card (SAB pattern).
+ * Always lands at the foot of the viewport so it never obscures the verse
+ * the user just tapped, and is reachable with the thumb on mobile. */
+.reader-note-popover {
+    position: fixed;
+    left: 50%;
+    bottom: 1.25rem;
+    transform: translateX(-50%);
+    z-index: 40;
+    width: min(720px, calc(100vw - 24px));
+    max-height: min(48vh, 360px);
+    overflow-y: auto;
+    padding: 12px 14px;
+    background: var(--FootnoteBackgroundColor, #fff);
+    color: var(--TextColor, #000B63);
+    border: 1px solid rgba(0, 11, 99, 0.18);
+    border-radius: 12px;
+    box-shadow:
+        0 24px 50px -16px rgba(0, 11, 99, 0.4),
+        0 6px 16px -6px rgba(0, 11, 99, 0.18);
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+/* Stack above the audio bar when both are visible. */
+.reader-note-popover.above-audio { bottom: calc(96px + 1.25rem); }
+.reader-note-popover .close {
+    float: inline-end;
+    background: transparent; border: 0; font-size: 1.3em;
+    line-height: 1; cursor: pointer; color: inherit;
+    margin-inline-start: 6px;
+    padding: 0 6px;
+}
+.reader-note-popover .close:hover { color: rgb(0, 11, 99); }
+
+/* App-level top bar — look-alike of SE's action bar, minus the hamburger.
+ * Icon buttons on the right control search, share, audio quick-toggle,
+ * font size, bookmark, and settings. */
+.reader-topbar {
+    background: var(--TitlesColor, #000B63);
+    color: white;
+    border-radius: 0;
+    margin: 0 -0.5em 0.4em;
+    padding: 0;
+    user-select: none;
+}
+.reader-topbar-bar {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.35em 0.55em;
+    min-height: 38px;
+}
+.reader-topbar-start { width: 0; }
+.reader-topbar-center {
+    text-align: center;
+    overflow: hidden;
+}
+.reader-topbar-title {
+    font-weight: 600;
+    font-size: 0.95em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.reader-topbar-end {
+    display: flex;
+    align-items: center;
+    gap: 0.15em;
+    justify-content: flex-end;
+}
+.reader-topbar .tb-icon {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 0.4em;
+    border-radius: 4px;
+    font-size: 1.05em;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.1s, transform 0.2s;
+}
+.reader-topbar .tb-icon:hover { background: rgba(255, 255, 255, 0.14); }
+.reader-topbar .tb-icon:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 1px;
+}
+.reader-topbar .tb-icon:disabled { opacity: 0.35; cursor: default; }
+.reader-topbar .tb-icon.active { background: rgba(255, 255, 255, 0.22); }
+.reader-topbar .tb-icon.flash {
+    background: var(--WordsOfJesusColor, #D32F2F);
+    animation: tb-flash 1.4s ease;
+}
+@keyframes tb-flash {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.15); }
+    100% { transform: scale(1); background: transparent; }
+}
+.reader-topbar .tb-font-dec { font-size: 0.85em; }
+.reader-topbar .tb-font-inc { font-size: 1.25em; font-weight: 700; }
+.reader-topbar-search {
+    display: flex;
+    gap: 0.3em;
+    padding: 0.35em 0.55em;
+    background: rgba(0, 0, 0, 0.1);
+    align-items: center;
+}
+.reader-topbar-search input[type="search"] {
+    flex: 1 1 auto;
+    background: white;
+    color: var(--TextColor);
+    border: 0;
+    border-radius: 3px;
+    padding: 0.35em 0.55em;
+    font-size: 0.9em;
+}
+.reader-topbar-search input[type="search"]:focus { outline: 2px solid rgba(255, 255, 255, 0.65); }
+
+/* Search-hit highlight within the scripture body. */
+.reader-body mark.search-hit {
+    background: #fff59d;
+    color: inherit;
+    padding: 0 1px;
+    border-radius: 1px;
+}
+.reader-root[data-theme="sepia"] .reader-body mark.search-hit { background: #FFE0B2; }
+.reader-root[data-theme="dark"] .reader-body mark.search-hit { background: #FFD54F; color: #000; }
+
+/* Floating chapter-nav arrows — fixed to the viewport sides, vertically
+ * centred. Hidden on narrow screens; on mobile the user swipes the body. */
+.reader-side-nav {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 11, 99, 0.15);
+    color: rgb(0, 11, 99);
+    border-radius: 999px;
+    font-size: 1.6em;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow:
+        0 8px 22px -10px rgba(0, 11, 99, 0.35),
+        0 2px 6px -2px rgba(0, 11, 99, 0.12);
+    transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 35;
+}
+.reader-side-nav.left  { left: 14px; }
+.reader-side-nav.right { right: 14px; }
+.reader-side-nav.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.reader-side-nav:hover,
+.reader-side-nav:focus-visible {
+    background: #fff;
+    transform: translateY(-50%) scale(1.05);
+    outline: none;
+}
+.reader-side-nav:active {
+    transform: translateY(-50%) scale(0.97);
+}
+@media (min-width: 768px) {
+    .reader-side-nav { display: inline-flex; }
+}
+
+/* Bottom-pinned audio bar — always reachable, never pushes the text down.
+ * Sits above the page footer; .reader-body adds matching bottom padding when
+ * the bar is on so the last verse doesn't hide behind it. */
+.reader-audio-bottom {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0));
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0, 11, 99, 0.12);
+    box-shadow: 0 -10px 30px -12px rgba(0, 11, 99, 0.18);
+}
+.reader-audio-bottom :global(*) { color: rgb(0, 11, 99); }
+.reader-body.has-bottom-bar {
+    padding-bottom: 110px;
+}
+
+/* Format-mode tabs: Text / Audio / Video. */
+.reader-format-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid rgb(229 231 235);
+    margin-bottom: 0.6em;
+}
+.reader-format-tabs button {
+    background: transparent;
+    border: 0;
+    padding: 0.5em 1em;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: inherit;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+.reader-format-tabs button:hover { background: rgb(243 244 246); }
+.reader-format-tabs button.active {
+    border-bottom-color: var(--VerseNumberColor);
+    color: var(--VerseNumberColor);
+    font-weight: 600;
+}
+
+/* Per-chapter media strip (audio player + video thumbnails). */
+.reader-media {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+    margin-bottom: 1.2em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid rgb(229 231 235);
+}
+/* Variant used when the audio bar is toggled inline via the top-bar ♪ icon.
+ * It appears above the scripture body without separating it from the rest
+ * of the view, so the user keeps reading while listening. */
+.reader-media-inline {
+    border-bottom: 0;
+    padding-bottom: 0;
+    margin-bottom: 0.7em;
+}
+.reader-audio {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+    flex-wrap: wrap;
+}
+.reader-audio audio {
+    flex: 1 1 320px;
+    min-width: 280px;
+    max-width: 100%;
+    height: 38px;
+}
+.reader-audio-label {
+    font-size: 0.8em;
+    color: rgb(107 114 128);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+}
+.reader-audio-icon {
+    color: var(--VerseNumberColor);
+    font-size: 1.1em;
+}
+.reader-videos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.6em;
+}
+.reader-video-thumb {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: 4px;
+    background-color: rgb(31 41 55);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    cursor: pointer;
+    color: white;
+    padding: 0;
+    display: block;
+    text-align: start;
+}
+.reader-video-thumb:hover { filter: brightness(1.1); }
+.reader-video-thumb:focus-visible {
+    outline: 2px solid var(--VerseNumberColor);
+    outline-offset: 2px;
+}
+.reader-video-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.75);
+    opacity: 0.92;
+}
+.reader-video-kind {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 0.65em;
+    padding: 1px 6px;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.reader-video-title {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 4px 8px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
+    font-size: 0.8em;
+    line-height: 1.2;
+    text-align: start;
+}
+.reader-video-player {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+}
+.reader-video-player iframe,
+.reader-video-player video {
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    border-radius: 4px;
+    background: black;
+}
+.reader-video-player .reader-video-title {
+    position: static;
+    background: none;
+    color: rgb(75 85 99);
+    font-size: 0.85em;
+    padding: 0;
+}
+
+/* Inline figures (USFM \fig). Phrasing-content span shown as a block. */
+.reader-body .fig {
+    display: block;
+    margin: 1.2em auto;
+    text-align: center;
+}
+.reader-body .fig img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    border-radius: 2px;
+}
+.reader-body .fig .fig-caption {
+    display: block;
+    margin-top: 0.4em;
+    font-size: 0.85em;
+    font-style: italic;
+    color: rgb(107 114 128);
+}
+
+/* Inline video thumbnails emitted by the Sofria renderer at verse boundaries. */
+.reader-body .reader-inline-video {
+    display: block;
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 16 / 9;
+    margin: 0.8em auto;
+    border-radius: 4px;
+    background-color: rgb(31 41 55);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    cursor: pointer;
+    color: white;
+}
+.reader-body .reader-inline-video:hover { filter: brightness(1.1); }
+.reader-body .reader-inline-video:focus-visible {
+    outline: 2px solid var(--VerseNumberColor);
+    outline-offset: 2px;
+}
+.reader-body .reader-inline-video .reader-video-play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.75);
+    opacity: 0.92;
+}
+.reader-body .reader-inline-video .reader-video-kind {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 0.65em;
+    padding: 1px 6px;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.reader-body .reader-inline-video .reader-video-title {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 4px 8px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
+    font-size: 0.8em;
+    line-height: 1.2;
+    text-align: start;
+}
+.reader-body .reader-inline-video-player {
+    display: block;
+    max-width: 480px;
+    margin: 0.8em auto;
+}
+
+/* Body gets a modest max-width for readable line length. */
+.reader-body {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 0.5em;
+}
+
+/* Glossary-linkable terms (USFM \w and \k inside scripture body). Rendered
+ * as <button> so keyboard focus and click resolve through the same delegation
+ * handler as footnotes. */
+.reader-body .glossary-term {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    border-bottom: 1px dotted currentColor;
+    line-height: inherit;
+}
+.reader-body .glossary-term:hover { color: var(--LinkColor); border-bottom-style: solid; }
+.reader-body .glossary-term:focus-visible {
+    outline: 2px solid var(--LinkColor);
+    outline-offset: 1px;
+}
+
+/* Popover term label (shown for glossary popover entries). */
+.reader-note-popover .popover-term {
+    font-weight: 700;
+    color: var(--TitlesColor);
+    margin-bottom: 0.3em;
+    font-size: 1.05em;
+}
+
+/* Settings panel — absolute-positioned card under the toolbar. */
+.settings-panel {
+    position: relative;
+    z-index: 20;
+    max-width: 420px;
+    margin: 0 auto 0.8em;
+    padding: 0.9em 1em;
+    background: var(--FootnoteBackgroundColor, #F9FAFB);
+    border: 1px solid rgb(209 213 219);
+    border-radius: 6px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 0.55em;
+    color: var(--TextColor);
+}
+.settings-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5em;
+    padding-bottom: 0.4em;
+    border-bottom: 1px solid rgb(229 231 235);
+    margin-bottom: 0.2em;
+}
+.settings-title { font-weight: 600; font-size: 0.95em; }
+.settings-close {
+    background: transparent; border: 0; font-size: 1.2em;
+    line-height: 1; cursor: pointer; color: inherit; padding: 0 0.25em;
+}
+.settings-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    flex-wrap: wrap;
+    font-size: 0.9em;
+}
+.settings-label { min-width: 5em; color: inherit; opacity: 0.85; }
+.settings-value { font-size: 0.85em; color: inherit; opacity: 0.75; min-width: 3em; text-align: end; }
+.settings-row input[type="range"] { flex: 1 1 160px; accent-color: var(--VerseNumberColor); }
+.settings-segmented {
+    display: flex;
+    border: 1px solid rgb(209 213 219);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.settings-segmented button {
+    background: transparent; border: 0; padding: 0.3em 0.7em; cursor: pointer;
+    color: inherit; font-size: 0.85em;
+    border-right: 1px solid rgb(229 231 235);
+}
+.settings-segmented button:last-child { border-right: 0; }
+.settings-segmented button.active {
+    background: var(--VerseNumberColor);
+    color: white;
+}
+.settings-segmented button:hover:not(.active) { background: rgb(243 244 246); }
+.toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+.toggle-label input[type="checkbox"] { accent-color: var(--VerseNumberColor); }
+
+/* Bespoke audio player matching SE's bar shape. */
+.audio-player {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.45em 0.65em;
+    background: var(--FootnoteBackgroundColor, #F3F4F6);
+    border: 1px solid rgb(229 231 235);
+    border-radius: 6px;
+    flex-wrap: wrap;
+    color: var(--TextColor);
+}
+.audio-player .ap-label {
+    font-size: 0.78em;
+    font-family: monospace;
+    opacity: 0.75;
+    padding-inline-end: 0.25em;
+}
+.audio-player .ap-controls { display: flex; gap: 0.25em; align-items: center; }
+.audio-player .ap-btn {
+    background: transparent;
+    border: 1px solid rgb(209 213 219);
+    border-radius: 4px;
+    min-width: 34px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 0.75em;
+    color: inherit;
+    padding: 0 0.35em;
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1em;
+}
+.audio-player .ap-btn:hover { background: rgba(0, 0, 0, 0.05); }
+.audio-player .ap-btn.ap-play {
+    min-width: 44px;
+    font-size: 0.95em;
+    font-weight: 700;
+    color: var(--VerseNumberColor);
+    border-color: var(--VerseNumberColor);
+}
+.audio-player .ap-btn.ap-rate { font-size: 0.8em; font-weight: 600; }
+.audio-player .ap-progress {
+    flex: 1 1 160px;
+    min-width: 120px;
+    height: 6px;
+    background: rgb(229 231 235);
+    border-radius: 3px;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+}
+.audio-player .ap-progress:focus-visible {
+    outline: 2px solid var(--VerseNumberColor);
+    outline-offset: 2px;
+}
+.audio-player .ap-fill {
+    height: 100%;
+    background: var(--VerseNumberColor);
+    transition: width 0.08s linear;
+}
+.audio-player .ap-time {
+    font-size: 0.75em;
+    font-family: monospace;
+    opacity: 0.7;
+    min-width: 82px;
+    text-align: end;
+}

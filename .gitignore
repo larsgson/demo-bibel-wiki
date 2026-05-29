@@ -1,0 +1,33 @@
+node_modules/
+dist/
+build/
+.astro/
+.svelte-kit/
+.env
+.DS_Store
+
+# Data fetched at build time
+data/pkf/
+data/BSB/
+
+# Public data copied from bibel-wiki (fetched, not committed)
+public/ALL-langs-data/
+public/ALL-langs-compact.json
+public/ALL-langs-mini.json
+public/templates/
+
+# Symlinks into data/ (resolved at runtime)
+public/pkf
+public/bsb/
+
+# Example projects
+example/
+
+# Previous SvelteKit implementation snapshot
+prev/
+
+# Claude Code
+.claude/
+
+# Local Netlify folder
+.netlify/

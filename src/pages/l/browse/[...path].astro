@@ -1,0 +1,20 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro"
+import { BrowseIsland } from "../../../components/browse/BrowseIsland"
+import "../../../styles/browse.css"
+
+export function getStaticPaths() {
+  return [{ params: { path: undefined } }]
+}
+---
+
+<BaseLayout title="Browse">
+  <div id="browse-root"></div>
+  <script>
+    const params = new URLSearchParams(window.location.search)
+    const iso = params.get("lang") || window.location.pathname.split("/").find((s) => /^[a-z]{3}$/.test(s)) || "eng"
+    const root = document.getElementById("browse-root")!
+    root.dataset.iso = iso
+  </script>
+  <BrowseIsland client:only="react" iso="" initialTree="" initialPath={[]} />
+</BaseLayout>

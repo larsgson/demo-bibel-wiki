@@ -1,0 +1,50 @@
+level = "chapter"
+id = "02"
+canon = "nt"
+
+[image]
+filename = "Bible_NT.png"
+
+[[stories]]
+id = "01"
+image = "43_Jn_01_02_RG.jpg"
+
+[[stories]]
+id = "02"
+image = "42_Lk_02_01_RG.jpg"
+
+[[stories]]
+id = "03-1"
+image = "40_Mt_03_05_RG.jpg"
+
+[[stories]]
+id = "03-2"
+image = "41_Mk_02_01_RG.jpg"
+
+[[stories]]
+id = "04"
+image = "40_Mt_05_01_RG.jpg"
+
+[[stories]]
+id = "05-1"
+image = "40_Mt_26_02_RG.jpg"
+
+[[stories]]
+id = "05-2"
+image = "40_Mt_27_01_RG.jpg"
+
+[[stories]]
+id = "05-3"
+image = "40_Mt_28_01_RG.jpg"
+
+[[stories]]
+id = "06-1"
+image = "44_Ac_01_11_RG.jpg"
+
+[[stories]]
+id = "06-2"
+image = "44_Ac_09_01_RG.jpg"
+
+[[stories]]
+id = "07"
+image = "66_Re_21_01_RG.jpg"

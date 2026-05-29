@@ -1,0 +1,9 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro"
+import { SearchIsland } from "../../components/search/SearchIsland"
+import "../../styles/search.css"
+---
+
+<BaseLayout title="AI Search">
+  <SearchIsland client:only="react" iso="" />
+</BaseLayout>

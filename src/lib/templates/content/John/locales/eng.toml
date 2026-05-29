@@ -1,0 +1,414 @@
+# The Gospel of John - English locale
+
+title = "The Gospel of John"
+longTitle = "The Good News according to John"
+description = "Jesus' beloved disciple John tells us about the One who was from the beginning. Through Jesus, God gave us grace and truth. Through Him we become children of God."
+video_url = "https://www.youtube.com/embed/RHs-mOkjXSg"
+
+[01]
+title = "The Word Among Us"
+description = "Chapters 1–12: From the incarnation of the Word to Jesus' entry into Jerusalem"
+
+[01.01]
+title = "The Living Word of God"
+description = "The Word of God became flesh and dwelt with us. John the Baptist bore witness to him. Andrew told Simon Peter and they followed Jesus."
+
+[01.02]
+title = "Cana Wedding"
+description = "Jesus turned water into wine at a wedding. He drove money-changers from the temple. He said, \"Destroy this temple and I will raise it.\""
+
+[01.03]
+title = "Nicodemus"
+description = "Jesus told Nicodemus, \"Be born again. Whoever believes in the Son will have eternal life.\" John the Baptist said, \"He is above all.\""
+
+[01.04]
+title = "Samaritan Woman"
+description = "Jesus spoke with a Samaritan woman about her husbands. She said, \"Can this be the Christ?\" Many believed. He healed an official's son."
+
+[01.05]
+title = "Lame Man Healed"
+description = "Jesus healed a man at Bethesda. He said, \"The Son only does what he sees the Father doing. My works and the Scriptures bear witness.\""
+
+[01.06]
+title = "Bread of Life"
+description = "Jesus fed 5,000 men and walked across the sea. He said, \"I am the bread of life. My flesh is true food.\" Many disciples turned back."
+
+[01.07]
+title = "Rivers of Living Water"
+description = "Jesus went to the feast. The people said, \"Is this the Christ?\" The chief priests tried to arrest him. He called out, \"Come and drink.\""
+
+[01.08]
+title = "Abraham's Descendants"
+description = "Jesus did not condemn a woman caught in adultery. The Pharisees questioned him. He said, \"If God were your Father you would love me.\""
+
+[01.09]
+title = "Blind Man Healed"
+description = "Jesus healed a blind man on the Sabbath. The Pharisees called the man and threw him out. Jesus said, \"I came that the blind may see.\""
+
+[01.10]
+title = "Sheepfold-Shepherd"
+description = "Jesus said, \"I am the good shepherd. I give my life for the sheep.\" They asked, \"Are you the Christ?\" He said, \"My sheep follow me.\""
+
+[01.11]
+title = "Lazarus"
+description = "Lazarus died. Jesus went to the tomb and said, \"Lazarus, come out.\" Lazarus came out. The chief priests plotted to put Jesus to death."
+
+[01.12]
+title = "Entrance Into Jerusalem"
+description = "Jesus rode into Jerusalem. The crowd shouted, \"Hosanna!\" He said, \"The Son of Man must be lifted up. I have come to save the world.\""
+
+[02]
+title = "Jesus and His Disciples"
+description = "Chapters 13–17: The Last Supper, farewell discourses, and Jesus' prayer"
+
+[02.13]
+title = "Foot Washing"
+description = "Jesus washed the disciples' feet. He said, \"One of you will betray me.\" Judas left. Jesus said, \"Love each other as I have loved you.\""
+
+[02.14]
+title = "Way-Truth-Life"
+description = "\"I am the way, the truth, and the life. I am in the Father and the Father in me. He will give you the Holy Spirit. Do not be afraid.\""
+
+[02.15]
+title = "Vine-Branches"
+description = "\"I am the vine, you are the branches. You are my friends if you do what I command. If they persecuted me, they will also persecute you.\""
+
+[02.16]
+title = "The Coming of the Holy Spirit"
+description = "\"The Spirit will convict the world of sin. He will guide you into all truth. Your sorrow will turn to joy. I am going to the Father.\""
+
+[02.17]
+title = "Christ to Depart"
+description = "Jesus said, \"Father, I have revealed your name to those you gave me. Sanctify them in the truth. May all who believe in me be one.\""
+
+[03]
+title = "Cross & Resurrection"
+description = "Chapters 18–21: Arrest, crucifixion, resurrection, and restoration"
+
+[03.18]
+title = "Arrest and Trials"
+description = "Judas betrayed Jesus to the chief priests. Peter denied him. He was sent before Pilate. Jesus said, \"My kingdom is not of this world.\""
+
+[03.19]
+title = "Death for Sins"
+description = "The soldiers took Jesus and crucified him. He said, \"It is finished.\" He gave up his spirit. A soldier pierced his side with a spear."
+
+[03.20]
+title = "Resurrection"
+description = "Mary went to the tomb and found it empty. Jesus met her. He came and stood among the disciples. Thomas said, \"My Lord and my God!\""
+
+[03.21]
+title = "Sea of Tiberius"
+description = "Jesus appeared as the disciples were fishing. He said to Peter, \"Do you love me? Feed my sheep.\" The beloved disciple has testified."
+
+[01.01.1]
+p_hd = "The Word became flesh"
+
+[01.01.19]
+p_hd = "John the Baptist denies being the Messiah"
+
+[01.01.29]
+p_hd = "John testifies about Jesus"
+
+[01.01.35]
+p_hd = "John’s disciples follow Jesus"
+
+[01.01.43]
+p_hd = "Jesus calls Philip and Nathanael"
+
+[01.02.1]
+p_hd = "Jesus changes water into wine"
+
+[01.02.13]
+p_hd = "Jesus clears the temple courts"
+
+[01.02.23]
+p_hd = "Jesus understands the people"
+
+[01.03.1]
+p_hd = "Jesus teaches Nicodemus"
+
+[01.03.22]
+p_hd = "John testifies again about Jesus"
+
+[01.04.1]
+p_hd = "Jesus talks with a Samaritan woman"
+
+[01.04.27]
+p_hd = "The disciples rejoin Jesus"
+
+[01.04.39]
+p_hd = "Many Samaritans believe"
+
+[01.04.43]
+p_hd = "Jesus heals an official’s son"
+
+[01.05.1]
+p_hd = "The healing at the pool"
+
+[01.05.16]
+p_hd = "The authority of the Son"
+
+[01.05.19]
+p_hd = "Jesus"
+
+[01.05.31]
+p_hd = "Testimonies about Jesus"
+
+[01.06.1]
+p_hd = "Jesus feeds the five thousand"
+
+[01.06.16]
+p_hd = "Jesus walks on the water"
+
+[01.06.22]
+p_hd = "The crowd seeks Jesus"
+
+[01.06.25]
+p_hd = "Jesus the bread of life"
+
+[01.06.26]
+p_hd = "Jesus Christ - the bread of life"
+
+[01.06.35]
+p_hd = "Whoever believes has eternal life"
+
+[01.06.48]
+p_hd = "Whoever eats this bread will live forever"
+
+[01.06.60]
+p_hd = "Many disciples desert Jesus"
+
+[01.06.67]
+p_hd = "Peter"
+
+[01.07.1]
+p_hd = "Jesus goes to the Feast of Tabernacles"
+
+[01.07.10]
+p_hd = "Jesus at the Feast of Tabernacles in Jerusalem"
+
+[01.07.14]
+p_hd = "Jesus teaches at the Feast"
+
+[01.07.25]
+p_hd = "Division over who Jesus is"
+
+[01.07.37]
+p_hd = "Living Water"
+
+[01.07.40]
+p_hd = "Is Jesus the Messiah?"
+
+[01.07.45]
+p_hd = "Unbelief of the Jewish leaders"
+
+[01.08.1]
+p_hd = "A woman caught in adultery, Jesus does not condemn her"
+
+[01.08.12]
+p_hd = "Dispute over Jesus’ testimony"
+
+[01.08.21]
+p_hd = "Dispute over who Jesus is"
+
+[01.08.31]
+p_hd = "Dispute over whose children Jesus’ opponents are"
+
+[01.08.37]
+p_hd = "Children of Abraham or of the devil?"
+
+[01.08.48]
+p_hd = "Jesus’ claims about himself"
+
+[01.09.1]
+p_hd = "Jesus heals a man born blind"
+
+[01.09.13]
+p_hd = "The Pharisees investigate the healing"
+
+[01.09.24]
+p_hd = "Rejection of the healed man"
+
+[01.09.35]
+p_hd = "Spiritual blindness"
+
+[01.10.1]
+p_hd = "The good shepherd and his sheep"
+
+[01.10.7]
+p_hd = "Jesus Christ - the door to the sheep"
+
+[01.10.11]
+p_hd = "Jesus Christ - the good shepherd"
+
+[01.10.22]
+p_hd = "Further conflict over Jesus’ claims"
+
+[01.10.31]
+p_hd = "Accusation of blasphemy"
+
+[01.11.1]
+p_hd = "The death of Lazarus"
+
+[01.11.17]
+p_hd = "Jesus comforts the sisters of Lazarus"
+
+[01.11.28]
+p_hd = "Jesus weeps"
+
+[01.11.38]
+p_hd = "Jesus raises Lazarus from the dead"
+
+[01.11.45]
+p_hd = "The plot to kill Jesus"
+
+[01.12.1]
+p_hd = "Jesus anointed at Bethany"
+
+[01.12.12]
+p_hd = "Jesus comes to Jerusalem as king"
+
+[01.12.20]
+p_hd = "Jesus predicts his death"
+
+[01.12.27]
+p_hd = "Jesus announces his death"
+
+[01.12.37]
+p_hd = "Belief and unbelief among the Jews"
+
+[01.12.42]
+p_hd = "Consequences of faith and unbelief"
+
+[02.13.1]
+p_hd = "Jesus washes his disciples’ feet"
+
+[02.13.12]
+p_hd = "Foot washing"
+
+[02.13.18]
+p_hd = "Jesus predicts his betrayal"
+
+[02.13.21]
+p_hd = "Announcement of betrayal"
+
+[02.13.31]
+p_hd = "Jesus predicts Peter’s denial"
+
+[02.13.33]
+p_hd = "The new Commandment"
+
+[02.13.36]
+p_hd = "Jesus announces that Peter will deny him"
+
+[02.14.1]
+p_hd = "Jesus comforts his disciples"
+
+[02.14.5]
+p_hd = "Jesus the way to the Father"
+
+[02.14.8]
+p_hd = "Whoever sees the Son sees the Father"
+
+[02.14.15]
+p_hd = "Jesus promises the Holy Spirit"
+
+[02.14.25]
+p_hd = "Jesus says: "
+
+[02.15.1]
+p_hd = "The vine and the branches"
+
+[02.15.9]
+p_hd = "Remain in the love of Jesus"
+
+[02.15.18]
+p_hd = "The world hates the disciples"
+
+[02.15.26]
+p_hd = "The work of the Holy Spirit"
+
+[02.16.4]
+p_hd = "The work of the Holy Spirit"
+
+[02.16.16]
+p_hd = "The disciples’ grief will turn to joy"
+
+[02.16.25]
+p_hd = "Jesus"
+
+[02.17.1]
+p_hd = "Jesus prays to be glorified"
+
+[02.17.6]
+p_hd = "Jesus prays for his disciples"
+
+[02.17.20]
+p_hd = "Jesus prays for all believers"
+
+[03.18.1]
+p_hd = "Jesus arrested"
+
+[03.18.12]
+p_hd = "Jesus before Annas"
+
+[03.18.15]
+p_hd = "Peter’s first denial"
+
+[03.18.19]
+p_hd = "The high priest questions Jesus"
+
+[03.18.25]
+p_hd = "Peter’s second and third denials"
+
+[03.18.28]
+p_hd = "Jesus before Pilate"
+
+[03.18.38]
+p_hd = "The condemnation of Jesus"
+
+[03.19.1]
+p_hd = "Jesus sentenced to be crucified"
+
+[03.19.6]
+p_hd = "Jesus does not answer Pilate"
+
+[03.19.16]
+p_hd = "The crucifixion of Jesus"
+
+[03.19.28]
+p_hd = "The death of Jesus"
+
+[03.19.31]
+p_hd = "The one she pierced have«"
+
+[03.19.38]
+p_hd = "The burial of Jesus"
+
+[03.20.1]
+p_hd = "The empty tomb"
+
+[03.20.10]
+p_hd = "Jesus appears to Mary Magdalene"
+
+[03.20.19]
+p_hd = "Jesus appears to his disciples"
+
+[03.20.24]
+p_hd = "Jesus appears to Thomas"
+
+[03.20.30]
+p_hd = "The purpose of John’s gospel"
+
+[03.21.1]
+p_hd = "Jesus and the miraculous catch of fish"
+
+[03.21.15]
+p_hd = "Jesus reinstates Peter"
+
+[03.21.20]
+p_hd = "Peter and the disciple whom Jesus especially loved"
+
+[03.21.24]
+p_hd = "Final words"

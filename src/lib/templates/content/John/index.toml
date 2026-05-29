@@ -1,0 +1,22 @@
+level = "collection"
+layout_theme = "theme.css"
+
+[images]
+base_url = "https://bibel.wiki/img/john-pics"
+medium_pattern = "640px/{filename}"
+thumbs_pattern = "640px/{filename}"
+
+[image]
+filename = "VB-John1v5b.jpg"
+
+[[categories]]
+id = "01"
+image = "VB-John1v14.jpg"
+
+[[categories]]
+id = "02"
+image = "VB-John13v18.jpg"
+
+[[categories]]
+id = "03"
+image = "VB-John18v24.jpg"

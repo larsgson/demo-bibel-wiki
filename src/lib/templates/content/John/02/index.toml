@@ -1,0 +1,26 @@
+level = "chapter"
+id = "02"
+canon = "nt"
+
+[image]
+filename = "VB-John13v18.jpg"
+
+[[stories]]
+id = "13"
+image = "VB-John13v18.jpg"
+
+[[stories]]
+id = "14"
+image = "VB-John14v20.jpg"
+
+[[stories]]
+id = "15"
+image = "VB-John15v15a.jpg"
+
+[[stories]]
+id = "16"
+image = "VB-John16v25.jpg"
+
+[[stories]]
+id = "17"
+image = "VB-John17v14.jpg"

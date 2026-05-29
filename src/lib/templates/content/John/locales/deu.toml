@@ -1,0 +1,414 @@
+# Das Johannesevangelium - Deutsche Lokalisierung
+
+title = "Das Johannesevangelium"
+longTitle = "Die gute Nachricht nach Johannes"
+description = "Der von Jesus geliebte Jünger Johannes erzählt uns von dem, der von Anfang an war. Durch Jesus schenkte uns Gott Gnade und Wahrheit. Durch Ihn werden wir Kinder Gottes."
+video_url = "https://www.youtube.com/embed/WMAfkYVlSoQ"
+
+[01]
+title = "Das Wort unter uns"
+description = "Kapitel 1–12: Von der Menschwerdung des Wortes bis zum Einzug Jesu in Jerusalem"
+
+[01.01]
+title = "Mensch gewordene Wort Gottes"
+description = "Das Wort Gottes wurde Fleisch und wohnte unter uns. Johannes der Täufer legt Zeugnis für ihn ab. Andreas erzählt es Simon Petrus und sie folgten Jesus."
+
+[01.02]
+title = "Hochzeit in Kana"
+description = "Jesus verwandelt bei einer Hochzeit Wasser in Wein. Er treibt Geldwechsler aus dem Tempel und sagt: \"Zerstört diesen Tempel und ich werde ihn wieder aufbauen.\""
+
+[01.03]
+title = "Nikodemus"
+description = "Jesus sagt zu Nikodemus: \"Du musst wiedergeboren werden. Wer an den Sohn glaubt, wird ewiges Leben haben.\" Johannes der Täufer sagt: \"Er ist über allem.\""
+
+[01.04]
+title = "Die samaritanische Frau"
+description = "Jesus spricht mit einer Samariterin über ihren Mann. Sie sagt: \"Kann das der Christus sein?\" Viele glauben. Er heilt den Sohn eines Beamten."
+
+[01.05]
+title = "Heilung eines Kranken"
+description = "Jesus heilt einen Mann in Bethesda. Er sagt: \"Der Sohn tut nur, was er sieht, dass der Vater tut. Meine Werke und die Schriften legen Zeugnis davon ab.\""
+
+[01.06]
+title = "Brot des Lebens"
+description = "Jesus speist 5.000 Männer und geht über das Meer. Er sagt: \"Ich bin das Brot des Lebens. Mein Fleisch ist wahre Speise.\" Viele Jünger ziehen sich zurück."
+
+[01.07]
+title = "Wasser des Lebens"
+description = "Jesus geht zum Laubhüttenfest. Die Leute sagen: \"Ist dies der Christus?\" Die Hohepriester versuchen, ihn festzunehmen. Er ruft: \"Kommt und trinkt.\""
+
+[01.08]
+title = "Kinder Abrahams"
+description = "Jesus verurteilt eine Frau nicht, die beim Ehebruch ertappt wurde. Die Pharisäer befragen ihn. Er sagt: \"Wenn Gott euer Vater wäre, würdet ihr mich lieben.\""
+
+[01.09]
+title = "Heilung eines Blindgeborenen"
+description = "Jesus heilt am Sabbat einen Blinden. Die Pharisäer werfen diesen blinden Mann hinaus. Jesus sagt: \"Ich bin gekommen, damit die Blinden sehen können.\""
+
+[01.10]
+title = "Der gute Hirte"
+description = "Jesus sagt: \"Ich bin der gute Hirte. Ich gebe mein Leben für die Schafe.\" Sie fragen: \"Bist du der Christus?\" Er sagt: \"Meine Schafe folgen mir.\""
+
+[01.11]
+title = "Lazarus"
+description = "Lazarus stirbt. Jesus geht zum Grab und ruft: \"Lazarus, komm heraus.\" Lazarus kommt heraus. Die Hohepriester planen, Jesus zu töten."
+
+[01.12]
+title = "Einzug in Jerusalem"
+description = "Jesus reitet nach Jerusalem. Die Menge ruft: \"Hosianna!\" Er sagt: \"Der Menschensohn muss erhöht werden. Ich bin gekommen, um die Welt zu retten.\""
+
+[02]
+title = "Jesus und seine Jünger"
+description = "Kapitel 13–17: Das letzte Abendmahl, Abschiedsreden und das Gebet Jesu"
+
+[02.13]
+title = "Fußwaschung"
+description = "Jesus wischt den Jüngern die Füße. Er sagt: \"Einer von euch wird mich verraten.\" Judas geht weg. Jesus sagt: \"Liebt einander, wie ich euch geliebt habe.\""
+
+[02.14]
+title = "Der Weg, die Wahrheit und das Leben"
+description = "\"Ich bin der Weg, die Wahrheit und das Leben. Ich bin im Vater und der Vater in mir. Er wird euch den Heiligen Geist senden. Habt keine Angst.\""
+
+[02.15]
+title = "Der Weinstock"
+description = "\"Ich bin der Weinstock, ihr seid die Reben. Ihr seid meine Freunde, wenn ihr tut, was ich euch gebiete. Wie sie mich verfolgt haben, werden sie auch euch verfolgen.\""
+
+[02.16]
+title = "Das Kommen des Heiligen Geistes"
+description = "\"Der Geist wird die Welt der Sünde überführen. Er wird euch in alle Wahrheit leiten. Eure Trauer wird sich in Freude verwandeln. Ich gehe zum Vater.\""
+
+[02.17]
+title = "Das Gebet Jesu für seine Jünger"
+description = "Jesus sagt: \"Vater, ich habe deinen Namen denen offenbart, die du mir gegeben hast. Heilige sie in der Wahrheit. Mögen alle, die an mich glauben, eins sein.\""
+
+[03]
+title = "Kreuz & Auferstehung"
+description = "Kapitel 18–21: Verhaftung, Kreuzigung, Auferstehung und Wiederherstellung"
+
+[03.18]
+title = "Gefangennahme und Verurteilung"
+description = "Judas verrät Jesus an die Hohepriester. Petrus verleugnet ihn. Er wird vom Pilatus verurteilt. Jesus sagt: \"Mein Reich ist nicht von dieser Welt.\""
+
+[03.19]
+title = "Tod"
+description = "Die Soldaten nehmen Jesus und kreuzigen ihn. Er sagt: \"Es ist vollbracht\" und gibt seinen Geist auf. Ein Soldat durchbohrt seine Seite mit einem Speer."
+
+[03.20]
+title = "Die Auferstehung"
+description = "Maria geht zum Grab und findet es leer. Jesus begegnet ihr. Er kommt und zeigt sich den Jüngern. Thomas sagt: \"Mein Herr und mein Gott!\""
+
+[03.21]
+title = "Am See von Tiberias"
+description = "Jesus zeigt sich nochmals, als die Jünger fischen. Er sagt zu Petrus: \"Liebst du mich? Weide meine Schafe.\" Der geliebte Jünger hat dieses Zeugnis abgelegt."
+
+[01.01.1]
+p_hd = "Jesus Christus – das Mensch gewordene Wort Gottes"
+
+[01.01.19]
+p_hd = "Johannes der Täufer über sich selbst"
+
+[01.01.29]
+p_hd = "Johannes der Täufer über Jesus Christus"
+
+[01.01.35]
+p_hd = "Die ersten Jünger Jesu"
+
+[01.01.43]
+p_hd = "Philippus und Natanaël"
+
+[01.02.1]
+p_hd = "Die Hochzeit in Kana"
+
+[01.02.13]
+p_hd = "Der Tempel – Haus Gottes oder Kaufhaus?"
+
+[01.02.23]
+p_hd = "Jesus kennt die Menschen"
+
+[01.03.1]
+p_hd = "Jesus und Nikodemus: Die Notwendigkeit, von neuem geboren zu werden"
+
+[01.03.22]
+p_hd = "Der Auftrag Johannes’ des Täufers und der Auftrag Jesu"
+
+[01.04.1]
+p_hd = "Jesus und die samaritanische Frau: Das Wasser, das den Durst für immer löscht"
+
+[01.04.27]
+p_hd = "Glaube der Samaritaner – Vom Erntefeld Gottes"
+
+[01.04.39]
+p_hd = "Viele Samariter glauben"
+
+[01.04.43]
+p_hd = "Jesus heilt den Sohn eines königlichen Beamten"
+
+[01.05.1]
+p_hd = "Heilung eines Kranken am Sabbat"
+
+[01.05.16]
+p_hd = "Die Vollmacht des Sohnes"
+
+[01.05.19]
+p_hd = "Jesu Vollmacht: die Vollmacht des Sohnes"
+
+[01.05.31]
+p_hd = "Die Glaubwürdigkeit der Aussagen Jesu über sich selbst"
+
+[01.06.1]
+p_hd = "Jesus gibt einer großen Menschenmenge zu essen"
+
+[01.06.16]
+p_hd = "Jesus geht auf dem Wasser"
+
+[01.06.22]
+p_hd = "Die Menschenmenge sucht Jesus"
+
+[01.06.25]
+p_hd = "Jesus, das Brot des Lebens"
+
+[01.06.26]
+p_hd = "Jesus Christus – das Brot des Lebens"
+
+[01.06.35]
+p_hd = "Wer glaubt, hat ewiges Leben"
+
+[01.06.48]
+p_hd = "Wer dieses Brot isst, wird leben in Ewigkeit"
+
+[01.06.60]
+p_hd = "Viele Jünger wenden sich von Jesus ab"
+
+[01.06.67]
+p_hd = "Das Bekenntnis des Petrus"
+
+[01.07.1]
+p_hd = "Jesus lässt sich nicht zu vorzeitigem Handeln drängen"
+
+[01.07.10]
+p_hd = "Jesus auf dem Laubhüttenfest in Jerusalem"
+
+[01.07.14]
+p_hd = "Jesus lehrt auf dem Fest"
+
+[01.07.25]
+p_hd = "Jesus im Widerstreit der Meinungen"
+
+[01.07.37]
+p_hd = "Jesu Angebot: das Wasser des Lebens"
+
+[01.07.40]
+p_hd = "Ist Jesus der Messias? Meinungsverschiedenheiten im Volk"
+
+[01.07.45]
+p_hd = "Unglaube der jüdischen Führer"
+
+[01.08.1]
+p_hd = "Jesus und die Frau, die beim Ehebruch ertappt wurde: Freispruch statt Verurteilung"
+
+[01.08.12]
+p_hd = "Jesus Christus – das Licht der Welt"
+
+[01.08.21]
+p_hd = "Woher Jesus kommt und wohin er geht"
+
+[01.08.31]
+p_hd = "Wirklich frei – nur durch Jesus"
+
+[01.08.37]
+p_hd = "Kinder Abrahams oder Kinder des Teufels?"
+
+[01.08.48]
+p_hd = "Jesus Christus – größer als Abraham"
+
+[01.09.1]
+p_hd = "Heilung eines Blindgeborenen am Sabbat"
+
+[01.09.13]
+p_hd = "Verhör des Geheilten durch die Pharisäer"
+
+[01.09.24]
+p_hd = "Verstoßung des Geheilten"
+
+[01.09.35]
+p_hd = "Das Bekenntnis des Blindgeborenen – die Blindheit der Sehenden"
+
+[01.10.1]
+p_hd = "Das Bild vom Hirten und seinen Schafen"
+
+[01.10.7]
+p_hd = "Jesus Christus – die Tür zu den Schafen"
+
+[01.10.11]
+p_hd = "Jesus Christus – der gute Hirte"
+
+[01.10.22]
+p_hd = "In der Hand des Hirten geborgen. Die Einheit von Vater und Sohn"
+
+[01.10.31]
+p_hd = "Vorwurf der Gotteslästerung. Die Auseinandersetzung spitzt sich zu"
+
+[01.11.1]
+p_hd = "Krankheit und Tod des Lazarus"
+
+[01.11.17]
+p_hd = "Jesus Christus – die Auferstehung und das Leben"
+
+[01.11.28]
+p_hd = "Jesus weint"
+
+[01.11.38]
+p_hd = "Die Auferweckung des Lazarus"
+
+[01.11.45]
+p_hd = "Der Beschluss des Hohen Rates: Einer muss für alle sterben"
+
+[01.12.1]
+p_hd = "Die Salbung Jesu in Betanien"
+
+[01.12.12]
+p_hd = "Der Einzug in Jerusalem"
+
+[01.12.20]
+p_hd = "Menschen nichtjüdischer Herkunft wollen Jesus sehen"
+
+[01.12.27]
+p_hd = "Jesus kündigt seinen Tod an"
+
+[01.12.37]
+p_hd = "Rückblick auf Jesu öffentliches Wirken: Der Unglaube des jüdischen Volkes"
+
+[01.12.42]
+p_hd = "Folgen des Glaubens und des Unglaubens"
+
+[02.13.1]
+p_hd = "Jesus wäscht seinen Jüngern die Füße"
+
+[02.13.12]
+p_hd = "Die Bedeutung der Fußwaschung"
+
+[02.13.18]
+p_hd = "Jesus sagt seinen Verrat voraus"
+
+[02.13.21]
+p_hd = "Ankündigung des Verrats"
+
+[02.13.31]
+p_hd = "Die Herrlichkeit des Menschensohnes und die Herrlichkeit Gottes"
+
+[02.13.33]
+p_hd = "Das neue Gebot"
+
+[02.13.36]
+p_hd = "Jesus kündigt an, dass Petrus ihn verleugnen wird"
+
+[02.14.1]
+p_hd = "Jesus Christus – der Weg zum Vater"
+
+[02.14.5]
+p_hd = "Jesus, der Weg zum Vater"
+
+[02.14.8]
+p_hd = "Wer den Sohn sieht, sieht den Vater"
+
+[02.14.15]
+p_hd = "Der Heilige Geist – Jesu Stellvertreter"
+
+[02.14.25]
+p_hd = "Jesus sagt: "
+
+[02.15.1]
+p_hd = "Jesus Christus – der Weinstock"
+
+[02.15.9]
+p_hd = "In der Liebe Jesu bleiben"
+
+[02.15.18]
+p_hd = "Der Hass der Welt auf die Jünger Jesu"
+
+[02.15.26]
+p_hd = "Das Wirken des Heiligen Geistes"
+
+[02.16.4]
+p_hd = "Das Wirken des Heiligen Geistes"
+
+[02.16.16]
+p_hd = "Die Traurigkeit der Jünger wird sich in Freude verwandeln"
+
+[02.16.25]
+p_hd = "Jesu Sieg über die Welt"
+
+[02.17.1]
+p_hd = "Jesus betet … … für sich selbst"
+
+[02.17.6]
+p_hd = "… für seine Jünger"
+
+[02.17.20]
+p_hd = "… für alle, die an ihn glauben werden"
+
+[03.18.1]
+p_hd = "Die Gefangennahme Jesu"
+
+[03.18.12]
+p_hd = "Jesus vor Hannas"
+
+[03.18.15]
+p_hd = "Petrus verleugnet Jesus"
+
+[03.18.19]
+p_hd = "Das Verhör vor dem Hohenpriester"
+
+[03.18.25]
+p_hd = "Petrus verleugnet Jesus noch einmal"
+
+[03.18.28]
+p_hd = "Jesus vor Pilatus"
+
+[03.18.38]
+p_hd = "Die Verurteilung Jesu"
+
+[03.19.1]
+p_hd = "Jesus wird von den Soldaten misshandelt und verspottet"
+
+[03.19.6]
+p_hd = "Jesus antwortet Pilatus nicht"
+
+[03.19.16]
+p_hd = "Die Kreuzigung Jesu"
+
+[03.19.28]
+p_hd = "Der Tod Jesu"
+
+[03.19.31]
+p_hd = "»Der, den sie durchbohrt haben«"
+
+[03.19.38]
+p_hd = "Das Begräbnis Jesu"
+
+[03.20.1]
+p_hd = "Das leere Grab: Jesus ist auferstanden"
+
+[03.20.10]
+p_hd = "Der Auferstandene erscheint Maria aus Magdala"
+
+[03.20.19]
+p_hd = "Der Auferstandene erscheint den Jüngern"
+
+[03.20.24]
+p_hd = "Jesus und Thomas: Vom Unglauben zur Anbetung"
+
+[03.20.30]
+p_hd = "Warum dieses Buch geschrieben wurde"
+
+[03.21.1]
+p_hd = "Der Auferstandene erscheint seinen Jüngern am See von Tiberias"
+
+[03.21.15]
+p_hd = "Jesus und Petrus: Erneuertes Vertrauen"
+
+[03.21.20]
+p_hd = "Petrus und der Jünger, den Jesus besonders liebte: Unterschiedliche Wege in der Nachfolge"
+
+[03.21.24]
+p_hd = "Schlusswort"

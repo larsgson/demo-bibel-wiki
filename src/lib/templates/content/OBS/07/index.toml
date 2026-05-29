@@ -1,0 +1,44 @@
+level = "category"
+id = "07"
+beg = 27
+count = 9
+canon = "nt"
+
+[image]
+filename = "42_Lk_08_01.png"
+
+[[stories]]
+id = "27"
+image = "obs-en-27-01.jpg"
+
+[[stories]]
+id = "28"
+image = "obs-en-28-01.jpg"
+
+[[stories]]
+id = "29"
+image = "obs-en-29-01.jpg"
+
+[[stories]]
+id = "30"
+image = "obs-en-30-01.jpg"
+
+[[stories]]
+id = "31"
+image = "obs-en-31-01.jpg"
+
+[[stories]]
+id = "32"
+image = "obs-en-32-01.jpg"
+
+[[stories]]
+id = "33"
+image = "obs-en-33-01.jpg"
+
+[[stories]]
+id = "34"
+image = "obs-en-34-01.jpg"
+
+[[stories]]
+id = "35"
+image = "obs-en-35-01.jpg"

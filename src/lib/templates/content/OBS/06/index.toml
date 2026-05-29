@@ -1,0 +1,24 @@
+level = "category"
+id = "06"
+beg = 23
+count = 4
+canon = "nt"
+
+[image]
+filename = "42_Lk_03_03.png"
+
+[[stories]]
+id = "23"
+image = "obs-en-23-01.jpg"
+
+[[stories]]
+id = "24"
+image = "obs-en-24-01.jpg"
+
+[[stories]]
+id = "25"
+image = "obs-en-25-01.jpg"
+
+[[stories]]
+id = "26"
+image = "obs-en-26-01.jpg"
