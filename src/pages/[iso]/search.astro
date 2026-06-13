@@ -12,5 +12,5 @@ const { iso } = Astro.params
 ---
 
 <BaseLayout title="AI Search">
-  <SearchIsland client:load iso={iso} />
+  <SearchIsland client:only="react" iso={iso} />
 </BaseLayout>
