@@ -72,6 +72,21 @@ export interface Citation extends ChunkPreview {
     };
 }
 
+export interface StudyCitation extends ChunkPreview {
+    n: number;
+    score: number;
+    retrievers: string[];
+}
+
+export interface StudyResponse {
+    question: string;
+    citations: StudyCitation[];
+    total: number;
+    lang: string;
+    strategies: string[];
+    analysis: QueryAnalysis;
+}
+
 export interface AskResponse {
     question: string;
     answer: string;

@@ -2,12 +2,12 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useStore } from "@nanostores/react"
 import { $apiConfigured } from "../../stores/api-store"
 import { $searchMode, setSearchMode, type SearchMode } from "../../stores/search-store"
-import { search } from "../../lib/api/search"
+import { study } from "../../lib/api/study"
 import { ask } from "../../lib/api/ask"
-import type { AskResponse, Citation, SearchHit, SearchResponse } from "../../lib/api/types"
+import type { AskResponse, StudyResponse } from "../../lib/api/types"
 
 type Result =
-  | { kind: "search"; data: SearchResponse }
+  | { kind: "study"; data: StudyResponse }
   | { kind: "ask"; data: AskResponse }
 
 type Turn = {
@@ -83,7 +83,7 @@ export function SearchIsland({ iso }: Props) {
     const promise =
       mode === "premium"
         ? ask({ question: query, lang: "en", password }).then((data) => ({ kind: "ask" as const, data }))
-        : search({ q: query, lang: "en", top_k: 10, semantic: true }).then((data) => ({ kind: "search" as const, data }))
+        : study({ question: query, lang: "en" }).then((data) => ({ kind: "study" as const, data }))
 
     promise
       .then((res) => {
@@ -156,51 +156,51 @@ export function SearchIsland({ iso }: Props) {
           <div className="chat-welcome">
             <div className="chat-welcome-icon">💬</div>
             <p className="chat-welcome-text">
-              {mode === "premium" ? "Ask a question about the Bible" : "Search the Bible"}
+              {mode === "premium" ? "Ask a question about the Bible" : "Study the Bible"}
             </p>
             <p className="chat-welcome-hint">
-              {mode === "premium" ? "AI-powered answers with citations" : "Semantic search across scripture resources"}
+              {mode === "premium" ? "AI-powered answers with citations" : "Find relevant scripture passages and resources"}
             </p>
           </div>
         ) : (
           turns.map((turn, ti) => (
             <div key={ti}>
               <div className="chat-bubble user-bubble">
-                <span className="bubble-mode">{turn.mode}</span>
+                <span className="bubble-mode">{turn.mode === "premium" ? "AI" : "study"}</span>
                 <span className="bubble-query">{turn.query}</span>
               </div>
 
               {turn.loading ? (
                 <div className="chat-bubble ai-bubble">
-                  <span className="loading-dots">{turn.mode === "premium" ? "Thinking…" : "Searching…"}</span>
+                  <span className="loading-dots">{turn.mode === "premium" ? "Thinking…" : "Studying…"}</span>
                 </div>
               ) : turn.error ? (
                 <div className="chat-bubble ai-bubble error-bubble">
                   <p className="bubble-error-title">Request failed</p>
                   <p className="bubble-error-msg">{turn.error}</p>
                 </div>
-              ) : turn.result?.kind === "search" ? (
+              ) : turn.result?.kind === "study" ? (
                 <div className="chat-bubble ai-bubble">
-                  {turn.result.data.hits.length === 0 ? (
+                  {turn.result.data.citations.length === 0 ? (
                     <p className="bubble-empty">No results for "{turn.query}".</p>
                   ) : (
                     <>
-                      <p className="bubble-summary">{turn.result.data.total ?? turn.result.data.hits.length} results</p>
-                      {(expandedTurns.has(ti) ? turn.result.data.hits : turn.result.data.hits.slice(0, 3)).map((hit) => (
-                        <article key={hit.chunk_id} className="hit-card">
+                      <p className="bubble-summary">{turn.result.data.total} results</p>
+                      {(expandedTurns.has(ti) ? turn.result.data.citations : turn.result.data.citations.slice(0, 3)).map((c) => (
+                        <article key={c.chunk_id} className="hit-card">
                           <h3 className="hit-title">
-                            <a href={`/${iso}/c/${encodeURIComponent(hit.chunk_id)}`}>{hit.title}</a>
+                            <a href={`/${iso}/c/${encodeURIComponent(c.chunk_id)}`}>{c.title}</a>
                           </h3>
-                          {hit.passage && <p className="hit-passage">{hit.passage}</p>}
-                          <p className="hit-excerpt">{hit.excerpt}</p>
+                          {c.passage && <p className="hit-passage">{c.passage}</p>}
+                          <p className="hit-excerpt">{c.excerpt}</p>
                           <div className="hit-footer">
-                            <span className="hit-kind">{hit.kind}</span>
+                            <span className="hit-kind">{c.kind}</span>
                           </div>
                         </article>
                       ))}
-                      {turn.result.data.hits.length > 3 && !expandedTurns.has(ti) && (
+                      {turn.result.data.citations.length > 3 && !expandedTurns.has(ti) && (
                         <button className="show-more-btn" type="button" onClick={() => toggleExpand(ti)}>
-                          Show {turn.result.data.hits.length - 3} more results
+                          Show {turn.result.data.citations.length - 3} more results
                         </button>
                       )}
                     </>
@@ -251,7 +251,7 @@ export function SearchIsland({ iso }: Props) {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={mode === "premium" ? "Ask a question…" : "Search the Bible…"}
+            placeholder={mode === "premium" ? "Ask a question…" : "Study a topic…"}
           />
           <button className="chat-send" type="submit" disabled={!inputValue.trim()}>➤</button>
         </form>
@@ -259,9 +259,9 @@ export function SearchIsland({ iso }: Props) {
           className={`mode-toggle ${mode === "premium" ? "premium" : ""}`}
           type="button"
           onClick={toggleMode}
-          title={mode === "premium" ? "Switch to search" : "Switch to AI answers"}
+          title={mode === "premium" ? "Switch to Study" : "Switch to AI answers"}
         >
-          {mode === "premium" ? "AI" : "Search"}
+          {mode === "premium" ? "AI" : "Study"}
         </button>
       </div>
 
