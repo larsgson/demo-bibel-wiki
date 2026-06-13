@@ -5,6 +5,7 @@ export interface AskParams {
     question: string;
     lang?: string;
     scope?: { source?: string; book?: string | null };
+    expand?: ('clause' | 'crossref' | 'topic' | 'all')[];
     password?: string;
 }
 

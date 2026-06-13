@@ -12,7 +12,5 @@ export function initSearchMode() {
 
 export function setSearchMode(mode: SearchMode) {
   $searchMode.set(mode)
-  if (typeof window !== "undefined") {
-    localStorage.setItem("search_mode", mode)
-  }
+  if (typeof window !== "undefined") localStorage.setItem("search_mode", mode)
 }

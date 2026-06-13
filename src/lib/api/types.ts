@@ -66,13 +66,18 @@ export interface SearchResponse {
 
 export interface Citation extends ChunkPreview {
     n: number;
+    original_words?: {
+        lang: string;
+        words: { surface: string; strong: string; gloss: string }[];
+    };
 }
 
 export interface AskResponse {
     question: string;
     answer: string;
     citations: Citation[];
-    confidence: 'low' | 'medium' | 'high';
+    confidence: number;
+    lang: string;
     analysis: QueryAnalysis;
 }
 

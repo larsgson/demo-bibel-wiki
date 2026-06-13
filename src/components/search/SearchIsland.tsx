@@ -83,7 +83,7 @@ export function SearchIsland({ iso }: Props) {
     const promise =
       mode === "premium"
         ? ask({ question: query, lang: "en", password }).then((data) => ({ kind: "ask" as const, data }))
-        : search({ q: query, lang: "en", top_k: 10 }).then((data) => ({ kind: "search" as const, data }))
+        : search({ q: query, lang: "en", top_k: 10, semantic: true }).then((data) => ({ kind: "search" as const, data }))
 
     promise
       .then((res) => {
@@ -141,8 +141,12 @@ export function SearchIsland({ iso }: Props) {
     })
   }
 
-  function confidenceColor(c: string): string {
-    return c === "high" ? "rgb(0,11,99)" : c === "medium" ? "rgb(100,100,140)" : "rgb(180,80,20)"
+  function confidenceLabel(c: number): string {
+    return c >= 0.7 ? "high" : c >= 0.4 ? "medium" : "low"
+  }
+
+  function confidenceColor(c: number): string {
+    return c >= 0.7 ? "rgb(0,11,99)" : c >= 0.4 ? "rgb(100,100,140)" : "rgb(180,80,20)"
   }
 
   return (
@@ -155,7 +159,7 @@ export function SearchIsland({ iso }: Props) {
               {mode === "premium" ? "Ask a question about the Bible" : "Search the Bible"}
             </p>
             <p className="chat-welcome-hint">
-              {mode === "premium" ? "AI-powered answers with citations" : "Free keyword search across scripture resources"}
+              {mode === "premium" ? "AI-powered answers with citations" : "Semantic search across scripture resources"}
             </p>
           </div>
         ) : (
@@ -206,7 +210,7 @@ export function SearchIsland({ iso }: Props) {
                 <div className="chat-bubble ai-bubble">
                   <div className="answer-meta">
                     <span className="confidence-badge" style={{ background: confidenceColor(turn.result.data.confidence) }}>
-                      {turn.result.data.confidence}
+                      {confidenceLabel(turn.result.data.confidence)}
                     </span>
                     <span className="cite-count">{turn.result.data.citations.length} citations</span>
                   </div>
@@ -255,9 +259,9 @@ export function SearchIsland({ iso }: Props) {
           className={`mode-toggle ${mode === "premium" ? "premium" : ""}`}
           type="button"
           onClick={toggleMode}
-          title={mode === "premium" ? "Switch to free search" : "Switch to premium AI"}
+          title={mode === "premium" ? "Switch to search" : "Switch to AI answers"}
         >
-          {mode === "premium" ? "AI" : "Free"}
+          {mode === "premium" ? "AI" : "Search"}
         </button>
       </div>
 
