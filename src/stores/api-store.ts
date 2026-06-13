@@ -22,7 +22,8 @@ export async function apiFetch<T>(path: string, init?: ApiFetchOptions): Promise
   const base = $apiBaseUrl.get()
   if (!base) throw new Error("API base URL is not configured.")
 
-  const url = `${base}${path}`
+  const isDev = import.meta.env.DEV
+  const url = isDev ? path : `${base}${path}`
   const headers: Record<string, string> = {
     Accept: "application/json",
     ...(init?.headers as Record<string, string>),

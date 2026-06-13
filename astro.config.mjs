@@ -19,6 +19,10 @@ export default defineConfig({
           target: "http://localhost:9999",
           changeOrigin: true,
         },
+        "/api": {
+          target: "https://bcv-query.up.qombi.com",
+          changeOrigin: true,
+        },
       },
     },
     plugins: [
@@ -28,7 +32,7 @@ export default defineConfig({
           // Paths that should never be rewritten
           const skipPrefixes = [
             "/src/", "/node_modules/", "/@", "/_astro/",
-            "/pkf/", "/bsb/", "/templates/", "/ALL-langs",
+            "/api/", "/pkf/", "/bsb/", "/templates/", "/ALL-langs",
             "/public/", "/favicon", "/manifest", "/.netlify", "/.well-known",
           ]
 
