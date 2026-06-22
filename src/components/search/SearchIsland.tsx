@@ -5,6 +5,7 @@ import { $searchMode, setSearchMode, type SearchMode } from "../../stores/search
 import { study } from "../../lib/api/study"
 import { ask } from "../../lib/api/ask"
 import type { AskResponse, StudyResponse } from "../../lib/api/types"
+import { getIsoFromUrl } from "../../lib/bw/iso-from-url"
 
 type Result =
   | { kind: "study"; data: StudyResponse }
@@ -21,11 +22,72 @@ type Turn = {
 const PW_KEY = "premium_password"
 const HISTORY_KEY = "search_history"
 
+const strings = {
+  en: {
+    studyWelcome: "Study the Bible",
+    askWelcome: "Ask a question about the Bible",
+    studyHint: "Find relevant scripture passages and resources",
+    askHint: "AI-powered answers with citations",
+    studying: "Studying…",
+    thinking: "Thinking…",
+    requestFailed: "Request failed",
+    noResults: (q: string) => `No results for "${q}".`,
+    results: (n: number) => `${n} results`,
+    showMore: (n: number) => `Show ${n} more results`,
+    citations: (n: number) => `${n} citations`,
+    showSources: (n: number) => `Show ${n} source${n === 1 ? "" : "s"}`,
+    studyPlaceholder: "Study a topic…",
+    askPlaceholder: "Ask a question…",
+    switchToStudy: "Switch to Study",
+    switchToAI: "Switch to AI answers",
+    studyLabel: "Study",
+    aiLabel: "AI",
+    clearHistory: "Clear history",
+    enterPassword: "Enter premium password",
+    passwordPlaceholder: "Password",
+    cancel: "Cancel",
+    ok: "OK",
+    apiNotConfigured: "API not configured. Set PUBLIC_API_BASE_URL.",
+    premiumNeedsPassword: "Premium requires a password. Toggle Premium to enter one.",
+    networkError: "Network error reaching the API.",
+    passwordRejected: "Password rejected.",
+  },
+  es: {
+    studyWelcome: "Estudiar la Biblia",
+    askWelcome: "Haz una pregunta sobre la Biblia",
+    studyHint: "Encuentra pasajes y recursos bíblicos relevantes",
+    askHint: "Respuestas con inteligencia artificial y citas",
+    studying: "Buscando…",
+    thinking: "Pensando…",
+    requestFailed: "Error en la solicitud",
+    noResults: (q: string) => `Sin resultados para "${q}".`,
+    results: (n: number) => `${n} resultados`,
+    showMore: (n: number) => `Mostrar ${n} resultados más`,
+    citations: (n: number) => `${n} citas`,
+    showSources: (n: number) => `Mostrar ${n} fuente${n === 1 ? "" : "s"}`,
+    studyPlaceholder: "Estudiar un tema…",
+    askPlaceholder: "Haz una pregunta…",
+    switchToStudy: "Cambiar a Estudio",
+    switchToAI: "Cambiar a respuestas IA",
+    studyLabel: "Estudio",
+    aiLabel: "IA",
+    clearHistory: "Borrar historial",
+    enterPassword: "Ingresa la contraseña premium",
+    passwordPlaceholder: "Contraseña",
+    cancel: "Cancelar",
+    ok: "OK",
+    apiNotConfigured: "API no configurada. Establece PUBLIC_API_BASE_URL.",
+    premiumNeedsPassword: "Premium requiere contraseña. Activa Premium para ingresarla.",
+    networkError: "Error de red al contactar la API.",
+    passwordRejected: "Contraseña rechazada.",
+  },
+}
+
 interface Props {
   iso: string
 }
 
-export function SearchIsland({ iso }: Props) {
+export function SearchIsland({ iso: isoProp }: Props) {
   const configured = useStore($apiConfigured)
   const mode = useStore($searchMode)
   const [turns, setTurns] = useState<Turn[]>([])
@@ -33,9 +95,15 @@ export function SearchIsland({ iso }: Props) {
   const [password, setPassword] = useState("")
   const [showPwModal, setShowPwModal] = useState(false)
   const [expandedTurns, setExpandedTurns] = useState<Set<number>>(new Set())
+  const [resolvedIso, setResolvedIso] = useState(isoProp || "eng")
   const scrollRef = useRef<HTMLDivElement>(null)
 
+  const iso = resolvedIso
+  const uiLang = iso === "eng" ? "en" : "es"
+  const t = strings[uiLang]
+
   useEffect(() => {
+    if (!isoProp) setResolvedIso(getIsoFromUrl("eng"))
     setPassword(sessionStorage.getItem(PW_KEY) ?? "")
     try {
       const raw = sessionStorage.getItem(HISTORY_KEY)
@@ -65,13 +133,13 @@ export function SearchIsland({ iso }: Props) {
     setInputValue("")
 
     if (!configured) {
-      const t: Turn = { query, mode, result: null, error: "API not configured. Set PUBLIC_API_BASE_URL.", loading: false }
-      setTurns((prev) => { const next = [...prev, t]; saveHistory(next); return next })
+      const turn: Turn = { query, mode, result: null, error: t.apiNotConfigured, loading: false }
+      setTurns((prev) => { const next = [...prev, turn]; saveHistory(next); return next })
       return
     }
     if (mode === "premium" && !password) {
-      const t: Turn = { query, mode, result: null, error: "Premium requires a password. Toggle Premium to enter one.", loading: false }
-      setTurns((prev) => { const next = [...prev, t]; saveHistory(next); return next })
+      const turn: Turn = { query, mode, result: null, error: t.premiumNeedsPassword, loading: false }
+      setTurns((prev) => { const next = [...prev, turn]; saveHistory(next); return next })
       return
     }
 
@@ -80,10 +148,11 @@ export function SearchIsland({ iso }: Props) {
 
     setTurns((prev) => [...prev, newTurn])
 
+    const apiLang = iso === "eng" ? "en" : "es"
     const promise =
       mode === "premium"
-        ? ask({ question: query, lang: "en", password }).then((data) => ({ kind: "ask" as const, data }))
-        : study({ question: query, lang: "en" }).then((data) => ({ kind: "study" as const, data }))
+        ? ask({ question: query, lang: apiLang, password }).then((data) => ({ kind: "ask" as const, data }))
+        : study({ question: query, lang: apiLang }).then((data) => ({ kind: "study" as const, data }))
 
     promise
       .then((res) => {
@@ -97,10 +166,10 @@ export function SearchIsland({ iso }: Props) {
       .catch((err: any) => {
         const errorMsg =
           err?.code === "network"
-            ? "Network error reaching the API."
+            ? t.networkError
             : err?.status === 401 || err?.status === 403
-            ? "Password rejected."
-            : err?.detail || err?.message || "Request failed."
+            ? t.passwordRejected
+            : err?.detail || err?.message || t.requestFailed
         setTurns((prev) => {
           const next = [...prev]
           next[turnIdx] = { ...next[turnIdx], error: errorMsg, loading: false }
@@ -156,36 +225,36 @@ export function SearchIsland({ iso }: Props) {
           <div className="chat-welcome">
             <div className="chat-welcome-icon">💬</div>
             <p className="chat-welcome-text">
-              {mode === "premium" ? "Ask a question about the Bible" : "Study the Bible"}
+              {mode === "premium" ? t.askWelcome : t.studyWelcome}
             </p>
             <p className="chat-welcome-hint">
-              {mode === "premium" ? "AI-powered answers with citations" : "Find relevant scripture passages and resources"}
+              {mode === "premium" ? t.askHint : t.studyHint}
             </p>
           </div>
         ) : (
           turns.map((turn, ti) => (
             <div key={ti}>
               <div className="chat-bubble user-bubble">
-                <span className="bubble-mode">{turn.mode === "premium" ? "AI" : "study"}</span>
+                <span className="bubble-mode">{turn.mode === "premium" ? t.aiLabel : t.studyLabel}</span>
                 <span className="bubble-query">{turn.query}</span>
               </div>
 
               {turn.loading ? (
                 <div className="chat-bubble ai-bubble">
-                  <span className="loading-dots">{turn.mode === "premium" ? "Thinking…" : "Studying…"}</span>
+                  <span className="loading-dots">{turn.mode === "premium" ? t.thinking : t.studying}</span>
                 </div>
               ) : turn.error ? (
                 <div className="chat-bubble ai-bubble error-bubble">
-                  <p className="bubble-error-title">Request failed</p>
+                  <p className="bubble-error-title">{t.requestFailed}</p>
                   <p className="bubble-error-msg">{turn.error}</p>
                 </div>
               ) : turn.result?.kind === "study" ? (
                 <div className="chat-bubble ai-bubble">
                   {turn.result.data.citations.length === 0 ? (
-                    <p className="bubble-empty">No results for "{turn.query}".</p>
+                    <p className="bubble-empty">{t.noResults(turn.query)}</p>
                   ) : (
                     <>
-                      <p className="bubble-summary">{turn.result.data.total} results</p>
+                      <p className="bubble-summary">{t.results(turn.result.data.total)}</p>
                       {(expandedTurns.has(ti) ? turn.result.data.citations : turn.result.data.citations.slice(0, 3)).map((c) => (
                         <article key={c.chunk_id} className="hit-card">
                           <h3 className="hit-title">
@@ -200,7 +269,7 @@ export function SearchIsland({ iso }: Props) {
                       ))}
                       {turn.result.data.citations.length > 3 && !expandedTurns.has(ti) && (
                         <button className="show-more-btn" type="button" onClick={() => toggleExpand(ti)}>
-                          Show {turn.result.data.citations.length - 3} more results
+                          {t.showMore(turn.result.data.citations.length - 3)}
                         </button>
                       )}
                     </>
@@ -212,13 +281,13 @@ export function SearchIsland({ iso }: Props) {
                     <span className="confidence-badge" style={{ background: confidenceColor(turn.result.data.confidence) }}>
                       {confidenceLabel(turn.result.data.confidence)}
                     </span>
-                    <span className="cite-count">{turn.result.data.citations.length} citations</span>
+                    <span className="cite-count">{t.citations(turn.result.data.citations.length)}</span>
                   </div>
                   <div className="answer-body">{turn.result.data.answer}</div>
                   {turn.result.data.citations.length > 0 && (
                     <details className="citations-details">
                       <summary className="citations-summary">
-                        Show {turn.result.data.citations.length} source{turn.result.data.citations.length === 1 ? "" : "s"}
+                        {t.showSources(turn.result.data.citations.length)}
                       </summary>
                       <ol className="citations-list">
                         {turn.result.data.citations.map((c) => (
@@ -243,7 +312,7 @@ export function SearchIsland({ iso }: Props) {
 
       <div className="chat-input-bar">
         {turns.length > 0 && (
-          <button className="clear-btn" type="button" onClick={clearHistory} title="Clear history">×</button>
+          <button className="clear-btn" type="button" onClick={clearHistory} title={t.clearHistory}>×</button>
         )}
         <form className="chat-form" onSubmit={(e) => { e.preventDefault(); submitQuery() }}>
           <input
@@ -251,7 +320,7 @@ export function SearchIsland({ iso }: Props) {
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={mode === "premium" ? "Ask a question…" : "Study a topic…"}
+            placeholder={mode === "premium" ? t.askPlaceholder : t.studyPlaceholder}
           />
           <button className="chat-send" type="submit" disabled={!inputValue.trim()}>➤</button>
         </form>
@@ -259,21 +328,21 @@ export function SearchIsland({ iso }: Props) {
           className={`mode-toggle ${mode === "premium" ? "premium" : ""}`}
           type="button"
           onClick={toggleMode}
-          title={mode === "premium" ? "Switch to Study" : "Switch to AI answers"}
+          title={mode === "premium" ? t.switchToStudy : t.switchToAI}
         >
-          {mode === "premium" ? "AI" : "Study"}
+          {mode === "premium" ? t.aiLabel : t.studyLabel}
         </button>
       </div>
 
       {showPwModal && (
         <div className="modal-backdrop" onClick={() => setShowPwModal(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">Enter premium password</h3>
+            <h3 className="modal-title">{t.enterPassword}</h3>
             <form onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); savePw(fd.get("pw") as string) }}>
-              <input className="modal-input" type="password" name="pw" placeholder="Password" autoComplete="off" />
+              <input className="modal-input" type="password" name="pw" placeholder={t.passwordPlaceholder} autoComplete="off" />
               <div className="modal-actions">
-                <button type="button" className="modal-cancel" onClick={() => { setShowPwModal(false); setSearchMode("free") }}>Cancel</button>
-                <button type="submit" className="modal-ok">OK</button>
+                <button type="button" className="modal-cancel" onClick={() => { setShowPwModal(false); setSearchMode("free") }}>{t.cancel}</button>
+                <button type="submit" className="modal-ok">{t.ok}</button>
               </div>
             </form>
           </div>

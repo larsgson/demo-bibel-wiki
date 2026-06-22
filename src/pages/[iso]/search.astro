@@ -11,6 +11,6 @@ export function getStaticPaths() {
 const { iso } = Astro.params
 ---
 
-<BaseLayout title="AI Search">
+<BaseLayout title={iso === "eng" ? "Study" : "Estudio"}>
   <SearchIsland client:only="react" iso={iso} />
 </BaseLayout>
