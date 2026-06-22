@@ -42,6 +42,29 @@
 }
 .show-more-btn:hover { background: rgba(0,11,99,0.04); border-color: rgba(0,11,99,0.35); }
 
+/* Branched results tree */
+.branches { display: flex; flex-direction: column; gap: 0.35rem; }
+.branch { border: 1px solid rgba(0,11,99,0.1); border-radius: 8px; overflow: hidden; }
+.branch-header {
+  display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  padding: 0.5rem 0.7rem; border: none; background: rgba(0,11,99,0.03);
+  font: inherit; font-size: 0.82rem; font-weight: 600; color: rgb(0,11,99);
+  cursor: pointer; text-align: left; transition: background 120ms ease;
+}
+.branch-header:hover { background: rgba(0,11,99,0.07); }
+.branch-label { flex: 1; }
+.branch-count {
+  font-size: 0.7rem; font-weight: 700; min-width: 1.4rem; text-align: center;
+  padding: 0 5px; background: rgba(0,11,99,0.1); border-radius: 8px; line-height: 1.5;
+}
+.branch-chevron { font-size: 0.7rem; opacity: 0.5; }
+.branch-items { padding: 0.3rem 0.5rem 0.5rem; }
+.branch-more {
+  font-size: 0.78rem; color: rgba(0,11,99,0.5); text-align: center;
+  margin: 0.3rem 0 0; font-style: italic;
+}
+.branch-open > .branch-header { border-bottom: 1px solid rgba(0,11,99,0.08); }
+
 .answer-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 .confidence-badge {
   display: inline-block; padding: 1px 7px; font-size: 0.65rem; font-weight: 600;

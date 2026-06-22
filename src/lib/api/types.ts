@@ -96,6 +96,43 @@ export interface AskResponse {
     analysis: QueryAnalysis;
 }
 
+// ---- Branched search/ask ----
+
+export type BranchKey = 'lexicon' | 'study' | 'terms' | 'verses' | 'morphology' | 'methodology' | 'media' | 'other' | (string & {});
+
+export interface Branch {
+    key: BranchKey;
+    label: string;
+    featured: boolean;
+    total: number;
+    items: SearchHit[];
+}
+
+export interface DrilldownHint {
+    key: BranchKey;
+    label: string;
+    total: number;
+}
+
+export interface BranchedSearchResponse {
+    query: string;
+    lang: string;
+    semantic: boolean;
+    analysis: QueryAnalysis;
+    branches: Branch[];
+    suggested_drilldown: DrilldownHint[];
+}
+
+export interface BranchedAskResponse {
+    question: string;
+    answer: string;
+    confidence: 'low' | 'medium' | 'high';
+    citations: string[];
+    branches: Branch[];
+    suggested_drilldown: DrilldownHint[];
+    analysis: QueryAnalysis;
+}
+
 export interface TreeNode {
     id: string;
     label: string;

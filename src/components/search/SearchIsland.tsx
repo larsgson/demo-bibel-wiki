@@ -2,14 +2,14 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useStore } from "@nanostores/react"
 import { $apiConfigured } from "../../stores/api-store"
 import { $searchMode, setSearchMode, type SearchMode } from "../../stores/search-store"
-import { study } from "../../lib/api/study"
-import { ask } from "../../lib/api/ask"
-import type { AskResponse, StudyResponse } from "../../lib/api/types"
+import { searchBranched } from "../../lib/api/search-branched"
+import { askBranched } from "../../lib/api/ask-branched"
+import type { BranchedSearchResponse, BranchedAskResponse, Branch, SearchHit } from "../../lib/api/types"
 import { getIsoFromUrl } from "../../lib/bw/iso-from-url"
 
 type Result =
-  | { kind: "study"; data: StudyResponse }
-  | { kind: "ask"; data: AskResponse }
+  | { kind: "study"; data: BranchedSearchResponse }
+  | { kind: "ask"; data: BranchedAskResponse }
 
 type Turn = {
   query: string
@@ -32,10 +32,8 @@ const strings = {
     thinking: "Thinking…",
     requestFailed: "Request failed",
     noResults: (q: string) => `No results for "${q}".`,
-    results: (n: number) => `${n} results`,
-    showMore: (n: number) => `Show ${n} more results`,
-    citations: (n: number) => `${n} citations`,
-    showSources: (n: number) => `Show ${n} source${n === 1 ? "" : "s"}`,
+    moreInBranch: (n: number) => `+${n} more`,
+    exploreSources: "Explore the sources",
     studyPlaceholder: "Study a topic…",
     askPlaceholder: "Ask a question…",
     switchToStudy: "Switch to Study",
@@ -61,10 +59,8 @@ const strings = {
     thinking: "Pensando…",
     requestFailed: "Error en la solicitud",
     noResults: (q: string) => `Sin resultados para "${q}".`,
-    results: (n: number) => `${n} resultados`,
-    showMore: (n: number) => `Mostrar ${n} resultados más`,
-    citations: (n: number) => `${n} citas`,
-    showSources: (n: number) => `Mostrar ${n} fuente${n === 1 ? "" : "s"}`,
+    moreInBranch: (n: number) => `+${n} más`,
+    exploreSources: "Explorar las fuentes",
     studyPlaceholder: "Estudiar un tema…",
     askPlaceholder: "Haz una pregunta…",
     switchToStudy: "Cambiar a Estudio",
@@ -94,7 +90,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
   const [inputValue, setInputValue] = useState("")
   const [password, setPassword] = useState("")
   const [showPwModal, setShowPwModal] = useState(false)
-  const [expandedTurns, setExpandedTurns] = useState<Set<number>>(new Set())
+  const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set())
   const [resolvedIso, setResolvedIso] = useState(isoProp || "eng")
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -147,12 +143,13 @@ export function SearchIsland({ iso: isoProp }: Props) {
     const newTurn: Turn = { query, mode, result: null, error: null, loading: true }
 
     setTurns((prev) => [...prev, newTurn])
+    setExpandedBranches(new Set())
 
     const apiLang = iso === "eng" ? "en" : "es"
     const promise =
       mode === "premium"
-        ? ask({ question: query, lang: apiLang, password }).then((data) => ({ kind: "ask" as const, data }))
-        : study({ question: query, lang: apiLang }).then((data) => ({ kind: "study" as const, data }))
+        ? askBranched({ question: query, lang: apiLang, password }).then((data) => ({ kind: "ask" as const, data }))
+        : searchBranched({ q: query, lang: apiLang }).then((data) => ({ kind: "study" as const, data }))
 
     promise
       .then((res) => {
@@ -201,21 +198,75 @@ export function SearchIsland({ iso: isoProp }: Props) {
     sessionStorage.removeItem(HISTORY_KEY)
   }
 
-  function toggleExpand(idx: number) {
-    setExpandedTurns((prev) => {
+  function toggleBranch(turnIdx: number, key: string) {
+    setExpandedBranches((prev) => {
+      const id = `${turnIdx}:${key}`
       const next = new Set(prev)
-      if (next.has(idx)) next.delete(idx)
-      else next.add(idx)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
 
-  function confidenceLabel(c: number): string {
-    return c >= 0.7 ? "high" : c >= 0.4 ? "medium" : "low"
+  function isBranchExpanded(turnIdx: number, key: string) {
+    return expandedBranches.has(`${turnIdx}:${key}`)
   }
 
-  function confidenceColor(c: number): string {
-    return c >= 0.7 ? "rgb(0,11,99)" : c >= 0.4 ? "rgb(100,100,140)" : "rgb(180,80,20)"
+  function confidenceColor(c: string): string {
+    return c === "high" ? "rgb(0,11,99)" : c === "medium" ? "rgb(100,100,140)" : "rgb(180,80,20)"
+  }
+
+  function renderHitCard(hit: SearchHit) {
+    return (
+      <article key={hit.chunk_id} className="hit-card">
+        <h3 className="hit-title">
+          <a href={`/${iso}/c/${encodeURIComponent(hit.chunk_id)}`}>{hit.title}</a>
+        </h3>
+        {hit.passage && <p className="hit-passage">{hit.passage}</p>}
+        <p className="hit-excerpt">{hit.excerpt}</p>
+        <div className="hit-footer">
+          <span className="hit-kind">{hit.kind}</span>
+        </div>
+      </article>
+    )
+  }
+
+  function renderBranch(branch: Branch, turnIdx: number) {
+    const isOpen = branch.featured || isBranchExpanded(turnIdx, branch.key)
+    const remaining = branch.total - branch.items.length
+
+    return (
+      <div key={branch.key} className={`branch ${isOpen ? "branch-open" : "branch-collapsed"}`}>
+        <button
+          type="button"
+          className="branch-header"
+          onClick={() => toggleBranch(turnIdx, branch.key)}
+        >
+          <span className="branch-label">{branch.label}</span>
+          <span className="branch-count">{branch.total}</span>
+          <span className="branch-chevron">{isOpen ? "▾" : "▸"}</span>
+        </button>
+        {isOpen && (
+          <div className="branch-items">
+            {branch.items.map(renderHitCard)}
+            {remaining > 0 && (
+              <p className="branch-more">{t.moreInBranch(remaining)}</p>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  function renderBranches(branches: Branch[], turnIdx: number) {
+    const hasFeatured = branches.some((b) => b.featured && b.items.length > 0)
+    if (!hasFeatured && branches.every((b) => b.items.length === 0)) return null
+
+    return (
+      <div className="branches">
+        {branches.map((b) => renderBranch(b, turnIdx))}
+      </div>
+    )
   }
 
   return (
@@ -250,57 +301,24 @@ export function SearchIsland({ iso: isoProp }: Props) {
                 </div>
               ) : turn.result?.kind === "study" ? (
                 <div className="chat-bubble ai-bubble">
-                  {turn.result.data.citations.length === 0 ? (
+                  {turn.result.data.branches.every((b) => b.items.length === 0) ? (
                     <p className="bubble-empty">{t.noResults(turn.query)}</p>
                   ) : (
-                    <>
-                      <p className="bubble-summary">{t.results(turn.result.data.total)}</p>
-                      {(expandedTurns.has(ti) ? turn.result.data.citations : turn.result.data.citations.slice(0, 3)).map((c) => (
-                        <article key={c.chunk_id} className="hit-card">
-                          <h3 className="hit-title">
-                            <a href={`/${iso}/c/${encodeURIComponent(c.chunk_id)}`}>{c.title}</a>
-                          </h3>
-                          {c.passage && <p className="hit-passage">{c.passage}</p>}
-                          <p className="hit-excerpt">{c.excerpt}</p>
-                          <div className="hit-footer">
-                            <span className="hit-kind">{c.kind}</span>
-                          </div>
-                        </article>
-                      ))}
-                      {turn.result.data.citations.length > 3 && !expandedTurns.has(ti) && (
-                        <button className="show-more-btn" type="button" onClick={() => toggleExpand(ti)}>
-                          {t.showMore(turn.result.data.citations.length - 3)}
-                        </button>
-                      )}
-                    </>
+                    renderBranches(turn.result.data.branches, ti)
                   )}
                 </div>
               ) : turn.result?.kind === "ask" ? (
                 <div className="chat-bubble ai-bubble">
                   <div className="answer-meta">
                     <span className="confidence-badge" style={{ background: confidenceColor(turn.result.data.confidence) }}>
-                      {confidenceLabel(turn.result.data.confidence)}
+                      {turn.result.data.confidence}
                     </span>
-                    <span className="cite-count">{t.citations(turn.result.data.citations.length)}</span>
                   </div>
                   <div className="answer-body">{turn.result.data.answer}</div>
-                  {turn.result.data.citations.length > 0 && (
-                    <details className="citations-details">
-                      <summary className="citations-summary">
-                        {t.showSources(turn.result.data.citations.length)}
-                      </summary>
-                      <ol className="citations-list">
-                        {turn.result.data.citations.map((c) => (
-                          <li key={c.chunk_id} className="citation-item">
-                            <span className="citation-n">[{c.n}]</span>
-                            <div className="citation-body">
-                              <a className="citation-title" href={`/${iso}/c/${encodeURIComponent(c.chunk_id)}`}>{c.title}</a>
-                              {c.passage && <span className="citation-passage">{c.passage}</span>}
-                              <p className="citation-excerpt">{c.excerpt}</p>
-                            </div>
-                          </li>
-                        ))}
-                      </ol>
+                  {turn.result.data.branches.length > 0 && (
+                    <details className="citations-details" open>
+                      <summary className="citations-summary">{t.exploreSources}</summary>
+                      {renderBranches(turn.result.data.branches, ti)}
                     </details>
                   )}
                 </div>
