@@ -105,7 +105,10 @@ export function SearchIsland({ iso: isoProp }: Props) {
       const raw = sessionStorage.getItem(HISTORY_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as Turn[]
-        setTurns(parsed.filter((t) => !t.loading))
+        setTurns(parsed.filter((t) => !t.loading).filter((t) => {
+          if (!t.result) return true
+          return Array.isArray(t.result.data?.branches)
+        }))
       }
     } catch {}
 
