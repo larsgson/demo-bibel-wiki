@@ -26,9 +26,9 @@ const { title = "Tu Biblia mexicana" } = Astro.props
           Tu Biblia mexicana
         </a>
         <div class="flex items-center gap-2">
-          <a href="/eng/OBS" class="header-link">Stories</a>
-          <a href="/eng/browse" class="header-link">Browse</a>
-          <a href="/eng/search" class="header-link-icon" aria-label="AI search" title="AI search">
+          <a href="/eng/OBS" class="header-link" data-iso-link="OBS">Stories</a>
+          <a href="/eng/browse" class="header-link" data-iso-link="browse">Browse</a>
+          <a href="/eng/search" class="header-link-icon" data-iso-link="search" aria-label="AI search" title="AI search">
             💬
           </a>
         </div>
@@ -119,9 +119,19 @@ const { title = "Tu Biblia mexicana" } = Astro.props
       } from "../stores/audio-store"
       import { t } from "../lib/bw/ui-locales"
 
+      import { $selectedIso } from "../stores/iso-store"
+
       initIsoFromUrl()
       initApiConfig()
       initSearchMode()
+
+      function updateIsoLinks(iso: string) {
+        document.querySelectorAll<HTMLAnchorElement>("[data-iso-link]").forEach((a) => {
+          a.href = `/${iso}/${a.dataset.isoLink}`
+        })
+      }
+      updateIsoLinks($selectedIso.get())
+      $selectedIso.subscribe(updateIsoLinks)
 
       // iOS audio unlock on first interaction
       const unlockEvents = ["touchstart", "click"] as const
