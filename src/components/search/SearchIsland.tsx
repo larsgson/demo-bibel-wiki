@@ -5,7 +5,7 @@ import { $searchMode, setSearchMode, type SearchMode } from "../../stores/search
 import { searchBranched } from "../../lib/api/search-branched"
 import { askBranched } from "../../lib/api/ask-branched"
 import type { BranchedSearchResponse, BranchedAskResponse, Branch, SearchHit } from "../../lib/api/types"
-import { getIsoFromUrl } from "../../lib/bw/iso-from-url"
+import { $selectedIso, initIsoFromUrl } from "../../stores/iso-store"
 
 type Result =
   | { kind: "study"; data: BranchedSearchResponse }
@@ -91,15 +91,15 @@ export function SearchIsland({ iso: isoProp }: Props) {
   const [password, setPassword] = useState("")
   const [showPwModal, setShowPwModal] = useState(false)
   const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set())
-  const [resolvedIso, setResolvedIso] = useState(isoProp || "eng")
+  const storeIso = useStore($selectedIso)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const iso = resolvedIso
+  const iso = isoProp || storeIso || "eng"
   const uiLang = iso === "eng" ? "en" : "es"
   const t = strings[uiLang]
 
   useEffect(() => {
-    if (!isoProp) setResolvedIso(getIsoFromUrl("eng"))
+    if (!isoProp) initIsoFromUrl()
     setPassword(sessionStorage.getItem(PW_KEY) ?? "")
     try {
       const raw = sessionStorage.getItem(HISTORY_KEY)
