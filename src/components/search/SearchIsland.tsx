@@ -9,6 +9,7 @@ import { $selectedIso, initIsoFromUrl } from "../../stores/iso-store"
 import { mergeBranches, clearNavBranches } from "../../stores/nav-branches-store"
 import { extractBibleHighlights, clearBibleHighlights } from "../../stores/bible-highlight-store"
 
+
 type Result =
   | { kind: "study"; data: BranchedSearchResponse }
   | { kind: "ask"; data: BranchedAskResponse }
@@ -95,10 +96,20 @@ export function SearchIsland({ iso: isoProp }: Props) {
   const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set())
   const storeIso = useStore($selectedIso)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(true)
 
   const iso = isoProp || storeIso || "eng"
   const uiLang = iso === "eng" ? "en" : "es"
   const t = strings[uiLang]
+
+  useEffect(() => {
+    const onPaneChanged = (e: Event) => {
+      const pane = (e as CustomEvent).detail?.pane || "bible"
+      setVisible(pane === "study")
+    }
+    window.addEventListener("pane-changed", onPaneChanged)
+    return () => window.removeEventListener("pane-changed", onPaneChanged)
+  }, [])
 
   useEffect(() => {
     if (!isoProp) initIsoFromUrl()
@@ -322,7 +333,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
   }
 
   return (
-    <div className="chat-shell">
+    <div className="chat-shell" style={{ display: visible ? "" : "none" }}>
       <div className="chat-scroll" ref={scrollRef}>
         {turns.length === 0 ? (
           <div className="chat-welcome">

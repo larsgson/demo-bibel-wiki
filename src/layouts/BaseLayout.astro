@@ -186,6 +186,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       initApiConfig()
       initSearchMode()
 
+
       function updateIsoLinks(iso: string) {
         document.querySelectorAll<HTMLAnchorElement>("[data-iso-link]").forEach((a) => {
           a.href = `/${iso}/${a.dataset.isoLink}`

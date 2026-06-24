@@ -1,8 +1,8 @@
-import { useEffect, useRef } from "react"
-import { useStore } from "@nanostores/react"
-import { $activePane } from "../../stores/branch-view-store"
-import { $navBranches } from "../../stores/nav-branches-store"
+import { useEffect, useRef, useState, useCallback } from "react"
 import type { BranchKey, SearchHit } from "../../lib/api/types"
+import type { NavBranches } from "../../stores/nav-branches-store"
+
+const NAV_BRANCHES_KEY = "nav_branches"
 
 const BRANCH_LABELS: Record<string, Record<string, string>> = {
   verses:      { en: "Verses",        es: "Versículos" },
@@ -15,24 +15,62 @@ const BRANCH_LABELS: Record<string, Record<string, string>> = {
   other:       { en: "Other",         es: "Otros" },
 }
 
+function loadBranches(): NavBranches {
+  try {
+    const raw = sessionStorage.getItem(NAV_BRANCHES_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
+}
+
 export function BranchContentPane({ lang = "es" }: { lang?: string }) {
-  const pane = useStore($activePane)
-  const navBranches = useStore($navBranches)
+  const [branchKey, setBranchKey] = useState<string | null>(null)
+  const [scrollIdx, setScrollIdx] = useState<number | null>(null)
+  const [branches, setBranches] = useState<NavBranches>(loadBranches)
   const itemRefs = useRef<Map<number, HTMLElement>>(new Map())
 
   useEffect(() => {
-    if (pane.pane === "branch" && pane.scrollToIndex != null) {
-      const el = itemRefs.current.get(pane.scrollToIndex)
-      if (el) el.scrollIntoView({ block: "start", behavior: "smooth" })
+    function onPaneChanged(e: Event) {
+      const detail = (e as CustomEvent).detail
+      if (detail?.pane === "branch" && detail.branchKey) {
+        setBranches(loadBranches())
+        setBranchKey(detail.branchKey)
+        setScrollIdx(detail.scrollToIndex ?? null)
+      } else {
+        setBranchKey(null)
+      }
     }
-  }, [pane])
+    function onBranchesChanged() {
+      setBranches(loadBranches())
+    }
+    window.addEventListener("pane-changed", onPaneChanged)
+    window.addEventListener("nav-branches-changed", onBranchesChanged)
+    return () => {
+      window.removeEventListener("pane-changed", onPaneChanged)
+      window.removeEventListener("nav-branches-changed", onBranchesChanged)
+    }
+  }, [])
 
-  if (pane.pane !== "branch" || !pane.branchKey) return null
+  useEffect(() => {
+    if (branchKey && scrollIdx != null) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = itemRefs.current.get(scrollIdx)
+          if (!el) return
+          const top = el.getBoundingClientRect().top + window.scrollY - 80
+          window.scrollTo({ top: Math.max(0, top), behavior: "smooth" })
+        })
+      })
+    }
+  }, [branchKey, scrollIdx])
 
-  const items = navBranches[pane.branchKey as BranchKey] ?? []
+  if (!branchKey) return null
+
+  const items = (branches[branchKey as BranchKey] ?? []) as SearchHit[]
   if (items.length === 0) return null
 
-  const label = BRANCH_LABELS[pane.branchKey]?.[lang] ?? pane.branchKey
+  const label = BRANCH_LABELS[branchKey]?.[lang] ?? branchKey
 
   return (
     <div className="branch-content-pane">
@@ -40,7 +78,7 @@ export function BranchContentPane({ lang = "es" }: { lang?: string }) {
         <h2 className="branch-content-title">{label}</h2>
       </div>
       <div className="branch-content-list">
-        {items.map((hit: SearchHit, idx: number) => (
+        {items.map((hit, idx) => (
           <article
             key={hit.chunk_id}
             className="branch-content-item"

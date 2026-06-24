@@ -48,56 +48,35 @@ const hasReader = !!(catalogUrl && docSetId)
 ---
 
 <BaseLayout title={title}>
-  <!-- Study pane: search input + conversation -->
-  <div data-pane="study" style="display:none">
-    <SearchIsland client:only="react" iso={iso} />
-  </div>
-
-  <!-- Branch content pane: full text for a specific answer branch -->
-  <div data-pane="branch" style="display:none">
-    <BranchContentPane client:only="react" />
-  </div>
-
-  <!-- Bible reader pane -->
-  <div data-pane="bible">
-    {hasReader ? (
-      isBsb ? (
-        <Reader
-          client:load
-          iso={iso}
-          docSetId={docSetId}
-          pkfUrl=""
-          catalogUrl={catalogUrl}
-          bsbMode={true}
-          media={media}
-        />
-      ) : (
-        <Reader
-          client:load
-          iso={iso}
-          docSetId={docSetId}
-          pkfUrl={pkfUrl ?? ""}
-          catalogUrl={catalogUrl}
-          styleUrl={styleUrl}
-          figureUrls={figureUrls}
-          captionMode={captionMode}
-          media={media}
-        />
-      )
+  <SearchIsland client:only="react" iso={iso} />
+  <BranchContentPane client:only="react" />
+  {hasReader ? (
+    isBsb ? (
+      <Reader
+        client:load
+        iso={iso}
+        docSetId={docSetId}
+        pkfUrl=""
+        catalogUrl={catalogUrl}
+        bsbMode={true}
+        media={media}
+      />
     ) : (
-      <div class="py-8 text-brand/60">
-        No PKF / catalog asset found for this language.
-      </div>
-    )}
-  </div>
-
-  <script>
-    window.addEventListener('pane-changed', (e: any) => {
-      const pane = e.detail?.pane || 'bible';
-      document.querySelectorAll('[data-pane]').forEach((el) => {
-        (el as HTMLElement).style.display =
-          el.getAttribute('data-pane') === pane ? '' : 'none';
-      });
-    });
-  </script>
+      <Reader
+        client:load
+        iso={iso}
+        docSetId={docSetId}
+        pkfUrl={pkfUrl ?? ""}
+        catalogUrl={catalogUrl}
+        styleUrl={styleUrl}
+        figureUrls={figureUrls}
+        captionMode={captionMode}
+        media={media}
+      />
+    )
+  ) : (
+    <div class="py-8 text-brand/60">
+      No PKF / catalog asset found for this language.
+    </div>
+  )}
 </BaseLayout>

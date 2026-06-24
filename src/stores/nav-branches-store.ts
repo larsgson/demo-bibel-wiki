@@ -60,11 +60,25 @@ export function mergeBranches(branches: Branch[]) {
     $navBranches.set(next)
     $lastUpdatedBranches.set(updated)
     save(next)
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("nav-branches-changed"))
+    }
   }
 }
 
 export function clearNavBranches() {
   $navBranches.set({})
   $lastUpdatedBranches.set([])
-  if (typeof window !== "undefined") sessionStorage.removeItem(STORAGE_KEY)
+  if (typeof window !== "undefined") {
+    sessionStorage.removeItem(STORAGE_KEY)
+    window.dispatchEvent(new CustomEvent("nav-branches-changed"))
+  }
+}
+
+// Sync local atom from sessionStorage when another island updates it
+export function initNavBranchesListener() {
+  if (typeof window === "undefined") return
+  window.addEventListener("nav-branches-changed", () => {
+    $navBranches.set(load())
+  })
 }

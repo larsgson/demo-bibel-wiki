@@ -17,6 +17,15 @@ function emitPaneChange(state: PaneState) {
   }
 }
 
+// Each Astro island gets its own atom instance. This syncs the local atom
+// from the global CustomEvent so all islands stay in step.
+export function initPaneListener() {
+  if (typeof window === "undefined") return
+  window.addEventListener("pane-changed", ((e: CustomEvent<PaneState>) => {
+    $activePane.set(e.detail)
+  }) as EventListener)
+}
+
 export function showBible() {
   const s = { pane: "bible" as const }
   $activePane.set(s)

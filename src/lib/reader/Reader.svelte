@@ -55,6 +55,7 @@
     let rendering = $state(false);
     let renderError = $state<string | null>(null);
     let pkfLoaded = $state(false);
+    let paneVisible = $state(true);
 
     const LINK_ID = 'bw-lang-css';
     let linkEl: HTMLLinkElement | null = null;
@@ -90,6 +91,10 @@
         // Eagerly load the PKF binary in the background so the first chapter
         // open is instant instead of waiting for fetch + parse.
         if (!bsbMode) ensurePkf();
+
+        window.addEventListener('pane-changed', ((e: CustomEvent) => {
+            paneVisible = e.detail?.pane === 'bible';
+        }) as EventListener);
 
         // Sidebar navigation: open a specific book+chapter on demand
         window.addEventListener('navigate-to-chapter', ((e: CustomEvent) => {
@@ -585,6 +590,7 @@
     }
 </script>
 
+<div style:display={paneVisible ? '' : 'none'}>
 {#if loadError}
     <div class="alert alert-error text-sm">Failed to load catalog: {loadError}</div>
 {:else if !catalog}
@@ -832,3 +838,4 @@
         {/if}
     </section>
 {/if}
+</div>
