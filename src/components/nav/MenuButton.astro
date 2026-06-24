@@ -1,0 +1,41 @@
+---
+// Mobile-only hamburger that toggles the global AppSidebar via a custom event.
+---
+
+<div class="app-menu-button-container">
+  <button class="app-menu-button" id="app-menu-toggle" aria-label="Toggle menu">
+    ☰
+  </button>
+</div>
+
+<script>
+  function attach() {
+    const btn = document.getElementById("app-menu-toggle")
+    if (btn && !btn.dataset.listenerAttached) {
+      btn.dataset.listenerAttached = "true"
+      btn.addEventListener(
+        "click",
+        (e) => {
+          e.stopPropagation()
+          window.dispatchEvent(new CustomEvent("toggle-sidebar"))
+        },
+        { capture: true },
+      )
+    }
+  }
+
+  function updateVisibility(isOpen: boolean) {
+    const c = document.querySelector<HTMLElement>(".app-menu-button-container")
+    if (c) c.style.visibility = isOpen ? "hidden" : "visible"
+  }
+
+  attach()
+
+  if (!(window as any).__appMenuButtonRegistered) {
+    ;(window as any).__appMenuButtonRegistered = true
+    document.addEventListener("astro:page-load", attach)
+    window.addEventListener("sidebar-state-changed", (e: any) => {
+      updateVisibility(!!e.detail?.isOpen)
+    })
+  }
+</script>

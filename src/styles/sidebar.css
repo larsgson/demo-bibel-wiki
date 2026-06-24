@@ -1,0 +1,283 @@
+/* Global hierarchical left navigation rail.
+   Namespaced `app-sidebar*` to avoid collision with browse's `.sidebar`. */
+
+:root {
+  --app-sidebar-width: 260px;
+}
+
+/* ── Layout wrapper (set on BaseLayout) ── */
+.app-shell { display: flex; align-items: flex-start; }
+
+/* ── The rail ── */
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--app-sidebar-width);
+  height: 100vh;
+  background: rgb(0, 11, 99);
+  color: #fff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+}
+
+.app-sidebar-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: rgb(0, 9, 80);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.app-sidebar-heading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.app-sidebar-close {
+  display: none; /* mobile only */
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem;
+  opacity: 0.8;
+}
+.app-sidebar-close:hover { opacity: 1; }
+
+.app-sidebar-nav { padding: 0.4rem 0; }
+.app-sidebar-roots,
+.app-sidebar-items { list-style: none; margin: 0; padding: 0; }
+
+/* Top-level rows (link or toggle button share styling) */
+.app-sidebar-root-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.55rem 1rem;
+  background: none;
+  border: none;
+  color: #fff;
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.app-sidebar-root-row:hover { background: rgba(255, 255, 255, 0.08); }
+.app-sidebar-root-row.active { background: rgba(255, 255, 255, 0.14); font-weight: 600; }
+.app-sidebar-root-row.flash { animation: app-sidebar-flash 2.5s ease; }
+
+@keyframes app-sidebar-flash {
+  0%, 30% { background: rgba(255, 215, 0, 0.35); }
+  100% { background: transparent; }
+}
+
+.app-sidebar-icon { width: 1.2rem; text-align: center; flex-shrink: 0; }
+.app-sidebar-root-label { flex: 1; }
+
+.app-sidebar-arrow {
+  display: inline-block;
+  width: 0.8rem;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+.app-sidebar-arrow.open { transform: rotate(90deg); }
+
+.app-sidebar-badge {
+  min-width: 1.3rem;
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0 0.35rem;
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.18);
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+/* Answer item children */
+.app-sidebar-items { padding: 0.1rem 0 0.3rem; }
+.app-sidebar-item {
+  display: block;
+  padding: 0.4rem 1rem 0.4rem 2.4rem;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.82rem;
+  text-decoration: none;
+  line-height: 1.35;
+}
+.app-sidebar-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.app-sidebar-item-label {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Bible chapter grid ── */
+.app-sidebar-bible-chapters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 0.3rem 0.5rem 0.5rem 2.4rem;
+}
+.app-sidebar-bible-ch {
+  min-width: 2rem;
+  height: 1.6rem;
+  padding: 0 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  background: none;
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-sidebar-bible-ch:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.app-sidebar-bible-ch.active {
+  background: rgba(255, 215, 0, 0.35);
+  color: #fff;
+  border-color: rgba(255, 215, 0, 0.5);
+}
+.app-sidebar-bible-ch.highlighted {
+  background: rgba(255, 215, 0, 0.25);
+  border-color: rgba(255, 215, 0, 0.45);
+  color: #fff;
+}
+.app-sidebar-bible-ch.highlighted:hover {
+  background: rgba(255, 215, 0, 0.4);
+}
+
+/* Yellow highlight badge on books with search hits */
+.app-sidebar-highlight-badge {
+  min-width: 1.1rem;
+  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0 0.35rem;
+  border-radius: 0.7rem;
+  background: rgba(255, 215, 0, 0.4);
+  color: #fff;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.app-sidebar-tree-row.has-highlights {
+  color: rgba(255, 235, 150, 1);
+}
+
+/* ── Generic tree nodes (stories, Bible nav) ── */
+.app-sidebar-tree-children { list-style: none; margin: 0; padding: 0; }
+
+.app-sidebar-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.4rem 1rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.88);
+  font: inherit;
+  font-size: 0.82rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.app-sidebar-tree-row:hover { background: rgba(255, 255, 255, 0.08); }
+.app-sidebar-tree-row.active { background: rgba(255, 255, 255, 0.12); font-weight: 600; }
+
+.app-sidebar-tree-label { flex: 1; }
+
+.app-sidebar-tree-count {
+  font-size: 0.65rem;
+  font-weight: 700;
+  opacity: 0.5;
+  min-width: 1.1rem;
+  text-align: center;
+}
+
+.app-sidebar-tree-item {
+  display: block;
+  padding: 0.35rem 1rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.8rem;
+  text-decoration: none;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.15s ease;
+}
+.app-sidebar-tree-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.app-sidebar-tree-item.active { background: rgba(255, 255, 255, 0.14); color: #fff; font-weight: 600; }
+
+/* Backdrop (mobile) */
+.app-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  z-index: 999;
+}
+
+/* Mobile menu button */
+.app-menu-button-container { display: none; }
+.app-menu-button {
+  position: fixed;
+  top: calc(0.6rem + env(safe-area-inset-top));
+  left: 0.6rem;
+  z-index: 998;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 8px;
+  background: rgb(0, 11, 99);
+  color: #fff;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* ── Desktop: persistent rail, content pushed right ── */
+@media (min-width: 769px) {
+  .app-sidebar { transform: translateX(0); }
+  .app-main { margin-left: var(--app-sidebar-width); }
+  .app-menu-button-container { display: none !important; }
+}
+
+/* ── Mobile: off-screen rail + hamburger ── */
+@media (max-width: 768px) {
+  .app-sidebar { transform: translateX(-100%); box-shadow: 2px 0 16px rgba(0, 0, 0, 0.3); }
+  .app-sidebar.open { transform: translateX(0); }
+  .app-main { margin-left: 0; }
+  .app-menu-button-container { display: block; }
+  .app-sidebar-close { display: block; }
+  .app-sidebar-backdrop { display: block; }
+  body.app-sidebar-open { overflow: hidden; }
+}

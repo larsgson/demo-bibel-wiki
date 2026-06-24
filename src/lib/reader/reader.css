@@ -150,6 +150,11 @@
 .reader-body .verse-block.selected {
     background-color: var(--TextHighlightColor);
 }
+.reader-body .verse-block.search-highlight {
+    background: rgba(255, 215, 0, 0.3);
+    border-radius: 3px;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.4);
+}
 
 /* Chapter drop-cap — large, floated left, spanning roughly two lines. */
 .reader-body .c-drop {

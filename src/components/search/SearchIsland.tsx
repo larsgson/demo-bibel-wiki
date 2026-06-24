@@ -6,6 +6,8 @@ import { searchBranched } from "../../lib/api/search-branched"
 import { askBranched } from "../../lib/api/ask-branched"
 import type { BranchedSearchResponse, BranchedAskResponse, Branch, SearchHit } from "../../lib/api/types"
 import { $selectedIso, initIsoFromUrl } from "../../stores/iso-store"
+import { mergeBranches } from "../../stores/nav-branches-store"
+import { extractBibleHighlights, clearBibleHighlights } from "../../stores/bible-highlight-store"
 
 type Result =
   | { kind: "study"; data: BranchedSearchResponse }
@@ -156,6 +158,10 @@ export function SearchIsland({ iso: isoProp }: Props) {
 
     promise
       .then((res) => {
+        // Feed the answer's branches into the global nav rail (skips verses).
+        mergeBranches(res.data.branches)
+        // Extract Bible references for yellow highlights in the sidebar tree.
+        extractBibleHighlights(res.data.branches)
         setTurns((prev) => {
           const next = [...prev]
           next[turnIdx] = { ...next[turnIdx], result: res, loading: false }
@@ -199,6 +205,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
   function clearHistory() {
     setTurns([])
     sessionStorage.removeItem(HISTORY_KEY)
+    clearBibleHighlights()
   }
 
   function toggleBranch(turnIdx: number, key: string) {
@@ -217,6 +224,47 @@ export function SearchIsland({ iso: isoProp }: Props) {
 
   function confidenceColor(c: string): string {
     return c === "high" ? "rgb(0,11,99)" : c === "medium" ? "rgb(100,100,140)" : "rgb(180,80,20)"
+  }
+
+  // Render an answer string with **bold** and inline [chunk_id] citation pills.
+  // Each pill links to the exact location of that chunk (the static content).
+  function renderAnswer(answer: string, branches: Branch[]) {
+    const lookup = new Map<string, SearchHit>()
+    for (const b of branches) for (const it of b.items) lookup.set(it.chunk_id, it)
+
+    // Tokenize on **bold** or [citation] markers.
+    const re = /\*\*([^*]+)\*\*|\[([^\]]+)\]/g
+    const nodes: React.ReactNode[] = []
+    let last = 0
+    let m: RegExpExecArray | null
+    let key = 0
+    while ((m = re.exec(answer)) !== null) {
+      if (m.index > last) nodes.push(answer.slice(last, m.index))
+      if (m[1] !== undefined) {
+        nodes.push(<strong key={key++}>{m[1]}</strong>)
+      } else {
+        const id = m[2]
+        const hit = lookup.get(id)
+        if (hit) {
+          const label = hit.passage || hit.title || id
+          nodes.push(
+            <a
+              key={key++}
+              className="citation-link"
+              href={`/${iso}/c/${encodeURIComponent(id)}`}
+              title={hit.title}
+            >
+              📖 {label}
+            </a>,
+          )
+        } else {
+          nodes.push(m[0]) // unknown id — leave raw
+        }
+      }
+      last = re.lastIndex
+    }
+    if (last < answer.length) nodes.push(answer.slice(last))
+    return nodes
   }
 
   function renderHitCard(hit: SearchHit) {
@@ -317,7 +365,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
                       {turn.result.data.confidence}
                     </span>
                   </div>
-                  <div className="answer-body">{turn.result.data.answer}</div>
+                  <div className="answer-body">{renderAnswer(turn.result.data.answer, turn.result.data.branches)}</div>
                   {turn.result.data.branches.length > 0 && (
                     <details className="citations-details" open>
                       <summary className="citations-summary">{t.exploreSources}</summary>

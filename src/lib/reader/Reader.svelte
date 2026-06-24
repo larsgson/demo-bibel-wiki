@@ -18,8 +18,9 @@
     import ReaderTopBar from './ReaderTopBar.svelte';
     import { getProskomma } from './store';
     import { loadGlossary, lookup as lookupGlossary, type Glossary } from './glossary';
-    import { saveLastPosition, saveLastIso } from './position';
+    import { saveLastPosition, loadLastPosition, saveLastIso } from './position';
     import StoriesGrid from '../components/StoriesGrid.svelte';
+    import { $bibleHighlights as bibleHighlightsStore } from '../../stores/bible-highlight-store';
     import './reader.css';
 
     type Props = {
@@ -85,6 +86,32 @@
         // The "global last-position memory" still drives in-chapter navigation
         // and prev/next, but the user always lands on the picker first so they
         // can choose a story or a book chapter.
+
+        // Eagerly load the PKF binary in the background so the first chapter
+        // open is instant instead of waiting for fetch + parse.
+        if (!bsbMode) ensurePkf();
+
+        // Sidebar navigation: open a specific book+chapter on demand
+        window.addEventListener('navigate-to-chapter', ((e: CustomEvent) => {
+            const { book, chapter, highlightVerses } = e.detail;
+            const doc = catalog?.documents.find((d) => d.bookCode === book);
+            if (doc) {
+                openBookChapter(doc, chapter).then(() => {
+                    if (highlightVerses?.length) highlightVersesInDom(highlightVerses);
+                });
+            }
+        }) as EventListener);
+
+        // If arriving with Bible highlights from search, apply them after chapter opens
+        const hlMap = bibleHighlightsStore.get();
+        if (hlMap.size > 0) {
+            const pos = loadLastPosition();
+            const verses = hlMap.get(`${pos.book}:${pos.chapter}`) ?? [];
+            const doc = catalog?.documents.find((d) => d.bookCode === pos.book);
+            if (doc && verses.length) {
+                openBookChapter(doc, pos.chapter).then(() => highlightVersesInDom(verses));
+            }
+        }
     });
 
     onDestroy(() => {
@@ -115,6 +142,7 @@
         rendering = true;
         // Persist globally so switching languages resumes at the same reference.
         saveLastPosition({ book: book.bookCode, chapter: ch });
+        window.dispatchEvent(new CustomEvent('bible-position-changed', { detail: { book: book.bookCode, chapter: ch } }));
         try {
             if (bsbMode) {
                 rendered = await fetchAndRenderBSB(book.bookCode, ch);
@@ -142,6 +170,24 @@
         await tick();
         const restored = scrollByChapter.get(chapterKey(book.bookCode, ch));
         if (browser) window.scrollTo(0, restored ?? 0);
+    }
+
+    function highlightVersesInDom(verses: number[]) {
+        // Clear any previous search highlights
+        document.querySelectorAll('.verse-block.search-highlight').forEach((el) =>
+            el.classList.remove('search-highlight'));
+        if (!verses.length) return;
+        requestAnimationFrame(() => {
+            let firstEl: Element | null = null;
+            for (const v of verses) {
+                const el = document.querySelector(`.verse-block[data-v="${v}"]`);
+                if (el) {
+                    el.classList.add('search-highlight');
+                    if (!firstEl) firstEl = el;
+                }
+            }
+            if (firstEl) firstEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        });
     }
 
     function closeReader() {

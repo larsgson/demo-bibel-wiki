@@ -1,11 +1,72 @@
 ---
 import "../styles/global.css"
+import "../styles/sidebar.css"
+import MenuButton from "../components/nav/MenuButton.astro"
+import { AppSidebar } from "../components/nav/AppSidebar"
+import { loadAllTemplates, loadLocaleData } from "../lib/bw/template-utils"
+import type { SidebarTreeNode, BibleBookEntry } from "../components/nav/AppSidebar"
+import books from "../../data/BSB/books"
 
 interface Props {
   title?: string
 }
 
 const { title = "Tu Biblia mexicana" } = Astro.props
+
+// Build story tree for the sidebar (Templates → Categories → Stories)
+const templates = loadAllTemplates()
+const storyTree: SidebarTreeNode[] = Object.entries(templates).map(([name, structure]) => {
+  const eng = loadLocaleData(name, "eng")
+  const spa = loadLocaleData(name, "spa")
+  return {
+    id: name,
+    label: { en: eng?.bookTitle ?? name, es: spa?.bookTitle ?? eng?.bookTitle ?? name },
+    children: structure.categories.map((cat) => ({
+      id: `${name}/${cat.id}`,
+      label: {
+        en: eng?.categories[cat.id]?.title ?? `Category ${cat.id}`,
+        es: spa?.categories[cat.id]?.title ?? eng?.categories[cat.id]?.title ?? `Categoría ${cat.id}`,
+      },
+      href: `/${name}/${cat.id}`,
+      children: cat.stories.map((s) => {
+        const storyKey = `${cat.id}.${s.id}`
+        return {
+          id: `${name}/${cat.id}/${s.id}`,
+          label: {
+            en: eng?.stories[storyKey]?.title ?? `Story ${s.id}`,
+            es: spa?.stories[storyKey]?.title ?? eng?.stories[storyKey]?.title ?? `Historia ${s.id}`,
+          },
+          href: `/${name}/${cat.id}/${s.id}`,
+        }
+      }),
+    })),
+  }
+})
+
+// Bible books for sidebar navigation (compact: code + names + chapter count)
+const esBookNames: Record<string, string> = {
+  GEN: "Génesis", EXO: "Éxodo", LEV: "Levítico", NUM: "Números", DEU: "Deuteronomio",
+  JOS: "Josué", JDG: "Jueces", RUT: "Rut", "1SA": "1 Samuel", "2SA": "2 Samuel",
+  "1KI": "1 Reyes", "2KI": "2 Reyes", "1CH": "1 Crónicas", "2CH": "2 Crónicas",
+  EZR: "Esdras", NEH: "Nehemías", EST: "Ester", JOB: "Job", PSA: "Salmos",
+  PRO: "Proverbios", ECC: "Eclesiastés", SNG: "Cantares", ISA: "Isaías", JER: "Jeremías",
+  LAM: "Lamentaciones", EZK: "Ezequiel", DAN: "Daniel", HOS: "Oseas", JOL: "Joel",
+  AMO: "Amós", OBA: "Abdías", JON: "Jonás", MIC: "Miqueas", NAM: "Nahúm",
+  HAB: "Habacuc", ZEP: "Sofonías", HAG: "Hageo", ZEC: "Zacarías", MAL: "Malaquías",
+  MAT: "Mateo", MRK: "Marcos", LUK: "Lucas", JHN: "Juan", ACT: "Hechos",
+  ROM: "Romanos", "1CO": "1 Corintios", "2CO": "2 Corintios", GAL: "Gálatas",
+  EPH: "Efesios", PHP: "Filipenses", COL: "Colosenses", "1TH": "1 Tesalonicenses",
+  "2TH": "2 Tesalonicenses", "1TI": "1 Timoteo", "2TI": "2 Timoteo", TIT: "Tito",
+  PHM: "Filemón", HEB: "Hebreos", JAS: "Santiago", "1PE": "1 Pedro", "2PE": "2 Pedro",
+  "1JN": "1 Juan", "2JN": "2 Juan", "3JN": "3 Juan", JUD: "Judas", REV: "Apocalipsis",
+}
+const bibleBooks: BibleBookEntry[] = books.map((b) => ({
+  code: b.code,
+  name: b.name,
+  nameEs: esBookNames[b.code] ?? b.name,
+  chapters: b.chapters,
+  ot: b.id <= 39,
+}))
 ---
 
 <!doctype html>
@@ -16,7 +77,11 @@ const { title = "Tu Biblia mexicana" } = Astro.props
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>{title}</title>
   </head>
-  <body class="min-h-screen flex flex-col bg-[#fbfaf6] text-brand">
+  <body class="min-h-screen bg-[#fbfaf6] text-brand">
+    <MenuButton />
+    <AppSidebar client:only="react" storyTree={storyTree} bibleBooks={bibleBooks} />
+
+    <div class="app-main min-h-screen flex flex-col">
     <header
       class="sticky top-0 z-10 border-b"
       style="background:rgb(0,11,99);border-color:rgba(0,11,99,0.4)"
@@ -26,8 +91,6 @@ const { title = "Tu Biblia mexicana" } = Astro.props
           Tu Biblia mexicana
         </a>
         <div class="flex items-center gap-2">
-          <a href="/eng/OBS" class="header-link" data-iso-link="OBS">Stories</a>
-          <a href="/eng/browse" class="header-link" data-iso-link="browse">Browse</a>
           <a href="/eng/search" class="header-link-icon" data-iso-link="search" aria-label="AI search" title="AI search">
             💬
           </a>
@@ -47,6 +110,7 @@ const { title = "Tu Biblia mexicana" } = Astro.props
         Data from scriptureearth.org · CC BY-NC-ND 4.0 for included languages (see config/licenses.json).
       </div>
     </footer>
+    </div>
 
     <!-- Focus panel (modal playing overlay) -->
     <div class="focus-panel-backdrop" id="focus-backdrop" style="display:none"></div>
