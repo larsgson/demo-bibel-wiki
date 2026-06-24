@@ -6,7 +6,7 @@ import { searchBranched } from "../../lib/api/search-branched"
 import { askBranched } from "../../lib/api/ask-branched"
 import type { BranchedSearchResponse, BranchedAskResponse, Branch, SearchHit } from "../../lib/api/types"
 import { $selectedIso, initIsoFromUrl } from "../../stores/iso-store"
-import { mergeBranches } from "../../stores/nav-branches-store"
+import { mergeBranches, clearNavBranches } from "../../stores/nav-branches-store"
 import { extractBibleHighlights, clearBibleHighlights } from "../../stores/bible-highlight-store"
 
 type Result =
@@ -206,6 +206,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
     setTurns([])
     sessionStorage.removeItem(HISTORY_KEY)
     clearBibleHighlights()
+    clearNavBranches()
   }
 
   function toggleBranch(turnIdx: number, key: string) {

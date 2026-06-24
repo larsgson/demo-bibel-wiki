@@ -113,14 +113,20 @@
 }
 
 /* Answer item children */
-.app-sidebar-items { padding: 0.1rem 0 0.3rem; }
+.app-sidebar-items { padding: 0.1rem 0 0.3rem; list-style: none; margin: 0; }
 .app-sidebar-item {
   display: block;
+  width: 100%;
   padding: 0.4rem 1rem 0.4rem 2.4rem;
+  background: none;
+  border: none;
   color: rgba(255, 255, 255, 0.82);
+  font: inherit;
   font-size: 0.82rem;
   text-decoration: none;
+  text-align: left;
   line-height: 1.35;
+  cursor: pointer;
 }
 .app-sidebar-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
 .app-sidebar-item-label {
@@ -187,6 +193,29 @@
 }
 .app-sidebar-tree-row.has-highlights {
   color: rgba(255, 235, 150, 1);
+}
+
+/* Clear answers button under Study branch */
+.app-sidebar-clear-btn {
+  display: block;
+  width: calc(100% - 2rem);
+  margin: 0.3rem 1rem 0.4rem;
+  padding: 0.35rem;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  background: none;
+  color: rgba(255, 255, 255, 0.55);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.app-sidebar-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* ── Generic tree nodes (stories, Bible nav) ── */
@@ -280,4 +309,54 @@
   .app-sidebar-close { display: block; }
   .app-sidebar-backdrop { display: block; }
   body.app-sidebar-open { overflow: hidden; }
+}
+
+/* ── Branch content pane (right side) ── */
+.branch-content-pane {
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(0, 11, 99, 0.1);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+.branch-content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  background: rgba(0, 11, 99, 0.04);
+  border-bottom: 1px solid rgba(0, 11, 99, 0.08);
+}
+.branch-content-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgb(0, 11, 99);
+}
+.branch-content-list {
+  overflow-y: auto;
+}
+
+.branch-content-item {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid rgba(0, 11, 99, 0.06);
+}
+.branch-content-item:last-child { border-bottom: none; }
+
+.branch-content-item-title {
+  margin: 0 0 0.15rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgb(0, 11, 99);
+}
+.branch-content-item-subtitle {
+  margin: 0 0 0.25rem;
+  font-size: 0.78rem;
+  color: rgba(0, 11, 99, 0.5);
+}
+.branch-content-item-text {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: rgb(0, 11, 99);
 }

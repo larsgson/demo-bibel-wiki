@@ -5,9 +5,12 @@ import {
   $navBranches,
   $lastUpdatedBranches,
   initNavBranches,
+  clearNavBranches,
 } from "../../stores/nav-branches-store"
 import type { BranchKey, SearchHit } from "../../lib/api/types"
 import { $bibleHighlights } from "../../stores/bible-highlight-store"
+import { clearBibleHighlights } from "../../stores/bible-highlight-store"
+import { $activePane, showBible, showStory, showStudy, showBranch } from "../../stores/branch-view-store"
 
 export interface SidebarTreeNode {
   id: string
@@ -30,31 +33,28 @@ interface Props {
   bibleBooks?: BibleBookEntry[]
 }
 
-type NodeKind = "static" | "answer"
-
-interface NavNode {
-  id: BranchKey | "bible" | "story"
-  kind: NodeKind
+interface AnswerBranch {
+  id: BranchKey
   icon: string
-  route?: string
   label: { en: string; es: string }
 }
 
-const NAV_NODES: NavNode[] = [
-  { id: "story", kind: "static", icon: "📚", route: "OBS", label: { en: "Stories", es: "Historias" } },
-  { id: "bible", kind: "static", icon: "📖", route: "", label: { en: "Bible", es: "Biblia" } },
-  { id: "lexicon", kind: "answer", icon: "🔤", label: { en: "Lexicon", es: "Léxico" } },
-  { id: "terms", kind: "answer", icon: "🏷", label: { en: "Key terms", es: "Términos clave" } },
-  { id: "study", kind: "answer", icon: "📝", label: { en: "Study notes", es: "Notas de estudio" } },
-  { id: "morphology", kind: "answer", icon: "🔬", label: { en: "Morphology", es: "Morfología" } },
-  { id: "methodology", kind: "answer", icon: "🛠", label: { en: "Methodology", es: "Metodología" } },
-  { id: "media", kind: "answer", icon: "🎬", label: { en: "Media", es: "Recursos" } },
-  { id: "other", kind: "answer", icon: "•", label: { en: "Other", es: "Otros" } },
+const ANSWER_BRANCHES: AnswerBranch[] = [
+  { id: "verses",      icon: "📜", label: { en: "Verses", es: "Versículos" } },
+  { id: "lexicon",     icon: "🔤", label: { en: "Lexicon", es: "Léxico" } },
+  { id: "terms",       icon: "🏷", label: { en: "Key terms", es: "Términos clave" } },
+  { id: "study",       icon: "📝", label: { en: "Study notes", es: "Notas de estudio" } },
+  { id: "morphology",  icon: "🔬", label: { en: "Morphology", es: "Morfología" } },
+  { id: "methodology", icon: "🛠", label: { en: "Methodology", es: "Metodología" } },
+  { id: "media",       icon: "🎬", label: { en: "Media", es: "Recursos" } },
+  { id: "other",       icon: "•",  label: { en: "Other", es: "Otros" } },
 ]
 
+const TOP_LEVEL_IDS = ["study_topic", "story", "bible"]
+
 const UI = {
-  en: { nav: "Navigation", close: "Close menu", ot: "Old Testament", nt: "New Testament" },
-  es: { nav: "Navegación", close: "Cerrar menú", ot: "Antiguo Testamento", nt: "Nuevo Testamento" },
+  en: { nav: "Navigation", close: "Close menu", ot: "Old Testament", nt: "New Testament", clearStudy: "Clear answers" },
+  es: { nav: "Navegación", close: "Cerrar menú", ot: "Antiguo Testamento", nt: "Nuevo Testamento", clearStudy: "Borrar respuestas" },
 }
 
 const STORAGE_EXPANDED = "nav_expanded"
@@ -100,8 +100,8 @@ function exclusiveOpen(prev: Set<string>, id: string, siblings: string[]): Set<s
   const next = new Set(prev)
   const wasOpen = next.has(id)
   for (const s of siblings) {
+    if (s === id) continue
     next.delete(s)
-    // Also collapse any children nested under the closed sibling
     for (const v of prev) {
       if (v.startsWith(s + "/") || v.startsWith(s + "-")) next.delete(v)
     }
@@ -115,6 +115,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
   const storeIso = useStore($selectedIso)
   const navBranches = useStore($navBranches)
   const bibleHighlights = useStore($bibleHighlights)
+  const activePane = useStore($activePane)
   useStore($lastUpdatedBranches) // subscribe so badge counts update
 
   const [isOpen, setIsOpen] = useState(false)
@@ -295,11 +296,8 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     window.dispatchEvent(new CustomEvent("sidebar-state-changed", { detail: { isOpen } }))
   }, [isOpen])
 
-  // Top-level node IDs for exclusive-open
-  const topLevelIds = NAV_NODES.map((n) => n.id as string)
-
   function toggleTopLevel(id: string) {
-    setExpanded((prev) => exclusiveOpen(prev, id, topLevelIds))
+    setExpanded((prev) => exclusiveOpen(prev, id, TOP_LEVEL_IDS))
   }
 
   function hrefFor(route: string) {
@@ -310,11 +308,18 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     return isActiveFull(href)
   }
 
+  function clearAllAnswers() {
+    clearNavBranches()
+    clearBibleHighlights()
+    showStudy()
+  }
+
   function navigateToBibleChapter(book: string, chapter: number) {
     const pos = { book, chapter }
     const verses = bibleHighlights.get(`${book}:${chapter}`) ?? []
     try { localStorage.setItem(BIBLE_POS_KEY, JSON.stringify(pos)) } catch {}
     setActiveBiblePos(pos)
+    showBible()
     const readerPath = `/${iso}`
     const onReaderPage = pathname.replace(/\/$/, "") === readerPath
     if (onReaderPage) {
@@ -476,28 +481,34 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     )
   }
 
-  function renderAnswerItems(items: SearchHit[]) {
+  function renderAnswerItems(items: SearchHit[], branchKey: string) {
     return (
       <ul className="app-sidebar-items">
-        {items.map((hit) => (
+        {items.map((hit, idx) => (
           <li key={hit.chunk_id}>
-            <a className="app-sidebar-item" href={`/${iso}/c/${encodeURIComponent(hit.chunk_id)}`}>
+            <button
+              className="app-sidebar-item"
+              type="button"
+              onClick={() => showBranch(branchKey, idx)}
+            >
               <span className="app-sidebar-item-label">{hit.passage || hit.title}</span>
-            </a>
+            </button>
           </li>
         ))}
       </ul>
     )
   }
 
-  const visibleNodes = NAV_NODES.filter((n) => {
-    if (n.kind === "static") return true
-    return (navBranches[n.id as BranchKey]?.length ?? 0) > 0
-  })
+  const hasAnyAnswers = ANSWER_BRANCHES.some((b) => (navBranches[b.id]?.length ?? 0) > 0)
+  const answerBranchIds = ANSWER_BRANCHES.map((b) => b.id as string)
 
   const filteredBooks = bibleBooks?.filter((b) => !availableBooks || availableBooks.has(b.code)) ?? []
   const otBooks = filteredBooks.filter((b) => b.ot)
   const ntBooks = filteredBooks.filter((b) => !b.ot)
+
+  const studyOpen = expanded.has("study_topic")
+  const storyOpen = expanded.has("story")
+  const bibleOpen = expanded.has("bible")
 
   return (
     <>
@@ -525,100 +536,114 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
 
         <nav className="app-sidebar-nav">
           <ul className="app-sidebar-roots">
-            {visibleNodes.map((node) => {
-              if (node.kind === "static") {
-                // Stories: hierarchical tree
-                if (node.id === "story" && storyTree && storyTree.length > 0) {
-                  const storyOpen = expanded.has("story")
-                  const storyHref = hrefFor(node.route ?? "OBS")
-                  const active = isActivePath(storyHref)
-                  return (
-                    <li key={node.id} className="app-sidebar-root">
-                      <button
-                        className={`app-sidebar-root-row toggle ${active ? "active" : ""}`}
-                        type="button"
-                        onClick={() => toggleTopLevel("story")}
-                        aria-expanded={storyOpen}
-                      >
-                        <span className={`app-sidebar-arrow ${storyOpen ? "open" : ""}`}>›</span>
-                        <span className="app-sidebar-icon">{node.icon}</span>
-                        <span className="app-sidebar-root-label">{node.label[lang]}</span>
-                      </button>
-                      {storyOpen && (
-                        <ul className="app-sidebar-tree-children">
-                          {storyTree.map((tpl) =>
-                            renderTreeNode(tpl, 0, storyTree.map((t) => t.id)),
-                          )}
-                        </ul>
-                      )}
-                    </li>
-                  )
-                }
+            {/* ── Stories ── */}
+            {storyTree && storyTree.length > 0 && (
+              <li className="app-sidebar-root">
+                <button
+                  className={`app-sidebar-root-row toggle ${activePane.pane === "story" ? "active" : ""}`}
+                  type="button"
+                  onClick={() => {
+                    toggleTopLevel("story")
+                    showStory()
+                  }}
+                  aria-expanded={storyOpen}
+                >
+                  <span className={`app-sidebar-arrow ${storyOpen ? "open" : ""}`}>›</span>
+                  <span className="app-sidebar-icon">📚</span>
+                  <span className="app-sidebar-root-label">{lang === "es" ? "Historias" : "Stories"}</span>
+                </button>
+                {storyOpen && (
+                  <ul className="app-sidebar-tree-children">
+                    {storyTree.map((tpl) =>
+                      renderTreeNode(tpl, 0, storyTree.map((t) => t.id)),
+                    )}
+                  </ul>
+                )}
+              </li>
+            )}
 
-                // Bible: OT/NT → Books → Chapters
-                if (node.id === "bible" && bibleBooks && bibleBooks.length > 0) {
-                  const bibleOpen = expanded.has("bible")
-                  const readerHref = `/${iso}`
-                  const onReaderPage = pathname.replace(/\/$/, "") === readerHref.replace(/\/$/, "")
-                  return (
-                    <li key={node.id} className="app-sidebar-root">
-                      <button
-                        className={`app-sidebar-root-row toggle ${onReaderPage ? "active" : ""}`}
-                        type="button"
-                        onClick={() => toggleTopLevel("bible")}
-                        aria-expanded={bibleOpen}
-                      >
-                        <span className={`app-sidebar-arrow ${bibleOpen ? "open" : ""}`}>›</span>
-                        <span className="app-sidebar-icon">{node.icon}</span>
-                        <span className="app-sidebar-root-label">{node.label[lang]}</span>
-                      </button>
-                      {bibleOpen && (
-                        <ul className="app-sidebar-tree-children">
-                          {otBooks.length > 0 && renderBibleTestament("bible-ot", t.ot, otBooks, "bible-nt")}
-                          {ntBooks.length > 0 && renderBibleTestament("bible-nt", t.nt, ntBooks, "bible-ot")}
-                        </ul>
-                      )}
-                    </li>
-                  )
-                }
+            {/* ── Bible ── */}
+            {bibleBooks && bibleBooks.length > 0 && (
+              <li className="app-sidebar-root">
+                <button
+                  className={`app-sidebar-root-row toggle ${activePane.pane === "bible" ? "active" : ""}`}
+                  type="button"
+                  onClick={() => {
+                    toggleTopLevel("bible")
+                    showBible()
+                  }}
+                  aria-expanded={bibleOpen}
+                >
+                  <span className={`app-sidebar-arrow ${bibleOpen ? "open" : ""}`}>›</span>
+                  <span className="app-sidebar-icon">📖</span>
+                  <span className="app-sidebar-root-label">{lang === "es" ? "Biblia" : "Bible"}</span>
+                </button>
+                {bibleOpen && (
+                  <ul className="app-sidebar-tree-children">
+                    {otBooks.length > 0 && renderBibleTestament("bible-ot", t.ot, otBooks, "bible-nt")}
+                    {ntBooks.length > 0 && renderBibleTestament("bible-nt", t.nt, ntBooks, "bible-ot")}
+                  </ul>
+                )}
+              </li>
+            )}
 
-                // Fallback: flat link
-                const href = hrefFor(node.route ?? "")
-                const active = isActivePath(href)
-                return (
-                  <li key={node.id} className="app-sidebar-root">
-                    <a
-                      className={`app-sidebar-root-row ${active ? "active" : ""}`}
-                      href={href}
-                      aria-current={active ? "page" : undefined}
+            {/* ── Study topic ── */}
+            <li className="app-sidebar-root">
+              <button
+                className={`app-sidebar-root-row toggle ${activePane.pane === "study" || activePane.pane === "branch" ? "active" : ""}`}
+                type="button"
+                onClick={() => {
+                  toggleTopLevel("study_topic")
+                  showStudy()
+                }}
+                aria-expanded={studyOpen}
+              >
+                <span className={`app-sidebar-arrow ${studyOpen ? "open" : ""}`}>›</span>
+                <span className="app-sidebar-icon">💬</span>
+                <span className="app-sidebar-root-label">{lang === "es" ? "Estudiar un tema" : "Study a topic"}</span>
+              </button>
+              {studyOpen && (
+                <>
+                  <ul className="app-sidebar-tree-children">
+                    {ANSWER_BRANCHES.map((branch) => {
+                      const items = navBranches[branch.id] ?? []
+                      if (items.length === 0) return null
+                      const branchOpen = expanded.has(branch.id)
+                      const isActiveBranch = activePane.pane === "branch" && activePane.branchKey === branch.id
+                      return (
+                        <li key={branch.id}>
+                          <button
+                            className={`app-sidebar-tree-row ${isActiveBranch ? "active" : ""}`}
+                            type="button"
+                            onClick={() => {
+                              setExpanded((prev) => exclusiveOpen(prev, branch.id, answerBranchIds))
+                              showBranch(branch.id)
+                            }}
+                            style={{ paddingLeft: "1.7rem" }}
+                            aria-expanded={branchOpen}
+                          >
+                            <span className={`app-sidebar-arrow ${branchOpen ? "open" : ""}`}>›</span>
+                            <span className="app-sidebar-icon" style={{ fontSize: "0.8rem" }}>{branch.icon}</span>
+                            <span className="app-sidebar-tree-label">{branch.label[lang]}</span>
+                            <span className="app-sidebar-badge">{items.length}</span>
+                          </button>
+                          {branchOpen && renderAnswerItems(items, branch.id)}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  {hasAnyAnswers && (
+                    <button
+                      className="app-sidebar-clear-btn"
+                      type="button"
+                      onClick={clearAllAnswers}
                     >
-                      <span className="app-sidebar-icon">{node.icon}</span>
-                      <span className="app-sidebar-root-label">{node.label[lang]}</span>
-                    </a>
-                  </li>
-                )
-              }
-
-              // Answer-fed nodes: show count badge, expand only on manual click
-              const items = navBranches[node.id as BranchKey] ?? []
-              const open = expanded.has(node.id)
-              return (
-                <li key={node.id} className="app-sidebar-root">
-                  <button
-                    className="app-sidebar-root-row toggle"
-                    type="button"
-                    onClick={() => toggleTopLevel(node.id)}
-                    aria-expanded={open}
-                  >
-                    <span className={`app-sidebar-arrow ${open ? "open" : ""}`}>›</span>
-                    <span className="app-sidebar-icon">{node.icon}</span>
-                    <span className="app-sidebar-root-label">{node.label[lang]}</span>
-                    <span className="app-sidebar-badge">{items.length}</span>
-                  </button>
-                  {open && renderAnswerItems(items)}
-                </li>
-              )
-            })}
+                      {t.clearStudy}
+                    </button>
+                  )}
+                </>
+              )}
+            </li>
           </ul>
         </nav>
       </aside>

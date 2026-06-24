@@ -44,7 +44,7 @@ export function mergeBranches(branches: Branch[]) {
   const updated: BranchKey[] = []
 
   for (const branch of branches) {
-    if (branch.key === "verses") continue // Bible node is static
+    // verses are now shown under the Study branch too
     if (!branch.items?.length) continue
 
     const existing = next[branch.key] ?? []
