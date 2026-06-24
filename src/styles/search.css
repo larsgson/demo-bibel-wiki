@@ -28,11 +28,13 @@
 .loading-dots { color: rgba(0,11,99,0.55); font-style: italic; }
 
 .hit-card { border: 1px solid rgba(0,11,99,0.1); border-radius: 8px; padding: 0.6rem; margin-bottom: 0.5rem; background: #fff; }
-.hit-title { margin: 0 0 0.2rem; font-size: 0.88rem; }
-.hit-title a { color: rgb(0,11,99); text-decoration: none; font-weight: 600; }
-.hit-title a:hover { text-decoration: underline; }
+.hit-title { margin: 0 0 0.2rem; font-size: 0.88rem; font-weight: 600; color: rgb(0,11,99); }
+.hit-title.clickable { cursor: pointer; transition: color 0.15s ease; }
+.hit-title.clickable:hover { color: rgba(0,11,99,0.65); }
 .hit-passage { font-size: 0.78rem; color: rgba(0,11,99,0.55); margin: 0 0 0.2rem; }
 .hit-excerpt { font-size: 0.82rem; color: rgb(0,11,99); line-height: 1.5; margin: 0 0 0.35rem; }
+.hit-body-full p { margin: 0.4em 0; }
+.hit-body-full p:first-child { margin-top: 0; }
 .hit-footer { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; }
 .hit-kind { padding: 1px 6px; background: rgba(0,11,99,0.08); color: rgb(0,11,99); border-radius: 3px; font-weight: 500; }
 .show-more-btn {

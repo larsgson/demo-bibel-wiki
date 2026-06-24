@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useStore } from "@nanostores/react"
-import { $apiConfigured } from "../../stores/api-store"
+import { $apiConfigured, apiFetch } from "../../stores/api-store"
 import { $searchMode, setSearchMode, type SearchMode } from "../../stores/search-store"
 import { searchBranched } from "../../lib/api/search-branched"
 import { askBranched } from "../../lib/api/ask-branched"
@@ -80,6 +80,67 @@ const strings = {
     networkError: "Error de red al contactar la API.",
     passwordRejected: "Contraseña rechazada.",
   },
+}
+
+function renderMarkdown(md: string) {
+  return md
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/_(.+?)_/g, "<em>$1</em>")
+    .replace(/\n\n/g, "</p><p>")
+    .replace(/\n/g, "<br>")
+}
+
+function ExpandableHitCard({ hit }: { hit: SearchHit }) {
+  const [expanded, setExpanded] = useState(false)
+  const [fullBody, setFullBody] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  async function expand() {
+    if (expanded) { setExpanded(false); return }
+    if (fullBody) { setExpanded(true); return }
+    setLoading(true)
+    try {
+      const data = await apiFetch<{ body: string }>(`/api/chunk/${hit.chunk_id}`)
+      setFullBody(data.body)
+      setExpanded(true)
+    } catch {
+      setFullBody(hit.excerpt)
+      setExpanded(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const isTruncated = hit.excerpt.endsWith("…") || hit.excerpt.endsWith("...")
+
+  return (
+    <article className={`hit-card ${expanded ? "expanded" : ""}`}>
+      <h3 className="hit-title clickable" onClick={expand}>
+        {hit.title}
+        {loading && <span className="branch-content-loading"> ...</span>}
+      </h3>
+      {hit.passage && <p className="hit-passage">{hit.passage}</p>}
+      {expanded && fullBody ? (
+        <div
+          className="hit-excerpt hit-body-full"
+          dangerouslySetInnerHTML={{ __html: renderMarkdown(fullBody) }}
+        />
+      ) : (
+        <p className="hit-excerpt">
+          <span dangerouslySetInnerHTML={{ __html: renderMarkdown(hit.excerpt) }} />
+          {isTruncated && (
+            <button className="branch-content-expand" onClick={expand} type="button">
+              {loading ? "..." : "…"}
+            </button>
+          )}
+        </p>
+      )}
+      <div className="hit-footer">
+        <span className="hit-kind">{hit.kind}</span>
+      </div>
+    </article>
+  )
 }
 
 interface Props {
@@ -260,14 +321,13 @@ export function SearchIsland({ iso: isoProp }: Props) {
         if (hit) {
           const label = hit.passage || hit.title || id
           nodes.push(
-            <a
+            <span
               key={key++}
               className="citation-link"
-              href={`/${iso}/c/${encodeURIComponent(id)}`}
               title={hit.title}
             >
               📖 {label}
-            </a>,
+            </span>,
           )
         } else {
           nodes.push(m[0]) // unknown id — leave raw
@@ -280,18 +340,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
   }
 
   function renderHitCard(hit: SearchHit) {
-    return (
-      <article key={hit.chunk_id} className="hit-card">
-        <h3 className="hit-title">
-          <a href={`/${iso}/c/${encodeURIComponent(hit.chunk_id)}`}>{hit.title}</a>
-        </h3>
-        {hit.passage && <p className="hit-passage">{hit.passage}</p>}
-        <p className="hit-excerpt">{hit.excerpt}</p>
-        <div className="hit-footer">
-          <span className="hit-kind">{hit.kind}</span>
-        </div>
-      </article>
-    )
+    return <ExpandableHitCard key={hit.chunk_id} hit={hit} />
   }
 
   function renderBranch(branch: Branch, turnIdx: number) {
