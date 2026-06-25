@@ -1,5 +1,7 @@
 import { atom, computed } from "nanostores"
 import languagePreferences from "../data/language-preferences.json"
+import { setIso } from "./iso-store"
+import { isStudyLanguage } from "../lib/bw/study-languages"
 
 // Always initialize with defaults to match server-rendered HTML.
 // Actual values are hydrated from URL in initLanguageFromUrl().
@@ -25,6 +27,19 @@ export const $engIsExplicit = computed(
   [$selectedLanguage, $secondaryLanguages],
   (primary, secondaries) => primary === "eng" || secondaries.includes("eng"),
 )
+
+// The currently-targeted study language: the first study-capable language in
+// selection order (primary first, then secondaries). Null when none of the
+// selected languages is study-capable. Study UI targets this language.
+export const $activeStudyLang = computed($selectedLanguages, (langs) => {
+  return langs.find((l) => isStudyLanguage(l)) ?? null
+})
+
+// `language-store` is the canonical selection. `$selectedIso` (iso-store) is a
+// one-way mirror of the PRIMARY only, for URL/title/link consumers. Keep it in
+// step whenever the primary changes. Multi-language features must read
+// `$selectedLanguages`/`$secondaryLanguages`, never `$selectedIso`.
+$selectedLanguage.subscribe((primary) => setIso(primary))
 
 export function setLanguage(lang: string) {
   $selectedLanguage.set(lang)

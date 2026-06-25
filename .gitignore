@@ -32,3 +32,4 @@ prev/
 # Local Netlify folder
 .netlify/
 internal-docs/
+temp/

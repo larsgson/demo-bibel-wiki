@@ -1,0 +1,179 @@
+/* Language picker — bottom sheet built on native <dialog>. */
+
+/* Header trigger button */
+.lang-button {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+.lang-button:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.lang-button-globe {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.lang-button-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 0 0.3rem;
+  border-radius: 999px;
+}
+
+.lang-dialog {
+  margin: 0;
+  padding: 0;
+  border: none;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  top: auto;
+  transform: translateX(-50%);
+  border-radius: 16px 16px 0 0;
+  background: #fff;
+  color: rgb(0, 11, 99);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+.lang-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+@media (min-width: 640px) {
+  .lang-dialog {
+    bottom: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 16px;
+  }
+}
+
+.lang-sheet {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+.lang-sheet-header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 0.75rem 1rem 0.5rem;
+  border-bottom: 1px solid rgba(0, 11, 99, 0.08);
+}
+.lang-sheet-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.lang-sheet-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.lang-sheet-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(0, 11, 99, 0.06);
+  border-radius: 999px;
+  font-size: 1rem;
+  cursor: pointer;
+  color: rgb(0, 11, 99);
+}
+.lang-search {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(0, 11, 99, 0.2);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+}
+.lang-search:focus {
+  border-color: rgb(0, 11, 99);
+}
+
+.lang-list {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.lang-section-label {
+  position: sticky;
+  top: 0;
+  background: rgba(0, 11, 99, 0.04);
+  padding: 0.3rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 11, 99, 0.55);
+}
+.lang-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(0, 11, 99, 0.05);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: rgb(0, 11, 99);
+}
+.lang-row:hover {
+  background: rgba(0, 11, 99, 0.04);
+}
+.lang-row.selected {
+  background: rgba(255, 215, 0, 0.18);
+}
+.lang-row-names {
+  flex: 1;
+  min-width: 0;
+}
+.lang-row-vernacular {
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lang-row-english {
+  font-size: 0.78rem;
+  color: rgba(0, 11, 99, 0.55);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lang-badge {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+.lang-badge-pkf {
+  font-size: 0.85rem;
+}
+.lang-badge-study {
+  color: #b8860b;
+  font-weight: 700;
+}
+.lang-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: rgba(0, 11, 99, 0.5);
+  font-size: 0.85rem;
+}

@@ -6,6 +6,8 @@ import {
   getHelloaoTid,
 } from "../lib/bw/content-sources"
 import { chapterVerses } from "../lib/templates/verseText"
+import { shouldProbePkf } from "../lib/bw/language-list"
+import { pkfUrl as pkfUrlOf } from "../lib/bw/pkf-url"
 
 // Cache key: "langCode-BOOK.chapter" e.g. "spa-JHN.1"
 export const $chapterText = atom<Record<string, any>>({})
@@ -23,8 +25,10 @@ const pkfCatalogCache = new Map<string, { checked: boolean; books: Set<string> }
 
 async function loadPkfInfo(langCode: string): Promise<any | null> {
   if (pkfInfoCache.has(langCode)) return pkfInfoCache.get(langCode)
+  // Skip the probe for languages with no .pkf data on disk (avoids a 404).
+  if (!(await shouldProbePkf(langCode))) { pkfInfoCache.set(langCode, null); return null }
   try {
-    const resp = await fetch(`/pkf/${langCode}/info.json`)
+    const resp = await fetch(pkfUrlOf(`/pkf/${langCode}/info.json`))
     if (!resp.ok) { pkfInfoCache.set(langCode, null); return null }
     const info = await resp.json()
     pkfInfoCache.set(langCode, info)
@@ -78,8 +82,8 @@ export async function loadChapter(
         : null
       if (pkfAsset) {
         try {
-          const pkfUrl = `/pkf/${langCode}/${pkfAsset.name}`
-          const catalogUrl = catalogAsset ? `/pkf/${langCode}/${catalogAsset.name}` : null
+          const pkfUrl = pkfUrlOf(`/pkf/${langCode}/${pkfAsset.name}`)
+          const catalogUrl = catalogAsset ? pkfUrlOf(`/pkf/${langCode}/${catalogAsset.name}`) : null
           let catalog = null
           if (catalogUrl) {
             const catResp = await fetch(catalogUrl)

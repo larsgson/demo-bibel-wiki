@@ -26,6 +26,8 @@ import StorySection from "./StorySection"
 import { buildLangHref } from "../lib/bw/url-utils"
 import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
 import { resolveImageUrl, resolveMediumUrl } from "../lib/bw/image-utils"
+import { shouldProbePkf } from "../lib/bw/language-list"
+import { pkfUrl } from "../lib/bw/pkf-url"
 import languageStyles from "../data/language-styles.json"
 import languagePreferences from "../data/language-preferences.json"
 
@@ -675,7 +677,7 @@ async function fetchPkfTimingData(
 
     for (const chapter of chapters) {
       try {
-        const resp = await fetch(`/pkf/${langCode}/timing/${book}-${chapter}.json`)
+        const resp = await fetch(pkfUrl(`/pkf/${langCode}/timing/${book}-${chapter}.json`))
         if (!resp.ok) continue
         const rows: [number, number, string][] = await resp.json()
 
@@ -812,10 +814,10 @@ function isDbtAvailable(): boolean { return _dbtAvailable }
 
 async function loadPkfMedia(langCode: string): Promise<any | null> {
   if (pkfAudioCache.has(langCode)) return pkfAudioCache.get(langCode)
-  // BSB-only languages have no PKF data
-  if (langCode === "eng") { pkfAudioCache.set(langCode, null); return null }
+  // BSB-only / bridge / un-fetched languages have no PKF data — skip (avoids 404).
+  if (langCode === "eng" || !(await shouldProbePkf(langCode))) { pkfAudioCache.set(langCode, null); return null }
   try {
-    const resp = await fetch(`/pkf/${langCode}/info.json`)
+    const resp = await fetch(pkfUrl(`/pkf/${langCode}/info.json`))
     if (!resp.ok) { pkfAudioCache.set(langCode, null); return null }
     const info = await resp.json()
     const media = info?.media ?? null

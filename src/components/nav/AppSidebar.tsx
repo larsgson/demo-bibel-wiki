@@ -12,6 +12,8 @@ import { $bibleHighlights } from "../../stores/bible-highlight-store"
 import { clearBibleHighlights } from "../../stores/bible-highlight-store"
 import { $activePane, showBible, showStory, showStudy, showBranch } from "../../stores/branch-view-store"
 import { getUILevel, type UILevel } from "../../stores/ui-level-store"
+import { shouldProbePkf } from "../../lib/bw/language-list"
+import { pkfUrl } from "../../lib/bw/pkf-url"
 
 export interface SidebarTreeNode {
   id: string
@@ -174,12 +176,14 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
         if (iso === "eng") {
           catalogUrl = "/bsb/catalog.json"
         } else {
-          const infoRes = await fetch(`/pkf/${iso}/info.json`)
+          // Skip the probe for languages with no .pkf data on disk (avoids a 404).
+          if (!(await shouldProbePkf(iso))) return
+          const infoRes = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
           if (!infoRes.ok) return
           const info = await infoRes.json()
           const pkf = info.assets?.find((a: any) => a.kind === "pkf")
           const cat = pkf ? info.assets?.find((a: any) => a.kind === "json" && a.base === pkf.base) : null
-          if (cat) catalogUrl = `/pkf/${iso}/${cat.name}`
+          if (cat) catalogUrl = pkfUrl(`/pkf/${iso}/${cat.name}`)
         }
         if (!catalogUrl) return
         const catRes = await fetch(catalogUrl)

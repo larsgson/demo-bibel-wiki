@@ -3,6 +3,7 @@ import "../styles/global.css"
 import "../styles/sidebar.css"
 import MenuButton from "../components/nav/MenuButton.astro"
 import { AppSidebar } from "../components/nav/AppSidebar"
+import LanguageButton from "../components/LanguageButton"
 import { loadAllTemplates, loadLocaleData } from "../lib/bw/template-utils"
 import type { SidebarTreeNode, BibleBookEntry } from "../components/nav/AppSidebar"
 import books from "../../data/BSB/books"
@@ -91,6 +92,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
           Tu Biblia mexicana
         </a>
         <div class="flex items-center gap-2">
+          <LanguageButton client:only="react" lang="es" />
           <div class="ui-level-wrapper" id="ui-level-wrapper">
             <button class="ui-level-gear" id="ui-level-btn" type="button" aria-label="Interface level">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

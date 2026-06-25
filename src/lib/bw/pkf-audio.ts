@@ -8,6 +8,7 @@
  */
 
 import type { VerseEntry } from "../../stores/audio-store"
+import { pkfUrl } from "./pkf-url"
 
 export interface PkfAudioItem {
   url: string
@@ -43,7 +44,7 @@ export async function fetchTiming(
   chapter: number,
 ): Promise<TimingRow[] | null> {
   try {
-    const resp = await fetch(`/pkf/${iso}/timing/${bookCode}-${chapter}.json`)
+    const resp = await fetch(pkfUrl(`/pkf/${iso}/timing/${bookCode}-${chapter}.json`))
     if (!resp.ok) return null
     return await resp.json()
   } catch {

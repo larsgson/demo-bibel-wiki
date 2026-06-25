@@ -19,3 +19,7 @@ const FULL_LANGUAGES = [
 ] as const
 
 export const POPULAR_LANGUAGES = import.meta.env.FULL_LANGS ? FULL_LANGUAGES : DEV_LANGUAGES
+
+// Always the full popular set, independent of build env — used by the language
+// picker's "Popular" tier (not by prerendering, which uses POPULAR_LANGUAGES).
+export const PICKER_POPULAR_LANGUAGES = FULL_LANGUAGES

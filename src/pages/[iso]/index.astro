@@ -10,6 +10,7 @@ import { captionModeFor } from "../../lib/data/figureCaptions"
 import { displayName } from "../../lib/data/languageNames"
 import { getIsoPaths } from "../../lib/prerender"
 import { loadAllTemplates, loadLocaleData, loadAllLocaleData } from "../../lib/bw/template-utils"
+import { pkfUrl as pkfUrlOf } from "../../lib/bw/pkf-url"
 import "../../styles/search.css"
 
 export function getStaticPaths() {
@@ -32,14 +33,14 @@ const catalogAsset = pkfAsset
   ? info?.assets.find((a) => a.kind === "json" && a.base === pkfAsset.base) ?? null
   : null
 
-const pkfUrl = pkfAsset ? `/pkf/${iso}/${pkfAsset.name}` : null
+const pkfUrl = pkfAsset ? pkfUrlOf(`/pkf/${iso}/${pkfAsset.name}`) : null
 const catalogUrl = isBsb
   ? "/bsb/catalog.json"
   : catalogAsset
-    ? `/pkf/${iso}/${catalogAsset.name}`
+    ? pkfUrlOf(`/pkf/${iso}/${catalogAsset.name}`)
     : null
 const docSetId = isBsb ? "eng_bsb" : (pkfAsset?.base ?? null)
-const styleUrl = info?.style_delta ? `/pkf/${iso}/${info.style_delta}` : null
+const styleUrl = info?.style_delta ? pkfUrlOf(`/pkf/${iso}/${info.style_delta}`) : null
 const region = regionForIso(iso)
 const title = `${displayName(iso)} — ${region?.displayName ?? ""}`.trim()
 const media = info?.media ?? { videos: [], audio: { base_url: null, items: [] } }

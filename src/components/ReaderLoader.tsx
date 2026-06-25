@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { pkfUrl } from "../lib/bw/pkf-url"
 
 interface ReaderData {
   iso: string
@@ -78,7 +79,7 @@ async function loadReaderData(iso: string): Promise<ReaderData> {
     }
   }
 
-  const infoResp = await fetch(`/pkf/${iso}/info.json`)
+  const infoResp = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
   if (!infoResp.ok) throw new Error(`No data for language: ${iso}`)
   const info = await infoResp.json()
 
@@ -93,9 +94,9 @@ async function loadReaderData(iso: string): Promise<ReaderData> {
     iso,
     isBsb: false,
     docSetId: pkfAsset.base,
-    pkfUrl: `/pkf/${iso}/${pkfAsset.name}`,
-    catalogUrl: `/pkf/${iso}/${catalogAsset.name}`,
-    styleUrl: info.style_delta ? `/pkf/${iso}/${info.style_delta}` : null,
+    pkfUrl: pkfUrl(`/pkf/${iso}/${pkfAsset.name}`),
+    catalogUrl: pkfUrl(`/pkf/${iso}/${catalogAsset.name}`),
+    styleUrl: info.style_delta ? pkfUrl(`/pkf/${iso}/${info.style_delta}`) : null,
     figureUrls: info.figure_urls ?? {},
     captionMode: "hide",
     media: info.media ?? { videos: [], audio: { base_url: null, items: [] } },

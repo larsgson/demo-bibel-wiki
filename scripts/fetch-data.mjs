@@ -31,108 +31,136 @@ if (SKIP) {
 }
 
 // ── 1. PKF data ──
+//
+// Two modes:
+//   • PUBLIC_PKF_BASE_URL set → the browser fetches .pkf data from the CDN, so
+//     the build only needs the small manifest.json (regions.ts imports it at
+//     build time). The ~732 MB tar is NOT downloaded.
+//   • unset → serve .pkf from the in-deploy /pkf, so download + extract the tar.
+//
+// In BOTH modes we must ensure data/pkf/manifest.json exists, because the
+// global tar does NOT contain it (it's a separate release asset).
 
-if (existsSync(join(DATA_DIR, "manifest.json"))) {
-  console.log(`PKF data already present at ${DATA_DIR}/manifest.json — skipping.`)
+const PKF_BASE = (process.env.PUBLIC_PKF_BASE_URL ?? "").trim().replace(/\/+$/, "")
+const manifestPath = join(DATA_DIR, "manifest.json")
+
+function hasFullPkfData() {
+  if (!existsSync(DATA_DIR)) return false
+  // Any entry besides manifest.json / dotfiles means the tree is extracted.
+  return readdirSync(DATA_DIR).some((n) => n !== "manifest.json" && !n.startsWith("."))
+}
+
+const needManifest = !existsSync(manifestPath)
+const needFullData = !PKF_BASE && !hasFullPkfData()
+
+if (!needManifest && !needFullData) {
+  console.log(`PKF data already present — skipping.`)
 } else {
   console.log(`\n── Fetching PKF data from ${REPO} (tag: ${TAG}) ──\n`)
+  mkdirSync(DATA_DIR, { recursive: true })
 
-  const releaseApi =
-    TAG === "latest"
-      ? `https://api.github.com/repos/${REPO}/releases/latest`
-      : `https://api.github.com/repos/${REPO}/releases/tags/${TAG}`
-
-  let releaseInfo
-  try {
-    const res = await fetch(releaseApi, {
-      headers: { Accept: "application/vnd.github+json" },
-    })
+  // Lazily fetched only when we actually need the GitHub release (full data, or
+  // manifest fallback). Avoids an API call when the CDN can serve the manifest.
+  let releaseInfo = null
+  async function getReleaseInfo() {
+    if (releaseInfo) return releaseInfo
+    const releaseApi =
+      TAG === "latest"
+        ? `https://api.github.com/repos/${REPO}/releases/latest`
+        : `https://api.github.com/repos/${REPO}/releases/tags/${TAG}`
+    const res = await fetch(releaseApi, { headers: { Accept: "application/vnd.github+json" } })
     if (!res.ok) throw new Error(`GitHub API ${res.status}: ${res.statusText}`)
     releaseInfo = await res.json()
-  } catch (err) {
-    console.error(`Failed to fetch release info: ${err.message}`)
-    process.exit(1)
+    console.log(`Release: ${releaseInfo.tag_name} (${releaseInfo.name ?? ""})`)
+    return releaseInfo
   }
 
-  console.log(`Release: ${releaseInfo.tag_name} (${releaseInfo.name ?? ""})`)
-
-  const asset = releaseInfo.assets?.find(
-    (a) => a.name.endsWith(".tar.zstd") || a.name.endsWith(".tar.zst")
-  )
-
-  if (!asset) {
-    console.error("No .tar.zstd asset found in release. Available assets:")
-    for (const a of releaseInfo.assets ?? []) console.error(`  - ${a.name}`)
-    process.exit(1)
-  }
-
-  console.log(`Downloading ${asset.name} (${(asset.size / 1e6).toFixed(1)} MB)...`)
-
-  const tmpDir = join("data", ".fetch-tmp")
-  mkdirSync(tmpDir, { recursive: true })
-  const archivePath = join(tmpDir, asset.name)
-
-  try {
-    execSync(
-      `curl -fSL -o "${archivePath}" "${asset.browser_download_url}"`,
-      { stdio: "inherit" }
-    )
-  } catch {
-    console.error("Download failed.")
-    rmSync(tmpDir, { recursive: true, force: true })
-    process.exit(1)
-  }
-
-  const checksumAsset = releaseInfo.assets?.find(
-    (a) => a.name === asset.name + ".sha256" || a.name === "checksums.txt"
-  )
-  if (checksumAsset) {
-    console.log("Verifying checksum...")
-    try {
-      const res = await fetch(checksumAsset.browser_download_url)
-      const checksumText = await res.text()
-      const expected = checksumText.split("\n").find((l) => l.includes(asset.name))
-      if (expected) {
-        const hash = createHash("sha256")
-          .update(readFileSync(archivePath))
-          .digest("hex")
-        const expectedHash = expected.split(/\s+/)[0]
-        if (hash !== expectedHash) {
-          console.error(`Checksum mismatch! Expected ${expectedHash}, got ${hash}`)
-          rmSync(tmpDir, { recursive: true, force: true })
-          process.exit(1)
-        }
-        console.log("  ✓ Checksum verified")
-      }
-    } catch (err) {
-      console.warn(`  ⚠ Could not verify checksum: ${err.message}`)
+  // 1a. Ensure manifest.json (build-time dependency of regions.ts).
+  if (needManifest) {
+    let manifestText = null
+    // Prefer the CDN when externalized — single source of truth.
+    if (PKF_BASE) {
+      try {
+        const r = await fetch(`${PKF_BASE}/pkf/manifest.json`)
+        if (r.ok) { manifestText = await r.text(); console.log("  ✓ manifest.json (from CDN)") }
+      } catch { /* fall through to GitHub */ }
     }
+    // Fallback: the standalone manifest asset on the GitHub release.
+    if (!manifestText) {
+      const info = await getReleaseInfo()
+      const a = info.assets?.find((x) => x.name.startsWith("manifest-global") && x.name.endsWith(".json"))
+      if (!a) { console.error("No standalone manifest-global-*.json asset found."); process.exit(1) }
+      const r = await fetch(a.browser_download_url)
+      if (!r.ok) { console.error(`Failed to fetch manifest: ${r.status}`); process.exit(1) }
+      manifestText = await r.text()
+      console.log(`  ✓ manifest.json (from release asset ${a.name})`)
+    }
+    writeFileSync(manifestPath, manifestText)
   }
 
-  console.log(`Extracting to ${DATA_DIR}/...`)
-  mkdirSync(DATA_DIR, { recursive: true })
-  try {
-    execSync(`tar --use-compress-program=unzstd -xf "${archivePath}" -C "${DATA_DIR}"`, {
-      stdio: "inherit",
-    })
-  } catch {
+  // 1b. Full data — only when serving from the in-deploy /pkf (no CDN).
+  if (needFullData) {
+    const info = await getReleaseInfo()
+    const asset = info.assets?.find((a) => a.name.endsWith(".tar.zstd") || a.name.endsWith(".tar.zst"))
+    if (!asset) {
+      console.error("No .tar.zstd asset found in release. Available assets:")
+      for (const a of info.assets ?? []) console.error(`  - ${a.name}`)
+      process.exit(1)
+    }
+
+    console.log(`Downloading ${asset.name} (${(asset.size / 1e6).toFixed(1)} MB)...`)
+    const tmpDir = join("data", ".fetch-tmp")
+    mkdirSync(tmpDir, { recursive: true })
+    const archivePath = join(tmpDir, asset.name)
+
     try {
-      execSync(`zstd -d "${archivePath}" --stdout | tar xf - -C "${DATA_DIR}"`, {
-        stdio: "inherit",
-      })
+      execSync(`curl -fSL -o "${archivePath}" "${asset.browser_download_url}"`, { stdio: "inherit" })
     } catch {
-      console.error("Extraction failed. Ensure zstd is installed: brew install zstd")
+      console.error("Download failed.")
       rmSync(tmpDir, { recursive: true, force: true })
       process.exit(1)
     }
-  }
 
-  rmSync(tmpDir, { recursive: true, force: true })
+    const checksumAsset = info.assets?.find(
+      (a) => a.name === asset.name + ".sha256" || a.name === "checksums.txt"
+    )
+    if (checksumAsset) {
+      console.log("Verifying checksum...")
+      try {
+        const res = await fetch(checksumAsset.browser_download_url)
+        const checksumText = await res.text()
+        const expected = checksumText.split("\n").find((l) => l.includes(asset.name))
+        if (expected) {
+          const hash = createHash("sha256").update(readFileSync(archivePath)).digest("hex")
+          const expectedHash = expected.split(/\s+/)[0]
+          if (hash !== expectedHash) {
+            console.error(`Checksum mismatch! Expected ${expectedHash}, got ${hash}`)
+            rmSync(tmpDir, { recursive: true, force: true })
+            process.exit(1)
+          }
+          console.log("  ✓ Checksum verified")
+        }
+      } catch (err) {
+        console.warn(`  ⚠ Could not verify checksum: ${err.message}`)
+      }
+    }
 
-  if (existsSync(join(DATA_DIR, "manifest.json"))) {
+    console.log(`Extracting to ${DATA_DIR}/...`)
+    try {
+      execSync(`tar --use-compress-program=unzstd -xf "${archivePath}" -C "${DATA_DIR}"`, { stdio: "inherit" })
+    } catch {
+      try {
+        execSync(`zstd -d "${archivePath}" --stdout | tar xf - -C "${DATA_DIR}"`, { stdio: "inherit" })
+      } catch {
+        console.error("Extraction failed. Ensure zstd is installed: brew install zstd")
+        rmSync(tmpDir, { recursive: true, force: true })
+        process.exit(1)
+      }
+    }
+    rmSync(tmpDir, { recursive: true, force: true })
     console.log(`  ✓ PKF data ready`)
-  } else {
-    console.warn("  ⚠ manifest.json not found after extraction")
+  } else if (PKF_BASE) {
+    console.log(`  PUBLIC_PKF_BASE_URL=${PKF_BASE} — serving .pkf from CDN; skipped the ~732 MB data download.`)
   }
 }
 
