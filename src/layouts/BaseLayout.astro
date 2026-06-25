@@ -91,6 +91,29 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
           Tu Biblia mexicana
         </a>
         <div class="flex items-center gap-2">
+          <div class="ui-level-wrapper" id="ui-level-wrapper">
+            <button class="ui-level-gear" id="ui-level-btn" type="button" aria-label="Interface level">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+              </svg>
+              <span class="ui-level-badge" id="ui-level-badge"></span>
+            </button>
+            <div class="ui-level-popover" id="ui-level-popover">
+              <button class="ui-level-option" data-level="1" type="button">
+                <span class="ui-level-dots"><span class="dot filled"></span><span class="dot"></span><span class="dot"></span></span>
+                <span class="ui-level-label" data-en="Simple" data-es="Básico"></span>
+              </button>
+              <button class="ui-level-option" data-level="2" type="button">
+                <span class="ui-level-dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></span>
+                <span class="ui-level-label" data-en="Standard" data-es="Estándar"></span>
+              </button>
+              <button class="ui-level-option" data-level="3" type="button">
+                <span class="ui-level-dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></span>
+                <span class="ui-level-label" data-en="Study" data-es="Estudiar"></span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -160,6 +183,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       import { initIsoFromUrl } from "../stores/iso-store"
       import { initApiConfig } from "../stores/api-store"
       import { initSearchMode } from "../stores/search-store"
+      import { $uiLevel, setUILevel, type UILevel } from "../stores/ui-level-store"
       import {
         $audioPlayState,
         $isPlaying,
@@ -186,6 +210,64 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       initApiConfig()
       initSearchMode()
 
+      // UI level gear + popover
+      const levelBtn = document.getElementById("ui-level-btn")!
+      const levelPopover = document.getElementById("ui-level-popover")!
+      const levelBadge = document.getElementById("ui-level-badge")!
+      const levelOptions = levelPopover.querySelectorAll<HTMLButtonElement>(".ui-level-option")
+
+      function renderBadge(level: UILevel) {
+        levelBadge.textContent = "●".repeat(level) + "○".repeat(3 - level)
+        levelOptions.forEach((opt) => {
+          opt.classList.toggle("active", opt.dataset.level === String(level))
+        })
+        document.documentElement.dataset.uiLevel = String(level)
+      }
+      renderBadge($uiLevel.get())
+
+      const uiLang = $selectedIso.get() === "eng" ? "en" : "es"
+      levelPopover.querySelectorAll<HTMLElement>(".ui-level-label").forEach((el) => {
+        el.textContent = el.dataset[uiLang] ?? el.dataset.en ?? ""
+      })
+
+      levelBtn.addEventListener("click", (e) => {
+        e.stopPropagation()
+        const open = levelPopover.classList.toggle("open")
+        if (open) {
+          const close = (ev: Event) => {
+            if (!levelPopover.contains(ev.target as Node)) {
+              levelPopover.classList.remove("open")
+              document.removeEventListener("click", close)
+            }
+          }
+          setTimeout(() => document.addEventListener("click", close), 0)
+        }
+      })
+
+      levelOptions.forEach((opt) => {
+        opt.addEventListener("click", () => {
+          const level = Number(opt.dataset.level) as UILevel
+          setUILevel(level)
+          renderBadge(level)
+          levelPopover.classList.remove("open")
+        })
+      })
+
+      $uiLevel.subscribe((level: UILevel) => renderBadge(level))
+
+      // Story landing pane (Simple mode): a plain div that can't self-hide like
+      // the React/Svelte islands, so toggle it from here on pane changes.
+      const storyLanding = document.getElementById("pane-story-landing")
+      if (storyLanding) {
+        const syncStoryLanding = (pane: string) => {
+          storyLanding.style.display = pane === "story" ? "" : "none"
+        }
+        const initialPane = $uiLevel.get() === 1 ? "story" : "bible"
+        syncStoryLanding(initialPane)
+        window.addEventListener("pane-changed", ((e: CustomEvent) => {
+          syncStoryLanding(e.detail?.pane || "story")
+        }) as EventListener)
+      }
 
       function updateIsoLinks(iso: string) {
         document.querySelectorAll<HTMLAnchorElement>("[data-iso-link]").forEach((a) => {
@@ -431,5 +513,92 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
   }
   .header-link-icon:hover {
     background: rgba(255, 255, 255, 0.22);
+  }
+
+  /* UI level gear + popover */
+  .ui-level-wrapper {
+    position: relative;
+  }
+  .ui-level-gear {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 6px;
+    transition: background 160ms ease, color 160ms ease;
+  }
+  .ui-level-gear:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
+  .ui-level-badge {
+    font-size: 0.5rem;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.6);
+  }
+  .ui-level-popover {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.4rem;
+    background: rgb(0, 9, 80);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.3rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    z-index: 100;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 4.5rem;
+  }
+  .ui-level-popover.open {
+    display: flex;
+  }
+  .ui-level-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    padding: 0.45rem 0.6rem;
+    border-radius: 6px;
+    font: inherit;
+    transition: background 160ms ease;
+    white-space: nowrap;
+  }
+  .ui-level-label {
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .ui-level-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .ui-level-option.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+  .ui-level-dots {
+    display: flex;
+    gap: 0.25rem;
+  }
+  .ui-level-dots .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255, 255, 255, 0.5);
+    background: none;
+    transition: background 160ms ease, border-color 160ms ease;
+  }
+  .ui-level-dots .dot.filled {
+    background: rgba(255, 215, 0, 0.8);
+    border-color: rgba(255, 215, 0, 0.9);
   }
 </style>

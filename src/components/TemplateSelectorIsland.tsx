@@ -19,9 +19,8 @@ interface Props {
   templates: TemplateInfo[]
 }
 
-const FALLBACK_IMAGES: Record<string, string> = {
-  OBS: "/img/obs-icon.png",
-}
+// Static placeholder asset — used as the ultimate image fallback.
+const PLACEHOLDER_IMAGE = "/fallback.svg"
 
 export default function TemplateSelectorIsland({ templates }: Props) {
   const selectedLang = useStore($selectedLanguage)
@@ -46,8 +45,8 @@ export default function TemplateSelectorIsland({ templates }: Props) {
               alt={getTitle(t)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
               onError={(e) => {
-                ;(e.target as HTMLImageElement).src =
-                  FALLBACK_IMAGES[t.name] || "/img/obs-icon.png"
+                const img = e.target as HTMLImageElement
+                if (!img.src.endsWith(PLACEHOLDER_IMAGE)) img.src = PLACEHOLDER_IMAGE
               }}
             />
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-4">

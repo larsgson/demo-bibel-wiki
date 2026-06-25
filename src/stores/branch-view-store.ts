@@ -9,7 +9,18 @@ export interface PaneState {
   scrollToIndex?: number | null
 }
 
-export const $activePane = atom<PaneState>({ pane: "bible" })
+// Default landing pane depends on the UI level: in Simple mode there is no
+// Bible pane, so the stories landing is the default. Standard/Study land on
+// the Bible reader.
+function defaultPane(): PaneState {
+  if (typeof localStorage !== "undefined") {
+    const lvl = localStorage.getItem("bw-ui-level")
+    if (lvl === "2" || lvl === "3") return { pane: "bible" }
+  }
+  return { pane: "story" }
+}
+
+export const $activePane = atom<PaneState>(defaultPane())
 
 function emitPaneChange(state: PaneState) {
   if (typeof window !== "undefined") {

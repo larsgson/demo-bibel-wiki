@@ -57,6 +57,13 @@
     let pkfLoaded = $state(false);
     let paneVisible = $state(true);
 
+    // The Bible reader is only available at Standard (2) and Study (3) levels.
+    function bibleAllowed(): boolean {
+        if (typeof localStorage === 'undefined') return false;
+        const lvl = localStorage.getItem('bw-ui-level');
+        return lvl === '2' || lvl === '3';
+    }
+
     const LINK_ID = 'bw-lang-css';
     let linkEl: HTMLLinkElement | null = null;
 
@@ -92,8 +99,15 @@
         // open is instant instead of waiting for fetch + parse.
         if (!bsbMode) ensurePkf();
 
+        // Default landing pane is "bible" at Standard/Study, "story" at Simple,
+        // so on those levels the reader starts visible.
+        paneVisible = bibleAllowed();
         window.addEventListener('pane-changed', ((e: CustomEvent) => {
-            paneVisible = e.detail?.pane === 'bible';
+            paneVisible = bibleAllowed() && e.detail?.pane === 'bible';
+        }) as EventListener);
+        // If the user drops below Standard while viewing the Bible, hide it.
+        window.addEventListener('ui-level-changed', (() => {
+            if (!bibleAllowed()) paneVisible = false;
         }) as EventListener);
 
         // Sidebar navigation: open a specific book+chapter on demand

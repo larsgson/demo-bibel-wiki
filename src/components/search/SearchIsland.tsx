@@ -164,12 +164,22 @@ export function SearchIsland({ iso: isoProp }: Props) {
   const t = strings[uiLang]
 
   useEffect(() => {
+    // Study pane is Study-level (3) only.
+    const studyAllowed = () => localStorage.getItem("bw-ui-level") === "3"
+    setVisible(false)
     const onPaneChanged = (e: Event) => {
       const pane = (e as CustomEvent).detail?.pane || "bible"
-      setVisible(pane === "study")
+      setVisible(pane === "study" && studyAllowed())
+    }
+    const onLevelChanged = () => {
+      if (!studyAllowed()) setVisible(false)
     }
     window.addEventListener("pane-changed", onPaneChanged)
-    return () => window.removeEventListener("pane-changed", onPaneChanged)
+    window.addEventListener("ui-level-changed", onLevelChanged)
+    return () => {
+      window.removeEventListener("pane-changed", onPaneChanged)
+      window.removeEventListener("ui-level-changed", onLevelChanged)
+    }
   }, [])
 
   useEffect(() => {

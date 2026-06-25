@@ -11,6 +11,7 @@ import type { BranchKey, SearchHit } from "../../lib/api/types"
 import { $bibleHighlights } from "../../stores/bible-highlight-store"
 import { clearBibleHighlights } from "../../stores/bible-highlight-store"
 import { $activePane, showBible, showStory, showStudy, showBranch } from "../../stores/branch-view-store"
+import { getUILevel, type UILevel } from "../../stores/ui-level-store"
 
 export interface SidebarTreeNode {
   id: string
@@ -121,6 +122,23 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [pathname, setPathname] = useState("")
+  const [uiLevel, setUiLevel] = useState<UILevel>(1)
+
+  // Track UI level (Simple/Standard/Study) from the gear toggle. Listen to the
+  // window event because each island has its own store instance.
+  useEffect(() => {
+    setUiLevel(getUILevel())
+    const onChange = (e: Event) => {
+      const level = (e as CustomEvent).detail as UILevel
+      setUiLevel(level)
+      // Jump to the level's default landing for immediate feedback:
+      // Simple → stories, Standard/Study → Bible.
+      if (level === 1) showStory()
+      else showBible()
+    }
+    window.addEventListener("ui-level-changed", onChange)
+    return () => window.removeEventListener("ui-level-changed", onChange)
+  }, [])
   const [activeBiblePos, setActiveBiblePos] = useState<{ book: string; chapter: number } | null>(null)
   const [localizedBookNames, setLocalizedBookNames] = useState<Map<string, string>>(new Map())
   const [availableBooks, setAvailableBooks] = useState<Set<string> | null>(null)
@@ -562,8 +580,8 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
               </li>
             )}
 
-            {/* ── Bible ── */}
-            {bibleBooks && bibleBooks.length > 0 && (
+            {/* ── Bible (Standard+) ── */}
+            {uiLevel >= 2 && bibleBooks && bibleBooks.length > 0 && (
               <li className="app-sidebar-root">
                 <button
                   className={`app-sidebar-root-row toggle ${activePane.pane === "bible" ? "active" : ""}`}
@@ -587,7 +605,8 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
               </li>
             )}
 
-            {/* ── Study topic ── */}
+            {/* ── Study topic (Study level only) ── */}
+            {uiLevel >= 3 && (
             <li className="app-sidebar-root">
               <button
                 className={`app-sidebar-root-row toggle ${activePane.pane === "study" || activePane.pane === "branch" ? "active" : ""}`}
@@ -644,6 +663,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
                 </>
               )}
             </li>
+            )}
           </ul>
         </nav>
       </aside>

@@ -20,7 +20,8 @@ interface Props {
 /** Coverage status for a story given the selected language */
 type CoverageStatus = "full" | "partial" | "none" | null
 
-const FALLBACK_IMAGE = "/img/obs-icon.png"
+// Static placeholder asset — used as the ultimate image fallback.
+const FALLBACK_IMAGE = "/fallback.svg"
 
 export default function NavigationGridIsland({
   templateName,
@@ -216,7 +217,8 @@ export default function NavigationGridIsland({
                               alt=""
                               loading="lazy"
                               onError={(e) => {
-                                ;(e.target as HTMLImageElement).src = FALLBACK_IMAGE
+                                const img = e.target as HTMLImageElement
+                                if (!img.src.endsWith(FALLBACK_IMAGE)) img.src = FALLBACK_IMAGE
                               }}
                             />
                           ) : (
