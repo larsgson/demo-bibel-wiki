@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react"
 import { pkfUrl } from "../lib/bw/pkf-url"
+import { hasPkf } from "../lib/bw/language-list"
+import { DbtChapterReader } from "./DbtChapterReader"
 
 interface ReaderData {
   iso: string
@@ -41,6 +43,10 @@ export function ReaderLoader({ iso: isoProp }: Props) {
   if (loading) {
     return <div style={{ padding: "2rem", color: "rgba(0,11,99,0.5)" }}>Loading {iso}…</div>
   }
+  if (error?.startsWith("NO_CHAPTER_READER:")) {
+    // Non-.pkf language → full-chapter reader backed by DBT/helloao.
+    return <DbtChapterReader iso={iso} lang={iso === "eng" ? "en" : "es"} />
+  }
   if (error) {
     return <div style={{ padding: "2rem", color: "rgb(180,80,20)" }}>Error: {error}</div>
   }
@@ -78,6 +84,11 @@ async function loadReaderData(iso: string): Promise<ReaderData> {
       media: { videos: [], audio: { base_url: null, items: [] } },
     }
   }
+
+  // Only .pkf languages have a chapter reader here (besides eng/BSB above).
+  // Bridge languages like Spanish carry their scripture via DBT, which the
+  // story reader uses — the chapter reader has no DBT path.
+  if (!hasPkf(iso)) throw new Error(`NO_CHAPTER_READER:${iso}`)
 
   const infoResp = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
   if (!infoResp.ok) throw new Error(`No data for language: ${iso}`)

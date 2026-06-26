@@ -9,10 +9,20 @@ export interface PaneState {
   scrollToIndex?: number | null
 }
 
-// Default landing pane depends on the UI level: in Simple mode there is no
-// Bible pane, so the stories landing is the default. Standard/Study land on
-// the Bible reader.
+// Default landing pane. A `?pane=` URL signal wins (so navigating to the study
+// pane from another page lands directly on it); otherwise it depends on the UI
+// level — Simple has no Bible pane so it lands on the stories landing, while
+// Standard/Study land on the Bible reader.
 function defaultPane(): PaneState {
+  if (typeof window !== "undefined") {
+    const params = new URLSearchParams(window.location.search)
+    const pane = params.get("pane")
+    if (pane === "study") return { pane: "study" }
+    if (pane === "branch") {
+      return { pane: "branch", branchKey: params.get("branch") || undefined,
+               scrollToIndex: params.get("i") ? Number(params.get("i")) : null }
+    }
+  }
   if (typeof localStorage !== "undefined") {
     const lvl = localStorage.getItem("bw-ui-level")
     if (lvl === "2" || lvl === "3") return { pane: "bible" }

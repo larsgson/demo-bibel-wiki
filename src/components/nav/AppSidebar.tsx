@@ -330,6 +330,29 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     return isActiveFull(href)
   }
 
+  // The study/bible/branch panes live only on the language home (/{iso}/) and
+  // /l/. From any other page (a story, browse, landing, …) switch to the study
+  // pane by navigating to the language home with a ?pane= signal.
+  function onPanePage() {
+    if (typeof window === "undefined") return false
+    const p = window.location.pathname
+    return /^\/[a-z]{3}\/?$/.test(p) || /^\/l\/?$/.test(p)
+  }
+
+  function openStudy() {
+    if (onPanePage()) showStudy()
+    else window.location.href = `/${iso}/?pane=study`
+  }
+
+  function openBranch(branchKey: string, idx: number | null = null) {
+    if (onPanePage()) {
+      showBranch(branchKey, idx)
+    } else {
+      const i = idx != null ? `&i=${idx}` : ""
+      window.location.href = `/${iso}/?pane=branch&branch=${branchKey}${i}`
+    }
+  }
+
   function clearAllAnswers() {
     clearNavBranches()
     clearBibleHighlights()
@@ -511,7 +534,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
             <button
               className="app-sidebar-item"
               type="button"
-              onClick={() => showBranch(branchKey, idx)}
+              onClick={() => openBranch(branchKey, idx)}
             >
               <span className="app-sidebar-item-label">{hit.passage || hit.title}</span>
             </button>
@@ -617,7 +640,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
                 type="button"
                 onClick={() => {
                   toggleTopLevel("study_topic")
-                  showStudy()
+                  openStudy()
                 }}
                 aria-expanded={studyOpen}
               >
@@ -640,7 +663,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
                             type="button"
                             onClick={() => {
                               setExpanded((prev) => exclusiveOpen(prev, branch.id, answerBranchIds))
-                              showBranch(branch.id)
+                              openBranch(branch.id)
                             }}
                             style={{ paddingLeft: "1.7rem" }}
                             aria-expanded={branchOpen}

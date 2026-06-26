@@ -21,6 +21,7 @@
     import { saveLastPosition, loadLastPosition, saveLastIso } from './position';
     import StoriesGrid from '../components/StoriesGrid.svelte';
     import { $bibleHighlights as bibleHighlightsStore } from '../../stores/bible-highlight-store';
+    import { $activePane as activePaneStore } from '../../stores/branch-view-store';
     import './reader.css';
 
     type Props = {
@@ -99,9 +100,10 @@
         // open is instant instead of waiting for fetch + parse.
         if (!bsbMode) ensurePkf();
 
-        // Default landing pane is "bible" at Standard/Study, "story" at Simple,
-        // so on those levels the reader starts visible.
-        paneVisible = bibleAllowed();
+        // Initial visibility from the current pane — the default can be
+        // overridden by a ?pane= signal (e.g. arriving on the study pane), which
+        // fires no pane-changed event.
+        paneVisible = bibleAllowed() && activePaneStore.get().pane === 'bible';
         window.addEventListener('pane-changed', ((e: CustomEvent) => {
             paneVisible = bibleAllowed() && e.detail?.pane === 'bible';
         }) as EventListener);

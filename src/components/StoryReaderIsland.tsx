@@ -300,16 +300,25 @@ export default function StoryReaderIsland({
         return !available || available.length === 0 || available.includes(book)
       })
 
-      // Fetch timing data
-      const timingResult = await fetchTimingData(
-        templateName, audioLang, timingIds, timingCategory, booksWithTiming,
-      )
-      let timingData = timingResult?.data || null
-
-      // If no template timing, try PKF timing
-      if (!timingData && audioLang) {
+      // Fetch timing data. PKF (Scripture Earth) languages carry their own
+      // timing, so prefer it and skip the template/DBT path entirely — avoids a
+      // spurious /templates/.../timing.json 404 for pkf languages.
+      let timingData = null
+      // `timingResult` (with DBT fileset IDs) only comes from the template path;
+      // null for pkf languages, whose audio uses info.json media items directly.
+      let timingResult: Awaited<ReturnType<typeof fetchTimingData>> | null = null
+      if (audioLang && (await shouldProbePkf(audioLang))) {
         const pkfTiming = await fetchPkfTimingData(audioLang, [...neededBooks])
         if (pkfTiming) timingData = pkfTiming
+      }
+
+      // Fall back to template (DBT) timing for non-pkf languages (or pkf langs
+      // that turned out to have none).
+      if (!timingData) {
+        timingResult = await fetchTimingData(
+          templateName, audioLang, timingIds, timingCategory, booksWithTiming,
+        )
+        timingData = timingResult?.data || null
       }
 
       // Use fileset IDs from timing data for audio fetch (ensures timing/audio match)
@@ -451,6 +460,25 @@ export default function StoryReaderIsland({
       }
 
       const primaryUrl = verseEntries.find((e) => e.audioUrl)?.audioUrl || null
+
+      // Audio diagnostics — enable by adding ?audiodebug to the URL.
+      if (typeof window !== "undefined" && window.location.search.includes("audiodebug")) {
+        console.group(`[audiodebug] ${templateName} / ${categoryId}/${storyId} · lang=${audioLang}`)
+        console.log("chapter refs → audio URL:")
+        for (const [key, { book, chapter }] of chapterRefs.entries()) {
+          console.log(`  ${book} ${chapter}  →  ${audioUrlMap.get(key) ?? "(none)"}`)
+        }
+        console.log("verse entries (section · book ch:verses · time · audio file):")
+        for (const e of verseEntries) {
+          if (!e.audioUrl && !e.startTime) continue
+          const file = e.audioUrl ? e.audioUrl.split("/").pop() : "(none)"
+          console.log(
+            `  §${e.sectionIndex} ${e.bookCode ?? "?"} ${e.chapter ?? "?"}:${e.verseStart}-${e.verseEnd}` +
+            `  t=${e.startTime.toFixed(1)}–${e.endTime.toFixed(1)}s  ${file}`,
+          )
+        }
+        console.groupEnd()
+      }
 
       setAudioForChapter({
         distinctId: langData?.distinctId || defaultDistinctId || "",
@@ -697,7 +725,9 @@ async function fetchPkfTimingData(
 
         if (!merged[pkfKey]) merged[pkfKey] = {}
         if (!merged[pkfKey][pkfKey]) merged[pkfKey][pkfKey] = {}
-        merged[pkfKey][pkfKey][String(chapter)] = verseMap
+        // Key by book-chapter (e.g. "MAT-2") so different books that share a
+        // chapter number (MAT 2 vs LUK 2) don't collide.
+        merged[pkfKey][pkfKey][`${book}-${chapter}`] = verseMap
       } catch { continue }
     }
   }
@@ -737,8 +767,11 @@ async function fetchTimingData(
           for (const [story, chapters] of Object.entries(stories as Record<string, any>)) {
             if (!merged[fileset][story]) merged[fileset][story] = {}
             for (const [chapter, verses] of Object.entries(chapters as Record<string, any>)) {
-              if (!merged[fileset][story][chapter]) merged[fileset][story][chapter] = {}
-              Object.assign(merged[fileset][story][chapter], verses)
+              // Key by book-chapter ("MAT-2") so books sharing a chapter number
+              // (MAT 2 vs LUK 2) don't collide when the lookup searches by chapter.
+              const ck = `${book}-${chapter}`
+              if (!merged[fileset][story][ck]) merged[fileset][story][ck] = {}
+              Object.assign(merged[fileset][story][ck], verses)
             }
           }
         }
@@ -766,6 +799,7 @@ function findTimingForReference(
   if (!parsed) return null
 
   const chapter = String(parsed.chapter)
+  const bookChapter = `${parsed.book}-${parsed.chapter}`
   const vs = parsed.verseStart
   if (!vs) return null
   const ve = parsed.verseEnd ?? vs
@@ -777,7 +811,8 @@ function findTimingForReference(
     if (!filesetData) continue
 
     for (const storyData of Object.values(filesetData) as Record<string, Record<string, any>>[]) {
-      const chapterData = storyData[chapter]
+      // Prefer the book-chapter key (pkf); fall back to chapter-only (DBT).
+      const chapterData = storyData[bookChapter] ?? storyData[chapter]
       if (!chapterData) continue
 
       // Collect start/end across all verses in the range

@@ -8,6 +8,7 @@ import type { BranchedSearchResponse, BranchedAskResponse, Branch, SearchHit } f
 import { $selectedIso, initIsoFromUrl } from "../../stores/iso-store"
 import { mergeBranches, clearNavBranches } from "../../stores/nav-branches-store"
 import { extractBibleHighlights, clearBibleHighlights } from "../../stores/bible-highlight-store"
+import { $activePane } from "../../stores/branch-view-store"
 
 
 type Result =
@@ -166,7 +167,9 @@ export function SearchIsland({ iso: isoProp }: Props) {
   useEffect(() => {
     // Study pane is Study-level (3) only.
     const studyAllowed = () => localStorage.getItem("bw-ui-level") === "3"
-    setVisible(false)
+    // Initial visibility from the current pane (set from ?pane= / level default),
+    // since a fresh load fires no pane-changed event.
+    setVisible($activePane.get().pane === "study" && studyAllowed())
     const onPaneChanged = (e: Event) => {
       const pane = (e as CustomEvent).detail?.pane || "bible"
       setVisible(pane === "study" && studyAllowed())

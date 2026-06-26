@@ -63,6 +63,8 @@
   background: #fff;
   overflow: hidden;
 }
+/* An expanded group spans the full row so its language tiles get full width. */
+.group-card[open] { grid-column: 1 / -1; }
 .group-card > summary {
   display: flex;
   align-items: center;
@@ -108,12 +110,9 @@
 /* Language tiles inside an expanded group */
 .lang-tile-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 0.4rem;
   padding: 0.4rem 0.7rem 0.8rem;
-}
-@media (min-width: 720px) {
-  .lang-tile-grid { grid-template-columns: 1fr 1fr 1fr; }
 }
 .lang-tile {
   display: flex;

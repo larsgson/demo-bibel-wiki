@@ -2,7 +2,7 @@ level = "collection"
 layout_theme = "theme.css"
 
 [images]
-base_url = "https://bibel.wiki/img/john-pics"
+base_url = "https://cdn.bibel.wiki/img/john-pics"
 medium_pattern = "640px/{filename}"
 thumbs_pattern = "640px/{filename}"
 

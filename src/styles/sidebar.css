@@ -303,6 +303,29 @@
 /* ── Landing pages: no left navigation, full-width content ── */
 .app-main--landing { margin-left: 0 !important; }
 
+/* ── Simple UI level (1): no left navigation at all ── */
+html[data-ui-level="1"] .app-sidebar,
+html[data-ui-level="1"] .app-sidebar-backdrop,
+html[data-ui-level="1"] .app-menu-button-container {
+  display: none !important;
+}
+html[data-ui-level="1"] .app-main {
+  margin-left: 0 !important;
+}
+
+/* ── Immersive audio playback (focus mode): hide the left navigation. ──
+   Returns when the mini player is shown (focus mode off) or audio is fully
+   stopped. While paused, focus mode persists, so the nav stays hidden. */
+body.focus-mode .app-sidebar,
+body.focus-mode .app-sidebar-backdrop,
+body.focus-mode .app-menu-button-container {
+  display: none !important;
+}
+/* Reclaim the freed-up width so the content fills the page. */
+body.focus-mode .app-main {
+  margin-left: 0 !important;
+}
+
 /* ── Mobile: off-screen rail + hamburger ── */
 @media (max-width: 768px) {
   .app-sidebar { transform: translateX(-100%); box-shadow: 2px 0 16px rgba(0, 0, 0, 0.3); }

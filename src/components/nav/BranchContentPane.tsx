@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import type { BranchKey, SearchHit } from "../../lib/api/types"
 import type { NavBranches } from "../../stores/nav-branches-store"
 import { apiFetch } from "../../stores/api-store"
+import { $activePane } from "../../stores/branch-view-store"
 
 const NAV_BRANCHES_KEY = "nav_branches"
 
@@ -130,6 +131,14 @@ export function BranchContentPane({ lang = "es" }: { lang?: string }) {
   const itemRefs = useRef<Map<number, HTMLElement>>(new Map())
 
   useEffect(() => {
+    // Initial state from the current pane (set from ?pane=branch on a fresh
+    // load, which fires no pane-changed event).
+    const init = $activePane.get()
+    if (init.pane === "branch" && init.branchKey) {
+      setBranches(loadBranches())
+      setBranchKey(init.branchKey)
+      setScrollIdx(init.scrollToIndex ?? null)
+    }
     function onPaneChanged(e: Event) {
       const detail = (e as CustomEvent).detail
       if (detail?.pane === "branch" && detail.branchKey) {

@@ -79,6 +79,14 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>{title}</title>
+    <script is:inline>
+      // Set the UI level on <html> before first paint so the Simple-mode
+      // "no left navigation" CSS applies without a flash of the sidebar.
+      try {
+        var lvl = localStorage.getItem("bw-ui-level") || "1";
+        document.documentElement.dataset.uiLevel = lvl;
+      } catch (e) { document.documentElement.dataset.uiLevel = "1"; }
+    </script>
   </head>
   <body class="min-h-screen bg-[#fbfaf6] text-brand">
     {!landing && <MenuButton />}
