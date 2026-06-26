@@ -1,6 +1,6 @@
-import regionsRaw from '../../../config/regions.conf?raw';
 import manifest from '../../../data/pkf/manifest.json';
 import licenses from '../../../config/licenses.json';
+import { regionConfigs } from './region-config';
 
 // ISOs explicitly excluded from the public data release (non-CC content).
 // Dropped from regions.conf parsing so they don't appear in the UI — neither
@@ -35,98 +35,26 @@ export const languages: Language[] = (manifest.languages as Language[]).slice().
 
 export const languagesByIso = new Map<string, Language>(languages.map((l) => [l.iso, l]));
 
-function toSlug(s: string): string {
-    return s
-        .toLowerCase()
-        .replace(/[()]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
-}
+// Build the region list from the per-region TOML configs (config/regions/*.toml).
+// Each config is a top-level region (country). License-excluded ISOs are dropped
+// from the displayed membership so they don't appear in the UI grid.
+const builtRegions: Region[] = regionConfigs.map((rc) => {
+    const isos = Array.from(new Set(rc.languages))
+        .filter((iso) => !excludedIsos.has(iso))
+        .sort();
+    const available = isos.filter((iso) => languagesByIso.has(iso));
+    return {
+        id: rc.code,
+        displayName: rc.name.es ?? rc.name.en ?? rc.code,
+        fullName: rc.name.en ?? rc.code,
+        trade: rc.tradeLanguages ?? [],
+        regional: rc.featuredLanguages ?? [],
+        isos,
+        available,
+    };
+});
 
-function stripMexicoPrefix(name: string): string {
-    const m = name.match(/^Mexico:\s*(.+)$/);
-    return m ? m[1] : name;
-}
-
-function parseMexicoRegions(raw: string): Region[] {
-    const blocks = raw.split(/\n\s*\n/);
-    const out: Region[] = [];
-    for (const block of blocks) {
-        const lines = block
-            .split('\n')
-            .map((l) => l.trim())
-            .filter((l) => l && !l.startsWith('#'));
-        if (lines.length === 0) continue;
-        const name = lines[0];
-        if (!name.startsWith('Mexico:')) continue;
-
-        let trade: string[] = [];
-        let regional: string[] = [];
-        const isos: string[] = [];
-        for (const line of lines.slice(1)) {
-            if (line.startsWith('@trade:')) {
-                trade = line
-                    .slice('@trade:'.length)
-                    .split(',')
-                    .map((s) => s.trim())
-                    .filter(Boolean);
-            } else if (line.startsWith('@regional:')) {
-                regional = line
-                    .slice('@regional:'.length)
-                    .split(',')
-                    .map((s) => s.trim())
-                    .filter(Boolean);
-            } else if (line.startsWith('@')) {
-                // other optional attrs (educational, literacy) ignored for now
-            } else {
-                isos.push(
-                    ...line
-                        .split(',')
-                        .map((s) => s.trim())
-                        .filter((s) => s && !excludedIsos.has(s))
-                );
-            }
-        }
-        const uniqIsos = Array.from(new Set(isos)).sort();
-        const available = uniqIsos.filter((iso) => languagesByIso.has(iso));
-        const display = stripMexicoPrefix(name);
-        out.push({
-            id: toSlug(display),
-            displayName: display,
-            fullName: name,
-            trade,
-            regional,
-            isos: uniqIsos,
-            available
-        });
-    }
-    return out;
-}
-
-const mexicoRegions = parseMexicoRegions(regionsRaw);
-
-// Any fetched ISO not in a Mexico region goes into Unclassified, so nothing is hidden.
-// This assumes all fetched pkfs are Mexican (as per the current --country MX run).
-const classifiedInMexico = new Set<string>();
-for (const r of mexicoRegions) for (const iso of r.isos) classifiedInMexico.add(iso);
-const unclassifiedIsos = languages
-    .map((l) => l.iso)
-    .filter((iso) => !classifiedInMexico.has(iso))
-    .sort();
-
-if (unclassifiedIsos.length > 0) {
-    mexicoRegions.push({
-        id: 'unclassified',
-        displayName: 'Unclassified',
-        fullName: 'Mexico: Unclassified (not yet in config/regions.conf)',
-        trade: [],
-        regional: [],
-        isos: unclassifiedIsos,
-        available: unclassifiedIsos
-    });
-}
-
-export const regions: Region[] = mexicoRegions;
+export const regions: Region[] = builtRegions;
 export const regionsById = new Map<string, Region>(regions.map((r) => [r.id, r]));
 
 /** Bytes of a language's pkf assets, read from the manifest (no info.json
