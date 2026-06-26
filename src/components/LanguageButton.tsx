@@ -24,6 +24,10 @@ export default function LanguageButton({ lang = "es" }: Props) {
   useEffect(() => {
     initLanguageFromUrl()
     loadLanguageNames()
+    // Let other surfaces (e.g. the region landing) open the picker.
+    const onOpen = () => setOpen(true)
+    window.addEventListener("open-language-picker", onOpen)
+    return () => window.removeEventListener("open-language-picker", onOpen)
   }, [])
 
   const label = (code: string) => names[code]?.n || code.toUpperCase()

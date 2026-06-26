@@ -15,6 +15,7 @@ interface Props {
 
 const SECTION_LABELS: Record<LanguageSection["id"], Record<"en" | "es", string>> = {
   recent:  { en: "Recent",                    es: "Recientes" },
+  region:  { en: "This region",               es: "Esta región" },
   pkf:     { en: "Full text & audio",         es: "Texto y audio completos" },
   popular: { en: "Popular",                   es: "Populares" },
   all:     { en: "All languages",             es: "Todos los idiomas" },
@@ -66,9 +67,18 @@ export default function LanguagePicker({
   lang = "es",
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const { query, setQuery, loading, results, sections } = useLanguageSearch()
+  const {
+    query, setQuery, loading, results, sections,
+    regionTierLabel, filterChips, activeFilter, setActiveFilter,
+  } = useLanguageSearch()
   const t = UI[lang]
   const selectedSet = new Set(selected)
+
+  // The "region" section uses the region's own tier label (from its TOML).
+  const sectionLabel = (id: LanguageSection["id"]) =>
+    id === "region" && regionTierLabel
+      ? regionTierLabel[lang] ?? regionTierLabel.en
+      : SECTION_LABELS[id][lang]
 
   // Drive the native <dialog> open/close from the `open` prop.
   useEffect(() => {
@@ -114,6 +124,22 @@ export default function LanguagePicker({
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
           />
+          {filterChips.length > 0 && (
+            <div className="lang-filters">
+              {filterChips.map((chip) => (
+                <button
+                  key={chip.slug}
+                  type="button"
+                  className={`lang-filter-chip ${activeFilter === chip.slug ? "active" : ""}`}
+                  onClick={() =>
+                    setActiveFilter(activeFilter === chip.slug ? null : chip.slug)
+                  }
+                >
+                  {chip.name[lang] ?? chip.name.en}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="lang-list">
@@ -136,7 +162,7 @@ export default function LanguagePicker({
             sections?.map((section) => (
               <div key={section.id}>
                 <div className="lang-section-label">
-                  {SECTION_LABELS[section.id][lang]}
+                  {sectionLabel(section.id)}
                 </div>
                 {section.items.map((l) => (
                   <LanguageRow

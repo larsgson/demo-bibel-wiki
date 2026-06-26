@@ -300,6 +300,9 @@
   .app-menu-button-container { display: none !important; }
 }
 
+/* ── Landing pages: no left navigation, full-width content ── */
+.app-main--landing { margin-left: 0 !important; }
+
 /* ── Mobile: off-screen rail + hamburger ── */
 @media (max-width: 768px) {
   .app-sidebar { transform: translateX(-100%); box-shadow: 2px 0 16px rgba(0, 0, 0, 0.3); }

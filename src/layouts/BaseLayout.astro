@@ -10,9 +10,11 @@ import books from "../../data/BSB/books"
 
 interface Props {
   title?: string
+  /** Landing pages hide the left navigation entirely (no sidebar / menu). */
+  landing?: boolean
 }
 
-const { title = "Tu Biblia mexicana" } = Astro.props
+const { title = "Tu Biblia mexicana", landing = false } = Astro.props
 
 // Build story tree for the sidebar (Templates → Categories → Stories)
 const templates = loadAllTemplates()
@@ -79,10 +81,10 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
     <title>{title}</title>
   </head>
   <body class="min-h-screen bg-[#fbfaf6] text-brand">
-    <MenuButton />
-    <AppSidebar client:only="react" storyTree={storyTree} bibleBooks={bibleBooks} />
+    {!landing && <MenuButton />}
+    {!landing && <AppSidebar client:only="react" storyTree={storyTree} bibleBooks={bibleBooks} />}
 
-    <div class="app-main min-h-screen flex flex-col">
+    <div class={`app-main min-h-screen flex flex-col${landing ? " app-main--landing" : ""}`}>
     <header
       class="sticky top-0 z-10 border-b"
       style="background:rgb(0,11,99);border-color:rgba(0,11,99,0.4)"

@@ -105,6 +105,34 @@
   border-color: rgb(0, 11, 99);
 }
 
+/* Region family filter chips */
+.lang-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+.lang-filter-chip {
+  border: 1px solid rgba(0, 11, 99, 0.2);
+  background: #fff;
+  color: rgba(0, 11, 99, 0.75);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.lang-filter-chip:hover {
+  border-color: rgb(0, 11, 99);
+}
+.lang-filter-chip.active {
+  background: rgb(0, 11, 99);
+  border-color: rgb(0, 11, 99);
+  color: #fff;
+}
+
 .lang-list {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;

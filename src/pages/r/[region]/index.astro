@@ -1,0 +1,99 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro"
+import { regionConfigs } from "../../../lib/data/region-config"
+import { displayName, altName } from "../../../lib/data/languageNames"
+import { hasPkf } from "../../../lib/bw/language-list"
+import { isStudyLanguage } from "../../../lib/bw/study-languages"
+import "../../../styles/region-landing.css"
+
+export function getStaticPaths() {
+  return regionConfigs.map((rc) => ({ params: { region: rc.code }, props: { rc } }))
+}
+
+const { rc } = Astro.props
+const lang = (rc.uiLanguage === "en" ? "en" : "es") as "en" | "es"
+
+// The grouping that drives the browse (picker.filterBy, else the first one).
+const grouping =
+  rc.grouping.find((g) => g.id === rc.picker?.filterBy) ?? rc.grouping[0] ?? null
+
+function tile(iso: string) {
+  return {
+    iso,
+    name: displayName(iso),
+    alt: altName(iso),
+    pkf: hasPkf(iso),
+    study: isStudyLanguage(iso),
+    href: `/${iso}/`,
+  }
+}
+
+// Groups with their language tiles, largest group first.
+const groups = (grouping?.group ?? [])
+  .map((g) => ({
+    slug: g.slug,
+    name: g.name[lang] ?? g.name.en,
+    tiles: g.languages.map(tile),
+  }))
+  .sort((a, b) => b.tiles.length - a.tiles.length)
+
+const T = lang === "es"
+  ? { all: "Buscar todos los idiomas", langs: "idiomas" }
+  : { all: "Search all languages", langs: "languages" }
+
+const title = rc.name[lang] ?? rc.code
+---
+
+<BaseLayout title={title} landing={true}>
+  <div class="region-landing">
+    <section class="region-hero" style={`--accent:${rc.landing?.accentColor ?? "#000b63"}`}>
+      <h1>{rc.landing?.headline?.[lang] ?? title}</h1>
+      {rc.landing?.subhead?.[lang] && <p>{rc.landing.subhead[lang]}</p>}
+      <div class="region-hero-actions">
+        <button type="button" class="region-all-btn" id="region-all-btn">
+          🌐 {T.all}
+        </button>
+      </div>
+    </section>
+
+    <section class="region-groups">
+      {groups.map((g) =>
+        g.tiles.length === 1 ? (
+          <a class="group-card group-card--single" href={g.tiles[0].href}>
+            <span class="group-card-title">{g.name}</span>
+            <span class="lang-tile-alt">{g.tiles[0].name}</span>
+          </a>
+        ) : (
+          <details class="group-card">
+            <summary>
+              <span class="group-card-title">{g.name}</span>
+              <span class="group-card-count">{g.tiles.length}</span>
+            </summary>
+            <div class="lang-tile-grid">
+              {g.tiles.map((tl) => (
+                <a class="lang-tile" href={tl.href}>
+                  <span class="lang-tile-name">{tl.name}</span>
+                  {tl.alt && <span class="lang-tile-alt">{tl.alt}</span>}
+                  {(tl.pkf || tl.study) && (
+                    <span class="lang-tile-badges">
+                      {tl.pkf && <span title="Full text & audio">📖</span>}
+                      {tl.study && <span class="study" title="Study available"> ✦</span>}
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          </details>
+        ),
+      )}
+    </section>
+  </div>
+
+  <script is:inline>
+    // Region landing: the "search all languages" button opens the header picker
+    // (full 2000+ list, global search) — Option 2's escape hatch.
+    document.getElementById("region-all-btn")?.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("open-language-picker"))
+    })
+  </script>
+</BaseLayout>
