@@ -3,6 +3,7 @@ import { loadLanguageData } from "../stores/language-store"
 import { loadChapter } from "../stores/chapter-store"
 import { parseTextFilesetId } from "../lib/bw/fileset-utils"
 import { getTestament } from "../lib/bw/bible-utils"
+import { loadBookList } from "../lib/bw/book-list"
 import { $activePane } from "../stores/branch-view-store"
 import books from "../../data/BSB/books"
 import "../styles/dbt-reader.css"
@@ -34,6 +35,7 @@ export function DbtChapterReader({ iso, lang = "es" }: { iso: string; lang?: "en
   const [verses, setVerses] = useState<Verse[] | null>(null)
   const [status, setStatus] = useState<"loading" | "ready" | "unavailable" | "nodata">("loading")
   const [paneVisible, setPaneVisible] = useState(false)
+  const [vernacular, setVernacular] = useState<Map<string, string>>(new Map())
 
   // Bible pane is Standard/Study only; show when the pane is "bible".
   useEffect(() => {
@@ -64,6 +66,9 @@ export function DbtChapterReader({ iso, lang = "es" }: { iso: string; lang?: "en
       const ot = parseTextFilesetId(cd?.ot?.data?.t ?? ld.data?.t, cd?.ot?.distinctId ?? ld.distinctId)
       setFilesets({ nt, ot })
       setCanon((ld.canon as "nt" | "ot" | "full") || "nt")
+    })
+    loadBookList(iso).then((list) => {
+      if (alive && list) setVernacular(new Map(list.map((b) => [b.code, b.name])))
     })
     return () => { alive = false }
   }, [iso])
@@ -104,7 +109,7 @@ export function DbtChapterReader({ iso, lang = "es" }: { iso: string; lang?: "en
     return () => { alive = false }
   }, [filesets, bookCode, chapter, iso, currentBook])
 
-  const bookName = (lang === "es" ? (currentBook as any)?.nameEs : null) || currentBook?.name || bookCode
+  const bookName = vernacular.get(bookCode) || currentBook?.name || bookCode
   const maxChapter = currentBook?.chapters ?? 1
   const T = lang === "es"
     ? { unavailable: "Capítulo no disponible en este idioma.", nodata: "Sin datos para este idioma.", loading: "Cargando…", prev: "Anterior", next: "Siguiente" }

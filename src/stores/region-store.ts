@@ -37,8 +37,6 @@ export const KNOWN_REGIONS: Record<string, RegionEntry> = Object.fromEntries(
   ]),
 )
 
-const STORAGE_KEY = "bw-active-region"
-
 export const $activeRegion = atom<string | null>(null)
 
 export function isKnownRegion(code: string | null | undefined): code is string {
@@ -66,24 +64,15 @@ function fromQuery(): string | null {
   return isKnownRegion(q) ? q : null
 }
 
-function fromStorage(): string | null {
-  if (typeof localStorage === "undefined") return null
-  const s = localStorage.getItem(STORAGE_KEY)
-  return isKnownRegion(s) ? s : null
-}
-
-/** Resolve the active region code from all sources, in priority order. */
+/** Resolve the active region from explicit URL signals only:
+ *  subdomain (production) → /r/<code> path → ?region= query (dev/debug). */
 export function resolveRegionCode(): string | null {
-  return fromSubdomain() ?? fromPath() ?? fromQuery() ?? fromStorage()
+  return fromSubdomain() ?? fromPath() ?? fromQuery()
 }
 
 export function setRegion(code: string | null) {
   const next = isKnownRegion(code) ? code : null
   $activeRegion.set(next)
-  if (typeof localStorage !== "undefined") {
-    if (next) localStorage.setItem(STORAGE_KEY, next)
-    else localStorage.removeItem(STORAGE_KEY)
-  }
   if (typeof document !== "undefined") {
     if (next) document.documentElement.dataset.region = next
     else delete document.documentElement.dataset.region
@@ -97,11 +86,6 @@ export function initRegion() {
   if (typeof document !== "undefined") {
     if (code) document.documentElement.dataset.region = code
     else delete document.documentElement.dataset.region
-  }
-  // Persist only an *explicitly signalled* region (subdomain/path/query), so it
-  // carries to later apex visits. Don't re-persist when only saved-pref matched.
-  if (code && (fromSubdomain() || fromPath() || fromQuery())) {
-    if (typeof localStorage !== "undefined") localStorage.setItem(STORAGE_KEY, code)
   }
 }
 

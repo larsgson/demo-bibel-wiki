@@ -30,6 +30,8 @@ export interface RegionGrouping {
 export interface RegionConfig {
   code: string
   name: Localized
+  /** Header/site title for this region. Hidden when unset. */
+  title?: Localized
   defaultLanguage: string
   uiLanguage: string
   tradeLanguages: string[]

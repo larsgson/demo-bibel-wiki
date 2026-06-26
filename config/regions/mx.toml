@@ -6,6 +6,7 @@
 
 code = "mx"
 name = { en = "Mexico", es = "México" }
+title = { en = "Your Mexican Bible", es = "Tu Biblia mexicana" }  # header title; hidden if unset
 defaultLanguage = "spa"   # primary language when entering with none chosen
 uiLanguage = "es"         # entering this region DEFAULTS the UI to Spanish
 

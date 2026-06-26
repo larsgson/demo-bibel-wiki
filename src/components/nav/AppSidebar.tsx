@@ -14,6 +14,7 @@ import { $activePane, showBible, showStory, showStudy, showBranch } from "../../
 import { getUILevel, type UILevel } from "../../stores/ui-level-store"
 import { shouldProbePkf } from "../../lib/bw/language-list"
 import { pkfUrl } from "../../lib/bw/pkf-url"
+import { loadBookList } from "../../lib/bw/book-list"
 
 export interface SidebarTreeNode {
   id: string
@@ -176,8 +177,16 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
         if (iso === "eng") {
           catalogUrl = "/bsb/catalog.json"
         } else {
-          // Skip the probe for languages with no .pkf data on disk (avoids a 404).
-          if (!(await shouldProbePkf(iso))) return
+          // Non-.pkf language (e.g. Spanish via DBT): get the vernacular book
+          // list from helloao for the left-pane Bible tree.
+          if (!(await shouldProbePkf(iso))) {
+            const list = await loadBookList(iso)
+            if (list) {
+              setAvailableBooks(new Set(list.map((b) => b.code)))
+              setLocalizedBookNames(new Map(list.map((b) => [b.code, b.name])))
+            }
+            return
+          }
           const infoRes = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
           if (!infoRes.ok) return
           const info = await infoRes.json()

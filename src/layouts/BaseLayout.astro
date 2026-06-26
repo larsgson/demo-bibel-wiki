@@ -14,7 +14,7 @@ interface Props {
   landing?: boolean
 }
 
-const { title = "Tu Biblia mexicana", landing = false } = Astro.props
+const { title = "Bibel Wiki", landing = false } = Astro.props
 
 // Build story tree for the sidebar (Templates → Categories → Stories)
 const templates = loadAllTemplates()
@@ -97,10 +97,8 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       class="sticky top-0 z-10 border-b"
       style="background:rgb(0,11,99);border-color:rgba(0,11,99,0.4)"
     >
-      <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
-        <a href="/" class="text-white font-semibold tracking-tight text-lg">
-          Tu Biblia mexicana
-        </a>
+      <div id="header-bar" class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <a href="/" id="header-title" class="text-white font-semibold tracking-tight text-lg" style="display:none"></a>
         <div class="flex items-center gap-2">
           <LanguageButton client:only="react" lang="es" />
           <div class="ui-level-wrapper" id="ui-level-wrapper">
@@ -217,6 +215,8 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       import { t } from "../lib/bw/ui-locales"
 
       import { $selectedIso } from "../stores/iso-store"
+      import { $activeRegion } from "../stores/region-store"
+      import { regionConfigByCode } from "../lib/data/region-config"
 
       initIsoFromUrl()
       initApiConfig()
@@ -238,6 +238,15 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       renderBadge($uiLevel.get())
 
       const uiLang = $selectedIso.get() === "eng" ? "en" : "es"
+
+      // Header title: region TOML title if a region is active, otherwise "Bibel Wiki".
+      const headerTitleEl = document.getElementById("header-title")
+      if (headerTitleEl) {
+        const cfg = $activeRegion.get() ? regionConfigByCode.get($activeRegion.get()) : null
+        const title = cfg?.title?.[uiLang] ?? cfg?.title?.en ?? "Bibel Wiki"
+        headerTitleEl.textContent = title
+        headerTitleEl.style.display = ""
+      }
       levelPopover.querySelectorAll<HTMLElement>(".ui-level-label").forEach((el) => {
         el.textContent = el.dataset[uiLang] ?? el.dataset.en ?? ""
       })

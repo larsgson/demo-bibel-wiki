@@ -303,6 +303,14 @@
 /* ── Landing pages: no left navigation, full-width content ── */
 .app-main--landing { margin-left: 0 !important; }
 
+/* Mobile: clear the fixed hamburger menu button so the header title doesn't
+   sit behind it. Reset when there's no menu button (Simple level / landing). */
+@media (max-width: 768px) {
+  #header-bar { padding-left: 3.5rem; }
+  html[data-ui-level="1"] #header-bar,
+  .app-main--landing #header-bar { padding-left: 1rem; }
+}
+
 /* ── Simple UI level (1): no left navigation at all ── */
 html[data-ui-level="1"] .app-sidebar,
 html[data-ui-level="1"] .app-sidebar-backdrop,
