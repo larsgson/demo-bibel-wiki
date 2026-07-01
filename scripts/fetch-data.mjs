@@ -3,12 +3,15 @@
  * Fetch build-time data:
  *   1. PKF data from the se-regional-data GitHub release
  *   2. BSB (Berean Standard Bible) from BSB-publishing/bsb-data-output
+ *   3. Story data (language catalog + audio timings) from bible-story-builder
  *
  * Run via: pnpm fetch:data   (or automatically as prebuild)
  *
  * Environment variables:
  *   DATA_REPO          — GitHub repo for PKF (default: larsgson/se-regional-data)
  *   DATA_RELEASE_TAG   — Release tag (default: "latest")
+ *   STORY_REPO         — GitHub repo for story data (default: larsgson/bible-story-builder)
+ *   STORY_RELEASE_TAG  — Story release tag (default: "latest")
  *   SKIP_DATA_FETCH    — Set to "1" to skip (useful in CI when data is cached)
  */
 
@@ -24,6 +27,9 @@ const DATA_DIR = "data/pkf"
 const BSB_DIR = "public/bsb"
 const BSB_REPO = "BSB-publishing/bsb-data-output"
 const BSB_BRANCH = "main"
+const STORY_REPO = process.env.STORY_REPO ?? "larsgson/bible-story-builder"
+const STORY_TAG = process.env.STORY_RELEASE_TAG ?? "latest"
+const PUBLIC_DIR = "public"
 
 if (SKIP) {
   console.log("SKIP_DATA_FETCH=1 — skipping data fetch.")
@@ -288,6 +294,72 @@ if (existsSync(join(BSB_DIR, "catalog.json"))) {
   }
   writeFileSync(join(BSB_DIR, "catalog.json"), JSON.stringify(catalog, null, 2))
   console.log(`  ✓ BSB data ready (${documents.length} books)`)
+}
+
+// ── 3. Story data (language catalog + audio timings) from bible-story-builder ──
+//
+// Browser-fetched at runtime from public/:
+//   • ALL-langs-compact.json / ALL-langs-mini.json  — language names + catalog
+//   • ALL-langs-data/                               — per-language story index
+//   • templates/<tpl>/ALL-timings/                  — audio timing per template
+// Story CONTENT (markdown/locales) is committed in this repo, so it is NOT fetched.
+
+if (existsSync(join(PUBLIC_DIR, "ALL-langs-data", "manifest.json"))) {
+  console.log(`Story data already present at ${PUBLIC_DIR}/ALL-langs-data/ — skipping.`)
+} else {
+  console.log(`\n── Fetching story data from ${STORY_REPO} (tag: ${STORY_TAG}) ──\n`)
+
+  // Which templates to fetch timing for — driven by site.config.json.
+  let templates = ["John", "TGS", "OBS"]
+  try {
+    const cfg = JSON.parse(readFileSync("site.config.json", "utf8"))
+    if (Array.isArray(cfg.templates) && cfg.templates.length) templates = cfg.templates
+  } catch { /* fall back to the default list */ }
+
+  const dlBase = `https://github.com/${STORY_REPO}/releases/${
+    STORY_TAG === "latest" ? "latest/download" : "download/" + STORY_TAG
+  }`
+  const tmpDir = join("data", ".fetch-tmp")
+  mkdirSync(tmpDir, { recursive: true })
+
+  // 3a. Language JSON files (from the repo main branch export/).
+  for (const f of ["ALL-langs-compact.json", "ALL-langs-mini.json"]) {
+    const r = await fetch(`https://raw.githubusercontent.com/${STORY_REPO}/main/export/${f}`)
+    if (!r.ok) { console.error(`Failed to fetch ${f}: ${r.status}`); process.exit(1) }
+    writeFileSync(join(PUBLIC_DIR, f), await r.text())
+    console.log(`  ✓ ${f}`)
+  }
+
+  // 3b. ALL-langs-data (per-language story index). Zip has manifest.json at root.
+  const langZip = join(tmpDir, "ALL-langs-data.zip")
+  console.log("  Downloading ALL-langs-data.zip...")
+  execSync(`curl -fSL -o "${langZip}" "${dlBase}/ALL-langs-data.zip"`, { stdio: "inherit" })
+  const langDest = join(PUBLIC_DIR, "ALL-langs-data")
+  rmSync(langDest, { recursive: true, force: true })
+  mkdirSync(langDest, { recursive: true })
+  execSync(`unzip -q "${langZip}" -d "${langDest}"`, { stdio: "inherit" })
+  console.log("  ✓ ALL-langs-data/")
+
+  // 3c. Per-template audio timing. Each zip has manifest.json at root.
+  for (const tpl of templates) {
+    const zipName = `${tpl}-ALL-timings.zip`
+    const zipPath = join(tmpDir, zipName)
+    process.stdout.write(`  ${zipName}... `)
+    try {
+      execSync(`curl -fSL -o "${zipPath}" "${dlBase}/${zipName}"`, { stdio: "pipe" })
+    } catch {
+      console.log("⊘ (not in release)")
+      continue
+    }
+    const dest = join(PUBLIC_DIR, "templates", tpl, "ALL-timings")
+    rmSync(dest, { recursive: true, force: true })
+    mkdirSync(dest, { recursive: true })
+    execSync(`unzip -q "${zipPath}" -d "${dest}"`, { stdio: "inherit" })
+    console.log("✓")
+  }
+
+  rmSync(tmpDir, { recursive: true, force: true })
+  console.log(`  ✓ Story data ready`)
 }
 
 console.log("\n── Data fetch complete ──\n")
