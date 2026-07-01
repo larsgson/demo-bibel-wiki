@@ -1,7 +1,7 @@
 {
-  "source": "larsgson/se-regional-data release data-2026.06.02 (manifest-global-20260602.json)",
-  "generated_from_manifest_updated_at": "2026-06-01T19:43:57Z",
-  "count": 588,
+  "source": "larsgson/se-regional-data release data-2026.07.01 (manifest-global-20260701.json)",
+  "generated_from_manifest_updated_at": "2026-07-01T15:37:57Z",
+  "count": 589,
   "isos": [
     "aai",
     "aak",
@@ -208,6 +208,7 @@
     "ilo",
     "imo",
     "inb",
+    "ind",
     "ino",
     "iqw",
     "iri",

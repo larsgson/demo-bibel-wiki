@@ -147,10 +147,10 @@ if (!needManifest && !needFullData) {
 
     console.log(`Extracting to ${DATA_DIR}/...`)
     try {
-      execSync(`tar --use-compress-program=unzstd -xf "${archivePath}" -C "${DATA_DIR}"`, { stdio: "inherit" })
+      execSync(`tar --use-compress-program=unzstd --warning=no-unknown-keyword -xf "${archivePath}" -C "${DATA_DIR}"`, { stdio: "inherit" })
     } catch {
       try {
-        execSync(`zstd -d "${archivePath}" --stdout | tar xf - -C "${DATA_DIR}"`, { stdio: "inherit" })
+        execSync(`zstd -d "${archivePath}" --stdout | tar --warning=no-unknown-keyword -xf - -C "${DATA_DIR}"`, { stdio: "inherit" })
       } catch {
         console.error("Extraction failed. Ensure zstd is installed: brew install zstd")
         rmSync(tmpDir, { recursive: true, force: true })

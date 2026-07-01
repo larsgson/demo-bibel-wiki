@@ -5,7 +5,7 @@ import { parseTextFilesetId } from "../lib/bw/fileset-utils"
 import { getTestament } from "../lib/bw/bible-utils"
 import { loadBookList } from "../lib/bw/book-list"
 import { $activePane } from "../stores/branch-view-store"
-import books from "../../data/BSB/books"
+import books from "../lib/bw/bible-books"
 import "../styles/dbt-reader.css"
 
 interface Verse { num: number; text: string }

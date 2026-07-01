@@ -9,7 +9,7 @@
  */
 
 import { getTestament } from "./bible-utils"
-import books from "../../../data/BSB/books"
+import books from "../../lib/bw/bible-books"
 
 const HELLOAO_API = "https://bible.helloao.org/api"
 

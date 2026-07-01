@@ -9,6 +9,7 @@ build/
 # Data fetched at build time
 data/pkf/
 data/BSB/
+data/.fetch-tmp/
 
 # Public data copied from bibel-wiki (fetched, not committed)
 public/ALL-langs-data/
