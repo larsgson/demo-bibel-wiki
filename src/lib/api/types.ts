@@ -96,6 +96,25 @@ export interface AskResponse {
     analysis: QueryAnalysis;
 }
 
+// ---- Cards (drill-down UX tiles from /api/ask) ----
+
+export type CardKind = 'passage' | 'concept' | 'entity' | 'speaker' | 'cross-ref' | (string & {});
+
+export interface Card {
+    kind: CardKind;
+    headline: string;
+    anchor: string;
+    drill: string | null;
+    confidence: number;
+    featured: boolean;
+    syntax?: string | null;
+    domains?: string[];
+    lxx?: unknown[];
+    frame?: unknown;
+}
+
+export type SuggestedLayout = 'hero' | 'deck' | 'tree' | 'explore' | (string & {});
+
 // ---- Branched search/ask ----
 
 export type BranchKey = 'lexicon' | 'study' | 'terms' | 'verses' | 'morphology' | 'methodology' | 'media' | 'other' | (string & {});
@@ -127,8 +146,11 @@ export interface BranchedAskResponse {
     question: string;
     answer: string;
     confidence: 'low' | 'medium' | 'high';
+    lang?: string;
     citations: string[];
+    cards?: Card[];
     branches: Branch[];
+    suggested_layout?: SuggestedLayout;
     suggested_drilldown: DrilldownHint[];
     analysis: QueryAnalysis;
 }

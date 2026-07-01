@@ -93,6 +93,33 @@
 }
 .citation-link:hover { background: rgba(255, 215, 0, 0.55); text-decoration: none; }
 
+/* Drill-down cards from /api/ask cards[] */
+.drill-cards {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.4rem; margin: 0.6rem 0;
+}
+.drill-card {
+  display: flex; flex-direction: column; gap: 0.2rem;
+  padding: 0.5rem 0.6rem; border: 1px solid rgba(0,11,99,0.12); border-radius: 8px;
+  background: #fff; text-decoration: none; color: rgb(0,11,99);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+a.drill-card:hover {
+  border-color: rgba(0,11,99,0.35);
+  box-shadow: 0 2px 8px rgba(0,11,99,0.08);
+}
+.drill-card.featured { border-left: 3px solid rgb(0,11,99); }
+.drill-card-icon { font-size: 1.1rem; line-height: 1; }
+.drill-card-anchor { font-size: 0.82rem; font-weight: 600; line-height: 1.3; }
+.drill-card-kind {
+  font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.03em; color: rgba(0,11,99,0.5);
+}
+.drill-card-domains {
+  font-size: 0.72rem; color: rgba(0,11,99,0.55); line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
 .citations-details { margin-top: 0.6rem; }
 .citations-summary {
   display: block; width: 100%; padding: 0.5rem; border: 1px dashed rgba(0,11,99,0.25);

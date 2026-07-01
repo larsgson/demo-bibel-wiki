@@ -4,7 +4,7 @@ import { $apiConfigured, apiFetch } from "../../stores/api-store"
 import { $searchMode, setSearchMode, type SearchMode } from "../../stores/search-store"
 import { searchBranched } from "../../lib/api/search-branched"
 import { askBranched } from "../../lib/api/ask-branched"
-import type { BranchedSearchResponse, BranchedAskResponse, Branch, SearchHit } from "../../lib/api/types"
+import type { BranchedSearchResponse, BranchedAskResponse, Branch, SearchHit, Card } from "../../lib/api/types"
 import { $selectedIso, initIsoFromUrl } from "../../stores/iso-store"
 import { mergeBranches, clearNavBranches } from "../../stores/nav-branches-store"
 import { extractBibleHighlights, clearBibleHighlights } from "../../stores/bible-highlight-store"
@@ -81,6 +81,20 @@ const strings = {
     networkError: "Error de red al contactar la API.",
     passwordRejected: "Contraseña rechazada.",
   },
+}
+
+const GLOSS_LANG: Record<string, string> = {
+  eng: "English", spa: "Spanish", fra: "French", por: "Portuguese",
+  deu: "German", ind: "Indonesian", zho: "Chinese", arb: "Arabic",
+  hin: "Hindi", ben: "Bengali", asm: "Assamese", hau: "Hausa", rus: "Russian",
+  en: "English", es: "Spanish", fr: "French", pt: "Portuguese",
+  de: "German", id: "Indonesian", zh: "Chinese", ar: "Arabic",
+  hi: "Hindi", bn: "Bengali", as: "Assamese", ha: "Hausa", ru: "Russian",
+}
+
+const CARD_KIND_ICON: Record<string, string> = {
+  passage: "\u{1F4D6}", concept: "\u{1F4A1}", entity: "\u{1F464}",
+  speaker: "\u{1F5E3}️", "cross-ref": "\u{1F517}",
 }
 
 function renderMarkdown(md: string) {
@@ -394,6 +408,43 @@ export function SearchIsland({ iso: isoProp }: Props) {
     )
   }
 
+  function drillHref(drill: string): string {
+    const base = import.meta.env.PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? ""
+    const gloss = GLOSS_LANG[iso] ?? "English"
+    const sep = drill.includes("?") ? "&" : "?"
+    return `${base}${drill}${sep}gloss_lang=${encodeURIComponent(gloss)}`
+  }
+
+  function renderCards(cards: Card[]) {
+    if (!cards.length) return null
+    return (
+      <div className="drill-cards">
+        {cards.map((card, i) => {
+          const icon = CARD_KIND_ICON[card.kind] ?? "\u{1F50D}"
+          const inner = (
+            <>
+              <span className="drill-card-icon">{icon}</span>
+              <span className="drill-card-anchor">{card.anchor}</span>
+              <span className="drill-card-kind">{card.kind}</span>
+              {card.domains && card.domains.length > 0 && (
+                <span className="drill-card-domains">{card.domains.slice(0, 3).join(" · ")}</span>
+              )}
+            </>
+          )
+          return card.drill ? (
+            <a key={i} className={`drill-card${card.featured ? " featured" : ""}`} href={drillHref(card.drill)} target="_blank" rel="noopener">
+              {inner}
+            </a>
+          ) : (
+            <div key={i} className={`drill-card${card.featured ? " featured" : ""}`}>
+              {inner}
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <div className="chat-shell" style={{ display: visible ? "" : "none" }}>
       <div className="chat-scroll" ref={scrollRef}>
@@ -440,6 +491,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
                     </span>
                   </div>
                   <div className="answer-body">{renderAnswer(turn.result.data.answer, turn.result.data.branches)}</div>
+                  {turn.result.data.cards && turn.result.data.cards.length > 0 && renderCards(turn.result.data.cards)}
                   {turn.result.data.branches.length > 0 && (
                     <details className="citations-details" open>
                       <summary className="citations-summary">{t.exploreSources}</summary>
