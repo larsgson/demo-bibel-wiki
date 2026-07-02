@@ -120,13 +120,18 @@ export type SuggestedLayout = 'hero' | 'deck' | 'tree' | 'explore' | (string & {
 export type BranchKey = 'lexicon' | 'study' | 'terms' | 'verses' | 'morphology' | 'methodology' | 'media' | 'other' | (string & {});
 
 export interface Branch {
-    key: BranchKey;
+    key?: BranchKey;
+    kind?: string;
     label: string;
     featured: boolean;
-    total: number;
+    total?: number;
     n?: number;
     items?: SearchHit[];
     leads?: SearchHit[];
+}
+
+export function branchKey(b: Branch): string {
+    return b.key ?? b.kind ?? b.label ?? "other"
 }
 
 export interface DrilldownHint {

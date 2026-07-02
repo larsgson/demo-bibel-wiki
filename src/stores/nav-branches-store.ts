@@ -1,10 +1,29 @@
 import { atom } from "nanostores"
-import type { BranchKey, SearchHit, Branch } from "../lib/api/types"
+import { branchKey as bKey, type BranchKey, type SearchHit, type Branch } from "../lib/api/types"
 
 // Accumulated answer items per branch, built up across the session from
 // search/ask responses. The `verses` branch is intentionally excluded — the
 // Bible navigation node renders the static Bible tree, not answer verse items.
 export type NavBranches = Partial<Record<BranchKey, SearchHit[]>>
+
+function hitKey(h: SearchHit): string {
+  return h.chunk_id ?? (h as any).headline ?? h.title ?? ""
+}
+
+function normalizeHit(h: any): SearchHit {
+  return {
+    chunk_id: h.chunk_id ?? "",
+    title: h.title ?? h.headline ?? "",
+    kind: h.kind ?? "other",
+    passage: h.passage ?? h.anchor ?? null,
+    tags: h.tags ?? [],
+    excerpt: h.excerpt ?? h.headline ?? "",
+    primary_path: h.primary_path ?? h.drill ?? "",
+    permalink: h.permalink ?? "",
+    score: h.score ?? 0,
+    retrievers: h.retrievers ?? [],
+  }
+}
 
 const STORAGE_KEY = "nav_branches"
 
@@ -44,17 +63,18 @@ export function mergeBranches(branches: Branch[]) {
   const updated: BranchKey[] = []
 
   for (const branch of branches) {
-    // verses are now shown under the Study branch too
-    const hits = branch.items ?? branch.leads ?? []
-    if (!hits.length) continue
+    const key = bKey(branch)
+    const raw = branch.items ?? branch.leads ?? []
+    if (!raw.length) continue
 
-    const existing = next[branch.key] ?? []
-    const seen = new Set(existing.map((h) => h.chunk_id))
-    const fresh = hits.filter((h) => !seen.has(h.chunk_id))
+    const hits = raw.map((h) => normalizeHit(h))
+    const existing = next[key] ?? []
+    const seen = new Set(existing.map((h) => hitKey(h)))
+    const fresh = hits.filter((h) => !seen.has(hitKey(h)))
     if (!fresh.length) continue
 
-    next[branch.key] = [...existing, ...fresh]
-    updated.push(branch.key)
+    next[key] = [...existing, ...fresh]
+    updated.push(key)
   }
 
   if (updated.length) {

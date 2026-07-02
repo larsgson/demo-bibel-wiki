@@ -6,6 +6,7 @@ import {
   $lastUpdatedBranches,
   initNavBranches,
   clearNavBranches,
+  type NavBranches,
 } from "../../stores/nav-branches-store"
 import type { BranchKey, SearchHit } from "../../lib/api/types"
 import { $bibleHighlights } from "../../stores/bible-highlight-store"
@@ -43,16 +44,31 @@ interface AnswerBranch {
   label: { en: string; es: string }
 }
 
-const ANSWER_BRANCHES: AnswerBranch[] = [
-  { id: "verses",      icon: "📜", label: { en: "Verses", es: "Versículos" } },
-  { id: "lexicon",     icon: "🔤", label: { en: "Lexicon", es: "Léxico" } },
-  { id: "terms",       icon: "🏷", label: { en: "Key terms", es: "Términos clave" } },
-  { id: "study",       icon: "📝", label: { en: "Study notes", es: "Notas de estudio" } },
-  { id: "morphology",  icon: "🔬", label: { en: "Morphology", es: "Morfología" } },
-  { id: "methodology", icon: "🛠", label: { en: "Methodology", es: "Metodología" } },
-  { id: "media",       icon: "🎬", label: { en: "Media", es: "Recursos" } },
-  { id: "other",       icon: "•",  label: { en: "Other", es: "Otros" } },
-]
+const BRANCH_META: Record<string, { icon: string; label: { en: string; es: string } }> = {
+  verses:      { icon: "📜", label: { en: "Verses", es: "Versículos" } },
+  lexicon:     { icon: "🔤", label: { en: "Lexicon", es: "Léxico" } },
+  terms:       { icon: "🏷", label: { en: "Key terms", es: "Términos clave" } },
+  study:       { icon: "📝", label: { en: "Study notes", es: "Notas de estudio" } },
+  morphology:  { icon: "🔬", label: { en: "Morphology", es: "Morfología" } },
+  methodology: { icon: "🛠", label: { en: "Methodology", es: "Metodología" } },
+  media:       { icon: "🎬", label: { en: "Media", es: "Recursos" } },
+  passage:     { icon: "📖", label: { en: "Passages", es: "Pasajes" } },
+  concept:     { icon: "💡", label: { en: "Concepts", es: "Conceptos" } },
+  entity:      { icon: "👤", label: { en: "Entities", es: "Entidades" } },
+  speaker:     { icon: "🗣", label: { en: "Speakers", es: "Hablantes" } },
+  "cross-ref": { icon: "🔗", label: { en: "Cross-references", es: "Referencias cruzadas" } },
+  other:       { icon: "•",  label: { en: "Other", es: "Otros" } },
+}
+
+function answerBranchesFor(navBranches: NavBranches): AnswerBranch[] {
+  const out: AnswerBranch[] = []
+  for (const id of Object.keys(navBranches)) {
+    if (!(navBranches[id]?.length)) continue
+    const meta = BRANCH_META[id] ?? { icon: "•", label: { en: id, es: id } }
+    out.push({ id, icon: meta.icon, label: meta.label })
+  }
+  return out
+}
 
 const TOP_LEVEL_IDS = ["study_topic", "story", "bible"]
 
@@ -107,7 +123,7 @@ function exclusiveOpen(prev: Set<string>, id: string, siblings: string[]): Set<s
     if (s === id) continue
     next.delete(s)
     for (const v of prev) {
-      if (v.startsWith(s + "/") || v.startsWith(s + "-")) next.delete(v)
+      if (typeof v === "string" && (v.startsWith(s + "/") || v.startsWith(s + "-"))) next.delete(v)
     }
   }
   if (wasOpen) next.delete(id)
@@ -120,7 +136,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
   const navBranches = useStore($navBranches)
   const bibleHighlights = useStore($bibleHighlights)
   const activePane = useStore($activePane)
-  useStore($lastUpdatedBranches) // subscribe so badge counts update
+  const lastUpdated = useStore($lastUpdatedBranches)
 
   const [isOpen, setIsOpen] = useState(false)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
@@ -321,6 +337,16 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     window.addEventListener("toggle-sidebar", onToggle)
     return () => window.removeEventListener("toggle-sidebar", onToggle)
   }, [])
+
+  useEffect(() => {
+    if (lastUpdated.length === 0) return
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      next.add("study_topic")
+      for (const key of lastUpdated) next.add(key)
+      return next
+    })
+  }, [lastUpdated])
 
   useEffect(() => {
     document.body.classList.toggle("app-sidebar-open", isOpen)
@@ -539,13 +565,15 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     return (
       <ul className="app-sidebar-items">
         {items.map((hit, idx) => (
-          <li key={hit.chunk_id}>
+          <li key={hit.chunk_id || idx}>
             <button
               className="app-sidebar-item"
               type="button"
               onClick={() => openBranch(branchKey, idx)}
             >
-              <span className="app-sidebar-item-label">{hit.passage || hit.title}</span>
+              <span className="app-sidebar-item-label">
+                {hit.passage || hit.title || (hit as any).headline || "—"}
+              </span>
             </button>
           </li>
         ))}
@@ -553,8 +581,9 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     )
   }
 
-  const hasAnyAnswers = ANSWER_BRANCHES.some((b) => (navBranches[b.id]?.length ?? 0) > 0)
-  const answerBranchIds = ANSWER_BRANCHES.map((b) => b.id as string)
+  const activeBranches = answerBranchesFor(navBranches)
+  const hasAnyAnswers = activeBranches.length > 0
+  const answerBranchIds = activeBranches.map((b) => b.id as string)
 
   const filteredBooks = bibleBooks?.filter((b) => !availableBooks || availableBooks.has(b.code)) ?? []
   const otBooks = filteredBooks.filter((b) => b.ot)
@@ -660,9 +689,8 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
               {studyOpen && (
                 <>
                   <ul className="app-sidebar-tree-children">
-                    {ANSWER_BRANCHES.map((branch) => {
+                    {activeBranches.map((branch) => {
                       const items = navBranches[branch.id] ?? []
-                      if (items.length === 0) return null
                       const branchOpen = expanded.has(branch.id)
                       const isActiveBranch = activePane.pane === "branch" && activePane.branchKey === branch.id
                       return (

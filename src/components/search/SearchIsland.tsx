@@ -4,7 +4,7 @@ import { $apiConfigured, apiFetch } from "../../stores/api-store"
 import { $searchMode, setSearchMode, type SearchMode } from "../../stores/search-store"
 import { searchBranched } from "../../lib/api/search-branched"
 import { askBranched } from "../../lib/api/ask-branched"
-import type { BranchedSearchResponse, BranchedAskResponse, Branch, SearchHit, Card } from "../../lib/api/types"
+import { branchKey as bKey, type BranchedSearchResponse, type BranchedAskResponse, type Branch, type SearchHit, type Card } from "../../lib/api/types"
 import { $selectedIso, initIsoFromUrl } from "../../stores/iso-store"
 import { mergeBranches, clearNavBranches } from "../../stores/nav-branches-store"
 import { extractBibleHighlights, clearBibleHighlights } from "../../stores/bible-highlight-store"
@@ -380,19 +380,20 @@ export function SearchIsland({ iso: isoProp }: Props) {
   }
 
   function renderBranch(branch: Branch, turnIdx: number, branchIdx: number) {
-    const isOpen = branch.featured || isBranchExpanded(turnIdx, branch.key)
+    const isOpen = isBranchExpanded(turnIdx, bKey(branch))
     const hits = branchItems(branch)
-    const remaining = branch.total - hits.length
+    const total = branch.total ?? branch.n ?? hits.length
+    const remaining = total - hits.length
 
     return (
-      <div key={`${branch.key}-${branchIdx}`} className={`branch ${isOpen ? "branch-open" : "branch-collapsed"}`}>
+      <div key={`${bKey(branch)}-${branchIdx}`} className={`branch ${isOpen ? "branch-open" : "branch-collapsed"}`}>
         <button
           type="button"
           className="branch-header"
-          onClick={() => toggleBranch(turnIdx, branch.key)}
+          onClick={() => toggleBranch(turnIdx, bKey(branch))}
         >
           <span className="branch-label">{branch.label}</span>
-          <span className="branch-count">{branch.total}</span>
+          <span className="branch-count">{total}</span>
           <span className="branch-chevron">{isOpen ? "▾" : "▸"}</span>
         </button>
         {isOpen && (

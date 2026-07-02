@@ -57,6 +57,9 @@ function ExpandableItem({
   const [fullBody, setFullBody] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const excerpt = hit.excerpt ?? (hit as any).headline ?? ""
+  const isTruncated = excerpt.endsWith("…") || excerpt.endsWith("...")
+
   async function expand() {
     if (expanded) {
       setExpanded(false)
@@ -66,6 +69,7 @@ function ExpandableItem({
       setExpanded(true)
       return
     }
+    if (!hit.chunk_id) return
     setLoading(true)
     try {
       const data = await apiFetch<ChunkResponse>(
@@ -74,7 +78,7 @@ function ExpandableItem({
       setFullBody(data.body)
       setExpanded(true)
     } catch {
-      setFullBody(hit.excerpt)
+      setFullBody(excerpt)
       setExpanded(true)
     } finally {
       setLoading(false)
@@ -87,8 +91,6 @@ function ExpandableItem({
     }
   }, [autoExpand])
 
-  const isTruncated = hit.excerpt.endsWith("…") || hit.excerpt.endsWith("...")
-
   return (
     <article
       key={hit.chunk_id}
@@ -99,7 +101,7 @@ function ExpandableItem({
         className="branch-content-item-title clickable"
         onClick={expand}
       >
-        {hit.passage || hit.title}
+        {hit.passage || hit.title || (hit as any).headline || "—"}
         {loading && <span className="branch-content-loading"> ...</span>}
       </h3>
       {hit.passage && hit.title !== hit.passage && (
@@ -110,16 +112,16 @@ function ExpandableItem({
           className="branch-content-item-body"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(fullBody) }}
         />
-      ) : (
+      ) : excerpt ? (
         <p className="branch-content-item-text">
-          <span dangerouslySetInnerHTML={{ __html: renderMarkdown(hit.excerpt) }} />
+          <span dangerouslySetInnerHTML={{ __html: renderMarkdown(excerpt) }} />
           {isTruncated && (
             <button className="branch-content-expand" onClick={expand} type="button">
               {loading ? "..." : "…"}
             </button>
           )}
         </p>
-      )}
+      ) : null}
     </article>
   )
 }
@@ -188,7 +190,7 @@ export function BranchContentPane({ lang = "es" }: { lang?: string }) {
       <div className="branch-content-list">
         {items.map((hit, idx) => (
           <ExpandableItem
-            key={hit.chunk_id}
+            key={hit.chunk_id || idx}
             hit={hit}
             idx={idx}
             itemRef={(el) => { if (el) itemRefs.current.set(idx, el) }}
