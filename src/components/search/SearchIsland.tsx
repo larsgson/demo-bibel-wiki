@@ -8,7 +8,7 @@ import { branchKey as bKey, type BranchedSearchResponse, type BranchedAskRespons
 import { $selectedIso, initIsoFromUrl } from "../../stores/iso-store"
 import { mergeBranches, clearNavBranches } from "../../stores/nav-branches-store"
 import { extractBibleHighlights, clearBibleHighlights } from "../../stores/bible-highlight-store"
-import { $activePane } from "../../stores/branch-view-store"
+import { $activePane, showBranch } from "../../stores/branch-view-store"
 
 
 type Result =
@@ -101,6 +101,15 @@ function branchItems(b: Branch): SearchHit[] {
   return b.items ?? b.leads ?? []
 }
 
+const FRONT_RATIO = 0.8
+const FRONT_MAX = 3
+
+function frontLeads(hits: SearchHit[]): SearchHit[] {
+  return hits
+    .filter((h: any) => (h.confidence ?? 1) >= FRONT_RATIO)
+    .slice(0, FRONT_MAX)
+}
+
 function renderMarkdown(md: string) {
   return md
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
@@ -178,7 +187,6 @@ export function SearchIsland({ iso: isoProp }: Props) {
   const [inputValue, setInputValue] = useState("")
   const [password, setPassword] = useState("")
   const [showPwModal, setShowPwModal] = useState(false)
-  const [expandedBranches, setExpandedBranches] = useState<Set<string>>(new Set())
   const storeIso = useStore($selectedIso)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(true)
@@ -256,8 +264,6 @@ export function SearchIsland({ iso: isoProp }: Props) {
     const newTurn: Turn = { query, mode, result: null, error: null, loading: true }
 
     setTurns((prev) => [...prev, newTurn])
-    setExpandedBranches(new Set())
-
     const apiLang = iso === "eng" ? "en" : "es"
     const promise =
       mode === "premium"
@@ -267,7 +273,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
     promise
       .then((res) => {
         // Feed the answer's branches into the global nav rail (skips verses).
-        mergeBranches(res.data.branches)
+        mergeBranches(query, res.data.branches)
         // Extract Bible references for yellow highlights in the sidebar tree.
         extractBibleHighlights(res.data.branches)
         setTurns((prev) => {
@@ -317,18 +323,8 @@ export function SearchIsland({ iso: isoProp }: Props) {
     clearNavBranches()
   }
 
-  function toggleBranch(turnIdx: number, key: string) {
-    setExpandedBranches((prev) => {
-      const id = `${turnIdx}:${key}`
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
-  function isBranchExpanded(turnIdx: number, key: string) {
-    return expandedBranches.has(`${turnIdx}:${key}`)
+  function navigateToBranch(branchKind: string) {
+    showBranch(branchKind)
   }
 
   function confidenceColor(c: string): string {
@@ -379,42 +375,55 @@ export function SearchIsland({ iso: isoProp }: Props) {
     return <ExpandableHitCard key={hit.chunk_id ?? idx} hit={hit} />
   }
 
-  function renderBranch(branch: Branch, turnIdx: number, branchIdx: number) {
-    const isOpen = isBranchExpanded(turnIdx, bKey(branch))
+  function renderBranch(branch: Branch, branchIdx: number) {
     const hits = branchItems(branch)
     const total = branch.total ?? branch.n ?? hits.length
-    const remaining = total - hits.length
+    const front = frontLeads(hits)
+    const kind = bKey(branch)
 
     return (
-      <div key={`${bKey(branch)}-${branchIdx}`} className={`branch ${isOpen ? "branch-open" : "branch-collapsed"}`}>
+      <div key={`${kind}-${branchIdx}`} className="branch branch-compact">
         <button
           type="button"
           className="branch-header"
-          onClick={() => toggleBranch(turnIdx, bKey(branch))}
+          onClick={() => navigateToBranch(kind)}
         >
           <span className="branch-label">{branch.label}</span>
           <span className="branch-count">{total}</span>
-          <span className="branch-chevron">{isOpen ? "▾" : "▸"}</span>
+          <span className="branch-chevron">›</span>
         </button>
-        {isOpen && (
-          <div className="branch-items">
-            {hits.map(renderHitCard)}
-            {remaining > 0 && (
-              <p className="branch-more">{t.moreInBranch(remaining)}</p>
-            )}
+        {front.length > 0 && (
+          <div className="branch-front">
+            {front.map((hit, i) => (
+              <button
+                key={hit.chunk_id ?? i}
+                type="button"
+                className="branch-front-lead"
+                onClick={() => navigateToBranch(kind)}
+              >
+                {hit.passage || hit.title || (hit as any).headline}
+              </button>
+            ))}
           </div>
         )}
       </div>
     )
   }
 
-  function renderBranches(branches: Branch[], turnIdx: number) {
-    const hasFeatured = branches.some((b) => b.featured && branchItems(b).length > 0)
-    if (!hasFeatured && branches.every((b) => branchItems(b).length === 0)) return null
+  function renderBranches(branches: Branch[]) {
+    const withLeads = branches.filter((b) => branchItems(b).length > 0)
+    if (!withLeads.length) return null
+
+    const sorted = [...withLeads].sort((a, b) => {
+      if (a.featured !== b.featured) return a.featured ? -1 : 1
+      const aTop = (branchItems(a)[0] as any)?.confidence ?? 0
+      const bTop = (branchItems(b)[0] as any)?.confidence ?? 0
+      return bTop - aTop
+    })
 
     return (
       <div className="branches">
-        {branches.map((b, i) => renderBranch(b, turnIdx, i))}
+        {sorted.map((b, i) => renderBranch(b, i))}
       </div>
     )
   }
@@ -491,7 +500,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
                   {turn.result.data.branches.every((b) => branchItems(b).length === 0) ? (
                     <p className="bubble-empty">{t.noResults(turn.query)}</p>
                   ) : (
-                    renderBranches(turn.result.data.branches, ti)
+                    renderBranches(turn.result.data.branches)
                   )}
                 </div>
               ) : turn.result?.kind === "ask" ? (
@@ -506,7 +515,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
                   {turn.result.data.branches.length > 0 && (
                     <details className="citations-details" open>
                       <summary className="citations-summary">{t.exploreSources}</summary>
-                      {renderBranches(turn.result.data.branches, ti)}
+                      {renderBranches(turn.result.data.branches)}
                     </details>
                   )}
                 </div>

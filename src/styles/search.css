@@ -65,6 +65,15 @@
   font-size: 0.78rem; color: rgba(0,11,99,0.5); text-align: center;
   margin: 0.3rem 0 0; font-style: italic;
 }
+.branch-compact > .branch-header .branch-chevron { font-size: 0.8rem; }
+.branch-front { padding: 0.15rem 0.7rem 0.35rem; }
+.branch-front-lead {
+  display: block; width: 100%; margin: 0; padding: 0.15rem 0; border: none;
+  background: none; font: inherit; font-size: 0.78rem; color: rgba(0,11,99,0.55);
+  text-align: left; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.branch-front-lead:hover { color: rgb(0,11,99); }
 .branch-open > .branch-header { border-bottom: 1px solid rgba(0,11,99,0.08); }
 
 .answer-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }

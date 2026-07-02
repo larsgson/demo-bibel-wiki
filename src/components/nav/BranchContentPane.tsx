@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import type { BranchKey, SearchHit } from "../../lib/api/types"
+import type { SearchHit } from "../../lib/api/types"
 import type { NavBranches } from "../../stores/nav-branches-store"
 import { apiFetch } from "../../stores/api-store"
 import { $activePane } from "../../stores/branch-view-store"
@@ -20,9 +20,12 @@ const BRANCH_LABELS: Record<string, Record<string, string>> = {
 function loadBranches(): NavBranches {
   try {
     const raw = sessionStorage.getItem(NAV_BRANCHES_KEY)
-    return raw ? JSON.parse(raw) : {}
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed as NavBranches
+    return []
   } catch {
-    return {}
+    return []
   }
 }
 
@@ -128,17 +131,17 @@ function ExpandableItem({
 
 export function BranchContentPane({ lang = "es" }: { lang?: string }) {
   const [branchKey, setBranchKey] = useState<string | null>(null)
+  const [queryIndex, setQueryIndex] = useState<number | undefined>(undefined)
   const [scrollIdx, setScrollIdx] = useState<number | null>(null)
   const [branches, setBranches] = useState<NavBranches>(loadBranches)
   const itemRefs = useRef<Map<number, HTMLElement>>(new Map())
 
   useEffect(() => {
-    // Initial state from the current pane (set from ?pane=branch on a fresh
-    // load, which fires no pane-changed event).
     const init = $activePane.get()
     if (init.pane === "branch" && init.branchKey) {
       setBranches(loadBranches())
       setBranchKey(init.branchKey)
+      setQueryIndex(init.queryIndex)
       setScrollIdx(init.scrollToIndex ?? null)
     }
     function onPaneChanged(e: Event) {
@@ -146,6 +149,7 @@ export function BranchContentPane({ lang = "es" }: { lang?: string }) {
       if (detail?.pane === "branch" && detail.branchKey) {
         setBranches(loadBranches())
         setBranchKey(detail.branchKey)
+        setQueryIndex(detail.queryIndex)
         setScrollIdx(detail.scrollToIndex ?? null)
       } else {
         setBranchKey(null)
@@ -177,7 +181,15 @@ export function BranchContentPane({ lang = "es" }: { lang?: string }) {
 
   if (!branchKey) return null
 
-  const items = (branches[branchKey as BranchKey] ?? []) as SearchHit[]
+  let items: SearchHit[] = []
+  if (queryIndex != null && branches[queryIndex]) {
+    items = (branches[queryIndex].branches[branchKey] ?? []) as SearchHit[]
+  } else {
+    for (const entry of branches) {
+      const found = entry.branches[branchKey]
+      if (found?.length) { items = found as SearchHit[]; break }
+    }
+  }
   if (items.length === 0) return null
 
   const label = BRANCH_LABELS[branchKey]?.[lang] ?? branchKey

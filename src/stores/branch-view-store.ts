@@ -6,6 +6,7 @@ export type ActivePane = "bible" | "story" | "study" | "branch"
 export interface PaneState {
   pane: ActivePane
   branchKey?: string
+  queryIndex?: number
   scrollToIndex?: number | null
 }
 
@@ -65,8 +66,8 @@ export function showStudy() {
   emitPaneChange(s)
 }
 
-export function showBranch(branchKey: string, scrollToIndex: number | null = null) {
-  const s = { pane: "branch" as const, branchKey, scrollToIndex }
+export function showBranch(branchKey: string, queryIndex?: number, scrollToIndex: number | null = null) {
+  const s = { pane: "branch" as const, branchKey, queryIndex, scrollToIndex }
   $activePane.set(s)
   emitPaneChange(s)
 }

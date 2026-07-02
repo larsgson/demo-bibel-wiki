@@ -7,6 +7,7 @@ import {
   initNavBranches,
   clearNavBranches,
   type NavBranches,
+  type LastUpdate,
 } from "../../stores/nav-branches-store"
 import type { BranchKey, SearchHit } from "../../lib/api/types"
 import { $bibleHighlights } from "../../stores/bible-highlight-store"
@@ -38,12 +39,6 @@ interface Props {
   bibleBooks?: BibleBookEntry[]
 }
 
-interface AnswerBranch {
-  id: BranchKey
-  icon: string
-  label: { en: string; es: string }
-}
-
 const BRANCH_META: Record<string, { icon: string; label: { en: string; es: string } }> = {
   verses:      { icon: "📜", label: { en: "Verses", es: "Versículos" } },
   lexicon:     { icon: "🔤", label: { en: "Lexicon", es: "Léxico" } },
@@ -58,16 +53,6 @@ const BRANCH_META: Record<string, { icon: string; label: { en: string; es: strin
   speaker:     { icon: "🗣", label: { en: "Speakers", es: "Hablantes" } },
   "cross-ref": { icon: "🔗", label: { en: "Cross-references", es: "Referencias cruzadas" } },
   other:       { icon: "•",  label: { en: "Other", es: "Otros" } },
-}
-
-function answerBranchesFor(navBranches: NavBranches): AnswerBranch[] {
-  const out: AnswerBranch[] = []
-  for (const id of Object.keys(navBranches)) {
-    if (!(navBranches[id]?.length)) continue
-    const meta = BRANCH_META[id] ?? { icon: "•", label: { en: id, es: id } }
-    out.push({ id, icon: meta.icon, label: meta.label })
-  }
-  return out
 }
 
 const TOP_LEVEL_IDS = ["study_topic", "story", "bible"]
@@ -339,11 +324,24 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
   }, [])
 
   useEffect(() => {
-    if (lastUpdated.length === 0) return
+    if (!lastUpdated) return
+    const { queryIndex, branchKeys } = lastUpdated
+    if (!branchKeys.length) return
     setExpanded((prev) => {
-      const next = new Set(prev)
+      let next = new Set(prev)
+      for (const s of TOP_LEVEL_IDS) if (s !== "study_topic") next.delete(s)
       next.add("study_topic")
-      for (const key of lastUpdated) next.add(key)
+      const queries = $navBranches.get()
+      const queryIds = queries.map((_, i) => `query-${i}`)
+      for (const qid of queryIds) next.delete(qid)
+      const qid = `query-${queryIndex}`
+      next.add(qid)
+      const entry = queries[queryIndex]
+      if (entry) {
+        const branchIds = Object.keys(entry.branches).map((k) => `${qid}:${k}`)
+        for (const bid of branchIds) next.delete(bid)
+        next.add(`${qid}:${branchKeys[0]}`)
+      }
       return next
     })
   }, [lastUpdated])
@@ -379,12 +377,13 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     else window.location.href = `/${iso}/?pane=study`
   }
 
-  function openBranch(branchKey: string, idx: number | null = null) {
+  function openBranch(branchKey: string, queryIndex?: number, idx: number | null = null) {
     if (onPanePage()) {
-      showBranch(branchKey, idx)
+      showBranch(branchKey, queryIndex, idx)
     } else {
+      const qi = queryIndex != null ? `&qi=${queryIndex}` : ""
       const i = idx != null ? `&i=${idx}` : ""
-      window.location.href = `/${iso}/?pane=branch&branch=${branchKey}${i}`
+      window.location.href = `/${iso}/?pane=branch&branch=${branchKey}${qi}${i}`
     }
   }
 
@@ -561,7 +560,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     )
   }
 
-  function renderAnswerItems(items: SearchHit[], branchKey: string) {
+  function renderAnswerItems(items: SearchHit[], branchKey: string, queryIndex: number) {
     return (
       <ul className="app-sidebar-items">
         {items.map((hit, idx) => (
@@ -569,7 +568,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
             <button
               className="app-sidebar-item"
               type="button"
-              onClick={() => openBranch(branchKey, idx)}
+              onClick={() => openBranch(branchKey, queryIndex, idx)}
             >
               <span className="app-sidebar-item-label">
                 {hit.passage || hit.title || (hit as any).headline || "—"}
@@ -581,9 +580,8 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     )
   }
 
-  const activeBranches = answerBranchesFor(navBranches)
-  const hasAnyAnswers = activeBranches.length > 0
-  const answerBranchIds = activeBranches.map((b) => b.id as string)
+  const hasAnyAnswers = navBranches.length > 0
+  const queryNodeIds = navBranches.map((_, i) => `query-${i}`)
 
   const filteredBooks = bibleBooks?.filter((b) => !availableBooks || availableBooks.has(b.code)) ?? []
   const otBooks = filteredBooks.filter((b) => b.ot)
@@ -689,28 +687,64 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
               {studyOpen && (
                 <>
                   <ul className="app-sidebar-tree-children">
-                    {activeBranches.map((branch) => {
-                      const items = navBranches[branch.id] ?? []
-                      const branchOpen = expanded.has(branch.id)
-                      const isActiveBranch = activePane.pane === "branch" && activePane.branchKey === branch.id
+                    {navBranches.map((entry, qi) => {
+                      const qid = `query-${qi}`
+                      const queryOpen = expanded.has(qid)
+                      const branchKeys = Object.keys(entry.branches).filter(
+                        (k) => (entry.branches[k]?.length ?? 0) > 0,
+                      )
+                      const branchNodeIds = branchKeys.map((k) => `${qid}:${k}`)
+                      const isActiveQuery = activePane.pane === "branch" && activePane.queryIndex === qi
+
                       return (
-                        <li key={branch.id}>
+                        <li key={qid}>
                           <button
-                            className={`app-sidebar-tree-row ${isActiveBranch ? "active" : ""}`}
+                            className={`app-sidebar-tree-row ${isActiveQuery ? "active" : ""}`}
                             type="button"
                             onClick={() => {
-                              setExpanded((prev) => exclusiveOpen(prev, branch.id, answerBranchIds))
-                              openBranch(branch.id)
+                              setExpanded((prev) => exclusiveOpen(prev, qid, queryNodeIds))
                             }}
-                            style={{ paddingLeft: "1.7rem" }}
-                            aria-expanded={branchOpen}
+                            style={{ paddingLeft: "1rem" }}
+                            aria-expanded={queryOpen}
                           >
-                            <span className={`app-sidebar-arrow ${branchOpen ? "open" : ""}`}>›</span>
-                            <span className="app-sidebar-icon" style={{ fontSize: "0.8rem" }}>{branch.icon}</span>
-                            <span className="app-sidebar-tree-label">{branch.label[lang]}</span>
-                            <span className="app-sidebar-badge">{items.length}</span>
+                            <span className={`app-sidebar-arrow ${queryOpen ? "open" : ""}`}>›</span>
+                            <span className="app-sidebar-tree-label">"{entry.query}"</span>
+                            <span className="app-sidebar-tree-count">{branchKeys.length}</span>
                           </button>
-                          {branchOpen && renderAnswerItems(items, branch.id)}
+                          {queryOpen && (
+                            <ul className="app-sidebar-tree-children">
+                              {branchKeys.map((bk) => {
+                                const items = entry.branches[bk] ?? []
+                                const bid = `${qid}:${bk}`
+                                const branchOpen = expanded.has(bid)
+                                const meta = BRANCH_META[bk] ?? { icon: "•", label: { en: bk, es: bk } }
+                                const isActiveBranch =
+                                  activePane.pane === "branch" &&
+                                  activePane.queryIndex === qi &&
+                                  activePane.branchKey === bk
+                                return (
+                                  <li key={bid}>
+                                    <button
+                                      className={`app-sidebar-tree-row ${isActiveBranch ? "active" : ""}`}
+                                      type="button"
+                                      onClick={() => {
+                                        setExpanded((prev) => exclusiveOpen(prev, bid, branchNodeIds))
+                                        openBranch(bk, qi)
+                                      }}
+                                      style={{ paddingLeft: "1.7rem" }}
+                                      aria-expanded={branchOpen}
+                                    >
+                                      <span className={`app-sidebar-arrow ${branchOpen ? "open" : ""}`}>›</span>
+                                      <span className="app-sidebar-icon" style={{ fontSize: "0.8rem" }}>{meta.icon}</span>
+                                      <span className="app-sidebar-tree-label">{meta.label[lang]}</span>
+                                      <span className="app-sidebar-badge">{items.length}</span>
+                                    </button>
+                                    {branchOpen && renderAnswerItems(items, bk, qi)}
+                                  </li>
+                                )
+                              })}
+                            </ul>
+                          )}
                         </li>
                       )
                     })}
