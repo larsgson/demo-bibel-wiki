@@ -97,6 +97,10 @@ const CARD_KIND_ICON: Record<string, string> = {
   speaker: "\u{1F5E3}️", "cross-ref": "\u{1F517}",
 }
 
+function branchItems(b: Branch): SearchHit[] {
+  return b.items ?? b.leads ?? []
+}
+
 function renderMarkdown(md: string) {
   return md
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
@@ -111,28 +115,33 @@ function ExpandableHitCard({ hit }: { hit: SearchHit }) {
   const [fullBody, setFullBody] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const title = hit.title || (hit as any).headline || ""
+  const excerpt = hit.excerpt ?? (hit as any).headline ?? ""
+
   async function expand() {
     if (expanded) { setExpanded(false); return }
     if (fullBody) { setExpanded(true); return }
+    if (!hit.chunk_id) { return }
     setLoading(true)
     try {
       const data = await apiFetch<{ body: string }>(`/api/chunk/${hit.chunk_id}`)
       setFullBody(data.body)
       setExpanded(true)
     } catch {
-      setFullBody(hit.excerpt)
+      setFullBody(excerpt)
       setExpanded(true)
     } finally {
       setLoading(false)
     }
   }
 
-  const isTruncated = hit.excerpt.endsWith("…") || hit.excerpt.endsWith("...")
+  const isTruncated = excerpt.endsWith("…") || excerpt.endsWith("...")
+  const canExpand = !!hit.chunk_id
 
   return (
     <article className={`hit-card ${expanded ? "expanded" : ""}`}>
-      <h3 className="hit-title clickable" onClick={expand}>
-        {hit.title}
+      <h3 className={`hit-title${canExpand ? " clickable" : ""}`} onClick={canExpand ? expand : undefined}>
+        {title}
         {loading && <span className="branch-content-loading"> ...</span>}
       </h3>
       {hit.passage && <p className="hit-passage">{hit.passage}</p>}
@@ -141,16 +150,16 @@ function ExpandableHitCard({ hit }: { hit: SearchHit }) {
           className="hit-excerpt hit-body-full"
           dangerouslySetInnerHTML={{ __html: renderMarkdown(fullBody) }}
         />
-      ) : (
+      ) : excerpt ? (
         <p className="hit-excerpt">
-          <span dangerouslySetInnerHTML={{ __html: renderMarkdown(hit.excerpt) }} />
-          {isTruncated && (
+          <span dangerouslySetInnerHTML={{ __html: renderMarkdown(excerpt) }} />
+          {isTruncated && canExpand && (
             <button className="branch-content-expand" onClick={expand} type="button">
               {loading ? "..." : "…"}
             </button>
           )}
         </p>
-      )}
+      ) : null}
       <div className="hit-footer">
         <span className="hit-kind">{hit.kind}</span>
       </div>
@@ -330,7 +339,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
   // Each pill links to the exact location of that chunk (the static content).
   function renderAnswer(answer: string, branches: Branch[]) {
     const lookup = new Map<string, SearchHit>()
-    for (const b of branches) for (const it of b.items) lookup.set(it.chunk_id, it)
+    for (const b of branches) for (const it of branchItems(b)) lookup.set(it.chunk_id, it)
 
     // Tokenize on **bold** or [citation] markers.
     const re = /\*\*([^*]+)\*\*|\[([^\]]+)\]/g
@@ -366,16 +375,17 @@ export function SearchIsland({ iso: isoProp }: Props) {
     return nodes
   }
 
-  function renderHitCard(hit: SearchHit) {
-    return <ExpandableHitCard key={hit.chunk_id} hit={hit} />
+  function renderHitCard(hit: SearchHit, idx: number) {
+    return <ExpandableHitCard key={hit.chunk_id ?? idx} hit={hit} />
   }
 
-  function renderBranch(branch: Branch, turnIdx: number) {
+  function renderBranch(branch: Branch, turnIdx: number, branchIdx: number) {
     const isOpen = branch.featured || isBranchExpanded(turnIdx, branch.key)
-    const remaining = branch.total - branch.items.length
+    const hits = branchItems(branch)
+    const remaining = branch.total - hits.length
 
     return (
-      <div key={branch.key} className={`branch ${isOpen ? "branch-open" : "branch-collapsed"}`}>
+      <div key={`${branch.key}-${branchIdx}`} className={`branch ${isOpen ? "branch-open" : "branch-collapsed"}`}>
         <button
           type="button"
           className="branch-header"
@@ -387,7 +397,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
         </button>
         {isOpen && (
           <div className="branch-items">
-            {branch.items.map(renderHitCard)}
+            {hits.map(renderHitCard)}
             {remaining > 0 && (
               <p className="branch-more">{t.moreInBranch(remaining)}</p>
             )}
@@ -398,12 +408,12 @@ export function SearchIsland({ iso: isoProp }: Props) {
   }
 
   function renderBranches(branches: Branch[], turnIdx: number) {
-    const hasFeatured = branches.some((b) => b.featured && b.items.length > 0)
-    if (!hasFeatured && branches.every((b) => b.items.length === 0)) return null
+    const hasFeatured = branches.some((b) => b.featured && branchItems(b).length > 0)
+    if (!hasFeatured && branches.every((b) => branchItems(b).length === 0)) return null
 
     return (
       <div className="branches">
-        {branches.map((b) => renderBranch(b, turnIdx))}
+        {branches.map((b, i) => renderBranch(b, turnIdx, i))}
       </div>
     )
   }
@@ -477,7 +487,7 @@ export function SearchIsland({ iso: isoProp }: Props) {
                 </div>
               ) : turn.result?.kind === "study" ? (
                 <div className="chat-bubble ai-bubble">
-                  {turn.result.data.branches.every((b) => b.items.length === 0) ? (
+                  {turn.result.data.branches.every((b) => branchItems(b).length === 0) ? (
                     <p className="bubble-empty">{t.noResults(turn.query)}</p>
                   ) : (
                     renderBranches(turn.result.data.branches, ti)

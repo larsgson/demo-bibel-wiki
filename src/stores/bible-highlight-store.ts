@@ -46,7 +46,7 @@ function parseRef(primaryPath: string): BibleRef | null {
 export function extractBibleHighlights(branches: Branch[]) {
   const map = new Map<string, number[]>()
   for (const branch of branches) {
-    for (const item of branch.items) {
+    for (const item of (branch.items ?? branch.leads ?? [])) {
       const ref = parseRef(item.primary_path)
       if (!ref) continue
       const key = `${ref.book}:${ref.chapter}`

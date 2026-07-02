@@ -45,11 +45,12 @@ export function mergeBranches(branches: Branch[]) {
 
   for (const branch of branches) {
     // verses are now shown under the Study branch too
-    if (!branch.items?.length) continue
+    const hits = branch.items ?? branch.leads ?? []
+    if (!hits.length) continue
 
     const existing = next[branch.key] ?? []
     const seen = new Set(existing.map((h) => h.chunk_id))
-    const fresh = branch.items.filter((h) => !seen.has(h.chunk_id))
+    const fresh = hits.filter((h) => !seen.has(h.chunk_id))
     if (!fresh.length) continue
 
     next[branch.key] = [...existing, ...fresh]

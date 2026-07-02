@@ -124,7 +124,9 @@ export interface Branch {
     label: string;
     featured: boolean;
     total: number;
-    items: SearchHit[];
+    n?: number;
+    items?: SearchHit[];
+    leads?: SearchHit[];
 }
 
 export interface DrilldownHint {
