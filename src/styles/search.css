@@ -159,7 +159,9 @@ a.drill-card:hover {
   z-index: 50; max-width: 700px; margin: 0 auto; box-sizing: border-box;
 }
 @media (max-width: 768px) {
-  .chat-input-bar { left: 0; }
+  /* Float the input just above the bottom-docked header. */
+  .chat-input-bar { left: 0; bottom: var(--bottom-header-h, 0px); }
+  .chat-shell { padding-bottom: calc(4.5rem + var(--bottom-header-h, 0px)); }
 }
 .chat-form { display: flex; flex: 1; gap: 0; }
 .chat-input {

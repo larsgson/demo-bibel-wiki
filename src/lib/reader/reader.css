@@ -22,28 +22,30 @@
     --WordsOfJesusColor: #D32F2F;
 }
 
-/* Per-theme variable overrides — applied on .reader-root[data-theme=…].
- * Values lifted from Scripture Earth's sab-app.css so the palette matches
- * their "Sepia" and "Dark" themes exactly. */
-.reader-root[data-theme="sepia"] {
+/* Per-theme variable overrides — applied on #container[data-color-theme=…],
+ * matching the client-data contract (spec §7). For PKF languages the CDN's
+ * styles/bundle.css redefines these same selectors with the identical palette;
+ * these blocks are the fallback for English/BSB, which ships no bundle.css.
+ * Values are the CDN's exact Sepia/Dark palettes. */
+#container[data-color-theme="Sepia"] {
     --TextColor: #5A4129;
     --TitlesColor: #513A24;
     --VerseNumberColor: #8D6E63;
-    --BackgroundColor: #ECDDC4;
-    --TextHighlightColor: #FFE082;
+    --BackgroundColor: #E9D8BA;
+    --TextHighlightColor: #FFFF99;
     --LinkColor: #513A24;
-    --FootnoteBackgroundColor: #D7C9AE;
+    --FootnoteBackgroundColor: #E9D8BA;
     --CrossRefColor: #5D4037;
     --WordsOfJesusColor: #B71C1C;
 }
-.reader-root[data-theme="dark"] {
+#container[data-color-theme="Dark"] {
     --TextColor: #E0E0E0;
-    --TitlesColor: #FFFFFF;
-    --VerseNumberColor: #BBDEFB;
-    --BackgroundColor: #121212;
+    --TitlesColor: #E0E0E0;
+    --VerseNumberColor: #E6C7BF;
+    --BackgroundColor: #000000;
     --TextHighlightColor: #404040;
-    --LinkColor: #BBDEFB;
-    --FootnoteBackgroundColor: #242424;
+    --LinkColor: #E6C7BF;
+    --FootnoteBackgroundColor: #1A1A1A;
     --CrossRefColor: #A5D6A7;
     --WordsOfJesusColor: #EF9A9A;
 }
@@ -53,6 +55,17 @@
     background: var(--BackgroundColor);
     line-height: 1.55;
 }
+
+/* Per-language attribution (app-config copyright, spec §6.7). */
+.reader-copyright {
+    margin-top: 1.5rem;
+    padding: 0.75rem 0.4rem 2rem;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    color: rgba(0, 11, 99, 0.55);
+    border-top: 1px solid rgba(0, 11, 99, 0.1);
+}
+.reader-copyright-license { font-weight: 600; }
 
 /* Paragraph markers — USFM indentation conventions copied from SE's sab-app.css. */
 .reader-body p {
@@ -289,6 +302,22 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.reader-topbar-title-btn {
+    max-width: 100%;
+    border: none;
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+    padding: 0.15em 0.5em;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+}
+.reader-topbar-title-btn:hover { background: rgba(0, 0, 0, 0.06); }
+.reader-topbar-title-caret { font-size: 0.7em; opacity: 0.55; }
 .reader-topbar-end {
     display: flex;
     align-items: center;

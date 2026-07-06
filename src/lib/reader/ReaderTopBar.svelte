@@ -24,6 +24,8 @@
         bookmarked: boolean;
         onBookmarkToggle: () => void;
         onSettings: () => void;
+        /** Open the book/chapter picker (tap the reference — SE/SAB pattern). */
+        onTitle?: () => void;
     };
     let {
         title,
@@ -40,7 +42,8 @@
         onFontSize,
         bookmarked,
         onBookmarkToggle,
-        onSettings
+        onSettings,
+        onTitle
     }: Props = $props();
 </script>
 
@@ -51,7 +54,13 @@
         </div>
 
         <div class="reader-topbar-center" title={title}>
-            <span class="reader-topbar-title">{title}</span>
+            {#if onTitle}
+                <button type="button" class="reader-topbar-title reader-topbar-title-btn" onclick={onTitle}>
+                    {title} <span class="reader-topbar-title-caret" aria-hidden="true">▾</span>
+                </button>
+            {:else}
+                <span class="reader-topbar-title">{title}</span>
+            {/if}
         </div>
 
         <div class="reader-topbar-end">

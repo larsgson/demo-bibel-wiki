@@ -6,7 +6,14 @@
 import { writable, type Writable } from 'svelte/store';
 const browser = typeof window !== "undefined";
 
-export type Theme = 'light' | 'sepia' | 'dark';
+/** Theme ids match the CDN contract's `themeNames` (app-config §6.6). */
+export type Theme = 'Normal' | 'Sepia' | 'Dark';
+
+/** Migrate legacy stored values (light/sepia/dark) to the contract ids. */
+const LEGACY_THEME: Record<string, Theme> = {
+    light: 'Normal', sepia: 'Sepia', dark: 'Dark',
+    Normal: 'Normal', Sepia: 'Sepia', Dark: 'Dark',
+};
 
 export type ReaderSettings = {
     theme: Theme;
@@ -20,7 +27,7 @@ export type ReaderSettings = {
 };
 
 const DEFAULTS: ReaderSettings = {
-    theme: 'light',
+    theme: 'Normal',
     fontSize: 20,
     showIllustrations: true,
     showVideos: true
@@ -34,7 +41,9 @@ function loadInitial(): ReaderSettings {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return DEFAULTS;
         const parsed = JSON.parse(raw);
-        return { ...DEFAULTS, ...parsed };
+        const merged = { ...DEFAULTS, ...parsed };
+        merged.theme = LEGACY_THEME[merged.theme] ?? 'Normal';
+        return merged;
     } catch {
         return DEFAULTS;
     }

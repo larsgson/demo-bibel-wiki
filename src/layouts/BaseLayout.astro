@@ -3,6 +3,7 @@ import "../styles/global.css"
 import "../styles/sidebar.css"
 import MenuButton from "../components/nav/MenuButton.astro"
 import { AppSidebar } from "../components/nav/AppSidebar"
+import { BiblePickerSheet } from "../components/BiblePickerSheet"
 import LanguageButton from "../components/LanguageButton"
 import { loadAllTemplates, loadLocaleData } from "../lib/bw/template-utils"
 import type { SidebarTreeNode, BibleBookEntry } from "../components/nav/AppSidebar"
@@ -91,10 +92,11 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
   <body class="min-h-screen bg-[#fbfaf6] text-brand">
     {!landing && <MenuButton />}
     {!landing && <AppSidebar client:only="react" storyTree={storyTree} bibleBooks={bibleBooks} />}
+    {!landing && <BiblePickerSheet client:only="react" />}
 
     <div class={`app-main min-h-screen flex flex-col${landing ? " app-main--landing" : ""}`}>
     <header
-      class="sticky top-0 z-10 border-b"
+      class="site-header sticky top-0 z-10 border-b"
       style="background:rgb(0,11,99);border-color:rgba(0,11,99,0.4)"
     >
       <div id="header-bar" class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
@@ -621,5 +623,27 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
   .ui-level-dots .dot.filled {
     background: rgba(255, 215, 0, 0.8);
     border-color: rgba(255, 215, 0, 0.9);
+  }
+
+  /* ── Mobile: dock the header to the bottom as an app bar ── */
+  @media (max-width: 768px) {
+    .site-header {
+      position: fixed;
+      top: auto;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-bottom: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding-bottom: env(safe-area-inset-bottom);
+      z-index: 40;
+    }
+    /* Gear menu opens upward out of the bottom bar */
+    .ui-level-popover {
+      top: auto;
+      bottom: 100%;
+      margin-top: 0;
+      margin-bottom: 0.4rem;
+    }
   }
 </style>

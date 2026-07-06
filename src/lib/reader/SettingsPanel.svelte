@@ -4,9 +4,9 @@
     let { onclose }: { onclose: () => void } = $props();
 
     const THEMES: Array<{ value: Theme; label: string }> = [
-        { value: 'light', label: 'Light' },
-        { value: 'sepia', label: 'Sepia' },
-        { value: 'dark', label: 'Dark' }
+        { value: 'Normal', label: 'Normal' },
+        { value: 'Sepia', label: 'Sepia' },
+        { value: 'Dark', label: 'Dark' }
     ];
 </script>
 

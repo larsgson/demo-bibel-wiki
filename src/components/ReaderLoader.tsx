@@ -107,7 +107,9 @@ async function loadReaderData(iso: string): Promise<ReaderData> {
     docSetId: pkfAsset.base,
     pkfUrl: pkfUrl(`/pkf/${iso}/${pkfAsset.name}`),
     catalogUrl: pkfUrl(`/pkf/${iso}/${catalogAsset.name}`),
-    styleUrl: info.style_delta ? pkfUrl(`/pkf/${iso}/${info.style_delta}`) : null,
+    // The authoritative reader stylesheet (spec §7/§10.4): fonts + all three
+    // theme palettes, scoped entirely to #container. Supersedes style_delta.
+    styleUrl: pkfUrl(`/pkf/${iso}/styles/bundle.css`),
     figureUrls: info.figure_urls ?? {},
     captionMode: "hide",
     media: info.media ?? { videos: [], audio: { base_url: null, items: [] } },

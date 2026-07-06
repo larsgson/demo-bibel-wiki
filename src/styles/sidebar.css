@@ -303,12 +303,16 @@
 /* ── Landing pages: no left navigation, full-width content ── */
 .app-main--landing { margin-left: 0 !important; }
 
-/* Mobile: clear the fixed hamburger menu button so the header title doesn't
-   sit behind it. Reset when there's no menu button (Simple level / landing). */
+/* Mobile: the header docks to the bottom (see BaseLayout). Clear the bottom-left
+   hamburger so the header title doesn't sit behind it. Reset when there's no
+   menu button (Simple level / landing). */
 @media (max-width: 768px) {
+  :root { --bottom-header-h: calc(3.5rem + env(safe-area-inset-bottom)); }
   #header-bar { padding-left: 3.5rem; }
   html[data-ui-level="1"] #header-bar,
   .app-main--landing #header-bar { padding-left: 1rem; }
+  /* Free space at the page bottom so content clears the fixed bottom bar. */
+  .app-main { padding-bottom: var(--bottom-header-h); }
 }
 
 /* ── Simple UI level (1): no left navigation at all ── */
@@ -343,6 +347,11 @@ body.focus-mode .app-main {
   .app-sidebar-close { display: block; }
   .app-sidebar-backdrop { display: block; }
   body.app-sidebar-open { overflow: hidden; }
+  /* Hamburger sits in the left slot of the bottom bar. */
+  .app-menu-button {
+    top: auto;
+    bottom: calc(0.35rem + env(safe-area-inset-bottom));
+  }
 }
 
 /* ── Branch content pane (right side) ── */

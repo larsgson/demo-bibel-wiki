@@ -19,9 +19,9 @@
     import { getProskomma } from './store';
     import { loadGlossary, lookup as lookupGlossary, type Glossary } from './glossary';
     import { saveLastPosition, loadLastPosition, saveLastIso } from './position';
-    import StoriesGrid from '../components/StoriesGrid.svelte';
     import { $bibleHighlights as bibleHighlightsStore } from '../../stores/bible-highlight-store';
     import { $activePane as activePaneStore } from '../../stores/branch-view-store';
+    import { loadAppConfig, parseStartRef, type AppConfig } from '../data/app-config';
     import './reader.css';
 
     type Props = {
@@ -58,6 +58,11 @@
     let pkfLoaded = $state(false);
     let paneVisible = $state(true);
 
+    // Per-language config from the CDN contract: attribution, text direction,
+    // and the default landing reference. Fetched once per language.
+    let appCfg = $state<AppConfig | null>(null);
+    let textDir = $state<'ltr' | 'rtl'>('ltr');
+
     // The Bible reader is only available at Standard (2) and Study (3) levels.
     function bibleAllowed(): boolean {
         if (typeof localStorage === 'undefined') return false;
@@ -70,6 +75,12 @@
 
     onMount(async () => {
         saveLastIso(iso);
+        // Per-language app-config (attribution, text direction, default ref).
+        loadAppConfig(iso).then((cfg) => {
+            if (!cfg) return;
+            appCfg = cfg;
+            if (cfg.collection?.textDirection) textDir = cfg.collection.textDirection;
+        });
         if (styleUrl) {
             // Swap in this language's CSS bundle. Any previously-injected link with
             // the same id gets removed first so only one language's styles are live.
@@ -621,7 +632,9 @@
             💬 <span>AI Search</span>
         </a>
     </div>
-    <StoriesGrid {iso} />
+    <!-- Stories are shown on the Simple-mode landing (TemplateSelectorIsland),
+         not here. This book-list page only renders in Standard/Study, so the
+         stories grid is intentionally omitted to keep it focused on the Bible. -->
     <section>
         <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-2">
             Bible Books ({catalog.documents.length})
@@ -665,6 +678,7 @@
             bookmarked={bookmarked}
             onBookmarkToggle={toggleBookmark}
             onSettings={() => (showSettings = !showSettings)}
+            onTitle={() => window.dispatchEvent(new CustomEvent('open-bible-picker', { detail: { iso } }))}
         />
 
         <div class="flex items-center mb-3">
@@ -737,10 +751,14 @@
             </div>
         {/if}
 
+        <!-- id="container" scopes the CDN styles/bundle.css (fonts + the
+             per-theme colour variables under #container[data-color-theme]). -->
         <div
+            id="container"
             class="reader-root"
             data-iso={iso}
-            data-theme={$settings.theme}
+            data-color-theme={$settings.theme}
+            dir={textDir}
             style={`font-size:${$settings.fontSize}px`}
         >
             {#if mode === 'audio' && audioForChapter.length > 0}
@@ -853,5 +871,14 @@
             </div>
         {/if}
     </section>
+{/if}
+
+{#if appCfg?.copyright}
+    <footer class="reader-copyright">
+        <span class="reader-copyright-license">{appCfg.copyright.license}</span>
+        {#if appCfg.copyright.holder}
+            <span class="reader-copyright-holder"> · {appCfg.copyright.holder}</span>
+        {/if}
+    </footer>
 {/if}
 </div>

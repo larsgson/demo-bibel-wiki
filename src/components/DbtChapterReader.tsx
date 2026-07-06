@@ -119,7 +119,14 @@ export function DbtChapterReader({ iso, lang = "es" }: { iso: string; lang?: "en
     <div className="dbt-reader" style={{ display: paneVisible ? "" : "none" }}>
       <div className="dbt-reader-body">
         <div className="dbt-reader-titlebar">
-          <h2 className="dbt-reader-title">{bookName} {chapter}</h2>
+          <button
+            type="button"
+            className="dbt-reader-title dbt-reader-title-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-bible-picker", { detail: { iso } }))}
+            title={lang === "es" ? "Elegir libro y capítulo" : "Choose book and chapter"}
+          >
+            {bookName} {chapter} <span className="dbt-reader-title-caret">▾</span>
+          </button>
           <div className="dbt-chapter-nav">
             <button type="button" disabled={chapter <= 1} onClick={() => setChapter((c) => Math.max(1, c - 1))} aria-label={T.prev}>‹</button>
             <button type="button" disabled={chapter >= maxChapter} onClick={() => setChapter((c) => Math.min(maxChapter, c + 1))} aria-label={T.next}>›</button>

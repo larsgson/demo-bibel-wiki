@@ -311,6 +311,11 @@ body.audio-paused .focus-panel-content .listen-verse-images img { -webkit-animat
   }
 }
 
+/* Lift the floating mini-player above the bottom-docked header on mobile. */
+@media (max-width: 768px) {
+  .listen-player { bottom: calc(var(--bottom-header-h, 0px) + 12px); }
+}
+
 .listen-player-image {
   position: absolute;
   inset: 0;
