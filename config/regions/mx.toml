@@ -13,9 +13,6 @@ uiLanguage = "es"         # entering this region DEFAULTS the UI to Spanish
 # Bridge/trade languages — surfaced first; natural audio/study fallback.
 tradeLanguages = ["spa"]
 
-# Highlighted on the landing page.
-featuredLanguages = ["zai", "chq", "mix", "nch", "tos"]
-
 # Every language in this region (ISO 639-3).
 languages = [
   "amu", "azd", "azg", "azz", "cco", "chd", "chf", "chq", "chz", "cle",

@@ -227,7 +227,7 @@ export default function LanguageSelectorIsland({ mode, onClose }: Props) {
             onClick={onClose}
             className="text-xl opacity-60 hover:opacity-100"
             style={{ color: "var(--text)" }}
-            aria-label="Close"
+            aria-label={t(uiLang, "languageSelector.close")}
           >
             &times;
           </button>

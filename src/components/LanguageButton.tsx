@@ -9,6 +9,7 @@ import {
   initLanguageFromUrl,
 } from "../stores/language-store"
 import { buildLangHref } from "../lib/bw/url-utils"
+import { t as translate } from "../lib/bw/ui-locales"
 import LanguagePicker from "./LanguagePicker"
 
 interface Props {
@@ -52,7 +53,7 @@ export default function LanguageButton({ lang = "es" }: Props) {
         type="button"
         className="lang-button"
         onClick={() => setOpen(true)}
-        aria-label="Change language"
+        aria-label={translate(lang, "app.changeLanguage")}
       >
         <span className="lang-button-globe">🌐</span>
         <span className="lang-button-label">{label(primary)}</span>

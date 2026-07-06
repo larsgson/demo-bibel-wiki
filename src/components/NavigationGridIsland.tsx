@@ -4,6 +4,9 @@ import { $selectedLanguage, $secondaryLanguages } from "../stores/language-store
 import { buildLangHref } from "../lib/bw/url-utils"
 import type { TemplateStructure, LocaleData, ImageConfig } from "../lib/bw/types"
 import { resolveThumbUrl } from "../lib/bw/image-utils"
+import { t as translate } from "../lib/bw/ui-locales"
+import { uiLangForRegion } from "../lib/data/region-config"
+import { $activeRegion } from "../stores/region-store"
 
 interface Props {
   templateName: string
@@ -35,6 +38,7 @@ export default function NavigationGridIsland({
 }: Props) {
   const selectedLang = useStore($selectedLanguage)
   const secondaryLangs = useStore($secondaryLanguages)
+  const uiLang = uiLangForRegion($activeRegion.get())
   const [hydrated, setHydrated] = useState(false)
   const [openCatId, setOpenCatId] = useState<string | null>(null)
   const [langCanons, setLangCanons] = useState<Record<string, Set<string>>>({})
@@ -227,7 +231,7 @@ export default function NavigationGridIsland({
                               style={{ background: "var(--bg-surface)" }}
                             />
                           )}
-                          {missing && <div className="chapter-card-badge" title="Content not yet available">∅</div>}
+                          {missing && <div className="chapter-card-badge" title={translate(uiLang, "navigationGrid.contentUnavailable")}>∅</div>}
                           {!missing && <CoverageBadge catId={cat.id} storyId={story.id} />}
                           <div className="chapter-card-info">
                             <span className="chapter-card-num">

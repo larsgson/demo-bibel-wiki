@@ -4,11 +4,10 @@ import { $selectedIso, initIsoFromUrl } from "../stores/iso-store"
 import { showBible } from "../stores/branch-view-store"
 import {
   loadAppConfig,
-  loadNavBase,
   booksBySection,
   parseStartRef,
-  type NavBase,
 } from "../lib/data/app-config"
+import { t } from "../lib/bw/ui-locales"
 import { sectionOf, testamentOf, sectionLabel } from "../lib/bw/bible-sections"
 import { loadBookList } from "../lib/bw/book-list"
 import staticBooks from "../lib/bw/bible-books"
@@ -96,7 +95,6 @@ export function BiblePickerSheet() {
   const [groups, setGroups] = useState<Group[]>([])
   const [openBook, setOpenBook] = useState<string | null>(null)
   const [current, setCurrent] = useState<{ book: string; chapter: number } | null>(null)
-  const [navBase, setNavBase] = useState<NavBase | null>(null)
   const loadedForIso = useRef<string>("")
 
   const iso = storeIso || "eng"
@@ -104,7 +102,6 @@ export function BiblePickerSheet() {
 
   useEffect(() => {
     initIsoFromUrl()
-    loadNavBase().then(setNavBase)
   }, [])
 
   const ensureBooks = useCallback(
@@ -155,10 +152,8 @@ export function BiblePickerSheet() {
 
   if (!open) return null
 
-  const title =
-    navBase?.["Settings_Book_Selection"] ??
-    (lang === "es" ? "Selección de libro" : "Book selection")
-  const closeLabel = lang === "es" ? "Cerrar" : "Close"
+  const title = t(lang, "biblePicker.title")
+  const closeLabel = t(lang, "biblePicker.close")
 
   return (
     <div className="bible-picker-backdrop" onClick={() => setOpen(false)}>
@@ -183,7 +178,7 @@ export function BiblePickerSheet() {
 
         <div className="bible-picker-body">
           {groups.length === 0 && (
-            <p className="bible-picker-empty">{lang === "es" ? "Cargando…" : "Loading…"}</p>
+            <p className="bible-picker-empty">{t(lang, "biblePicker.loading")}</p>
           )}
           {groups.map((g) => (
             <section key={g.section} className="bible-picker-group">

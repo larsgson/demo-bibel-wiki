@@ -1,5 +1,9 @@
 <script lang="ts">
     import { onDestroy } from 'svelte';
+    import { t } from '../bw/ui-locales';
+    import { uiLangForRegion } from '../data/region-config';
+    import { $activeRegion as activeRegionStore } from '../../stores/region-store';
+    const uiLang = uiLangForRegion(activeRegionStore.get());
 
     export type AudioCue = {
         /** Section index this cue plays. */
@@ -148,7 +152,7 @@
 <div class="ranged-player" class:playing>
     <div class="ranged-player-row">
         {#if playing}
-            <button class="ranged-player-btn" type="button" onclick={pause} aria-label="Pause">
+            <button class="ranged-player-btn" type="button" onclick={pause} aria-label={t(uiLang, 'audioPlayer.pause')}>
                 <svg viewBox="0 0 20 20" width="22" height="22" fill="currentColor">
                     <rect x="5" y="4" width="4" height="12" rx="1" />
                     <rect x="11" y="4" width="4" height="12" rx="1" />

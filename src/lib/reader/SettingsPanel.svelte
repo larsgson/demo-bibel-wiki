@@ -1,7 +1,13 @@
 <script lang="ts">
     import { settings, type Theme } from './settings';
+    import { t } from '../bw/ui-locales';
+    import { uiLangForRegion } from '../data/region-config';
+    import { $activeRegion as activeRegionStore } from '../../stores/region-store';
 
     let { onclose }: { onclose: () => void } = $props();
+
+    const uiLang = uiLangForRegion(activeRegionStore.get());
+    const tr = (k: string) => t(uiLang, 'reader.' + k);
 
     const THEMES: Array<{ value: Theme; label: string }> = [
         { value: 'Normal', label: 'Normal' },
@@ -12,19 +18,19 @@
 
 <div class="settings-panel" role="dialog" aria-label="Reader settings">
     <div class="settings-header">
-        <span class="settings-title">Reader settings</span>
+        <span class="settings-title">{tr('settings')}</span>
         <button
             type="button"
             class="settings-close"
             onclick={onclose}
-            aria-label="Close settings"
+            aria-label={tr('closeSettings')}
         >
             ×
         </button>
     </div>
 
     <div class="settings-row">
-        <label for="sp-fontSize" class="settings-label">Font size</label>
+        <label for="sp-fontSize" class="settings-label">{tr('fontSize')}</label>
         <input
             id="sp-fontSize"
             type="range"
@@ -37,7 +43,7 @@
     </div>
 
     <div class="settings-row">
-        <span class="settings-label">Theme</span>
+        <span class="settings-label">{tr('theme')}</span>
         <div class="settings-segmented">
             {#each THEMES as t (t.value)}
                 <button
@@ -54,14 +60,14 @@
     <div class="settings-row">
         <label class="toggle-label">
             <input type="checkbox" bind:checked={$settings.showIllustrations} />
-            Show illustrations
+            {tr('showIllustrations')}
         </label>
     </div>
 
     <div class="settings-row">
         <label class="toggle-label">
             <input type="checkbox" bind:checked={$settings.showVideos} />
-            Show videos
+            {tr('showVideos')}
         </label>
     </div>
 </div>

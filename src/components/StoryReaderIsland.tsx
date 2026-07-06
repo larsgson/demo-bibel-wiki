@@ -27,6 +27,7 @@ import { buildLangHref } from "../lib/bw/url-utils"
 import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
 import { resolveImageUrl, resolveMediumUrl } from "../lib/bw/image-utils"
 import { shouldProbePkf } from "../lib/bw/language-list"
+import { resolveVersion } from "../lib/bw/version-config"
 import { pkfUrl } from "../lib/bw/pkf-url"
 import languageStyles from "../data/language-styles.json"
 import languagePreferences from "../data/language-preferences.json"
@@ -287,6 +288,20 @@ export default function StoryReaderIsland({
       const defaultDistinctId = langData?.distinctId || ""
       if (!timingIds.nt) timingIds.nt = defaultDistinctId
       if (!timingIds.ot) timingIds.ot = defaultDistinctId
+
+      // Version-config override (config/bible-sources.json): pin the audio +
+      // timing filesets for languages that declare them (e.g. ind → INDTSI /
+      // INZTSIN1DA). Only touches configured languages; others are untouched.
+      // The story templates are NT, so the NT canon is what carries these.
+      const vcfg = resolveVersion(audioLang)
+      if (vcfg.slug) {
+        if (vcfg.timing?.provider === "bundled" && vcfg.timing.textFileset) {
+          timingIds.nt = vcfg.timing.textFileset
+        }
+        if (vcfg.audio?.provider === "dbt" && vcfg.audio.fileset) {
+          audioFilesetIds.nt = vcfg.audio.fileset
+        }
+      }
 
       // Need at least one audio fileset
       if (Object.keys(audioFilesetIds).length === 0) {

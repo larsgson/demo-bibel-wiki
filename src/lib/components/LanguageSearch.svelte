@@ -1,4 +1,8 @@
 <script lang="ts">
+    import { t } from '../bw/ui-locales';
+    import { uiLangForRegion } from '../data/region-config';
+    import { $activeRegion as activeRegionStore } from '../../stores/region-store';
+    const uiLang = uiLangForRegion(activeRegionStore.get());
     function goto(path: string) { window.location.href = path; }
 
     type LangEntry = {
@@ -110,7 +114,7 @@
             <button
                 type="button"
                 class="lang-search-clear"
-                aria-label="Clear"
+                aria-label={t(uiLang, 'picker.clear')}
                 onmousedown={(e) => e.preventDefault()}
                 onclick={() => { query = ''; inputEl?.focus(); }}
             >

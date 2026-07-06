@@ -10,6 +10,11 @@
     };
     let { initialQuery, initialMode, iso }: Props = $props();
 
+    import { t } from '../bw/ui-locales';
+    import { uiLangForRegion } from '../data/region-config';
+    import { $activeRegion as activeRegionStore } from '../../stores/region-store';
+    const uiLang = uiLangForRegion(activeRegionStore.get());
+
     const PW_KEY = 'premium_password';
     const MODE_KEY = 'search_mode';
     const HISTORY_KEY = 'search_history';
@@ -296,7 +301,7 @@
     <!-- Bottom input bar -->
     <div class="chat-input-bar">
         {#if turns.length > 0}
-            <button class="clear-btn" type="button" onclick={clearHistory} title="Clear history">
+            <button class="clear-btn" type="button" onclick={clearHistory} title={t(uiLang, 'study.clearHistory')}>
                 ×
             </button>
         {/if}
@@ -334,7 +339,7 @@
                 const fd = new FormData(e.currentTarget);
                 savePassword(fd.get('pw') as string);
             }}>
-                <input class="modal-input" type="password" name="pw" placeholder="Password" autocomplete="off" />
+                <input class="modal-input" type="password" name="pw" placeholder={t(uiLang, 'study.passwordPlaceholder')} autocomplete="off" />
                 <div class="modal-actions">
                     <button type="button" class="modal-cancel" onclick={() => { showPasswordModal = false; mode = 'free'; localStorage.setItem(MODE_KEY, 'free'); }}>Cancel</button>
                     <button type="submit" class="modal-ok">OK</button>

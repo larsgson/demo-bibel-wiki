@@ -17,6 +17,7 @@ import { getUILevel, type UILevel } from "../../stores/ui-level-store"
 import { shouldProbePkf } from "../../lib/bw/language-list"
 import { pkfUrl } from "../../lib/bw/pkf-url"
 import { loadBookList } from "../../lib/bw/book-list"
+import { t as translate } from "../../lib/bw/ui-locales"
 
 export interface SidebarTreeNode {
   id: string
@@ -39,28 +40,25 @@ interface Props {
   bibleBooks?: BibleBookEntry[]
 }
 
-const BRANCH_META: Record<string, { icon: string; label: { en: string; es: string } }> = {
-  verses:      { icon: "📜", label: { en: "Verses", es: "Versículos" } },
-  lexicon:     { icon: "🔤", label: { en: "Lexicon", es: "Léxico" } },
-  terms:       { icon: "🏷", label: { en: "Key terms", es: "Términos clave" } },
-  study:       { icon: "📝", label: { en: "Study notes", es: "Notas de estudio" } },
-  morphology:  { icon: "🔬", label: { en: "Morphology", es: "Morfología" } },
-  methodology: { icon: "🛠", label: { en: "Methodology", es: "Metodología" } },
-  media:       { icon: "🎬", label: { en: "Media", es: "Recursos" } },
-  passage:     { icon: "📖", label: { en: "Passages", es: "Pasajes" } },
-  concept:     { icon: "💡", label: { en: "Concepts", es: "Conceptos" } },
-  entity:      { icon: "👤", label: { en: "Entities", es: "Entidades" } },
-  speaker:     { icon: "🗣", label: { en: "Speakers", es: "Hablantes" } },
-  "cross-ref": { icon: "🔗", label: { en: "Cross-references", es: "Referencias cruzadas" } },
-  other:       { icon: "•",  label: { en: "Other", es: "Otros" } },
+// Icon + locale key (under `branches.*`) per answer-branch kind. Labels live in
+// the locale files, not here.
+const BRANCH_META: Record<string, { icon: string; key: string }> = {
+  verses:      { icon: "📜", key: "verses" },
+  lexicon:     { icon: "🔤", key: "lexicon" },
+  terms:       { icon: "🏷", key: "terms" },
+  study:       { icon: "📝", key: "study" },
+  morphology:  { icon: "🔬", key: "morphology" },
+  methodology: { icon: "🛠", key: "methodology" },
+  media:       { icon: "🎬", key: "media" },
+  passage:     { icon: "📖", key: "passage" },
+  concept:     { icon: "💡", key: "concept" },
+  entity:      { icon: "👤", key: "entity" },
+  speaker:     { icon: "🗣", key: "speaker" },
+  "cross-ref": { icon: "🔗", key: "crossRef" },
+  other:       { icon: "•",  key: "other" },
 }
 
 const TOP_LEVEL_IDS = ["study_topic", "story", "bible"]
-
-const UI = {
-  en: { nav: "Navigation", close: "Close menu", ot: "Old Testament", nt: "New Testament", clearStudy: "Clear answers" },
-  es: { nav: "Navegación", close: "Cerrar menú", ot: "Antiguo Testamento", nt: "Nuevo Testamento", clearStudy: "Borrar respuestas" },
-}
 
 const STORAGE_EXPANDED = "nav_expanded"
 const STORAGE_LAST_LOCATION = "nav_last_location"
@@ -151,7 +149,14 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
 
   const iso = isoProp || storeIso || "eng"
   const lang: "en" | "es" = iso === "eng" ? "en" : "es"
-  const t = UI[lang]
+  const tr = (k: string) => translate(lang, `nav.${k}`)
+  const t = {
+    nav: tr("navigation"),
+    close: tr("closeMenu"),
+    ot: tr("ot"),
+    nt: tr("nt"),
+    clearStudy: tr("clearAnswers"),
+  }
 
   const fullHref = useCallback(
     (href: string) => `/${iso}${href}`,
@@ -631,7 +636,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
                 >
                   <span className={`app-sidebar-arrow ${storyOpen ? "open" : ""}`}>›</span>
                   <span className="app-sidebar-icon">📚</span>
-                  <span className="app-sidebar-root-label">{lang === "es" ? "Historias" : "Stories"}</span>
+                  <span className="app-sidebar-root-label">{tr("stories")}</span>
                 </button>
                 {storyOpen && (
                   <ul className="app-sidebar-tree-children">
@@ -657,7 +662,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
                 >
                   <span className={`app-sidebar-arrow ${bibleOpen ? "open" : ""}`}>›</span>
                   <span className="app-sidebar-icon">📖</span>
-                  <span className="app-sidebar-root-label">{lang === "es" ? "Biblia" : "Bible"}</span>
+                  <span className="app-sidebar-root-label">{tr("bible")}</span>
                 </button>
                 {bibleOpen && (
                   <ul className="app-sidebar-tree-children">
@@ -682,7 +687,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
               >
                 <span className={`app-sidebar-arrow ${studyOpen ? "open" : ""}`}>›</span>
                 <span className="app-sidebar-icon">💬</span>
-                <span className="app-sidebar-root-label">{lang === "es" ? "Estudiar un tema" : "Study a topic"}</span>
+                <span className="app-sidebar-root-label">{tr("studyTopic")}</span>
               </button>
               {studyOpen && (
                 <>
@@ -717,7 +722,9 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
                                 const items = entry.branches[bk] ?? []
                                 const bid = `${qid}:${bk}`
                                 const branchOpen = expanded.has(bid)
-                                const meta = BRANCH_META[bk] ?? { icon: "•", label: { en: bk, es: bk } }
+                                const meta = BRANCH_META[bk]
+                                const branchIcon = meta?.icon ?? "•"
+                                const branchLabel = meta ? translate(lang, `branches.${meta.key}`) : bk
                                 const isActiveBranch =
                                   activePane.pane === "branch" &&
                                   activePane.queryIndex === qi &&
@@ -735,8 +742,8 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
                                       aria-expanded={branchOpen}
                                     >
                                       <span className={`app-sidebar-arrow ${branchOpen ? "open" : ""}`}>›</span>
-                                      <span className="app-sidebar-icon" style={{ fontSize: "0.8rem" }}>{meta.icon}</span>
-                                      <span className="app-sidebar-tree-label">{meta.label[lang]}</span>
+                                      <span className="app-sidebar-icon" style={{ fontSize: "0.8rem" }}>{branchIcon}</span>
+                                      <span className="app-sidebar-tree-label">{branchLabel}</span>
                                       <span className="app-sidebar-badge">{items.length}</span>
                                     </button>
                                     {branchOpen && renderAnswerItems(items, bk, qi)}

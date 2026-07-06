@@ -9,6 +9,7 @@ import { $selectedIso, initIsoFromUrl } from "../../stores/iso-store"
 import { mergeBranches, clearNavBranches } from "../../stores/nav-branches-store"
 import { extractBibleHighlights, clearBibleHighlights } from "../../stores/bible-highlight-store"
 import { $activePane, showBranch } from "../../stores/branch-view-store"
+import { t as translate } from "../../lib/bw/ui-locales"
 
 
 type Result =
@@ -25,63 +26,6 @@ type Turn = {
 
 const PW_KEY = "premium_password"
 const HISTORY_KEY = "search_history"
-
-const strings = {
-  en: {
-    studyWelcome: "Study the Bible",
-    askWelcome: "Ask a question about the Bible",
-    studyHint: "Find relevant scripture passages and resources",
-    askHint: "AI-powered answers with citations",
-    studying: "Studying…",
-    thinking: "Thinking…",
-    requestFailed: "Request failed",
-    noResults: (q: string) => `No results for "${q}".`,
-    moreInBranch: (n: number) => `+${n} more`,
-    exploreSources: "Explore the sources",
-    studyPlaceholder: "Study a topic…",
-    askPlaceholder: "Ask a question…",
-    switchToStudy: "Switch to Study",
-    switchToAI: "Switch to AI answers",
-    studyLabel: "Study",
-    aiLabel: "AI",
-    clearHistory: "Clear history",
-    enterPassword: "Enter premium password",
-    passwordPlaceholder: "Password",
-    cancel: "Cancel",
-    ok: "OK",
-    apiNotConfigured: "API not configured. Set PUBLIC_API_BASE_URL.",
-    premiumNeedsPassword: "Premium requires a password. Toggle Premium to enter one.",
-    networkError: "Network error reaching the API.",
-    passwordRejected: "Password rejected.",
-  },
-  es: {
-    studyWelcome: "Estudiar la Biblia",
-    askWelcome: "Haz una pregunta sobre la Biblia",
-    studyHint: "Encuentra pasajes y recursos bíblicos relevantes",
-    askHint: "Respuestas con inteligencia artificial y citas",
-    studying: "Buscando…",
-    thinking: "Pensando…",
-    requestFailed: "Error en la solicitud",
-    noResults: (q: string) => `Sin resultados para "${q}".`,
-    moreInBranch: (n: number) => `+${n} más`,
-    exploreSources: "Explorar las fuentes",
-    studyPlaceholder: "Estudiar un tema…",
-    askPlaceholder: "Haz una pregunta…",
-    switchToStudy: "Cambiar a Estudio",
-    switchToAI: "Cambiar a respuestas IA",
-    studyLabel: "Estudio",
-    aiLabel: "IA",
-    clearHistory: "Borrar historial",
-    enterPassword: "Ingresa la contraseña premium",
-    passwordPlaceholder: "Contraseña",
-    cancel: "Cancelar",
-    ok: "OK",
-    apiNotConfigured: "API no configurada. Establece PUBLIC_API_BASE_URL.",
-    premiumNeedsPassword: "Premium requiere contraseña. Activa Premium para ingresarla.",
-    networkError: "Error de red al contactar la API.",
-    passwordRejected: "Contraseña rechazada.",
-  },
-}
 
 const GLOSS_LANG: Record<string, string> = {
   eng: "English", spa: "Spanish", fra: "French", por: "Portuguese",
@@ -193,7 +137,33 @@ export function SearchIsland({ iso: isoProp }: Props) {
 
   const iso = isoProp || storeIso || "eng"
   const uiLang = iso === "eng" ? "en" : "es"
-  const t = strings[uiLang]
+  const tr = (k: string) => translate(uiLang, `study.${k}`)
+  const t = {
+    studyWelcome: tr("studyWelcome"),
+    askWelcome: tr("askWelcome"),
+    studyHint: tr("studyHint"),
+    askHint: tr("askHint"),
+    studying: tr("studying"),
+    thinking: tr("thinking"),
+    requestFailed: tr("requestFailed"),
+    noResults: (q: string) => tr("noResults").replace("{q}", q),
+    exploreSources: tr("exploreSources"),
+    studyPlaceholder: tr("studyPlaceholder"),
+    askPlaceholder: tr("askPlaceholder"),
+    switchToStudy: tr("switchToStudy"),
+    switchToAI: tr("switchToAI"),
+    studyLabel: tr("studyLabel"),
+    aiLabel: tr("aiLabel"),
+    clearHistory: tr("clearHistory"),
+    enterPassword: tr("enterPassword"),
+    passwordPlaceholder: tr("passwordPlaceholder"),
+    cancel: tr("cancel"),
+    ok: tr("ok"),
+    apiNotConfigured: tr("apiNotConfigured"),
+    premiumNeedsPassword: tr("premiumNeedsPassword"),
+    networkError: tr("networkError"),
+    passwordRejected: tr("passwordRejected"),
+  }
 
   useEffect(() => {
     // Study pane is Study-level (3) only.

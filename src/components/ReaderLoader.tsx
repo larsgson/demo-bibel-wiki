@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react"
 import { pkfUrl } from "../lib/bw/pkf-url"
 import { hasPkf } from "../lib/bw/language-list"
+import { resolveVersion } from "../lib/bw/version-config"
+import { t as translate } from "../lib/bw/ui-locales"
+import { uiLangForRegion } from "../lib/data/region-config"
+import { $activeRegion } from "../stores/region-store"
 import { DbtChapterReader } from "./DbtChapterReader"
 
 interface ReaderData {
@@ -40,15 +44,17 @@ export function ReaderLoader({ iso: isoProp }: Props) {
       .catch((e) => { setError(e.message); setLoading(false) })
   }, [iso])
 
+  const uiLang = uiLangForRegion($activeRegion.get())
+
   if (loading) {
-    return <div style={{ padding: "2rem", color: "rgba(0,11,99,0.5)" }}>Loading {iso}…</div>
+    return <div style={{ padding: "2rem", color: "rgba(0,11,99,0.5)" }}>{translate(uiLang, "reader.loading")}</div>
   }
   if (error?.startsWith("NO_CHAPTER_READER:")) {
     // Non-.pkf language → full-chapter reader backed by DBT/helloao.
     return <DbtChapterReader iso={iso} lang={iso === "eng" ? "en" : "es"} />
   }
   if (error) {
-    return <div style={{ padding: "2rem", color: "rgb(180,80,20)" }}>Error: {error}</div>
+    return <div style={{ padding: "2rem", color: "rgb(180,80,20)" }}>{translate(uiLang, "reader.error")}: {error}</div>
   }
   if (!data) return null
 
@@ -69,7 +75,13 @@ export function ReaderLoader({ iso: isoProp }: Props) {
 }
 
 async function loadReaderData(iso: string): Promise<ReaderData> {
-  const isBsb = iso === "eng"
+  // Text channel from the version config. Only an EXPLICIT catalog entry
+  // (slug !== null) overrides the auto-detection below; unconfigured languages
+  // keep today's behaviour (eng → BSB, .pkf → pkf reader, else → DBT/helloao).
+  const resolved = resolveVersion(iso)
+  const textProvider = resolved.slug ? resolved.text.provider : null
+
+  const isBsb = textProvider === "bsb" || (!textProvider && iso === "eng")
 
   if (isBsb) {
     return {
@@ -85,10 +97,13 @@ async function loadReaderData(iso: string): Promise<ReaderData> {
     }
   }
 
-  // Only .pkf languages have a chapter reader here (besides eng/BSB above).
-  // Bridge languages like Spanish carry their scripture via DBT, which the
-  // story reader uses — the chapter reader has no DBT path.
-  if (!hasPkf(iso)) throw new Error(`NO_CHAPTER_READER:${iso}`)
+  // helloao text → the full-chapter DBT/helloao reader.
+  if (textProvider === "helloao") throw new Error(`NO_CHAPTER_READER:${iso}`)
+
+  // .pkf text — explicit config, or auto-detected. Bridge languages like
+  // Spanish carry their scripture via DBT (the story-reader path), so if there
+  // is no .pkf and the config didn't force one, hand off to the chapter reader.
+  if (textProvider !== "pkf" && !hasPkf(iso)) throw new Error(`NO_CHAPTER_READER:${iso}`)
 
   const infoResp = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
   if (!infoResp.ok) throw new Error(`No data for language: ${iso}`)

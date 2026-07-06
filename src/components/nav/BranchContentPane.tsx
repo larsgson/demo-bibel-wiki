@@ -3,18 +3,16 @@ import type { SearchHit } from "../../lib/api/types"
 import type { NavBranches } from "../../stores/nav-branches-store"
 import { apiFetch } from "../../stores/api-store"
 import { $activePane } from "../../stores/branch-view-store"
+import { t as translate } from "../../lib/bw/ui-locales"
 
 const NAV_BRANCHES_KEY = "nav_branches"
 
-const BRANCH_LABELS: Record<string, Record<string, string>> = {
-  verses:      { en: "Verses",        es: "Versículos" },
-  lexicon:     { en: "Lexicon",       es: "Léxico" },
-  study:       { en: "Study Notes",   es: "Notas de estudio" },
-  terms:       { en: "Key Terms",     es: "Términos clave" },
-  morphology:  { en: "Morphology",    es: "Morfología" },
-  methodology: { en: "Methodology",   es: "Metodología" },
-  media:       { en: "Media",         es: "Recursos" },
-  other:       { en: "Other",         es: "Otros" },
+/** Localised label for an answer-branch kind (labels live in the locale files
+ *  under `branches.*`). Falls back to the raw key for unknown kinds. */
+function branchLabel(branchKey: string, lang: string): string {
+  const key = branchKey === "cross-ref" ? "crossRef" : branchKey
+  const resolved = translate(lang, `branches.${key}`)
+  return resolved.startsWith("branches.") ? branchKey : resolved
 }
 
 function loadBranches(): NavBranches {
@@ -192,7 +190,7 @@ export function BranchContentPane({ lang = "es" }: { lang?: string }) {
   }
   if (items.length === 0) return null
 
-  const label = BRANCH_LABELS[branchKey]?.[lang] ?? branchKey
+  const label = branchLabel(branchKey, lang)
 
   return (
     <div className="branch-content-pane">

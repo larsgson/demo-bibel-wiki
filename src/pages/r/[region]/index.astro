@@ -4,6 +4,7 @@ import { regionConfigs } from "../../../lib/data/region-config"
 import { displayName, altName } from "../../../lib/data/languageNames"
 import { hasPkf } from "../../../lib/bw/language-list"
 import { isStudyLanguage } from "../../../lib/bw/study-languages"
+import { t } from "../../../lib/bw/ui-locales"
 import "../../../styles/region-landing.css"
 
 export function getStaticPaths() {
@@ -37,24 +38,40 @@ const groups = (grouping?.group ?? [])
   }))
   .sort((a, b) => b.tiles.length - a.tiles.length)
 
-const T = lang === "es"
-  ? { all: "Buscar todos los idiomas", langs: "idiomas" }
-  : { all: "Search all languages", langs: "languages" }
+// Featured story templates + hero image (from the region config).
+const featuredTemplates = rc.landing?.featuredTemplates ?? []
+const heroImage = rc.landing?.heroImage
+
+const tr = (k: string) => t(lang, `regionLanding.${k}`)
 
 const title = rc.name[lang] ?? rc.code
 ---
 
 <BaseLayout title={title} landing={true}>
   <div class="region-landing">
-    <section class="region-hero" style={`--accent:${rc.landing?.accentColor ?? "#000b63"}`}>
+    <section
+      class={`region-hero${heroImage ? " has-image" : ""}`}
+      style={`--accent:${rc.landing?.accentColor ?? "#000b63"}${heroImage ? `;--hero-image:url('${heroImage}')` : ""}`}
+    >
       <h1>{rc.landing?.headline?.[lang] ?? title}</h1>
       {rc.landing?.subhead?.[lang] && <p>{rc.landing.subhead[lang]}</p>}
       <div class="region-hero-actions">
         <button type="button" class="region-all-btn" id="region-all-btn">
-          🌐 {T.all}
+          🌐 {tr("searchAll")}
         </button>
       </div>
     </section>
+
+    {featuredTemplates.length > 0 && (
+      <section class="region-featured-templates">
+        <h2 class="region-section-title">{tr("featuredStories")}</h2>
+        <div class="region-template-row">
+          {featuredTemplates.map((tpl) => (
+            <a class="region-template-chip" href={`/${rc.defaultLanguage}/${tpl}/`}>{tpl}</a>
+          ))}
+        </div>
+      </section>
+    )}
 
     <section class="region-groups">
       {groups.map((g) =>
@@ -76,8 +93,8 @@ const title = rc.name[lang] ?? rc.code
                   {tl.alt && <span class="lang-tile-alt">{tl.alt}</span>}
                   {(tl.pkf || tl.study) && (
                     <span class="lang-tile-badges">
-                      {tl.pkf && <span title="Full text & audio">📖</span>}
-                      {tl.study && <span class="study" title="Study available"> ✦</span>}
+                      {tl.pkf && <span title={tr("fullTextAudio")}>📖</span>}
+                      {tl.study && <span class="study" title={tr("studyAvailable")}> ✦</span>}
                     </span>
                   )}
                 </a>

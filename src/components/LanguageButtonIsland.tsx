@@ -11,6 +11,9 @@ import {
   removeSecondaryLanguage,
 } from "../stores/language-store"
 import { buildLangHref } from "../lib/bw/url-utils"
+import { t as translate } from "../lib/bw/ui-locales"
+import { uiLangForRegion } from "../lib/data/region-config"
+import { $activeRegion } from "../stores/region-store"
 import LanguageSelectorIsland from "./LanguageSelectorIsland"
 
 const TIMING_CATEGORIES = ["with-timecode", "audio-with-timecode"]
@@ -18,6 +21,7 @@ const TIMING_CATEGORIES = ["with-timecode", "audio-with-timecode"]
 export default function LanguageButtonIsland() {
   const selectedLang = useStore($selectedLanguage)
   const secondaryLangs = useStore($secondaryLanguages)
+  const uiLang = uiLangForRegion($activeRegion.get())
   const languageNames = useStore($languageNames)
   const languageData = useStore($languageData)
   const [selectorMode, setSelectorMode] = useState<"primary" | "secondary" | null>(null)
@@ -118,7 +122,7 @@ export default function LanguageButtonIsland() {
         <button
           className="lang-btn lang-btn-add"
           onClick={() => openSelector("secondary")}
-          title="Add secondary language"
+          title={translate(uiLang, "app.addSecondaryLanguage")}
         >
           <span className="lang-add-icon">+</span>
         </button>

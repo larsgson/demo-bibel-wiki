@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "_doc": {
+    "about": "Per-(language, slug) Bible version source registry. A version bundles up to three independently-sourced channels: text, audio, timing. Only languages that need something other than the implicit default appear here; everything else resolves by fallback (see src/lib/bw/version-config.ts).",
+    "channels": {
+      "text.provider":   "pkf (CDN .pkf, full coverage; optional 'collection') | helloao (needs 'id') | bsb",
+      "audio.provider":  "dbt (needs 'fileset') | pkf (CDN info.json media) | omit for none",
+      "timing.provider": "bundled (ALL-timings from fetch-data.mjs; needs 'textFileset' + 'audioFileset') | pkf (CDN /timing) | omit for none"
+    },
+    "resolutionOrder": "user selection > region override > global default > fallback (first slug) > implicit pkf"
+  },
+  "sources": {
+    "ind": {
+      "tsi": {
+        "label": { "en": "Simple Indonesian (TSI)", "id": "Terjemahan Sederhana Indonesia" },
+        "shortName": "TSI",
+        "text":   { "provider": "pkf" },
+        "audio":  { "provider": "dbt", "fileset": "INZTSIN1DA" },
+        "timing": { "provider": "bundled", "textFileset": "INDTSI", "audioFileset": "INZTSIN1DA" }
+      }
+    }
+  }
+}

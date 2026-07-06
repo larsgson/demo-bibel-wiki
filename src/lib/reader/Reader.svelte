@@ -22,7 +22,14 @@
     import { $bibleHighlights as bibleHighlightsStore } from '../../stores/bible-highlight-store';
     import { $activePane as activePaneStore } from '../../stores/branch-view-store';
     import { loadAppConfig, parseStartRef, type AppConfig } from '../data/app-config';
+    import { t } from '../bw/ui-locales';
+    import { uiLangForRegion } from '../data/region-config';
+    import { $activeRegion as activeRegionStore } from '../../stores/region-store';
     import './reader.css';
+
+    // UI language follows the active region (never the scripture ISO).
+    const uiLang = uiLangForRegion(activeRegionStore.get());
+    const tr = (k: string) => t(uiLang, 'reader.' + k);
 
     type Props = {
         iso: string;          // e.g. "zai"
@@ -619,9 +626,9 @@
 
 <div style:display={paneVisible ? '' : 'none'}>
 {#if loadError}
-    <div class="alert alert-error text-sm">Failed to load catalog: {loadError}</div>
+    <div class="alert alert-error text-sm">{tr('catalogFailed')}: {loadError}</div>
 {:else if !catalog}
-    <div class="text-sm text-base-content/60">Loading catalog…</div>
+    <div class="text-sm text-base-content/60">{tr('loadingCatalog')}</div>
 {:else if !currentBook}
     <div class="flex justify-end mb-2">
         <a
@@ -629,7 +636,7 @@
             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
             style="color:rgb(0,11,99);background:rgba(0,11,99,0.06)"
         >
-            💬 <span>AI Search</span>
+            💬 <span>{tr('aiSearch')}</span>
         </a>
     </div>
     <!-- Stories are shown on the Simple-mode landing (TemplateSelectorIsland),
@@ -637,7 +644,7 @@
          stories grid is intentionally omitted to keep it focused on the Bible. -->
     <section>
         <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-2">
-            Bible Books ({catalog.documents.length})
+            {tr('bibleBooks')} ({catalog.documents.length})
         </h2>
         <ul class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {#each catalog.documents as doc (doc.id)}
@@ -653,7 +660,7 @@
                             {doc.toc2 ?? doc.toc ?? doc.h ?? doc.bookCode}
                         </div>
                         <div class="text-xs text-base-content/60 mt-1">
-                            {cc === 0 ? 'no chapters' : `${cc} ch.`}
+                            {cc === 0 ? tr('noChapters') : `${cc} ${tr('chaptersShort')}`}
                         </div>
                     </button>
                 </li>
@@ -682,7 +689,7 @@
         />
 
         <div class="flex items-center mb-3">
-            <button class="btn btn-sm btn-ghost" onclick={closeReader}>← Books</button>
+            <button class="btn btn-sm btn-ghost" onclick={closeReader}>← {tr('books')}</button>
         </div>
 
         <!-- Floating side arrows: vertically centred on the viewport, hidden on
@@ -692,7 +699,7 @@
             class="reader-side-nav left"
             class:visible={currentChapter > 1}
             onclick={prevChapter}
-            aria-label="Previous chapter"
+            aria-label={tr('prevChapter')}
         >
             ‹
         </button>
@@ -701,7 +708,7 @@
             class="reader-side-nav right"
             class:visible={currentChapter < chapterList.length}
             onclick={nextChapter}
-            aria-label="Next chapter"
+            aria-label={tr('nextChapter')}
         >
             ›
         </button>
@@ -728,7 +735,7 @@
                     class:active={mode === 'text'}
                     onclick={() => setMode('text')}
                 >
-                    Text
+                    {tr('tabText')}
                 </button>
                 {#if audioForChapter.length > 0}
                     <button
@@ -736,7 +743,7 @@
                         class:active={mode === 'audio'}
                         onclick={() => setMode('audio')}
                     >
-                        Audio
+                        {tr('tabAudio')}
                     </button>
                 {/if}
                 {#if $settings.showVideos && videosForChapter.length > 0}
@@ -745,7 +752,7 @@
                         class:active={mode === 'video'}
                         onclick={() => setMode('video')}
                     >
-                        Video
+                        {tr('tabVideo')}
                     </button>
                 {/if}
             </div>
@@ -786,7 +793,7 @@
                                     class="reader-video-thumb"
                                     type="button"
                                     onclick={() => openVideo(v)}
-                                    aria-label={`Play ${v.title}`}
+                                    aria-label={`${tr('play')} ${v.title}`}
                                     style={v.thumbnailUrl
                                         ? `background-image:url(${v.thumbnailUrl})`
                                         : ''}
@@ -817,13 +824,13 @@
                     {...usePinch(doPinch)}
                 >
                     {#if rendering}
-                        <div class="text-sm text-base-content/60">Loading chapter…</div>
+                        <div class="text-sm text-base-content/60">{tr('loadingChapter')}</div>
                     {:else if renderError}
                         <div class="alert alert-error text-sm">{renderError}</div>
                     {:else if rendered}
                         {@html displayHtml}
                     {:else}
-                        <div class="text-sm text-base-content/60">No content rendered.</div>
+                        <div class="text-sm text-base-content/60">{tr('noContent')}</div>
                     {/if}
                 </div>
             {/if}
@@ -850,12 +857,12 @@
                 bind:this={popoverEl}
                 role="dialog"
                 aria-label={popover.kind === 'note'
-                    ? 'Footnote'
+                    ? tr('footnote')
                     : popover.kind === 'xref'
-                      ? 'Cross-reference'
-                      : 'Glossary'}
+                      ? tr('crossRef')
+                      : tr('glossary')}
             >
-                <button class="close" type="button" aria-label="Close" onclick={closePopover}>
+                <button class="close" type="button" aria-label={tr('close')} onclick={closePopover}>
                     ×
                 </button>
                 {#if popover.kind === 'glossary'}

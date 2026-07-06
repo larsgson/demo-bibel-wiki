@@ -77,13 +77,24 @@ export function getLocale(langCode: string): any {
   return locales[mappedCode] || locales[defaultLocale]
 }
 
-export function t(langCode: string, path: string): string {
-  const locale = getLocale(langCode)
-  const keys = path.split(".")
+function lookup(locale: any, keys: string[]): string | undefined {
   let value: any = locale
   for (const key of keys) {
-    if (value == null) return path
+    if (value == null) return undefined
     value = value[key]
   }
-  return typeof value === "string" ? value : path
+  return typeof value === "string" ? value : undefined
+}
+
+/**
+ * Look up a UI string by dot-path. Falls back to English when the key is
+ * missing in the target locale (so partial translations degrade to English,
+ * never to the raw path), and finally to the path itself if truly unknown.
+ */
+export function t(langCode: string, path: string): string {
+  const keys = path.split(".")
+  const hit = lookup(getLocale(langCode), keys)
+  if (hit !== undefined) return hit
+  const enHit = lookup(locales[defaultLocale], keys)
+  return enHit !== undefined ? enHit : path
 }

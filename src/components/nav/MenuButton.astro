@@ -9,10 +9,15 @@
 </div>
 
 <script>
+  import { t } from "../../lib/bw/ui-locales"
+  import { uiLangForRegion } from "../../lib/data/region-config"
+  import { $activeRegion } from "../../stores/region-store"
+
   function attach() {
     const btn = document.getElementById("app-menu-toggle")
     if (btn && !btn.dataset.listenerAttached) {
       btn.dataset.listenerAttached = "true"
+      btn.setAttribute("aria-label", t(uiLangForRegion($activeRegion.get()), "nav.toggleMenu"))
       btn.addEventListener(
         "click",
         (e) => {

@@ -4,6 +4,7 @@ import LanguageSearch from "../lib/components/LanguageSearch.svelte"
 import { regions, pkfSizeBytes } from "../lib/data/regions"
 import { displayName, altName } from "../lib/data/languageNames"
 import { formatKB } from "../lib/data/pkfInfo"
+import { en as t } from "../locales/en"
 
 const regionsData = regions.map((r) => ({
   id: r.id,
@@ -38,8 +39,6 @@ for (const r of regionsData) {
   }
 }
 allLanguages.sort((a, b) => a.name.localeCompare(b.name))
-
-const totalLangs = regionsData.reduce((s, r) => s + r.languages.length, 0)
 ---
 
 <BaseLayout title="Bibel Wiki" landing={true}>
@@ -48,12 +47,8 @@ const totalLangs = regionsData.reduce((s, r) => s + r.languages.length, 0)
       class="text-3xl sm:text-4xl font-bold tracking-tight"
       style="color:rgb(0,11,99);letter-spacing:-0.02em"
     >
-      Mexico
+      {t.app.selectLanguage}
     </h1>
-    <p class="mt-2 text-sm" style="color:rgba(0,11,99,0.65)">
-      {totalLangs} Scripture translations across {regionsData.length} language regions.
-      Search by name or ISO code, or browse by region below.
-    </p>
   </section>
 
   <div class="mb-6">
@@ -88,7 +83,7 @@ const totalLangs = regionsData.reduce((s, r) => s + r.languages.length, 0)
         <div class="region-body">
           {region.languages.length === 0 ? (
             <p class="text-sm" style="color:rgba(0,11,99,0.55)">
-              No Scripture data available.
+              {t.regionLanding.noData}
             </p>
           ) : (
             <ul class="lang-grid">

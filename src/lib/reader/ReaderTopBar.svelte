@@ -45,6 +45,12 @@
         onSettings,
         onTitle
     }: Props = $props();
+
+    import { t } from '../bw/ui-locales';
+    import { uiLangForRegion } from '../data/region-config';
+    import { $activeRegion as activeRegionStore } from '../../stores/region-store';
+    const uiLang = uiLangForRegion(activeRegionStore.get());
+    const tr = (k: string) => t(uiLang, 'reader.' + k);
 </script>
 
 <header class="reader-topbar">
@@ -67,8 +73,8 @@
             <a
                 class="tb-icon"
                 href={`/${iso}/search`}
-                aria-label="AI search"
-                title="AI search"
+                aria-label={tr('searchAria')}
+                title={tr('searchAria')}
             >
                 💬
             </a>
@@ -77,8 +83,8 @@
                 class="tb-icon"
                 class:active={searchActive}
                 onclick={onSearchToggle}
-                aria-label="Search in chapter"
-                title="Search in chapter"
+                aria-label={tr('searchInChapter')}
+                title={tr('searchInChapter')}
             >
                 🔍
             </button>
@@ -87,8 +93,8 @@
                 class="tb-icon"
                 class:flash={shareFlashing}
                 onclick={onShare}
-                aria-label="Share link"
-                title={shareFlashing ? 'Link copied' : 'Share link'}
+                aria-label={tr('shareLink')}
+                title={shareFlashing ? tr('linkCopied') : tr('shareLink')}
             >
                 ⇪
             </button>
@@ -98,12 +104,12 @@
                 class:active={audioInline}
                 disabled={!hasAudio}
                 onclick={onAudioToggle}
-                aria-label={audioInline ? 'Hide audio player' : 'Show audio player'}
+                aria-label={audioInline ? tr('hideAudio') : tr('showAudio')}
                 title={hasAudio
                     ? audioInline
-                        ? 'Hide audio player'
-                        : 'Show audio player'
-                    : 'No audio for this chapter'}
+                        ? tr('hideAudio')
+                        : tr('showAudio')
+                    : tr('noAudioChapter')}
             >
                 ♪
             </button>
@@ -111,8 +117,8 @@
                 type="button"
                 class="tb-icon tb-font-dec"
                 onclick={() => onFontSize(-1)}
-                aria-label="Smaller text"
-                title="Smaller text"
+                aria-label={tr('smallerText')}
+                title={tr('smallerText')}
             >
                 A
             </button>
@@ -120,8 +126,8 @@
                 type="button"
                 class="tb-icon tb-font-inc"
                 onclick={() => onFontSize(1)}
-                aria-label="Larger text"
-                title="Larger text"
+                aria-label={tr('largerText')}
+                title={tr('largerText')}
             >
                 A
             </button>
@@ -130,8 +136,8 @@
                 class="tb-icon"
                 class:active={bookmarked}
                 onclick={onBookmarkToggle}
-                aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark this chapter'}
-                title={bookmarked ? 'Remove bookmark' : 'Bookmark this chapter'}
+                aria-label={bookmarked ? tr('removeBookmark') : tr('bookmark')}
+                title={bookmarked ? tr('removeBookmark') : tr('bookmark')}
             >
                 {bookmarked ? '★' : '☆'}
             </button>
@@ -139,8 +145,8 @@
                 type="button"
                 class="tb-icon"
                 onclick={onSettings}
-                aria-label="Reader settings"
-                title="Reader settings"
+                aria-label={tr('settings')}
+                title={tr('settings')}
             >
                 ⚙
             </button>
@@ -152,12 +158,12 @@
             <!-- svelte-ignore a11y_autofocus -->
             <input
                 type="search"
-                placeholder="Find in this chapter…"
+                placeholder={tr('findInChapter')}
                 bind:value={searchQuery}
                 oninput={() => onSearchInput(searchQuery)}
                 autofocus
             />
-            <button type="button" class="tb-icon" onclick={onSearchToggle} aria-label="Close search">×</button>
+            <button type="button" class="tb-icon" onclick={onSearchToggle} aria-label={tr('closeSearch')}>×</button>
         </div>
     {/if}
 </header>

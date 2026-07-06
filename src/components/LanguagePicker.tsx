@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react"
 import { useLanguageSearch, addRecentLang, type LanguageSection } from "../lib/bw/useLanguageSearch"
 import type { PickerLanguage } from "../lib/bw/language-list"
+import { t as translate } from "../lib/bw/ui-locales"
 import "../styles/language-picker.css"
 
 interface Props {
@@ -13,27 +14,25 @@ interface Props {
   lang?: "en" | "es"
 }
 
-const SECTION_LABELS: Record<LanguageSection["id"], Record<"en" | "es", string>> = {
-  recent:  { en: "Recent",                    es: "Recientes" },
-  region:  { en: "This region",               es: "Esta región" },
-  pkf:     { en: "Full text & audio",         es: "Texto y audio completos" },
-  popular: { en: "Popular",                   es: "Populares" },
-  all:     { en: "All languages",             es: "Todos los idiomas" },
-}
-
-const UI = {
-  en: { search: "Search languages…", none: "No languages found", pick: "Select a language" },
-  es: { search: "Buscar idiomas…",   none: "No se encontraron idiomas", pick: "Selecciona un idioma" },
+// Section id → locale key (labels live in the locale files).
+const SECTION_KEY: Record<LanguageSection["id"], string> = {
+  recent: "picker.recent",
+  region: "picker.thisRegion",
+  pkf: "regionLanding.fullTextAudio",
+  popular: "picker.popular",
+  all: "picker.allLanguages",
 }
 
 function LanguageRow({
   lang,
   selected,
   onSelect,
+  uiLang,
 }: {
   lang: PickerLanguage
   selected: boolean
   onSelect: (iso: string) => void
+  uiLang: "en" | "es"
 }) {
   return (
     <button
@@ -49,10 +48,10 @@ function LanguageRow({
         )}
       </span>
       {lang.pkf && (
-        <span className="lang-badge lang-badge-pkf" title="Full text & audio">📖</span>
+        <span className="lang-badge lang-badge-pkf" title={translate(uiLang, "regionLanding.fullTextAudio")}>📖</span>
       )}
       {lang.study && (
-        <span className="lang-badge lang-badge-study" title="Study available">✦</span>
+        <span className="lang-badge lang-badge-study" title={translate(uiLang, "regionLanding.studyAvailable")}>✦</span>
       )}
     </button>
   )
@@ -71,14 +70,14 @@ export default function LanguagePicker({
     query, setQuery, loading, results, sections,
     regionTierLabel, filterChips, activeFilter, setActiveFilter,
   } = useLanguageSearch()
-  const t = UI[lang]
+  const tr = (k: string) => translate(lang, `picker.${k}`)
   const selectedSet = new Set(selected)
 
   // The "region" section uses the region's own tier label (from its TOML).
   const sectionLabel = (id: LanguageSection["id"]) =>
     id === "region" && regionTierLabel
       ? regionTierLabel[lang] ?? regionTierLabel.en
-      : SECTION_LABELS[id][lang]
+      : translate(lang, SECTION_KEY[id])
 
   // Drive the native <dialog> open/close from the `open` prop.
   useEffect(() => {
@@ -106,11 +105,11 @@ export default function LanguagePicker({
       <div className="lang-sheet">
         <div className="lang-sheet-header">
           <div className="lang-sheet-titlebar">
-            <span className="lang-sheet-title">{title ?? t.pick}</span>
+            <span className="lang-sheet-title">{title ?? tr("pick")}</span>
             <button
               type="button"
               className="lang-sheet-close"
-              aria-label="Close"
+              aria-label={translate(lang, "biblePicker.close")}
               onClick={onClose}
             >
               ✕
@@ -119,7 +118,7 @@ export default function LanguagePicker({
           <input
             type="text"
             className="lang-search"
-            placeholder={t.search}
+            placeholder={tr("search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
@@ -147,7 +146,7 @@ export default function LanguagePicker({
             <div className="lang-empty">…</div>
           ) : results ? (
             results.length === 0 ? (
-              <div className="lang-empty">{t.none}</div>
+              <div className="lang-empty">{tr("none")}</div>
             ) : (
               results.map((l) => (
                 <LanguageRow
@@ -155,6 +154,7 @@ export default function LanguagePicker({
                   lang={l}
                   selected={selectedSet.has(l.iso)}
                   onSelect={handleSelect}
+                  uiLang={lang}
                 />
               ))
             )
@@ -170,6 +170,7 @@ export default function LanguagePicker({
                     lang={l}
                     selected={selectedSet.has(l.iso)}
                     onSelect={handleSelect}
+                    uiLang={lang}
                   />
                 ))}
               </div>

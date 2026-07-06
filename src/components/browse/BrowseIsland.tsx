@@ -2,6 +2,9 @@ import { useState } from "react"
 import { BrowseSidebar } from "./BrowseSidebar"
 import { TreeContent } from "./TreeContent"
 import { getIsoFromUrl } from "../../lib/bw/iso-from-url"
+import { t as translate } from "../../lib/bw/ui-locales"
+import { uiLangForRegion } from "../../lib/data/region-config"
+import { $activeRegion } from "../../stores/region-store"
 
 interface Props {
   iso: string
@@ -11,6 +14,7 @@ interface Props {
 
 export function BrowseIsland({ iso: isoProp, initialTree, initialPath }: Props) {
   const iso = isoProp || getIsoFromUrl()
+  const uiLang = uiLangForRegion($activeRegion.get())
   const [tree, setTree] = useState(initialTree)
   const [path, setPath] = useState(initialPath)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -39,7 +43,7 @@ export function BrowseIsland({ iso: isoProp, initialTree, initialPath }: Props) 
         <button
           className="sidebar-backdrop"
           type="button"
-          aria-label="Close menu"
+          aria-label={translate(uiLang, "nav.closeMenu")}
           onClick={() => setSidebarOpen(false)}
         />
       )}

@@ -71,6 +71,14 @@ export const regionConfigByCode = new Map<string, RegionConfig>(
   regionConfigs.map((rc) => [rc.code, rc]),
 )
 
+/** The UI locale for a region (its `uiLanguage`), falling back to English.
+ *  This is the single source for "which language the interface speaks" —
+ *  never tie UI strings to the scripture ISO. */
+export function uiLangForRegion(code: string | null | undefined): string {
+  const rc = code ? regionConfigByCode.get(code) : undefined
+  return rc?.uiLanguage ?? "en"
+}
+
 /** Navigable groups (sub-region subdomains) declared in a region — i.e. the
  *  groupings the author uncommented. Each yields a valid <region>.<slug> subdomain. */
 export function navigableGroups(code: string): Array<{ groupingId: string; group: RegionGroup }> {

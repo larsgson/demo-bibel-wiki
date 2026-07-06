@@ -4,6 +4,7 @@ import { loadChapter } from "../stores/chapter-store"
 import { parseTextFilesetId } from "../lib/bw/fileset-utils"
 import { getTestament } from "../lib/bw/bible-utils"
 import { loadBookList } from "../lib/bw/book-list"
+import { t } from "../lib/bw/ui-locales"
 import { $activePane } from "../stores/branch-view-store"
 import books from "../lib/bw/bible-books"
 import "../styles/dbt-reader.css"
@@ -111,9 +112,7 @@ export function DbtChapterReader({ iso, lang = "es" }: { iso: string; lang?: "en
 
   const bookName = vernacular.get(bookCode) || currentBook?.name || bookCode
   const maxChapter = currentBook?.chapters ?? 1
-  const T = lang === "es"
-    ? { unavailable: "Capítulo no disponible en este idioma.", nodata: "Sin datos para este idioma.", loading: "Cargando…", prev: "Anterior", next: "Siguiente" }
-    : { unavailable: "Chapter not available in this language.", nodata: "No data for this language.", loading: "Loading…", prev: "Previous", next: "Next" }
+  const tr = (k: string) => t(lang, `reader.${k}`)
 
   return (
     <div className="dbt-reader" style={{ display: paneVisible ? "" : "none" }}>
@@ -123,18 +122,18 @@ export function DbtChapterReader({ iso, lang = "es" }: { iso: string; lang?: "en
             type="button"
             className="dbt-reader-title dbt-reader-title-btn"
             onClick={() => window.dispatchEvent(new CustomEvent("open-bible-picker", { detail: { iso } }))}
-            title={lang === "es" ? "Elegir libro y capítulo" : "Choose book and chapter"}
+            title={tr("chooseBookChapter")}
           >
             {bookName} {chapter} <span className="dbt-reader-title-caret">▾</span>
           </button>
           <div className="dbt-chapter-nav">
-            <button type="button" disabled={chapter <= 1} onClick={() => setChapter((c) => Math.max(1, c - 1))} aria-label={T.prev}>‹</button>
-            <button type="button" disabled={chapter >= maxChapter} onClick={() => setChapter((c) => Math.min(maxChapter, c + 1))} aria-label={T.next}>›</button>
+            <button type="button" disabled={chapter <= 1} onClick={() => setChapter((c) => Math.max(1, c - 1))} aria-label={tr("prevChapter")}>‹</button>
+            <button type="button" disabled={chapter >= maxChapter} onClick={() => setChapter((c) => Math.min(maxChapter, c + 1))} aria-label={tr("nextChapter")}>›</button>
           </div>
         </div>
-        {status === "loading" && <p className="dbt-reader-note">{T.loading}</p>}
-        {status === "nodata" && <p className="dbt-reader-note">{T.nodata}</p>}
-        {status === "unavailable" && <p className="dbt-reader-note">{T.unavailable}</p>}
+        {status === "loading" && <p className="dbt-reader-note">{tr("loading")}</p>}
+        {status === "nodata" && <p className="dbt-reader-note">{tr("noLanguageData")}</p>}
+        {status === "unavailable" && <p className="dbt-reader-note">{tr("chapterUnavailable")}</p>}
         {status === "ready" && verses && (
           <p className="dbt-reader-text">
             {verses.map((v) => (
