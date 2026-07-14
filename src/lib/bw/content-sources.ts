@@ -3,6 +3,8 @@
  * Priority: contrib (local) → helloao (free API) → dbt (proxy)
  */
 
+import { toHelloaoTranslationId } from "./helloao-crosswalk"
+
 export interface VerseEntry {
   num: number
   text: string
@@ -14,7 +16,10 @@ const contribTextModules = import.meta.glob<string>(
   { query: "?raw", import: "default", eager: true },
 )
 
-// Mapping from content-data distinct_id to helloao translation ID
+// Mapping from content-data distinct_id to helloao translation ID. Checked
+// first (deliberately curated overrides), before the CDN's 1,256-entry
+// crosswalk (/dbt/_helloao-crosswalk.json, see helloao-crosswalk.ts) — which
+// covers everything else without needing a hand-maintained entry per language.
 const HELLOAO_TID_MAP: Record<string, string> = {
   ENGWEB: "ENGWEBP",
   ENGNAS: "eng-NASB",
@@ -155,8 +160,13 @@ export async function fetchDbtAudioUrl(
 }
 
 /**
- * Resolve helloao translation ID from a distinct_id.
+ * Resolve a helloao translation ID from a distinct_id (DBT-style text-fileset
+ * id, e.g. "INDOBO", "ENGWEB"). Checks the hand-curated overrides first, then
+ * the CDN's live crosswalk (1,256 entries, covers most languages without
+ * needing a per-language entry here).
  */
-export function getHelloaoTid(distinctId: string): string | null {
-  return HELLOAO_TID_MAP[distinctId] || null
+export async function getHelloaoTid(distinctId: string): Promise<string | null> {
+  const override = HELLOAO_TID_MAP[distinctId]
+  if (override) return override
+  return toHelloaoTranslationId(distinctId)
 }

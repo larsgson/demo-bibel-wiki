@@ -121,7 +121,7 @@ export async function loadChapter(
       verses = await fetchHelloaoText(filesetId.slice(8), book, chapter)
     } else {
       const distinctId = filesetId.replace(/(N[12]DA|[A-Z]{2}16|O[12]DA|S[12]DA)$/, "")
-      const tid = getHelloaoTid(distinctId)
+      const tid = await getHelloaoTid(distinctId)
       if (tid) {
         verses = await fetchHelloaoText(tid, book, chapter)
       }

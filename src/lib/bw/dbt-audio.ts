@@ -1,13 +1,11 @@
 /**
- * Whole-chapter audio-stream URL resolution from a DBT/FCBH fileset.
- *
- * Tries the free helloao mirror first, then the authenticated `dbt-proxy`
+ * Whole-chapter audio-stream URL resolution via the authenticated `dbt-proxy`
  * Netlify function (needs DBT_API_KEY at runtime). NT-only filesets (e.g.
  * `INZTSIN1DA` for Indonesian TSI) return null for OT books.
  *
- * This mirrors the helloao→dbt-proxy tiers of StoryReaderIsland's
- * `fetchAudioUrl`, extracted so the chapter reader can reuse it. The chapter
- * reader plays whole-chapter audio (no verse sync), so no timing is involved.
+ * helloAO is a text-only API (its `thisChapterAudioLinks` field is never
+ * populated, by design), so there is no keyless audio tier to try first here
+ * — this is the final fallback after `dbt-media.ts`'s raw/contrib CDN check.
  */
 
 // A 404 from the proxy means DBT isn't reachable (e.g. key unset) — stop asking.
@@ -18,19 +16,6 @@ export async function fetchDbtAudioUrl(
   bookCode: string,
   chapter: number,
 ): Promise<string | null> {
-  // 1. helloao (free, no key)
-  try {
-    const r = await fetch(`https://bible.helloao.org/api/${fileset}/${bookCode}/${chapter}.json`)
-    if (r.ok) {
-      const d = await r.json()
-      const mp3 = d?.chapter?.audio?.mp3
-      if (mp3) return mp3
-    }
-  } catch {
-    /* fall through */
-  }
-
-  // 2. dbt-proxy (skip once a 404 has shown it's unavailable)
   if (!dbtAvailable) return null
   const params = new URLSearchParams({
     type: "audio",

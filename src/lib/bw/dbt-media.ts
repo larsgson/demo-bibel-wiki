@@ -14,8 +14,10 @@
  * for languages whose canon sources include "contrib" (raw CDN-hosted audio,
  * no DBT key needed — see internal-docs/cdn-data-delivery-spec.md §6a).
  *
- * Source preference is keyless-first: raw (CDN file) > helloao (free API) >
- * dbt (proxy, needs DBT_API_KEY). This mirrors §6a of the delivery spec.
+ * Source preference is keyless-first: raw (CDN file, no key) > dbt (proxy,
+ * needs DBT_API_KEY). helloAO is text-only (never audio — confirmed, not a
+ * temporary gap), so it isn't part of the audio chain; see §6a of the
+ * delivery spec.
  */
 
 import { pkfUrl } from "./pkf-url"
@@ -163,6 +165,11 @@ async function rawAudioUrl(iso: string, filesetId: string, bookCode: string, cha
  * every fileset offered for that canon in listed order, keyless sources first.
  * Returns null when no source has audio for this chapter (e.g. OT chapter for
  * an NT-only recording, or the language has no audio at all).
+ *
+ * No helloAO tier: helloAO is a text-only API (confirmed — its
+ * `thisChapterAudioLinks` field exists in the schema but is never populated,
+ * by design, not as a temporary gap). Adding a lookup there would cost a real
+ * network round-trip on every resolution for a source that can never answer.
  */
 export async function resolveChapterAudioUrl(
   iso: string,
@@ -176,7 +183,6 @@ export async function resolveChapterAudioUrl(
   if (!canonMedia?.filesets?.length) return null
 
   const sources = new Set(canonMedia.sources ?? [])
-  const audioFilesetIds = canonMedia.filesets.flatMap((f) => f.a ?? [])
 
   // 1. Raw/contrib — direct CDN file, no key, tried against each fileset id
   //    (the /audio/ path segment matches the SAB fileset id, e.g. "NBS").
@@ -187,7 +193,8 @@ export async function resolveChapterAudioUrl(
     }
   }
 
-  // 2. helloao (free) then 3. dbt-proxy (needs DBT_API_KEY) — per audio fileset id.
+  // 2. dbt-proxy (needs DBT_API_KEY) — per audio fileset id.
+  const audioFilesetIds = canonMedia.filesets.flatMap((f) => f.a ?? [])
   for (const fileset of audioFilesetIds) {
     const url = await fetchDbtAudioUrl(fileset, bookCode, chapter)
     if (url) return url
