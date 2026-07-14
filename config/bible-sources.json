@@ -2,22 +2,11 @@
   "version": 1,
   "_doc": {
     "about": "Per-(language, slug) Bible version source registry. A version bundles up to three independently-sourced channels: text, audio, timing. Only languages that need something other than the implicit default appear here; everything else resolves by fallback (see src/lib/bw/version-config.ts).",
+    "retired": "Audio/timing overrides (e.g. the former 'ind' entry) are superseded by live CDN discovery — see src/lib/bw/dbt-media.ts, which reads /dbt/_app/media-index.json and /dbt/<iso>/media.json + timing/<BOOK>.json directly. That data is richer and more current than anything hand-maintained here (e.g. it found Indonesian OT audio filesets this file never declared). This file is reserved for TEXT-provider overrides only (e.g. selecting a specific translation to render as the primary reader text) — a concern the CDN media tree doesn't cover.",
     "channels": {
-      "text.provider":   "pkf (CDN .pkf, full coverage; optional 'collection') | helloao (needs 'id') | bsb",
-      "audio.provider":  "dbt (needs 'fileset') | pkf (CDN info.json media) | omit for none",
-      "timing.provider": "bundled (ALL-timings from fetch-data.mjs; needs 'textFileset' + 'audioFileset') | pkf (CDN /timing) | omit for none"
+      "text.provider": "pkf (CDN .pkf, full coverage; optional 'collection') | helloao (needs 'id') | bsb"
     },
     "resolutionOrder": "user selection > region override > global default > fallback (first slug) > implicit pkf"
   },
-  "sources": {
-    "ind": {
-      "tsi": {
-        "label": { "en": "Simple Indonesian (TSI)", "id": "Terjemahan Sederhana Indonesia" },
-        "shortName": "TSI",
-        "text":   { "provider": "pkf" },
-        "audio":  { "provider": "dbt", "fileset": "INZTSIN1DA" },
-        "timing": { "provider": "bundled", "textFileset": "INDTSI", "audioFileset": "INZTSIN1DA" }
-      }
-    }
-  }
+  "sources": {}
 }

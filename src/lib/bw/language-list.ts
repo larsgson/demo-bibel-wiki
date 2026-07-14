@@ -15,6 +15,7 @@
 import pkfLangs from "../../../config/pkf-langs.json"
 import { isStudyLanguage } from "./study-languages"
 import { pkfUrl } from "./pkf-url"
+import { loadMediaIndex } from "./dbt-media"
 
 export interface PickerLanguage {
   iso: string
@@ -28,6 +29,10 @@ export interface PickerLanguage {
   study: boolean
   /** Source category from ALL-langs (e.g. "with-timecode"), if known */
   category?: string
+  /** Has audio in any canon, per the live CDN media-index (/dbt/_app/media-index.json). */
+  audio?: boolean
+  /** Has verse-synced audio in any canon, per the same index. */
+  timing?: boolean
 }
 
 const PKF_SET = new Set<string>((pkfLangs as { isos: string[] }).isos)
@@ -117,6 +122,35 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
       pkf: true,
       study: isStudyLanguage(iso),
     })
+  }
+
+  // 3. Live CDN media index (/dbt/_app/media-index.json) → real audio/timing
+  // availability per language, independent of (and often broader than) the
+  // .pkf list — many .pkf languages have no CDN media, and many non-.pkf
+  // languages do have audio via the /dbt tree.
+  try {
+    const media = await loadMediaIndex()
+    for (const [iso, avail] of media) {
+      const entry = byIso.get(iso)
+      const audio = !!(avail.nt?.audio || avail.ot?.audio)
+      const timing = !!(avail.nt?.timing || avail.ot?.timing)
+      if (entry) {
+        entry.audio = audio
+        entry.timing = timing
+      } else {
+        byIso.set(iso, {
+          iso,
+          name: avail.name,
+          vernacular: avail.vernacular || avail.name,
+          pkf: PKF_SET.has(iso),
+          study: isStudyLanguage(iso),
+          audio,
+          timing,
+        })
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to load CDN media index:", e)
   }
 
   cache = [...byIso.values()].sort((a, b) => a.name.localeCompare(b.name))

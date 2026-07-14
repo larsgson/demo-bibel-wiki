@@ -1,11 +1,16 @@
 /**
- * Bible version resolution.
+ * Bible TEXT version resolution — which translation/source to render as a
+ * language's primary reader text (e.g. a future picker letting users choose
+ * between translations for eng/spa).
  *
- * A "version" bundles up to three independently-sourced channels — text, audio,
- * and timing — under a short slug scoped to a language (e.g. `ind/tsi`). The
- * catalog lives in `config/bible-sources.json`; it is intentionally sparse:
- * only languages that need something other than the implicit default appear
- * there. Everything else resolves by fallback.
+ * Audio and verse-timing are NOT resolved here anymore — that's superseded by
+ * live CDN discovery (see `dbt-media.ts`, which reads `/dbt/_app/media-index.json`
+ * and per-language `/dbt/<iso>/media.json` + `timing/<BOOK>.json`). That data is
+ * richer and more current than anything hand-maintained in a config file (e.g.
+ * it surfaces Indonesian OT audio filesets this module never knew about).
+ *
+ * The catalog lives in `config/bible-sources.json`; it is intentionally sparse
+ * — only languages that need a non-default text source appear there.
  *
  * Resolution order (highest wins):
  *   1. explicit `selected` (e.g. a URL param)
@@ -13,14 +18,12 @@
  *   3. region override         (slug the caller read from the region TOML)
  *   4. global default          (none yet — reserved for config/bible-defaults.json)
  *   5. fallback                (first slug defined for the language)
- *   6. implicit                (text = pkf; audio/timing = pkf if the CDN has them)
+ *   6. implicit                (text = pkf)
  */
 
 import sourcesData from "../../../config/bible-sources.json"
 
 export type TextProvider = "pkf" | "helloao" | "bsb"
-export type AudioProvider = "dbt" | "pkf"
-export type TimingProvider = "bundled" | "pkf"
 
 export interface TextSource {
   provider: TextProvider
@@ -30,26 +33,10 @@ export interface TextSource {
   collection?: string
 }
 
-export interface AudioSource {
-  provider: AudioProvider
-  /** DBT/Bible Brain fileset id (e.g. "INZTSIN1DA"). */
-  fileset?: string
-}
-
-export interface TimingSource {
-  provider: TimingProvider
-  /** ALL-timings text fileset folder (e.g. "INDTSI"). */
-  textFileset?: string
-  /** ALL-timings audio fileset key (e.g. "INZTSIN1DA"). */
-  audioFileset?: string
-}
-
 export interface VersionSource {
   label?: Record<string, string>
   shortName?: string
   text: TextSource
-  audio?: AudioSource
-  timing?: TimingSource
 }
 
 export interface ResolvedVersion {
@@ -58,21 +45,17 @@ export interface ResolvedVersion {
   label: Record<string, string>
   shortName?: string
   text: TextSource
-  audio: AudioSource | null
-  timing: TimingSource | null
 }
 
 type Catalog = Record<string, Record<string, VersionSource>>
 
 const SOURCES: Catalog = (sourcesData as { sources?: Catalog }).sources ?? {}
 
-/** The implicit default for languages with no catalog entry: pkf everywhere. */
+/** The implicit default for languages with no catalog entry: pkf text. */
 const IMPLICIT: ResolvedVersion = {
   slug: null,
   label: {},
   text: { provider: "pkf" },
-  audio: { provider: "pkf" },
-  timing: { provider: "pkf" },
 }
 
 function userKey(iso: string): string {
@@ -108,8 +91,8 @@ export function versionsFor(iso: string): Array<{ slug: string } & VersionSource
 }
 
 /**
- * Resolve the version to use for a language. See the file header for the
- * precedence order. `region` is the slug the caller read from the region
+ * Resolve the text version to use for a language. See the file header for
+ * the precedence order. `region` is the slug the caller read from the region
  * config for this language (not the region name).
  */
 export function resolveVersion(
@@ -145,7 +128,5 @@ export function resolveVersion(
     label: v.label ?? {},
     shortName: v.shortName,
     text: v.text,
-    audio: v.audio ?? null,
-    timing: v.timing ?? null,
   }
 }

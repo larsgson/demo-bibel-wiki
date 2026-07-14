@@ -150,12 +150,14 @@ export const en = {
     none: "No languages found",
     pick: "Select a language",
     clear: "Clear",
+    hasAudio: "Audio available",
+    hasTiming: "Verse-synced audio",
   },
 
   regionLanding: {
     searchAll: "Search all languages",
     featuredStories: "Featured stories",
-    fullTextAudio: "Full text & audio",
+    fullTextAudio: "Full offline text",
     studyAvailable: "Study available",
     noData: "No Scripture data available.",
   },

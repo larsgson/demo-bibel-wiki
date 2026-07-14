@@ -50,6 +50,11 @@ function LanguageRow({
       {lang.pkf && (
         <span className="lang-badge lang-badge-pkf" title={translate(uiLang, "regionLanding.fullTextAudio")}>📖</span>
       )}
+      {lang.timing ? (
+        <span className="lang-badge lang-badge-timing" title={translate(uiLang, "picker.hasTiming")}>⏱</span>
+      ) : lang.audio ? (
+        <span className="lang-badge lang-badge-audio" title={translate(uiLang, "picker.hasAudio")}>🔊</span>
+      ) : null}
       {lang.study && (
         <span className="lang-badge lang-badge-study" title={translate(uiLang, "regionLanding.studyAvailable")}>✦</span>
       )}

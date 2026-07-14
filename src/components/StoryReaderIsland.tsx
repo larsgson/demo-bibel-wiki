@@ -27,7 +27,7 @@ import { buildLangHref } from "../lib/bw/url-utils"
 import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
 import { resolveImageUrl, resolveMediumUrl } from "../lib/bw/image-utils"
 import { shouldProbePkf } from "../lib/bw/language-list"
-import { resolveVersion } from "../lib/bw/version-config"
+import { loadLanguageMedia } from "../lib/bw/dbt-media"
 import { pkfUrl } from "../lib/bw/pkf-url"
 import languageStyles from "../data/language-styles.json"
 import languagePreferences from "../data/language-preferences.json"
@@ -289,18 +289,17 @@ export default function StoryReaderIsland({
       if (!timingIds.nt) timingIds.nt = defaultDistinctId
       if (!timingIds.ot) timingIds.ot = defaultDistinctId
 
-      // Version-config override (config/bible-sources.json): pin the audio +
-      // timing filesets for languages that declare them (e.g. ind → INDTSI /
-      // INZTSIN1DA). Only touches configured languages; others are untouched.
-      // The story templates are NT, so the NT canon is what carries these.
-      const vcfg = resolveVersion(audioLang)
-      if (vcfg.slug) {
-        if (vcfg.timing?.provider === "bundled" && vcfg.timing.textFileset) {
-          timingIds.nt = vcfg.timing.textFileset
-        }
-        if (vcfg.audio?.provider === "dbt" && vcfg.audio.fileset) {
-          audioFilesetIds.nt = vcfg.audio.fileset
-        }
+      // Cross-check against the CDN's live fileset registry (/dbt/<iso>/media.json):
+      // the local template timing is keyed by TEXT fileset id (timingIds.nt, e.g.
+      // "INDTSI"), but the language-data-derived audioFilesetIds.nt may point at a
+      // different translation's recording. When the CDN lists a fileset whose text
+      // id matches, prefer ITS audio fileset — this keeps the played audio aligned
+      // with the text the timing was authored against, for any language (not just
+      // a hand-maintained per-language list).
+      if (audioLang && timingIds.nt) {
+        const media = await loadLanguageMedia(audioLang)
+        const match = media?.canons?.nt?.filesets?.find((f) => f.t === timingIds.nt)
+        if (match?.a?.[0]) audioFilesetIds.nt = match.a[0]
       }
 
       // Need at least one audio fileset

@@ -22,6 +22,7 @@
     import { $bibleHighlights as bibleHighlightsStore } from '../../stores/bible-highlight-store';
     import { $activePane as activePaneStore } from '../../stores/branch-view-store';
     import { loadAppConfig, parseStartRef, type AppConfig } from '../data/app-config';
+    import { resolveChapterAudioUrl } from '../bw/dbt-media';
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
@@ -69,6 +70,13 @@
     // and the default landing reference. Fetched once per language.
     let appCfg = $state<AppConfig | null>(null);
     let textDir = $state<'ltr' | 'rtl'>('ltr');
+
+    // Whole-chapter audio resolved from the /dbt CDN tree (media-index +
+    // per-language filesets + timing), used when the CDN media manifest
+    // (`media` prop, from info.json) has no audio for this book/chapter.
+    // Tries every offered fileset, keyless sources first (raw CDN file >
+    // helloao > DBT proxy) — see src/lib/bw/dbt-media.ts.
+    let dbtAudioUrl = $state<string | null>(null);
 
     // The Bible reader is only available at Standard (2) and Study (3) levels.
     function bibleAllowed(): boolean {
@@ -249,7 +257,7 @@
     // Fall back to Text when the current chapter doesn't have the active
     // mode's media, or when settings hide the corresponding format.
     $effect(() => {
-        if (mode === 'audio' && audioForChapter.length === 0) mode = 'text';
+        if (mode === 'audio' && chapterAudio.length === 0) mode = 'text';
         if (mode === 'video' && (videosForChapter.length === 0 || !$settings.showVideos))
             mode = 'text';
     });
@@ -375,7 +383,7 @@
     // still gives a dedicated audio-only view.
     let audioInline = $state(false);
     function toggleInlineAudio() {
-        if (audioForChapter.length === 0) return;
+        if (chapterAudio.length === 0) return;
         audioInline = !audioInline;
     }
 
@@ -441,7 +449,7 @@
         if (e.key === 'Escape' && popover) closePopover();
     }
 
-    /** Audio entries attached to the current book+chapter. */
+    /** Audio entries from the CDN media manifest for the current book+chapter. */
     let audioForChapter = $derived<AudioEntry[]>(
         currentBook && media
             ? media.audio.items.filter(
@@ -451,6 +459,34 @@
                       a.chapter === currentChapter
               )
             : []
+    );
+
+    // When the CDN media manifest has no audio for this chapter, resolve the
+    // /dbt CDN tree instead (covers both NT and OT, whichever filesets that
+    // language actually offers — not limited to a single hand-picked fileset).
+    $effect(() => {
+        const book = currentBook?.bookCode;
+        const ch = currentChapter;
+        dbtAudioUrl = null;
+        if (!book || audioForChapter.length > 0) return;
+        let cancelled = false;
+        resolveChapterAudioUrl(iso, book, ch).then((url) => { if (!cancelled) dbtAudioUrl = url; });
+        return () => { cancelled = true; };
+    });
+
+    /** Audio to actually play — CDN media if present, else the /dbt stream. */
+    let chapterAudio = $derived<AudioEntry[]>(
+        audioForChapter.length > 0
+            ? audioForChapter
+            : dbtAudioUrl && currentBook
+              ? [{
+                    filename: `${currentBook.bookCode}-${currentChapter}`,
+                    url: dbtAudioUrl,
+                    bookCode: currentBook.bookCode,
+                    chapter: currentChapter,
+                    num: null, len: null, size: null, timingFile: null, src: 'dbt',
+                }]
+              : []
     );
     /** Videos attached to the current book+chapter. Split by whether they
      * have a verse-level placement: ones with a verse go inline in the
@@ -678,7 +714,7 @@
             onSearchInput={onSearchInput}
             onShare={copyShareLink}
             shareFlashing={shareFlashing}
-            hasAudio={audioForChapter.length > 0}
+            hasAudio={chapterAudio.length > 0}
             audioInline={audioInline}
             onAudioToggle={toggleInlineAudio}
             onFontSize={adjustFontSize}
@@ -728,7 +764,7 @@
             {/each}
         </div>
 
-        {#if audioForChapter.length > 0 || ($settings.showVideos && videosForChapter.length > 0)}
+        {#if chapterAudio.length > 0 || ($settings.showVideos && videosForChapter.length > 0)}
             <div class="reader-format-tabs">
                 <button
                     type="button"
@@ -737,7 +773,7 @@
                 >
                     {tr('tabText')}
                 </button>
-                {#if audioForChapter.length > 0}
+                {#if chapterAudio.length > 0}
                     <button
                         type="button"
                         class:active={mode === 'audio'}
@@ -768,9 +804,9 @@
             dir={textDir}
             style={`font-size:${$settings.fontSize}px`}
         >
-            {#if mode === 'audio' && audioForChapter.length > 0}
+            {#if mode === 'audio' && chapterAudio.length > 0}
                 <div class="reader-media">
-                    {#each audioForChapter as a (a.filename)}
+                    {#each chapterAudio as a (a.filename)}
                         {#if a.url}
                             <AudioPlayer
                                 src={a.url}
@@ -813,7 +849,7 @@
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
                     class="reader-body"
-                    class:has-bottom-bar={audioInline && audioForChapter.length > 0}
+                    class:has-bottom-bar={audioInline && chapterAudio.length > 0}
                     onclick={handleBodyClick}
                     onkeydown={handleBodyClick}
                     {...useSwipe(doSwipe, () => ({
@@ -837,9 +873,9 @@
         </div>
 
         <!-- Bottom-pinned inline audio bar (toggle via ♪ in the topbar). -->
-        {#if mode === 'text' && audioInline && audioForChapter.length > 0}
+        {#if mode === 'text' && audioInline && chapterAudio.length > 0}
             <div class="reader-audio-bottom">
-                {#each audioForChapter as a (a.filename)}
+                {#each chapterAudio as a (a.filename)}
                     {#if a.url}
                         <AudioPlayer
                             src={a.url}
@@ -853,7 +889,7 @@
         {#if popover}
             <div
                 class="reader-note-popover"
-                class:above-audio={audioInline && audioForChapter.length > 0}
+                class:above-audio={audioInline && chapterAudio.length > 0}
                 bind:this={popoverEl}
                 role="dialog"
                 aria-label={popover.kind === 'note'

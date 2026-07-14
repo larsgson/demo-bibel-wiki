@@ -150,12 +150,14 @@ export const es = {
     none: "No se encontraron idiomas",
     pick: "Selecciona un idioma",
     clear: "Limpiar",
+    hasAudio: "Audio disponible",
+    hasTiming: "Audio sincronizado por versículo",
   },
 
   regionLanding: {
     searchAll: "Buscar todos los idiomas",
     featuredStories: "Historias destacadas",
-    fullTextAudio: "Texto y audio completos",
+    fullTextAudio: "Texto completo sin conexión",
     studyAvailable: "Estudio disponible",
     noData: "No hay datos bíblicos disponibles.",
   },
