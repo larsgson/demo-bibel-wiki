@@ -25,7 +25,7 @@
         onBookmarkToggle: () => void;
         onSettings: () => void;
         /** Open the book/chapter picker (tap the reference — SE/SAB pattern). */
-        onTitle?: () => void;
+        onTitle?: (anchorRect: DOMRect) => void;
     };
     let {
         title,
@@ -61,7 +61,11 @@
 
         <div class="reader-topbar-center" title={title}>
             {#if onTitle}
-                <button type="button" class="reader-topbar-title reader-topbar-title-btn" onclick={onTitle}>
+                <button
+                    type="button"
+                    class="reader-topbar-title reader-topbar-title-btn"
+                    onclick={(e) => onTitle?.(e.currentTarget.getBoundingClientRect())}
+                >
                     {title} <span class="reader-topbar-title-caret" aria-hidden="true">▾</span>
                 </button>
             {:else}

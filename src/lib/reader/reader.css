@@ -318,6 +318,28 @@
 }
 .reader-topbar-title-btn:hover { background: rgba(0, 0, 0, 0.06); }
 .reader-topbar-title-caret { font-size: 0.7em; opacity: 0.55; }
+
+.reader-landing-picker { display: flex; justify-content: center; padding: 2rem 0; }
+.reader-landing-picker-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    border: 1px solid rgba(0, 11, 99, 0.15);
+    background: #fff;
+    color: rgb(0, 11, 99);
+    font: inherit;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.7em 1.2em;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease;
+}
+.reader-landing-picker-btn:hover {
+    background: rgba(0, 11, 99, 0.05);
+    border-color: rgba(0, 11, 99, 0.3);
+}
+.reader-landing-picker-icon { font-size: 1.1em; }
 .reader-topbar-end {
     display: flex;
     align-items: center;

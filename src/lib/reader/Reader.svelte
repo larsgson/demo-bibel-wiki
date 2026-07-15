@@ -249,6 +249,12 @@
         renderError = null;
     }
 
+    /** Open the book/chapter picker, anchored under the triggering element
+     * (SAB-style dropdown — see BiblePickerSheet.tsx). */
+    function openPicker(anchorRect?: DOMRect) {
+        window.dispatchEvent(new CustomEvent('open-bible-picker', { detail: { iso, anchorRect } }));
+    }
+
     let chapterList = $derived(
         currentBook ? Array.from({ length: chapterCount(currentBook) }, (_, i) => i + 1) : []
     );
@@ -683,31 +689,20 @@
     </div>
     <!-- Stories are shown on the Simple-mode landing (TemplateSelectorIsland),
          not here. This book-list page only renders in Standard/Study, so the
-         stories grid is intentionally omitted to keep it focused on the Bible. -->
-    <section>
-        <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60 mb-2">
-            {tr('bibleBooks')} ({catalog.documents.length})
-        </h2>
-        <ul class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {#each catalog.documents as doc (doc.id)}
-                {@const cc = chapterCount(doc)}
-                <li>
-                    <button
-                        class="w-full text-left p-3 rounded border border-base-300 hover:border-primary hover:bg-base-200 transition-colors"
-                        onclick={() => openBookChapter(doc, 1)}
-                        disabled={cc === 0}
-                    >
-                        <div class="font-mono text-xs text-base-content/50">{doc.bookCode}</div>
-                        <div class="text-sm truncate">
-                            {doc.toc2 ?? doc.toc ?? doc.h ?? doc.bookCode}
-                        </div>
-                        <div class="text-xs text-base-content/60 mt-1">
-                            {cc === 0 ? tr('noChapters') : `${cc} ${tr('chaptersShort')}`}
-                        </div>
-                    </button>
-                </li>
-            {/each}
-        </ul>
+         stories grid is intentionally omitted to keep it focused on the Bible.
+         Book/chapter selection goes through the one shared picker (see
+         BiblePickerSheet.tsx) — this used to be a separate inline grid here,
+         which diverged from the picker's own book list/behavior. -->
+    <section class="reader-landing-picker">
+        <button
+            type="button"
+            class="reader-landing-picker-btn"
+            onclick={(e) => openPicker(e.currentTarget.getBoundingClientRect())}
+        >
+            <span class="reader-landing-picker-icon" aria-hidden="true">📖</span>
+            <span>{tr('bibleBooks')} ({catalog.documents.length})</span>
+            <span class="reader-topbar-title-caret" aria-hidden="true">▾</span>
+        </button>
     </section>
 {:else}
     <section>
@@ -727,7 +722,7 @@
             bookmarked={bookmarked}
             onBookmarkToggle={toggleBookmark}
             onSettings={() => (showSettings = !showSettings)}
-            onTitle={() => window.dispatchEvent(new CustomEvent('open-bible-picker', { detail: { iso } }))}
+            onTitle={openPicker}
         />
 
         <div class="flex items-center mb-3">

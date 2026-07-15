@@ -121,7 +121,7 @@ export function DbtChapterReader({ iso, lang = "es" }: { iso: string; lang?: "en
           <button
             type="button"
             className="dbt-reader-title dbt-reader-title-btn"
-            onClick={() => window.dispatchEvent(new CustomEvent("open-bible-picker", { detail: { iso } }))}
+            onClick={(e) => window.dispatchEvent(new CustomEvent("open-bible-picker", { detail: { iso, anchorRect: e.currentTarget.getBoundingClientRect() } }))}
             title={tr("chooseBookChapter")}
           >
             {bookName} {chapter} <span className="dbt-reader-title-caret">▾</span>

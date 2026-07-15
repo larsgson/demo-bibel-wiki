@@ -166,6 +166,8 @@ export const es = {
     title: "Selección de libro",
     close: "Cerrar",
     loading: "Cargando…",
+    bookTab: "Libro",
+    chapterTab: "Capítulo",
   },
 
   study: {
