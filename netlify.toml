@@ -9,6 +9,12 @@
   # from the GitHub release, which the release no longer publishes (data
   # delivery moved to the CDN) — that fallback fails the build.
   PUBLIC_PKF_BASE_URL = "https://cdn.bibel.wiki"
+  # DBT/Bible Brain API base — not a secret (only DBT_API_KEY is). Without
+  # it, netlify/functions/dbt-proxy.cjs builds `new URL("undefined/bibles/...")`
+  # and throws "Invalid URL" on every request — the live symptom that surfaced
+  # this. DBT_API_KEY itself must still be set via the Netlify dashboard (it's
+  # not committed here), same as today.
+  DBT_API_BASE_URL = "https://4.dbt.io/api"
 
 [dev]
   framework = "astro"
