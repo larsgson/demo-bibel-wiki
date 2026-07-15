@@ -60,7 +60,12 @@ function loadLocalPkfSet(): Promise<Set<string>> {
       const resp = await fetch(pkfUrl("/pkf/manifest.json"))
       if (!resp.ok) return new Set<string>()
       const m = await resp.json()
-      return new Set<string>((m.languages ?? []).map((l: any) => l.iso))
+      const langs = m.languages
+      // manifest.json's `languages` has been both an array of {iso, ...} and
+      // a dict keyed by iso (current CDN shape) — handle either.
+      return new Set<string>(
+        Array.isArray(langs) ? langs.map((l: any) => l.iso) : Object.keys(langs ?? {}),
+      )
     } catch {
       return new Set<string>()
     }

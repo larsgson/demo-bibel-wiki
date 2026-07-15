@@ -2,6 +2,14 @@
   command = "pnpm run build"
   publish = "dist"
 
+[build.environment]
+  # Public CDN host for PKF/DBT scripture data (see src/lib/bw/pkf-url.ts).
+  # Not a secret — already inlined into the client bundle. Without it,
+  # scripts/fetch-data.mjs falls back to downloading the full data tarball
+  # from the GitHub release, which the release no longer publishes (data
+  # delivery moved to the CDN) — that fallback fails the build.
+  PUBLIC_PKF_BASE_URL = "https://cdn.bibel.wiki"
+
 [dev]
   framework = "astro"
   port = 8888

@@ -29,7 +29,34 @@ export type Region = {
     available: string[];
 };
 
-export const languages: Language[] = (manifest.languages as Language[]).slice().sort((a, b) =>
+// manifest.json's `languages` field has shifted shape at least once already
+// (array of {iso, pkfs, catalogs, ...} → dict keyed by iso, each entry with a
+// `collections[]` array — the CDN's newer, multi-collection-aware format).
+// Normalize whichever shape is on disk into the flat Language[] the rest of
+// the app expects, so a future CDN reshape degrades gracefully instead of
+// breaking the build.
+type ManifestCollection = { pkf?: string; catalog?: string; pkf_bytes?: number };
+type ManifestLangEntryV2 = { collections?: ManifestCollection[] };
+
+function normalizeManifestLanguages(raw: unknown): Language[] {
+    if (Array.isArray(raw)) {
+        // v1 shape: already Language[].
+        return (raw as Language[]).slice();
+    }
+    // v2 shape: dict keyed by iso, per-language collections[].
+    return Object.entries(raw as Record<string, ManifestLangEntryV2>).map(([iso, entry]) => {
+        const collections = entry.collections ?? [];
+        return {
+            iso,
+            version: null,
+            pkfs: collections.map((c) => c.pkf).filter((x): x is string => !!x),
+            catalogs: collections.map((c) => c.catalog).filter((x): x is string => !!x),
+            pkf_bytes: collections.reduce((sum, c) => sum + (c.pkf_bytes ?? 0), 0),
+        };
+    });
+}
+
+export const languages: Language[] = normalizeManifestLanguages(manifest.languages).sort((a, b) =>
     a.iso.localeCompare(b.iso)
 );
 
