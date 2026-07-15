@@ -205,6 +205,14 @@ export const en = {
     bible: "Bible",
     studyTopic: "Study a topic",
     toggleMenu: "Toggle menu",
+    search: "Search",
+    settings: "Settings",
+    searchComingSoon: "AI-powered search is coming soon.",
+    level: "Mode",
+    interfaceLevel: "Interface level",
+    levelSimple: "Simple",
+    levelStandard: "Standard",
+    levelStudy: "Study",
   },
 
   branches: {

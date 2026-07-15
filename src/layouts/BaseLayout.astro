@@ -4,6 +4,7 @@ import "../styles/sidebar.css"
 import MenuButton from "../components/nav/MenuButton.astro"
 import { AppSidebar } from "../components/nav/AppSidebar"
 import { BiblePickerSheet } from "../components/BiblePickerSheet"
+import { StandardBottomBar } from "../components/nav/StandardBottomBar"
 import LanguageButton from "../components/LanguageButton"
 import { loadAllTemplates, loadLocaleData } from "../lib/bw/template-utils"
 import type { SidebarTreeNode, BibleBookEntry } from "../components/nav/AppSidebar"
@@ -93,6 +94,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
     {!landing && <MenuButton />}
     {!landing && <AppSidebar client:only="react" storyTree={storyTree} bibleBooks={bibleBooks} />}
     {!landing && <BiblePickerSheet client:only="react" />}
+    {!landing && <StandardBottomBar client:only="react" />}
 
     <div class={`app-main min-h-screen flex flex-col${landing ? " app-main--landing" : ""}`}>
     <header

@@ -313,6 +313,10 @@
   .app-main--landing #header-bar { padding-left: 1rem; }
   /* Free space at the page bottom so content clears the fixed bottom bar. */
   .app-main { padding-bottom: var(--bottom-header-h); }
+
+  /* Standard level (2): its own bottom tab bar replaces the site header here
+     (see .standard-bottom-bar below) — the header itself stays hidden. */
+  html[data-ui-level="2"] .site-header { display: none !important; }
 }
 
 /* ── Simple UI level (1): no left navigation at all ── */
@@ -324,6 +328,97 @@ html[data-ui-level="1"] .app-menu-button-container {
 html[data-ui-level="1"] .app-main {
   margin-left: 0 !important;
 }
+
+/* ── Standard UI level (2): no left navigation either (first step of the
+   Standard-mode redesign — more to come). Mirrors the Simple-level rule. ── */
+html[data-ui-level="2"] .app-sidebar,
+html[data-ui-level="2"] .app-sidebar-backdrop,
+html[data-ui-level="2"] .app-menu-button-container {
+  display: none !important;
+}
+html[data-ui-level="2"] .app-main {
+  margin-left: 0 !important;
+}
+
+/* ── Standard-mode bottom tab bar (Bible / Search / Settings / Mode) ──
+   Modelled on sab-pwa's BottomNavigationBar. Shown at all viewport widths in
+   Standard mode (that mode has no left rail to fall back on at any width). */
+.standard-bottom-bar {
+  display: none;
+}
+html[data-ui-level="2"] .standard-bottom-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4rem;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #fff;
+  border-top: 1px solid rgba(0, 11, 99, 0.12);
+  z-index: 40;
+}
+html[data-ui-level="2"] .app-main {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom)) !important;
+}
+.standard-bottom-tab-wrapper {
+  position: relative;
+  display: flex;
+}
+.standard-bottom-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  flex: 1;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  color: rgba(0, 11, 99, 0.55);
+}
+.standard-bottom-tab:hover { background: rgba(0, 11, 99, 0.04); }
+.standard-bottom-tab.active { color: rgb(0, 11, 99); }
+.standard-bottom-tab-icon { font-size: 1.3rem; line-height: 1; }
+.standard-bottom-tab-label { font-size: 0.68rem; font-weight: 600; }
+
+/* Mode (interface-level) popover — opens upward above the bottom bar. */
+.standard-level-popover {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 0.4rem;
+  background: rgb(0, 9, 80);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.3rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 8rem;
+  z-index: 41;
+}
+.standard-level-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: background 160ms ease;
+}
+.standard-level-option:hover { background: rgba(255, 255, 255, 0.1); }
+.standard-level-option.active { background: rgba(255, 255, 255, 0.15); color: #fff; }
+.standard-level-dots { letter-spacing: 0.1em; color: rgba(255, 215, 0, 0.9); font-size: 0.7rem; }
 
 /* ── Immersive audio playback (focus mode): hide the left navigation. ──
    Returns when the mini player is shown (focus mode off) or audio is fully

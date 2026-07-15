@@ -1,7 +1,7 @@
 import { atom } from "nanostores"
 
 // Which top-level view the right pane shows
-export type ActivePane = "bible" | "story" | "study" | "branch"
+export type ActivePane = "bible" | "story" | "study" | "branch" | "search"
 
 export interface PaneState {
   pane: ActivePane
@@ -68,6 +68,14 @@ export function showStudy() {
 
 export function showBranch(branchKey: string, queryIndex?: number, scrollToIndex: number | null = null) {
   const s = { pane: "branch" as const, branchKey, queryIndex, scrollToIndex }
+  $activePane.set(s)
+  emitPaneChange(s)
+}
+
+// Standard-mode "Search" tab — a UI placeholder for now (the real AI-chat
+// search, i.e. SearchIsland/"study", is reserved for later integration here).
+export function showSearch() {
+  const s = { pane: "search" as const }
   $activePane.set(s)
   emitPaneChange(s)
 }

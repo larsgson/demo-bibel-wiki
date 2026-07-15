@@ -205,6 +205,14 @@ export const es = {
     bible: "Biblia",
     studyTopic: "Estudiar un tema",
     toggleMenu: "Abrir o cerrar el menú",
+    search: "Buscar",
+    settings: "Configuración",
+    searchComingSoon: "La búsqueda con inteligencia artificial estará disponible pronto.",
+    level: "Modo",
+    interfaceLevel: "Nivel de interfaz",
+    levelSimple: "Básico",
+    levelStandard: "Estándar",
+    levelStudy: "Estudiar",
   },
 
   branches: {

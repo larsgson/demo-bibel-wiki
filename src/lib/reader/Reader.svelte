@@ -138,6 +138,12 @@
             if (!bibleAllowed()) paneVisible = false;
         }) as EventListener);
 
+        // Standard-mode bottom bar's Settings tab — opens this reader's
+        // existing settings panel rather than a new one.
+        window.addEventListener('open-reader-settings', (() => {
+            showSettings = true;
+        }) as EventListener);
+
         // Sidebar navigation: open a specific book+chapter on demand
         window.addEventListener('navigate-to-chapter', ((e: CustomEvent) => {
             const { book, chapter, highlightVerses } = e.detail;

@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro"
 import Reader from "../../lib/reader/Reader.svelte"
 import { SearchIsland } from "../../components/search/SearchIsland"
+import { SearchPlaceholder } from "../../components/SearchPlaceholder"
 import { BranchContentPane } from "../../components/nav/BranchContentPane"
 import TemplateSelectorIsland from "../../components/TemplateSelectorIsland"
 import { languages, languagesByIso, regionForIso } from "../../lib/data/regions"
@@ -74,6 +75,7 @@ const templateList = Object.values(templates).map((t) => {
     <TemplateSelectorIsland client:only="react" templates={templateList} />
   </div>
   <SearchIsland client:only="react" iso={iso} />
+  <SearchPlaceholder client:only="react" />
   <BranchContentPane client:only="react" />
   {hasReader ? (
     isBsb ? (

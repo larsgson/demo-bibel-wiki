@@ -3,6 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro"
 import Reader from "../../lib/reader/Reader.svelte"
 import { ReaderLoader } from "../../components/ReaderLoader"
 import { SearchIsland } from "../../components/search/SearchIsland"
+import { SearchPlaceholder } from "../../components/SearchPlaceholder"
 import { BranchContentPane } from "../../components/nav/BranchContentPane"
 import TemplateSelectorIsland from "../../components/TemplateSelectorIsland"
 import { loadAllTemplates, loadLocaleData, loadAllLocaleData } from "../../lib/bw/template-utils"
@@ -33,6 +34,7 @@ const templateList = Object.values(templates).map((t) => {
     <TemplateSelectorIsland client:only="react" templates={templateList} />
   </div>
   <SearchIsland client:only="react" />
+  <SearchPlaceholder client:only="react" />
   <BranchContentPane client:only="react" />
   <div id="reader-root"></div>
   <ReaderLoader client:only="react" />

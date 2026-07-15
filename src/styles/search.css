@@ -1,4 +1,43 @@
 .chat-shell { max-width: 700px; margin: 0 auto; padding-bottom: 4.5rem; }
+
+/* Standard-mode "Search" tab — UI shell only (see SearchPlaceholder.tsx). */
+.search-placeholder {
+  max-width: 480px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+  text-align: center;
+}
+.search-placeholder-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgb(0, 11, 99);
+  margin: 0 0 1rem;
+}
+.search-placeholder-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(0, 11, 99, 0.15);
+  border-radius: 999px;
+  background: #fff;
+}
+.search-placeholder-icon { opacity: 0.4; }
+.search-placeholder-input {
+  flex: 1;
+  border: none;
+  background: none;
+  font: inherit;
+  color: rgb(0, 11, 99);
+  outline: none;
+}
+.search-placeholder-input::placeholder { color: rgba(0, 11, 99, 0.4); }
+.search-placeholder-input:disabled { cursor: not-allowed; }
+.search-placeholder-note {
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(0, 11, 99, 0.55);
+}
 .chat-scroll {
   display: flex; flex-direction: column; gap: 0.6rem;
   padding: 0.5rem 0 1rem; min-height: 40vh;
