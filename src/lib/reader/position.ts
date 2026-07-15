@@ -111,6 +111,18 @@ export function markGreetingBackShown(): void {
     }
 }
 
+/** Whether a position was ever actually saved (vs. `loadLastPosition()`
+ *  falling back to its hardcoded default) — lets a first-ever visit prefer
+ *  the language's own `start-at-reference` over Matthew 1. */
+export function hasLastPosition(): boolean {
+    if (!browser) return false;
+    try {
+        return !!localStorage.getItem(KEY);
+    } catch {
+        return false;
+    }
+}
+
 /**
  * Global last-read position — book + chapter, shared across ALL languages.
  * Persists to localStorage; consumers should apply a per-catalog fallback

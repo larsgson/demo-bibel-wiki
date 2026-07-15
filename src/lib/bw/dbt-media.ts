@@ -160,6 +160,16 @@ async function rawAudioUrl(iso: string, filesetId: string, bookCode: string, cha
   }
 }
 
+export interface ResolvedAudio {
+  url: string
+  /** The fileset id the URL was resolved against — needed to look up verse
+   *  timing (loadBookTiming's result is keyed by this same id, but only for
+   *  source "dbt": raw/contrib fileset ids follow a different, non-DBT
+   *  naming scheme and aren't guaranteed to appear in the DBT timing file). */
+  filesetId: string
+  source: "raw" | "dbt"
+}
+
 /**
  * Resolve a whole-chapter audio stream URL for (iso, book, chapter), trying
  * every fileset offered for that canon in listed order, keyless sources first.
@@ -175,7 +185,7 @@ export async function resolveChapterAudioUrl(
   iso: string,
   bookCode: string,
   chapter: number,
-): Promise<string | null> {
+): Promise<ResolvedAudio | null> {
   const media = await loadLanguageMedia(iso)
   if (!media) return null
   const canon = getTestament(bookCode)
@@ -189,7 +199,7 @@ export async function resolveChapterAudioUrl(
   if (sources.has("contrib")) {
     for (const f of canonMedia.filesets) {
       const url = await rawAudioUrl(iso, f.id, bookCode, chapter)
-      if (url) return url
+      if (url) return { url, filesetId: f.id, source: "raw" }
     }
   }
 
@@ -197,7 +207,7 @@ export async function resolveChapterAudioUrl(
   const audioFilesetIds = canonMedia.filesets.flatMap((f) => f.a ?? [])
   for (const fileset of audioFilesetIds) {
     const url = await fetchDbtAudioUrl(fileset, bookCode, chapter)
-    if (url) return url
+    if (url) return { url, filesetId: fileset, source: "dbt" }
   }
 
   return null

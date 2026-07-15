@@ -238,7 +238,7 @@ export async function loadManifest() {
   return manifestPromise
 }
 
-const langDataPromises: Record<string, Promise<any>> = {}
+const langDataPromises: Record<string, Promise<any> | undefined> = {}
 
 export async function loadLanguageData(langCode: string) {
   const existing = $languageData.get()

@@ -25,7 +25,7 @@ const replaceBibleReferences = (
 
 const resolveLocaleKey = (
   keyPath: string,
-  localeData: Record<string, any> | null,
+  localeData: Record<string, any> | null | undefined,
 ): string | null => {
   if (!localeData) return null
   const parts = keyPath.split(".")

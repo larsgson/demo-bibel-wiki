@@ -39,7 +39,11 @@ import "../styles/bible-picker.css"
  */
 
 const POS_KEY = "bw-last-position"
-const PANEL_WIDTH = 360
+// Narrower when the Book tab is suppressed (Chapter-trigger flow — no book
+// abbreviations to fit), matching sab-pwa's Dropdown min-w-[22rem]/[18rem]
+// split between its 6-col (book) and 5-col (chapter/verse) variants.
+const PANEL_WIDTH = 340
+const PANEL_WIDTH_NARROW = 260
 
 interface PickerBook {
   code: string
@@ -146,6 +150,9 @@ export function BiblePickerSheet() {
   const [groups, setGroups] = useState<Group[]>([])
   const [verseData, setVerseData] = useState<VerseData | null>(null)
   const [tab, setTab] = useState<Tab>("book")
+  // Chapter-trigger flow (sab-pwa's ChapterSelector) never offers a Book tab
+  // — only Chapter/Verse. Book-trigger flow (BookSelector) offers all three.
+  const [allowBookTab, setAllowBookTab] = useState(true)
   const [pickedBook, setPickedBook] = useState<string | null>(null)
   const [pickedChapter, setPickedChapter] = useState<number | null>(null)
   const [current, setCurrent] = useState<{ book: string; chapter: number } | null>(null)
@@ -178,7 +185,13 @@ export function BiblePickerSheet() {
       setCurrent(pos)
       setPickedBook(pos?.book ?? null)
       setPickedChapter(null)
-      setTab("book")
+      // The topbar has separate Book/Chapter triggers (sab-pwa pattern) —
+      // land straight on the requested tab, and suppress the Book tab
+      // entirely for the Chapter-trigger flow. Falls back to "book" when
+      // there's no saved position yet, since a chapter grid needs a book.
+      const wantsChapter = detail?.initialTab === "chapter"
+      setTab(wantsChapter && pos ? "chapter" : "book")
+      setAllowBookTab(!wantsChapter)
       setAnchorRect(detail?.anchorRect ?? null)
       setOpen(true)
       ensureBooks(forIso)
@@ -186,7 +199,11 @@ export function BiblePickerSheet() {
       if (!pos) {
         loadAppConfig(forIso).then((cfg) => {
           const sr = parseStartRef(cfg?.features?.["start-at-reference"])
-          if (sr) { setCurrent(sr); setPickedBook(sr.book) }
+          if (sr) {
+            setCurrent(sr)
+            setPickedBook(sr.book)
+            if (detail?.initialTab === "chapter") setTab("chapter")
+          }
         })
       }
     }
@@ -247,11 +264,13 @@ export function BiblePickerSheet() {
 
   // Anchored position, clamped to the viewport; falls back to a centered
   // top panel when no trigger rect is available.
+  const panelWidth = allowBookTab ? PANEL_WIDTH : PANEL_WIDTH_NARROW
   const style: React.CSSProperties = anchorRect
     ? {
         position: "fixed",
         top: Math.min(anchorRect.bottom + 8, window.innerHeight - 120),
-        left: Math.max(8, Math.min(anchorRect.left, window.innerWidth - PANEL_WIDTH - 8)),
+        left: Math.max(8, Math.min(anchorRect.left, window.innerWidth - panelWidth - 8)),
+        width: `min(${panelWidth}px, calc(100vw - 1rem))`,
       }
     : { position: "fixed", top: 64, left: "50%", transform: "translateX(-50%)" }
 
@@ -267,13 +286,15 @@ export function BiblePickerSheet() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bible-picker-tabs">
-          <button
-            type="button"
-            className={`bible-picker-tab ${tab === "book" ? "active" : ""}`}
-            onClick={() => setTab("book")}
-          >
-            {pickedBookEntry ? pickedBookEntry.name : bookLabel}
-          </button>
+          {allowBookTab && (
+            <button
+              type="button"
+              className={`bible-picker-tab ${tab === "book" ? "active" : ""}`}
+              onClick={() => setTab("book")}
+            >
+              {pickedBookEntry ? pickedBookEntry.name : bookLabel}
+            </button>
+          )}
           {pickedBook && (
             <button
               type="button"

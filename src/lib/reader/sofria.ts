@@ -8,7 +8,14 @@ import { getProskomma } from './store';
  *
  *   Block     = Paragraph | Graft
  *   Paragraph = { type: "paragraph", subtype: "usfm:p" | "usfm:q1" | ..., content: [Content] }
- *   Graft     = { type: "graft", subtype: "title" | "heading" | "footnote" | ..., sequence: InnerSeq }
+ *   Graft     = { type: "graft", sequence: InnerSeq }
+ *             -- top-level grafts (title/heading/remark, one per chapter
+ *                pericope) carry NO `subtype` of their own; the type lives
+ *                on `sequence.type` instead ("title" | "heading" | …).
+ *                Inline grafts nested in paragraph content (footnote/xref)
+ *                DO set `subtype` directly — confirmed against live data,
+ *                this asymmetry is a real quirk of the upstream renderer,
+ *                not a typo here.
  *
  *   Content   = string
  *             | { type: "mark",    subtype: "verses_label" | "chapter_label", atts: { number } }
@@ -178,10 +185,13 @@ function renderVerseMark(atts?: Record<string, string>): string {
 }
 
 /** Render a chapter_label (chapter number) as a drop-cap matching SE's
- *  `.c-drop` convention — float-left, large, in the titles color. */
+ *  `.c-drop` convention — float-left, large, in the titles color. Bundle.css
+ *  targets `div.c-drop` (not span) — same tag/class mismatch as the
+ *  title/heading grafts had; floats work identically regardless of tag, so
+ *  this is a pure compatibility fix, no layout change. */
 function renderChapterMark(atts?: Record<string, string>): string {
     const n = atts?.number ?? '';
-    return `<span class="c-drop" data-c="${esc(n)}">${esc(n)}</span>`;
+    return `<div class="c-drop" data-c="${esc(n)}">${esc(n)}</div>`;
 }
 
 export function renderInlineVideos(
@@ -390,19 +400,22 @@ function pullText(seq: SofriaSeq): string {
     return buf.join('').trim();
 }
 
+/** USFM level-1 markers (s1, mt1, q1, …) are the unnumbered default and have
+ *  no "1" in the CDN's bundle.css class names (div.s, div.mt, div.q — level
+ *  2+ keep their digit: div.s2, div.mt2). Normalize so our own markup lines
+ *  up with the same classes bundle.css (and reader.css's fallback theme)
+ *  actually style. */
+function cssClassForMarker(marker: string): string {
+    return marker.replace(/1$/, '');
+}
+
 function renderParagraph(
     block: { type: 'paragraph'; subtype?: string; content: SofriaContent[] },
     ctx: RenderCtx
 ): string {
     const marker = usfmMarker(block.subtype) || 'p';
-    return `<p class="${esc(marker)}">${renderInlineContent(block.content, ctx)}</p>`;
-}
-
-/** Pick a semantic element for a USFM top-of-page / section marker. */
-function elementForMarker(marker: string): 'h2' | 'h3' | 'p' {
-    if (/^mt[0-9]?$/.test(marker) || marker === 'mr') return 'h2';
-    if (/^m?s[0-9]?$/.test(marker)) return 'h3';
-    return 'p';
+    const cls = cssClassForMarker(marker);
+    return `<div class="${esc(cls)}">${renderInlineContent(block.content, ctx)}</div>`;
 }
 
 function renderTitleSeq(seq: SofriaSeq, ctx: RenderCtx): string {
@@ -410,9 +423,9 @@ function renderTitleSeq(seq: SofriaSeq, ctx: RenderCtx): string {
     for (const b of seq.blocks ?? []) {
         if (b.type !== 'paragraph') continue;
         const marker = usfmMarker(b.subtype) || 'p';
-        const tag = elementForMarker(marker);
+        const cls = cssClassForMarker(marker);
         parts.push(
-            `<${tag} class="${esc(marker)}">${renderInlineContent(b.content, ctx)}</${tag}>`
+            `<div class="${esc(cls)}">${renderInlineContent(b.content, ctx)}</div>`
         );
     }
     return parts.join('');
@@ -446,7 +459,13 @@ export function renderSofria(
     const parts: string[] = [];
     for (const block of doc.sequence.blocks ?? []) {
         if (block.type === 'graft') {
-            const st = block.subtype;
+            // Top-level grafts (title/heading/remark) carry their type on
+            // `sequence.type`, not `subtype` — unlike inline footnote/xref
+            // grafts nested in paragraph content, which DO set `subtype`
+            // (confirmed against live data: a top-level graft's own
+            // `subtype` key is simply absent from the JSON). Check both so
+            // this is robust either way.
+            const st = block.subtype ?? block.sequence?.type;
             if (st === 'title' || st === 'heading' || st === 'remark') {
                 parts.push(renderTitleSeq(block.sequence, ctx));
             }

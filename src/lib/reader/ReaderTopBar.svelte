@@ -1,13 +1,15 @@
 <script lang="ts">
     /**
-     * Look-alike of SE's top action bar, minus the left-drawer / hamburger
-     * button (global navigation is intentionally deferred). Title in the
-     * centre, icon buttons on the right: search, share, audio quick-toggle,
-     * font size −/+, bookmark, settings. All buttons are delegated to
-     * handlers owned by Reader.svelte.
+     * Look-alike of SE's top action bar: left-drawer hamburger, then
+     * separate Book / Chapter dropdown triggers (sab-pwa's Navbar +
+     * BookSelector/ChapterSelector pattern — each opens BiblePickerSheet
+     * landed on its own tab). Icon buttons on the right: search, share,
+     * audio quick-toggle, font size −/+, bookmark, settings. All buttons are
+     * delegated to handlers owned by Reader.svelte.
      */
     type Props = {
-        title: string;
+        bookLabel: string;
+        chapterLabel: string;
         iso: string;
         searchActive: boolean;
         searchQuery: string;
@@ -24,11 +26,16 @@
         bookmarked: boolean;
         onBookmarkToggle: () => void;
         onSettings: () => void;
-        /** Open the book/chapter picker (tap the reference — SE/SAB pattern). */
-        onTitle?: (anchorRect: DOMRect) => void;
+        /** Open the book/chapter picker, landing on the Book/Chapter tab
+         *  respectively (sab-pwa's BookSelector/ChapterSelector pattern). */
+        onBookTap?: (anchorRect: DOMRect) => void;
+        onChapterTap?: (anchorRect: DOMRect) => void;
+        /** Toggle the left navigation drawer. */
+        onMenu?: () => void;
     };
     let {
-        title,
+        bookLabel,
+        chapterLabel,
         iso,
         searchActive,
         searchQuery = $bindable(),
@@ -43,7 +50,9 @@
         bookmarked,
         onBookmarkToggle,
         onSettings,
-        onTitle
+        onBookTap,
+        onChapterTap,
+        onMenu
     }: Props = $props();
 
     import { t } from '../bw/ui-locales';
@@ -55,23 +64,37 @@
 
 <header class="reader-topbar">
     <div class="reader-topbar-bar">
-        <div class="reader-topbar-start" aria-hidden="true">
-            <!-- intentionally empty: no hamburger / drawer button -->
+        <div class="reader-topbar-start">
+            <button
+                type="button"
+                class="tb-icon reader-topbar-menu-btn"
+                onclick={onMenu}
+                aria-label={t(uiLang, 'nav.toggleMenu')}
+                title={t(uiLang, 'nav.toggleMenu')}
+            >
+                ☰
+            </button>
+            <button
+                type="button"
+                class="reader-topbar-select reader-topbar-select-book"
+                onclick={(e) => onBookTap?.(e.currentTarget.getBoundingClientRect())}
+                title={bookLabel}
+            >
+                <span class="reader-topbar-select-label">{bookLabel}</span>
+                <span class="reader-topbar-title-caret" aria-hidden="true">▾</span>
+            </button>
+            <button
+                type="button"
+                class="reader-topbar-select reader-topbar-select-chapter"
+                onclick={(e) => onChapterTap?.(e.currentTarget.getBoundingClientRect())}
+                title={chapterLabel}
+            >
+                <span class="reader-topbar-select-label">{chapterLabel}</span>
+                <span class="reader-topbar-title-caret" aria-hidden="true">▾</span>
+            </button>
         </div>
 
-        <div class="reader-topbar-center" title={title}>
-            {#if onTitle}
-                <button
-                    type="button"
-                    class="reader-topbar-title reader-topbar-title-btn"
-                    onclick={(e) => onTitle?.(e.currentTarget.getBoundingClientRect())}
-                >
-                    {title} <span class="reader-topbar-title-caret" aria-hidden="true">▾</span>
-                </button>
-            {:else}
-                <span class="reader-topbar-title">{title}</span>
-            {/if}
-        </div>
+        <div class="reader-topbar-center"></div>
 
         <div class="reader-topbar-end">
             <a

@@ -67,77 +67,86 @@
 }
 .reader-copyright-license { font-weight: 600; }
 
-/* Paragraph markers — USFM indentation conventions copied from SE's sab-app.css. */
-.reader-body p {
+/* Paragraph markers — USFM indentation conventions copied from SE's sab-app.css.
+ * Body blocks render as <div class="{marker}"> (matching the PKF bundle.css
+ * convention — div.p, div.mt, div.s, etc., trailing "1" stripped so "s1"/"mt1"
+ * become bare "s"/"mt", same as bundle.css's own class names) — see sofria.ts.
+ * The old p./h2./h3. selectors are kept alongside so nothing regresses if any
+ * other renderer still emits those tags; they're otherwise unused now. */
+.reader-body p, .reader-body div.p, .reader-body div.q, .reader-body div.m,
+.reader-body div.mi, .reader-body div.pi, .reader-body div.pi1, .reader-body div.pi2,
+.reader-body div.q1, .reader-body div.q2, .reader-body div.q3,
+.reader-body div.qr, .reader-body div.qc, .reader-body div.sp, .reader-body div.d,
+.reader-body div.cls, .reader-body div.lh, .reader-body div.b {
     margin: 0;
 }
-.reader-body p.p   { padding-inline-start: 0; padding-top: 12px; text-indent: 3%; }
-.reader-body p.m   { padding-inline-start: 0; padding-top: 12px; text-indent: 0; }
-.reader-body p.mi  { padding-inline-start: 1em; padding-top: 12px; text-indent: 0; }
-.reader-body p.pi,
-.reader-body p.pi1 { padding-inline-start: 1em; padding-top: 12px; text-indent: 3%; }
-.reader-body p.pi2 { padding-inline-start: 2em; padding-top: 12px; text-indent: 3%; }
-.reader-body p.q,
-.reader-body p.q1  { padding-inline-start: 20%; padding-inline-end: 2%; text-indent: -15%; }
-.reader-body p.q2  { padding-inline-start: 20%; padding-inline-end: 2%; text-indent: -8%; }
-.reader-body p.q3  { padding-inline-start: 20%; padding-inline-end: 2%; text-indent: -5%; }
-.reader-body p.qr  { text-align: end; font-style: italic; padding-top: 4px; }
-.reader-body p.qc  { text-align: center; font-style: italic; padding-top: 4px; }
-.reader-body p.sp  { font-style: italic; padding-top: 8px; }
-.reader-body p.d   { font-style: italic; text-align: center; padding-top: 8px; }
-.reader-body p.cls { text-align: end; font-style: italic; }
-.reader-body p.lh  { padding-top: 0; }
-.reader-body p.b   { padding-top: 0.6em; }
+.reader-body p.p,   .reader-body div.p   { padding-inline-start: 0; padding-top: 12px; text-indent: 3%; }
+.reader-body p.m,   .reader-body div.m   { padding-inline-start: 0; padding-top: 12px; text-indent: 0; }
+.reader-body p.mi,  .reader-body div.mi  { padding-inline-start: 1em; padding-top: 12px; text-indent: 0; }
+.reader-body p.pi,  .reader-body div.pi,
+.reader-body p.pi1, .reader-body div.pi1 { padding-inline-start: 1em; padding-top: 12px; text-indent: 3%; }
+.reader-body p.pi2, .reader-body div.pi2 { padding-inline-start: 2em; padding-top: 12px; text-indent: 3%; }
+.reader-body p.q,   .reader-body div.q,
+.reader-body p.q1,  .reader-body div.q1  { padding-inline-start: 20%; padding-inline-end: 2%; text-indent: -15%; }
+.reader-body p.q2,  .reader-body div.q2  { padding-inline-start: 20%; padding-inline-end: 2%; text-indent: -8%; }
+.reader-body p.q3,  .reader-body div.q3  { padding-inline-start: 20%; padding-inline-end: 2%; text-indent: -5%; }
+.reader-body p.qr,  .reader-body div.qr  { text-align: end; font-style: italic; padding-top: 4px; }
+.reader-body p.qc,  .reader-body div.qc  { text-align: center; font-style: italic; padding-top: 4px; }
+.reader-body p.sp,  .reader-body div.sp  { font-style: italic; padding-top: 8px; }
+.reader-body p.d,   .reader-body div.d   { font-style: italic; text-align: center; padding-top: 8px; }
+.reader-body p.cls, .reader-body div.cls { text-align: end; font-style: italic; }
+.reader-body p.lh,  .reader-body div.lh  { padding-top: 0; }
+.reader-body p.b,   .reader-body div.b   { padding-top: 0.6em; }
 
 /* Major titles and section headings — centred, bolded, in the titles color. */
-.reader-body h2.mt, .reader-body p.mt,
+.reader-body h2.mt, .reader-body p.mt, .reader-body div.mt,
 .reader-body h2.mt1, .reader-body p.mt1 {
     text-align: center; color: var(--TitlesColor);
     font-weight: 700; font-size: 150%; line-height: 1;
     padding-top: 16px; padding-bottom: 4px;
     page-break-after: avoid;
 }
-.reader-body h2.mt2, .reader-body p.mt2 {
+.reader-body h2.mt2, .reader-body p.mt2, .reader-body div.mt2 {
     text-align: center; color: var(--TitlesColor);
     font-weight: 700; font-size: 120%; padding-top: 8px;
 }
-.reader-body h2.mt3, .reader-body p.mt3 {
+.reader-body h2.mt3, .reader-body p.mt3, .reader-body div.mt3 {
     text-align: center; color: var(--TitlesColor);
     font-weight: 400; font-size: 100%; padding-top: 4px;
 }
-.reader-body h3.ms, .reader-body h3.ms1, .reader-body p.ms {
+.reader-body h3.ms, .reader-body h3.ms1, .reader-body p.ms, .reader-body div.ms {
     text-align: center; color: var(--TitlesColor);
     font-weight: 700; font-size: 120%;
     padding-top: 30px; padding-bottom: 8px;
     page-break-after: avoid;
 }
-.reader-body h3.ms2, .reader-body p.ms2 {
+.reader-body h3.ms2, .reader-body p.ms2, .reader-body div.ms2 {
     text-align: center; color: var(--TitlesColor);
     font-weight: 700; font-size: 110%;
     padding-top: 18px; padding-bottom: 4px;
 }
-.reader-body h3.s, .reader-body h3.s1 {
+.reader-body h3.s, .reader-body h3.s1, .reader-body div.s {
     text-align: center; color: var(--TitlesColor);
     font-weight: 700; font-size: 110%;
     padding-top: 30px; padding-bottom: 2px;
     page-break-after: avoid;
 }
-.reader-body h3.s2 {
+.reader-body h3.s2, .reader-body div.s2 {
     text-align: center; color: var(--TitlesColor);
     font-weight: 700; font-size: 100%;
     padding-top: 20px; padding-bottom: 2px;
 }
-.reader-body h3.s3 {
+.reader-body h3.s3, .reader-body div.s3 {
     text-align: center; color: var(--TitlesColor);
     font-weight: 700; font-size: 95%;
     padding-top: 14px; padding-bottom: 2px;
 }
-.reader-body p.r, .reader-body p.sr {
+.reader-body p.r, .reader-body p.sr, .reader-body div.r, .reader-body div.sr {
     text-align: center; font-style: italic; font-size: 90%;
     padding-top: 14px; padding-bottom: 2px;
     page-break-after: avoid;
 }
-.reader-body p.mr {
+.reader-body p.mr, .reader-body div.mr {
     text-align: center; font-style: italic; font-size: 95%;
     padding-top: 14px; padding-bottom: 2px;
 }
@@ -186,6 +195,17 @@
     font-style: normal;
     line-height: 0.9;
     user-select: none;
+}
+/* A chapter can legitimately open on an indented style (e.g. a translation
+ * that formats John's prologue as poetry, marker "q") — when that happens,
+ * the drop-cap ends up trapped inside that paragraph's own indent (up to
+ * 20% for "q"), reading as a huge, wrong-looking left gap instead of sitting
+ * flush at the margin like every other chapter opener. The chapter number is
+ * a document-level marker, not paragraph content, so it always wins: reset
+ * the containing block's indent whenever it starts with the drop-cap. */
+.reader-body div:has(> .c-drop:first-child) {
+    padding-inline-start: 0 !important;
+    text-indent: 0 !important;
 }
 .reader-body .c {
     color: var(--TitlesColor);
@@ -277,9 +297,11 @@
 }
 .reader-note-popover .close:hover { color: rgb(0, 11, 99); }
 
-/* App-level top bar — look-alike of SE's action bar, minus the hamburger.
- * Icon buttons on the right control search, share, audio quick-toggle,
- * font size, bookmark, and settings. */
+/* App-level top bar — look-alike of SE's action bar: hamburger (opens the
+ * left nav drawer) then separate Book/Chapter dropdown triggers on the
+ * left (sab-pwa's Navbar + BookSelector/ChapterSelector). Icon buttons on
+ * the right control search, share, audio quick-toggle, font size, bookmark,
+ * and settings. */
 .reader-topbar {
     background: var(--TitlesColor, #000B63);
     color: white;
@@ -296,24 +318,29 @@
     padding: 0.35em 0.55em;
     min-height: 38px;
 }
-.reader-topbar-start { width: 0; }
-.reader-topbar-center {
-    text-align: center;
-    overflow: hidden;
+.reader-topbar-start {
+    display: flex;
+    align-items: center;
+    gap: 0.2em;
+    min-width: 0;
 }
-.reader-topbar-title {
-    font-weight: 600;
-    font-size: 0.95em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.reader-topbar-center { overflow: hidden; }
+.reader-topbar-menu-btn {
+    flex-shrink: 0;
 }
-.reader-topbar-title-btn {
-    max-width: 100%;
+.reader-topbar-select {
+    max-width: 40vw;
     border: none;
     background: none;
     font: inherit;
+    /* Vernacular book name lives outside #container (the scope bundle.css's
+     * font-face targets), so name the language's font explicitly. "font1"
+     * only resolves while that language's bundle.css link is active
+     * (Reader.svelte swaps it per iso) — falls through otherwise, so this
+     * is safe for every language. */
+    font-family: font1, system-ui, sans-serif;
     font-weight: 600;
+    font-size: 0.95em;
     color: inherit;
     cursor: pointer;
     padding: 0.15em 0.5em;
@@ -321,31 +348,17 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3em;
+    min-width: 0;
 }
-.reader-topbar-title-btn:hover { background: rgba(0, 0, 0, 0.06); }
-.reader-topbar-title-caret { font-size: 0.7em; opacity: 0.55; }
+.reader-topbar-select:hover { background: rgba(0, 0, 0, 0.06); }
+.reader-topbar-select-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.reader-topbar-select-chapter { max-width: 12vw; flex-shrink: 0; }
+.reader-topbar-title-caret { font-size: 0.7em; opacity: 0.55; flex-shrink: 0; }
 
-.reader-landing-picker { display: flex; justify-content: center; padding: 2rem 0; }
-.reader-landing-picker-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5em;
-    border: 1px solid rgba(0, 11, 99, 0.15);
-    background: #fff;
-    color: rgb(0, 11, 99);
-    font: inherit;
-    font-weight: 600;
-    font-size: 1rem;
-    padding: 0.7em 1.2em;
-    border-radius: 999px;
-    cursor: pointer;
-    transition: background 120ms ease, border-color 120ms ease;
-}
-.reader-landing-picker-btn:hover {
-    background: rgba(0, 11, 99, 0.05);
-    border-color: rgba(0, 11, 99, 0.3);
-}
-.reader-landing-picker-icon { font-size: 1.1em; }
 .reader-topbar-end {
     display: flex;
     align-items: center;

@@ -18,11 +18,11 @@
     import ReaderTopBar from './ReaderTopBar.svelte';
     import { getProskomma } from './store';
     import { loadGlossary, lookup as lookupGlossary, type Glossary } from './glossary';
-    import { saveLastPosition, loadLastPosition, saveLastIso } from './position';
+    import { saveLastPosition, loadLastPosition, hasLastPosition, resolvePosition, saveLastIso } from './position';
     import { $bibleHighlights as bibleHighlightsStore } from '../../stores/bible-highlight-store';
     import { $activePane as activePaneStore } from '../../stores/branch-view-store';
     import { loadAppConfig, parseStartRef, type AppConfig } from '../data/app-config';
-    import { resolveChapterAudioUrl } from '../bw/dbt-media';
+    import { resolveChapterAudioUrl, loadBookTiming, type ResolvedAudio } from '../bw/dbt-media';
     import { loadChapterTiming, verseAtTime, baseVerseNumber, type TimingRow } from '../bw/pkf-timing';
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
@@ -77,7 +77,7 @@
     // (`media` prop, from info.json) has no audio for this book/chapter.
     // Tries every offered fileset, keyless sources first (raw CDN file >
     // helloao > DBT proxy) — see src/lib/bw/dbt-media.ts.
-    let dbtAudioUrl = $state<string | null>(null);
+    let dbtAudio = $state<ResolvedAudio | null>(null);
 
     // The Bible reader is only available at Standard (2) and Study (3) levels.
     function bibleAllowed(): boolean {
@@ -92,10 +92,11 @@
     onMount(async () => {
         saveLastIso(iso);
         // Per-language app-config (attribution, text direction, default ref).
-        loadAppConfig(iso).then((cfg) => {
-            if (!cfg) return;
+        const appCfgPromise = loadAppConfig(iso).then((cfg) => {
+            if (!cfg) return cfg;
             appCfg = cfg;
             if (cfg.collection?.textDirection) textDir = cfg.collection.textDirection;
+            return cfg;
         });
         if (styleUrl) {
             // Swap in this language's CSS bundle. Any previously-injected link with
@@ -118,11 +119,6 @@
             loadError = e instanceof Error ? e.message : String(e);
             return;
         }
-        // Initial view is the picker (Stories + Books grids) — no auto-open.
-        // The "global last-position memory" still drives in-chapter navigation
-        // and prev/next, but the user always lands on the picker first so they
-        // can choose a story or a book chapter.
-
         // Eagerly load the PKF binary in the background so the first chapter
         // open is instant instead of waiting for fetch + parse.
         if (!bsbMode) ensurePkf();
@@ -156,7 +152,12 @@
             }
         }) as EventListener);
 
-        // If arriving with Bible highlights from search, apply them after chapter opens
+        // If arriving with Bible highlights from search, apply them after chapter
+        // opens. Otherwise auto-open straight to a chapter — no intermediate
+        // "choose a book" landing click; matches sab-pwa, which never makes you
+        // click through an extra screen just to see the picker exists. First-ever
+        // visit (nothing saved yet) prefers the language's own start-at-reference
+        // over the hardcoded Matthew-1 default.
         const hlMap = bibleHighlightsStore.get();
         if (hlMap.size > 0) {
             const pos = loadLastPosition();
@@ -165,6 +166,16 @@
             if (doc && verses.length) {
                 openBookChapter(doc, pos.chapter).then(() => highlightVersesInDom(verses));
             }
+        } else if (catalog) {
+            let want = loadLastPosition();
+            if (!hasLastPosition()) {
+                const cfg = await appCfgPromise;
+                want = parseStartRef(cfg?.features?.['start-at-reference']) ?? want;
+            }
+            const available = catalog.documents.map((d) => ({ bookCode: d.bookCode, chapters: chapterCount(d) }));
+            const resolved = resolvePosition(want, available);
+            const doc = resolved ? catalog.documents.find((d) => d.bookCode === resolved.book) : null;
+            if (doc && resolved) openBookChapter(doc, resolved.chapter);
         }
     });
 
@@ -244,22 +255,8 @@
         });
     }
 
-    // Verse-synced audio highlighting (PKF timing/<BOOK>-<chapter>.json,
-    // spec §9) — a separate track from the search/jump highlight above: no
-    // auto-scroll (would fight the user's own scroll during playback), and
-    // it silently no-ops when the chapter has no timing data.
     let audioTimingRows = $state<TimingRow[] | null>(null);
     let lastHighlightedVerse: number | null = null;
-    $effect(() => {
-        const book = currentBook?.bookCode;
-        const ch = currentChapter;
-        audioTimingRows = null;
-        lastHighlightedVerse = null;
-        if (!book) return;
-        let cancelled = false;
-        loadChapterTiming(iso, book, ch).then((rows) => { if (!cancelled) audioTimingRows = rows; });
-        return () => { cancelled = true; };
-    });
 
     function highlightPlayingVerse(verseNum: number | null) {
         if (verseNum === lastHighlightedVerse) return;
@@ -272,38 +269,56 @@
     }
 
     function handleAudioTimeUpdate(t: number) {
-        if (!audioTimingRows) return;
-        const label = verseAtTime(audioTimingRows, t);
-        highlightPlayingVerse(label ? baseVerseNumber(label) : null);
-    }
-
-    function closeReader() {
-        currentBook = null;
-        rendered = null;
-        renderError = null;
+        if (audioTimingRows) {
+            const label = verseAtTime(audioTimingRows, t);
+            highlightPlayingVerse(label ? baseVerseNumber(label) : null);
+            return;
+        }
+        if (dbtTimingVerses) {
+            let match: number | null = null;
+            for (const [verse, [start, end]] of Object.entries(dbtTimingVerses)) {
+                if (t >= start && t < end) { match = parseInt(verse, 10); break; }
+            }
+            highlightPlayingVerse(Number.isFinite(match) ? match : null);
+        }
     }
 
     /** Open the book/chapter picker, anchored under the triggering element
-     * (SAB-style dropdown — see BiblePickerSheet.tsx). */
-    function openPicker(anchorRect?: DOMRect) {
-        window.dispatchEvent(new CustomEvent('open-bible-picker', { detail: { iso, anchorRect } }));
+     * (SAB-style dropdown — see BiblePickerSheet.tsx), landing on the given
+     * tab (sab-pwa has separate Book/Chapter trigger buttons in the header,
+     * each opening straight to their own tab). */
+    function openPicker(anchorRect?: DOMRect, initialTab: 'book' | 'chapter' = 'book') {
+        window.dispatchEvent(
+            new CustomEvent('open-bible-picker', { detail: { iso, anchorRect, initialTab } })
+        );
+    }
+
+    // Two different left navigation panes, one per UI level: the hierarchical
+    // AppSidebar (Study/level 3 only) and the flat sab-pwa-style
+    // StandardSidebar (Standard/level 2 only). Same hamburger button in the
+    // topbar, different event depending on which level is active.
+    function openSidebar() {
+        const lvl = typeof localStorage !== 'undefined' ? localStorage.getItem('bw-ui-level') : null;
+        window.dispatchEvent(new CustomEvent(lvl === '2' ? 'toggle-standard-sidebar' : 'toggle-sidebar'));
     }
 
     let chapterList = $derived(
         currentBook ? Array.from({ length: chapterCount(currentBook) }, (_, i) => i + 1) : []
     );
 
-    /** Format-mode tabs (Tier 2): Text is the default; Audio / Video appear
-     *  only when the current chapter actually has audio / video entries. */
-    type ReaderMode = 'text' | 'audio' | 'video';
+    /** Format-mode tabs (Tier 2): Text is the default; Video appears only
+     *  when the current chapter has chapter-level video entries. Audio has
+     *  no tab of its own — it's the ♪ toggle's bottom-pinned bar instead
+     *  (matches sab-pwa's single mute/volume icon, not a full mode switch;
+     *  a dedicated "Audio" tab that replaced the text was redundant with it). */
+    type ReaderMode = 'text' | 'video';
     let mode = $state<ReaderMode>('text');
     function setMode(m: ReaderMode) {
         mode = m;
     }
-    // Fall back to Text when the current chapter doesn't have the active
-    // mode's media, or when settings hide the corresponding format.
+    // Fall back to Text when the current chapter doesn't have video, or
+    // when settings hide it.
     $effect(() => {
-        if (mode === 'audio' && chapterAudio.length === 0) mode = 'text';
         if (mode === 'video' && (videosForChapter.length === 0 || !$settings.showVideos))
             mode = 'text';
     });
@@ -478,11 +493,13 @@
     }
 
     // ---- top-bar title -----------------------------------------------------
-    let topBarTitle = $derived(
-        currentBook
-            ? `${currentBook.toc2 ?? currentBook.toc ?? currentBook.bookCode} ${currentChapter}`
-            : iso
+    // Split into separate Book/Chapter labels — the topbar shows them as two
+    // independent dropdown triggers (sab-pwa's BookSelector/ChapterSelector),
+    // not one combined title button.
+    let bookLabel = $derived(
+        currentBook ? (currentBook.toc2 ?? currentBook.toc ?? currentBook.bookCode) : iso
     );
+    let chapterLabel = $derived(String(currentChapter));
     function onGlobalClick(e: MouseEvent) {
         if (!popover) return;
         const target = e.target as Node | null;
@@ -507,16 +524,55 @@
             : []
     );
 
+    // Verse-synced audio highlighting (PKF timing/<BOOK>-<chapter>.json,
+    // spec §9) — only ever published for chapters that have the local
+    // SE-native audio (audioForChapter), so gate on that instead of firing
+    // blind: a language with no audio at all (audioForChapter always empty)
+    // would otherwise 404 a timing request on every single chapter view.
+    // Even gated, an audio-having chapter can still lack timing specifically
+    // (delivered per-chapter, not guaranteed) — a 404 there is expected per
+    // spec, not a bug; loadChapterTiming() already no-ops on it silently.
+    $effect(() => {
+        const book = currentBook?.bookCode;
+        const ch = currentChapter;
+        audioTimingRows = null;
+        lastHighlightedVerse = null;
+        if (!book || audioForChapter.length === 0) return;
+        let cancelled = false;
+        loadChapterTiming(iso, book, ch).then((rows) => { if (!cancelled) audioTimingRows = rows; });
+        return () => { cancelled = true; };
+    });
+
     // When the CDN media manifest has no audio for this chapter, resolve the
     // /dbt CDN tree instead (covers both NT and OT, whichever filesets that
     // language actually offers — not limited to a single hand-picked fileset).
     $effect(() => {
         const book = currentBook?.bookCode;
         const ch = currentChapter;
-        dbtAudioUrl = null;
+        dbtAudio = null;
         if (!book || audioForChapter.length > 0) return;
         let cancelled = false;
-        resolveChapterAudioUrl(iso, book, ch).then((url) => { if (!cancelled) dbtAudioUrl = url; });
+        resolveChapterAudioUrl(iso, book, ch).then((r) => { if (!cancelled) dbtAudio = r; });
+        return () => { cancelled = true; };
+    });
+
+    // Verse-sync highlighting for DBT-sourced audio — a separate timing
+    // system from the PKF-native one above (§9), keyed by DBT audio fileset
+    // id: {[filesetId]: {[chapter]: {[verse]: [start, end]}}}. Only
+    // attempted for source "dbt" (raw/contrib fileset ids follow a
+    // non-DBT naming scheme, not guaranteed to appear in this file).
+    let dbtTimingVerses = $state<Record<string, [number, number]> | null>(null);
+    $effect(() => {
+        const book = currentBook?.bookCode;
+        const ch = currentChapter;
+        const audio = dbtAudio;
+        dbtTimingVerses = null;
+        if (!book || !audio || audio.source !== 'dbt') return;
+        let cancelled = false;
+        loadBookTiming(iso, book).then((timing) => {
+            if (cancelled) return;
+            dbtTimingVerses = timing?.[audio.filesetId]?.[String(ch)] ?? null;
+        });
         return () => { cancelled = true; };
     });
 
@@ -524,10 +580,10 @@
     let chapterAudio = $derived<AudioEntry[]>(
         audioForChapter.length > 0
             ? audioForChapter
-            : dbtAudioUrl && currentBook
+            : dbtAudio && currentBook
               ? [{
                     filename: `${currentBook.bookCode}-${currentChapter}`,
-                    url: dbtAudioUrl,
+                    url: dbtAudio.url,
                     bookCode: currentBook.bookCode,
                     chapter: currentChapter,
                     num: null, len: null, size: null, timingFile: null, src: 'dbt',
@@ -712,36 +768,15 @@
 {:else if !catalog}
     <div class="text-sm text-base-content/60">{tr('loadingCatalog')}</div>
 {:else if !currentBook}
-    <div class="flex justify-end mb-2">
-        <a
-            href={`/${iso}/search`}
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
-            style="color:rgb(0,11,99);background:rgba(0,11,99,0.06)"
-        >
-            💬 <span>{tr('aiSearch')}</span>
-        </a>
-    </div>
-    <!-- Stories are shown on the Simple-mode landing (TemplateSelectorIsland),
-         not here. This book-list page only renders in Standard/Study, so the
-         stories grid is intentionally omitted to keep it focused on the Bible.
-         Book/chapter selection goes through the one shared picker (see
-         BiblePickerSheet.tsx) — this used to be a separate inline grid here,
-         which diverged from the picker's own book list/behavior. -->
-    <section class="reader-landing-picker">
-        <button
-            type="button"
-            class="reader-landing-picker-btn"
-            onclick={(e) => openPicker(e.currentTarget.getBoundingClientRect())}
-        >
-            <span class="reader-landing-picker-icon" aria-hidden="true">📖</span>
-            <span>{tr('bibleBooks')} ({catalog.documents.length})</span>
-            <span class="reader-topbar-title-caret" aria-hidden="true">▾</span>
-        </button>
-    </section>
+    <!-- Transient: onMount auto-opens a chapter (last position, or the
+         language's start-at-reference on a first-ever visit) the instant the
+         catalog resolves — no "choose a book" click gate, matching sab-pwa. -->
+    <div class="text-sm text-base-content/60">{tr('loadingChapter')}</div>
 {:else}
     <section>
         <ReaderTopBar
-            title={topBarTitle}
+            {bookLabel}
+            {chapterLabel}
             {iso}
             searchActive={searchActive}
             bind:searchQuery
@@ -756,12 +791,10 @@
             bookmarked={bookmarked}
             onBookmarkToggle={toggleBookmark}
             onSettings={() => (showSettings = !showSettings)}
-            onTitle={openPicker}
+            onBookTap={(r) => openPicker(r, 'book')}
+            onChapterTap={(r) => openPicker(r, 'chapter')}
+            onMenu={openSidebar}
         />
-
-        <div class="flex items-center mb-3">
-            <button class="btn btn-sm btn-ghost" onclick={closeReader}>← {tr('books')}</button>
-        </div>
 
         <!-- Floating side arrows: vertically centred on the viewport, hidden on
              narrow screens (mobile uses swipe). Mirror SAB's reading layout. -->
@@ -788,7 +821,7 @@
             <SettingsPanel onclose={() => (showSettings = false)} />
         {/if}
 
-        {#if chapterAudio.length > 0 || ($settings.showVideos && videosForChapter.length > 0)}
+        {#if $settings.showVideos && videosForChapter.length > 0}
             <div class="reader-format-tabs">
                 <button
                     type="button"
@@ -797,24 +830,13 @@
                 >
                     {tr('tabText')}
                 </button>
-                {#if chapterAudio.length > 0}
-                    <button
-                        type="button"
-                        class:active={mode === 'audio'}
-                        onclick={() => setMode('audio')}
-                    >
-                        {tr('tabAudio')}
-                    </button>
-                {/if}
-                {#if $settings.showVideos && videosForChapter.length > 0}
-                    <button
-                        type="button"
-                        class:active={mode === 'video'}
-                        onclick={() => setMode('video')}
-                    >
-                        {tr('tabVideo')}
-                    </button>
-                {/if}
+                <button
+                    type="button"
+                    class:active={mode === 'video'}
+                    onclick={() => setMode('video')}
+                >
+                    {tr('tabVideo')}
+                </button>
             </div>
         {/if}
 
@@ -828,19 +850,7 @@
             dir={textDir}
             style={`font-size:${$settings.fontSize}px;line-height:${$settings.lineHeight}`}
         >
-            {#if mode === 'audio' && chapterAudio.length > 0}
-                <div class="reader-media">
-                    {#each chapterAudio as a (a.filename)}
-                        {#if a.url}
-                            <AudioPlayer
-                                src={a.url}
-                                label={`${a.bookCode ?? ''} ${a.chapter ?? ''}`.trim()}
-                                onTimeUpdate={handleAudioTimeUpdate}
-                            />
-                        {/if}
-                    {/each}
-                </div>
-            {:else if mode === 'video' && videosForChapter.length > 0 && $settings.showVideos}
+            {#if mode === 'video' && videosForChapter.length > 0 && $settings.showVideos}
                 <div class="reader-media">
                     <div class="reader-videos">
                         {#each videosForChapter as v (v.id)}

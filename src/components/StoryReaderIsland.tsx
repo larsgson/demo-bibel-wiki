@@ -28,6 +28,7 @@ import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
 import { resolveImageUrl, resolveMediumUrl } from "../lib/bw/image-utils"
 import { shouldProbePkf } from "../lib/bw/language-list"
 import { loadLanguageMedia } from "../lib/bw/dbt-media"
+import { loadVernacularFontFace } from "../lib/bw/vernacular-font"
 import { pkfUrl } from "../lib/bw/pkf-url"
 import languageStyles from "../data/language-styles.json"
 import languagePreferences from "../data/language-preferences.json"
@@ -82,6 +83,39 @@ export default function StoryReaderIsland({
     document.documentElement.style.setProperty("--secondary-font-scale", String(secondary?.fontScale ?? 1))
     document.documentElement.style.setProperty("--primary-gap-scale", String(primary?.gapScale ?? 1))
   }, [selectedLang, secondaryLangs])
+
+  // Vernacular fonts for the primary/secondary text, if the CDN ships real
+  // @font-face for this language (see vernacular-font.ts for why this can't
+  // just reuse the Bible reader's bundle.css <link> swap — two languages can
+  // be on screen at once here).
+  useEffect(() => {
+    let cancelled = false
+    loadVernacularFontFace(selectedLang).then((family) => {
+      if (!cancelled) {
+        document.documentElement.style.setProperty("--primary-font-family", family ?? "inherit")
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedLang])
+
+  useEffect(() => {
+    const secondaryIso = secondaryLangs[0]
+    if (!secondaryIso) {
+      document.documentElement.style.setProperty("--secondary-font-family", "inherit")
+      return
+    }
+    let cancelled = false
+    loadVernacularFontFace(secondaryIso).then((family) => {
+      if (!cancelled) {
+        document.documentElement.style.setProperty("--secondary-font-family", family ?? "inherit")
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [secondaryLangs])
 
   // Load locale data for current language from build-time data
   useEffect(() => {
@@ -528,7 +562,7 @@ export default function StoryReaderIsland({
   }
 
   const primaryParsed = parseMarkdownIntoSections(markdown, {}, localeData, engLocale)
-  const storyTitle = primaryParsed.title || primaryParsed.description || ""
+  const storyTitle = primaryParsed.title || ""
 
   const handleSectionClick = (sectionIndex: number) => {
     if (!audioLang) return // Audio disabled

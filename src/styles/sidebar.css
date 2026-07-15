@@ -276,6 +276,9 @@
 
 /* Mobile menu button */
 .app-menu-button-container { display: none; }
+/* The Bible reader's topbar has its own inline hamburger (ReaderTopBar) —
+ * hide the floating global one while it's on screen so there's only one. */
+body:has(.reader-topbar-menu-btn) .app-menu-button-container { display: none !important; }
 .app-menu-button {
   position: fixed;
   top: calc(0.6rem + env(safe-area-inset-top));
@@ -298,6 +301,9 @@
   .app-sidebar { transform: translateX(0); }
   .app-main { margin-left: var(--app-sidebar-width); }
   .app-menu-button-container { display: none !important; }
+  /* Unlike the floating global button, the reader topbar's inline hamburger
+   * stays visible at every width (matches sab-pwa's Navbar, which always
+   * shows it) — it's part of the header row, not a mobile-only affordance. */
 }
 
 /* ── Landing pages: no left navigation, full-width content ── */
@@ -322,15 +328,18 @@
 /* ── Simple UI level (1): no left navigation at all ── */
 html[data-ui-level="1"] .app-sidebar,
 html[data-ui-level="1"] .app-sidebar-backdrop,
-html[data-ui-level="1"] .app-menu-button-container {
+html[data-ui-level="1"] .app-menu-button-container,
+html[data-ui-level="1"] .reader-topbar-menu-btn {
   display: none !important;
 }
 html[data-ui-level="1"] .app-main {
   margin-left: 0 !important;
 }
 
-/* ── Standard UI level (2): no left navigation either (first step of the
-   Standard-mode redesign — more to come). Mirrors the Simple-level rule. ── */
+/* ── Standard UI level (2): the hierarchical AppSidebar (Study-only) stays
+   hidden, but this level has its own flat StandardSidebar drawer instead —
+   the topbar hamburger stays visible and opens that one (Reader.svelte's
+   openSidebar() picks the event by level). ── */
 html[data-ui-level="2"] .app-sidebar,
 html[data-ui-level="2"] .app-sidebar-backdrop,
 html[data-ui-level="2"] .app-menu-button-container {
@@ -338,6 +347,14 @@ html[data-ui-level="2"] .app-menu-button-container {
 }
 html[data-ui-level="2"] .app-main {
   margin-left: 0 !important;
+}
+/* StandardSidebar (level 2) / AppSidebar (level 3) are each exclusive to
+   their own level — never show the other's drawer. */
+html[data-ui-level="1"] .standard-sidebar,
+html[data-ui-level="1"] .standard-sidebar-backdrop,
+html[data-ui-level="3"] .standard-sidebar,
+html[data-ui-level="3"] .standard-sidebar-backdrop {
+  display: none !important;
 }
 
 /* ── Standard-mode bottom tab bar (Bible / Search / Settings / Mode) ──
@@ -419,6 +436,93 @@ html[data-ui-level="2"] .app-main {
 .standard-level-option:hover { background: rgba(255, 255, 255, 0.1); }
 .standard-level-option.active { background: rgba(255, 255, 255, 0.15); color: #fff; }
 .standard-level-dots { letter-spacing: 0.1em; color: rgba(255, 215, 0, 0.9); font-size: 0.7rem; }
+
+/* ── StandardSidebar (level 2) — flat drawer modelled on sab-pwa's
+   Sidebar.svelte. Unlike AppSidebar it's a pure overlay at every width
+   (sab-pwa's own drawer never becomes a persistent desktop rail), so there's
+   no separate desktop rule — just off-canvas → open at all sizes. ── */
+.standard-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: min(20rem, 82vw);
+  height: 100vh;
+  background: rgb(0, 11, 99);
+  color: #fff;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.3);
+}
+.standard-sidebar.open { transform: translateX(0); }
+
+.standard-sidebar-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  background: rgb(0, 9, 80);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.standard-sidebar-heading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+.standard-sidebar-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.2rem;
+  opacity: 0.8;
+}
+.standard-sidebar-close:hover { opacity: 1; }
+
+.standard-sidebar-menu {
+  padding: 0.4rem 0;
+  margin: 0;
+  list-style: none;
+}
+.standard-sidebar-menu li { margin: 0; }
+.standard-sidebar-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.7rem 1rem;
+  transition: background-color 0.15s ease;
+}
+.standard-sidebar-menu button:hover { background: rgba(255, 255, 255, 0.08); }
+.standard-sidebar-menu button.active { background: rgba(255, 255, 255, 0.14); color: #fff; font-weight: 600; }
+
+.standard-sidebar-backdrop {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  z-index: 999;
+}
+body.standard-sidebar-open { overflow: hidden; }
 
 /* ── Immersive audio playback (focus mode): hide the left navigation. ──
    Returns when the mini player is shown (focus mode off) or audio is fully

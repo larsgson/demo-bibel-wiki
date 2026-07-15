@@ -690,6 +690,7 @@ body.focus-mode .verse-focus-active {
 
 .listen-verse-text-primary {
   padding: 0.75rem;
+  font-family: var(--primary-font-family, inherit);
   font-size: calc(0.9rem * var(--primary-font-scale, 1));
   line-height: 1.6;
   color: var(--text);
@@ -716,6 +717,7 @@ body.focus-mode .verse-focus-active {
 
 .listen-verse-text-secondary {
   padding: 0 0.75rem 0.75rem;
+  font-family: var(--secondary-font-family, inherit);
   font-size: calc(0.85rem * var(--secondary-font-scale, 1));
   line-height: 1.5;
   color: var(--text-secondary, #555);
