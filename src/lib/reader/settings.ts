@@ -20,6 +20,8 @@ export type ReaderSettings = {
     /** Scripture-body font size in pixels; overrides the per-language
      *  delta.css default. */
     fontSize: number;
+    /** Scripture-body line height as a unitless multiplier. */
+    lineHeight: number;
     /** When false, figure grafts in the Sofria render are suppressed. */
     showIllustrations: boolean;
     /** When false, video tabs and inline video thumbnails are suppressed. */
@@ -29,6 +31,7 @@ export type ReaderSettings = {
 const DEFAULTS: ReaderSettings = {
     theme: 'Normal',
     fontSize: 20,
+    lineHeight: 1.6,
     showIllustrations: true,
     showVideos: true
 };

@@ -131,6 +131,7 @@ export const en = {
     closeSearch: "Close search",
     chooseBookChapter: "Choose book and chapter",
     fontSize: "Font size",
+    lineHeight: "Line spacing",
     theme: "Theme",
     showIllustrations: "Show illustrations",
     showVideos: "Show videos",

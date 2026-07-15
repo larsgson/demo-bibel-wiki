@@ -754,17 +754,6 @@
             <SettingsPanel onclose={() => (showSettings = false)} />
         {/if}
 
-        <div class="flex flex-wrap gap-1 mb-4">
-            {#each chapterList as ch (ch)}
-                <button
-                    class="btn btn-xs {ch === currentChapter ? 'btn-primary' : 'btn-ghost'}"
-                    onclick={() => openBookChapter(currentBook!, ch)}
-                >
-                    {ch}
-                </button>
-            {/each}
-        </div>
-
         {#if chapterAudio.length > 0 || ($settings.showVideos && videosForChapter.length > 0)}
             <div class="reader-format-tabs">
                 <button
@@ -803,7 +792,7 @@
             data-iso={iso}
             data-color-theme={$settings.theme}
             dir={textDir}
-            style={`font-size:${$settings.fontSize}px`}
+            style={`font-size:${$settings.fontSize}px;line-height:${$settings.lineHeight}`}
         >
             {#if mode === 'audio' && chapterAudio.length > 0}
                 <div class="reader-media">

@@ -194,21 +194,14 @@ export function BiblePickerSheet() {
     return () => window.removeEventListener("open-bible-picker", onOpen)
   }, [ensureBooks])
 
-  // Close on Escape or an outside click (native-dropdown behavior).
+  // Close on Escape. Outside-click-to-close is handled by the scrim's own
+  // onClick (below) + stopPropagation on the panel — simpler and more
+  // reliable than a document-level listener racing React's event handling.
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false) }
-    const onClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) setOpen(false)
-    }
     window.addEventListener("keydown", onKey)
-    // Deferred so the opening click itself doesn't immediately close it.
-    const id = setTimeout(() => document.addEventListener("click", onClick), 0)
-    return () => {
-      window.removeEventListener("keydown", onKey)
-      clearTimeout(id)
-      document.removeEventListener("click", onClick)
-    }
+    return () => window.removeEventListener("keydown", onKey)
   }, [open])
 
   function chooseBook(code: string) {
@@ -263,7 +256,7 @@ export function BiblePickerSheet() {
     : { position: "fixed", top: 64, left: "50%", transform: "translateX(-50%)" }
 
   return (
-    <div className="bible-picker-scrim">
+    <div className="bible-picker-scrim" onClick={() => setOpen(false)}>
       <div
         className="bible-picker-panel"
         style={style}
@@ -271,6 +264,7 @@ export function BiblePickerSheet() {
         aria-modal="true"
         aria-label={t(lang, "biblePicker.title")}
         ref={panelRef}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="bible-picker-tabs">
           <button

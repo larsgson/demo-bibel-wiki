@@ -43,6 +43,19 @@
     </div>
 
     <div class="settings-row">
+        <label for="sp-lineHeight" class="settings-label">{tr('lineHeight')}</label>
+        <input
+            id="sp-lineHeight"
+            type="range"
+            min="1.2"
+            max="2.2"
+            step="0.1"
+            bind:value={$settings.lineHeight}
+        />
+        <span class="settings-value tabular-nums">{$settings.lineHeight.toFixed(1)}</span>
+    </div>
+
+    <div class="settings-row">
         <span class="settings-label">{tr('theme')}</span>
         <div class="settings-segmented">
             {#each THEMES as t (t.value)}
