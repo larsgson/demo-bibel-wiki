@@ -11,16 +11,16 @@ import { t } from "../lib/bw/ui-locales"
 import { sectionOf, testamentOf, sectionLabel } from "../lib/bw/bible-sections"
 import { loadBookList } from "../lib/bw/book-list"
 import staticBooks from "../lib/bw/bible-books"
+import { pkfUrl } from "../lib/bw/pkf-url"
 import "../styles/bible-picker.css"
 
 /**
  * sab-pwa-style book/chapter picker: a compact panel anchored under the
- * triggering element (the reader title / landing button), with Book and
- * Chapter TABS that auto-advance — selecting a book switches the active tab
- * to Chapter in place, rather than expanding an accordion. Matches
- * example/sab-pwa's BookSelector/ChapterSelector + TabsMenu + SelectGrid
- * pattern (see internal notes); verse-level selection is not implemented yet
- * (sab-pwa also has a Verse tab — deferred, not required for this pass).
+ * triggering element (the reader title / landing button), with Book /
+ * Chapter / Verse TABS that auto-advance — selecting a book switches the
+ * active tab to Chapter in place (and Chapter to Verse), rather than
+ * expanding an accordion. Matches example/sab-pwa's BookSelector/
+ * ChapterSelector + TabsMenu + SelectGrid pattern.
  *
  * Opened from a reader's title via the global `open-bible-picker` event,
  * whose detail carries `anchorRect` (the trigger's getBoundingClientRect())
@@ -30,6 +30,12 @@ import "../styles/bible-picker.css"
  * §6.4 — localised names + sections + chapter counts, no `.pkf` load needed),
  * and falls back to the static 66-book table (+ helloao vernacular names) for
  * English/BSB and Spanish/DBT, which are not on this CDN.
+ *
+ * Verse numbers come from the catalog's `versesByChapters` (both the PKF
+ * catalog and the BSB catalog carry this) — the same file ReaderLoader
+ * already resolves a URL for. Languages with neither (Spanish/DBT bridge
+ * languages) simply have no Verse tab, degrading the same way sab-pwa itself
+ * skips the tab when `verseCount === 0`.
  */
 
 const POS_KEY = "bw-last-position"
@@ -99,15 +105,49 @@ async function loadPickerBooks(iso: string): Promise<Group[]> {
   return order.map((section) => ({ section, books: map.get(section)! }))
 }
 
-type Tab = "book" | "chapter"
+/** bookCode -> chapter -> verse-number keys (from versesByChapters). */
+type VerseData = Map<string, Record<string, Record<string, string>>>
+
+async function loadVerseData(iso: string): Promise<VerseData | null> {
+  try {
+    let catalogUrl: string | null = null
+    if (iso === "eng") {
+      catalogUrl = "/bsb/catalog.json"
+    } else {
+      const infoRes = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
+      if (!infoRes.ok) return null
+      const info = await infoRes.json()
+      const pkfAsset = info.assets?.find((a: any) => a.kind === "pkf")
+      const catalogAsset = pkfAsset
+        ? info.assets?.find((a: any) => a.kind === "json" && a.base === pkfAsset.base)
+        : null
+      if (!catalogAsset) return null
+      catalogUrl = pkfUrl(`/pkf/${iso}/${catalogAsset.name}`)
+    }
+    const catRes = await fetch(catalogUrl)
+    if (!catRes.ok) return null
+    const catalog = await catRes.json()
+    const map: VerseData = new Map()
+    for (const doc of catalog.documents ?? []) {
+      if (doc.bookCode && doc.versesByChapters) map.set(doc.bookCode, doc.versesByChapters)
+    }
+    return map
+  } catch {
+    return null
+  }
+}
+
+type Tab = "book" | "chapter" | "verse"
 
 export function BiblePickerSheet() {
   const storeIso = useStore($selectedIso)
   const [open, setOpen] = useState(false)
   const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
   const [groups, setGroups] = useState<Group[]>([])
+  const [verseData, setVerseData] = useState<VerseData | null>(null)
   const [tab, setTab] = useState<Tab>("book")
   const [pickedBook, setPickedBook] = useState<string | null>(null)
+  const [pickedChapter, setPickedChapter] = useState<number | null>(null)
   const [current, setCurrent] = useState<{ book: string; chapter: number } | null>(null)
   const loadedForIso = useRef<string>("")
   const panelRef = useRef<HTMLDivElement>(null)
@@ -123,8 +163,9 @@ export function BiblePickerSheet() {
     async (forIso: string) => {
       if (loadedForIso.current === forIso && groups.length) return
       loadedForIso.current = forIso
-      const g = await loadPickerBooks(forIso)
+      const [g, v] = await Promise.all([loadPickerBooks(forIso), loadVerseData(forIso)])
       setGroups(g)
+      setVerseData(v)
     },
     [groups.length],
   )
@@ -136,6 +177,7 @@ export function BiblePickerSheet() {
       const pos = savedPosition()
       setCurrent(pos)
       setPickedBook(pos?.book ?? null)
+      setPickedChapter(null)
       setTab("book")
       setAnchorRect(detail?.anchorRect ?? null)
       setOpen(true)
@@ -171,21 +213,44 @@ export function BiblePickerSheet() {
 
   function chooseBook(code: string) {
     setPickedBook(code)
+    setPickedChapter(null)
     setTab("chapter")
   }
 
-  function selectChapter(book: string, chapter: number) {
+  function goToChapter(book: string, chapter: number, highlightVerses?: number[]) {
     try { localStorage.setItem(POS_KEY, JSON.stringify({ book, chapter })) } catch {}
     showBible()
-    window.dispatchEvent(new CustomEvent("navigate-to-chapter", { detail: { book, chapter } }))
+    window.dispatchEvent(new CustomEvent("navigate-to-chapter", { detail: { book, chapter, highlightVerses } }))
     setOpen(false)
+  }
+
+  function selectChapter(book: string, chapter: number) {
+    const verseKeys = verseData?.get(book)?.[String(chapter)]
+    const verseCount = verseKeys ? Object.keys(verseKeys).length : 0
+    if (verseCount > 1) {
+      setPickedChapter(chapter)
+      setTab("verse")
+    } else {
+      goToChapter(book, chapter)
+    }
+  }
+
+  function selectVerse(book: string, chapter: number, verse: number) {
+    goToChapter(book, chapter, [verse])
   }
 
   if (!open) return null
 
   const bookLabel = t(lang, "biblePicker.bookTab")
   const chapterLabel = t(lang, "biblePicker.chapterTab")
+  const verseLabel = t(lang, "biblePicker.verseTab")
   const pickedBookEntry = groups.flatMap((g) => g.books).find((b) => b.code === pickedBook) ?? null
+  const verseKeys = pickedBook && pickedChapter
+    ? verseData?.get(pickedBook)?.[String(pickedChapter)]
+    : undefined
+  const verseNumbers = verseKeys
+    ? Object.keys(verseKeys).map(Number).sort((a, b) => a - b)
+    : []
 
   // Anchored position, clamped to the viewport; falls back to a centered
   // top panel when no trigger rect is available.
@@ -222,6 +287,15 @@ export function BiblePickerSheet() {
               onClick={() => setTab("chapter")}
             >
               {chapterLabel}
+            </button>
+          )}
+          {pickedChapter && verseNumbers.length > 0 && (
+            <button
+              type="button"
+              className={`bible-picker-tab ${tab === "verse" ? "active" : ""}`}
+              onClick={() => setTab("verse")}
+            >
+              {verseLabel}
             </button>
           )}
         </div>
@@ -265,6 +339,28 @@ export function BiblePickerSheet() {
                   </button>
                 )
               })}
+            </div>
+          )}
+
+          {tab === "verse" && pickedBook && pickedChapter && (
+            <div className="bible-picker-grid bible-picker-grid-verses">
+              <button
+                type="button"
+                className="bible-picker-cell bible-picker-cell-wide"
+                onClick={() => goToChapter(pickedBook, pickedChapter)}
+              >
+                {t(lang, "biblePicker.wholeChapter")}
+              </button>
+              {verseNumbers.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  className="bible-picker-cell"
+                  onClick={() => selectVerse(pickedBook, pickedChapter, v)}
+                >
+                  {v}
+                </button>
+              ))}
             </div>
           )}
         </div>

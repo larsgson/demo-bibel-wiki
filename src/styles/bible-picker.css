@@ -80,6 +80,20 @@
   grid-template-columns: repeat(6, 1fr);
   padding-top: 0.25rem;
 }
+.bible-picker-grid-verses {
+  grid-template-columns: repeat(6, 1fr);
+  padding-top: 0.25rem;
+}
+.bible-picker-cell-wide {
+  grid-column: 1 / -1;
+  aspect-ratio: auto;
+  min-height: 2.2rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: rgba(0, 11, 99, 0.08);
+  margin-bottom: 0.2rem;
+}
 .bible-picker-cell {
   aspect-ratio: 1 / 1;
   min-height: 2.4rem;

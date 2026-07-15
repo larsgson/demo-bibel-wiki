@@ -168,6 +168,8 @@ export const es = {
     loading: "Cargando…",
     bookTab: "Libro",
     chapterTab: "Capítulo",
+    verseTab: "Versículo",
+    wholeChapter: "Capítulo completo",
   },
 
   study: {

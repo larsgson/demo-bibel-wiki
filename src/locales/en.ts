@@ -168,6 +168,8 @@ export const en = {
     loading: "Loading…",
     bookTab: "Book",
     chapterTab: "Chapter",
+    verseTab: "Verse",
+    wholeChapter: "Whole chapter",
   },
 
   study: {
