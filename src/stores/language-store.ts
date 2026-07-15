@@ -264,7 +264,13 @@ export async function loadLanguageData(langCode: string) {
 
     for (const canon of ["nt", "ot"]) {
       const preferredFileset = getPreferred(canon)
-      let canonResult: any = null
+      // Fetch every category's best fileset first, then decide — categories
+      // aren't mutually-exclusive complete bundles. E.g. an "audio-with-timecode"
+      // fileset may carry only `.a` (audio) with no `.t`, while the real text
+      // lives in a separate "text-only" fileset for the same language. Locking
+      // onto whichever category resolves first (old behaviour) could pick an
+      // audio-only fileset and never fall through to the text-only one.
+      const byCategory: Record<string, any> = {}
       for (const cat of categories) {
         const langEntries = manifest?.files?.[canon]?.[cat]
         if (!langEntries || !langEntries[langCode]) continue
@@ -282,16 +288,35 @@ export async function loadLanguageData(langCode: string) {
             const resp = await fetch(`/ALL-langs-data/${canon}/${cat}/${langCode}/${distinctId}/data.json`)
             if (!resp.ok) continue
             const data = await resp.json()
-            if (!canonResult) canonResult = { langCode, canon, category: cat, distinctId, data }
-            if (cat === "with-timecode") {
-              canonResult = { langCode, canon, category: cat, distinctId, data }
-              break
-            }
+            byCategory[cat] = { distinctId, data }
+            break
           } catch {
             continue
           }
         }
-        if (canonResult && canonResult.category === "with-timecode") break
+        // with-timecode bundles audio+text together — the ideal case, no need
+        // to keep looking at lower-priority categories.
+        if (byCategory["with-timecode"]) break
+      }
+
+      let canonResult: any = null
+      if (byCategory["with-timecode"]) {
+        const r = byCategory["with-timecode"]
+        canonResult = { langCode, canon, category: "with-timecode", distinctId: r.distinctId, data: r.data }
+      } else {
+        const textCat = categories.find((c) => byCategory[c]?.data?.t)
+        const audioCat = byCategory["audio-with-timecode"] ? "audio-with-timecode" : null
+        const text = textCat ? byCategory[textCat] : null
+        const audio = audioCat ? byCategory[audioCat] : null
+        if (text || audio) {
+          canonResult = {
+            langCode,
+            canon,
+            category: audioCat ?? textCat,
+            distinctId: (text ?? audio).distinctId,
+            data: { ...(audio?.data ?? {}), ...(text?.data ?? {}) },
+          }
+        }
       }
       if (canonResult) {
         canonResults[canon] = canonResult
