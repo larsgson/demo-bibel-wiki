@@ -8,8 +8,12 @@
     type Props = {
         src: string;
         label?: string;
+        /** Called on every playback tick with the current time in seconds —
+         *  used by the reader to drive verse-sync highlighting. Optional;
+         *  the player has no opinion on what a caller does with it. */
+        onTimeUpdate?: (t: number) => void;
     };
-    let { src, label = '' }: Props = $props();
+    let { src, label = '', onTimeUpdate }: Props = $props();
 
     let audioEl = $state<HTMLAudioElement | null>(null);
     let playing = $state(false);
@@ -66,7 +70,11 @@
         preload="metadata"
         onplay={() => (playing = true)}
         onpause={() => (playing = false)}
-        ontimeupdate={() => audioEl && (currentTime = audioEl.currentTime)}
+        ontimeupdate={() => {
+            if (!audioEl) return;
+            currentTime = audioEl.currentTime;
+            onTimeUpdate?.(currentTime);
+        }}
         onloadedmetadata={() => audioEl && (duration = audioEl.duration)}
         onended={() => (playing = false)}
     ></audio>

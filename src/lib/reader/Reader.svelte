@@ -23,6 +23,7 @@
     import { $activePane as activePaneStore } from '../../stores/branch-view-store';
     import { loadAppConfig, parseStartRef, type AppConfig } from '../data/app-config';
     import { resolveChapterAudioUrl } from '../bw/dbt-media';
+    import { loadChapterTiming, verseAtTime, baseVerseNumber, type TimingRow } from '../bw/pkf-timing';
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
@@ -241,6 +242,39 @@
             }
             if (firstEl) firstEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
         });
+    }
+
+    // Verse-synced audio highlighting (PKF timing/<BOOK>-<chapter>.json,
+    // spec §9) — a separate track from the search/jump highlight above: no
+    // auto-scroll (would fight the user's own scroll during playback), and
+    // it silently no-ops when the chapter has no timing data.
+    let audioTimingRows = $state<TimingRow[] | null>(null);
+    let lastHighlightedVerse: number | null = null;
+    $effect(() => {
+        const book = currentBook?.bookCode;
+        const ch = currentChapter;
+        audioTimingRows = null;
+        lastHighlightedVerse = null;
+        if (!book) return;
+        let cancelled = false;
+        loadChapterTiming(iso, book, ch).then((rows) => { if (!cancelled) audioTimingRows = rows; });
+        return () => { cancelled = true; };
+    });
+
+    function highlightPlayingVerse(verseNum: number | null) {
+        if (verseNum === lastHighlightedVerse) return;
+        lastHighlightedVerse = verseNum;
+        document.querySelectorAll('.verse-block.audio-playing').forEach((el) =>
+            el.classList.remove('audio-playing'));
+        if (verseNum == null) return;
+        const el = document.querySelector(`.verse-block[data-v="${verseNum}"]`);
+        if (el) el.classList.add('audio-playing');
+    }
+
+    function handleAudioTimeUpdate(t: number) {
+        if (!audioTimingRows) return;
+        const label = verseAtTime(audioTimingRows, t);
+        highlightPlayingVerse(label ? baseVerseNumber(label) : null);
     }
 
     function closeReader() {
@@ -801,6 +835,7 @@
                             <AudioPlayer
                                 src={a.url}
                                 label={`${a.bookCode ?? ''} ${a.chapter ?? ''}`.trim()}
+                                onTimeUpdate={handleAudioTimeUpdate}
                             />
                         {/if}
                     {/each}
@@ -870,6 +905,7 @@
                         <AudioPlayer
                             src={a.url}
                             label={`${a.bookCode ?? ''} ${a.chapter ?? ''}`.trim()}
+                            onTimeUpdate={handleAudioTimeUpdate}
                         />
                     {/if}
                 {/each}

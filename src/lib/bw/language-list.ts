@@ -8,8 +8,9 @@
  *     + audio — the priority tier)
  *
  * The union is longer than either source (39 .pkf languages are not in the
- * ALL-langs catalog). For those, we fall back to the uppercased ISO code as the
- * display name until a proper 639-3 reference name is wired in.
+ * ALL-langs catalog). For those, the live PKF manifest's own `nm`/`v` fields
+ * (§3 of the CDN client-data spec) supply the display name — an ISO-uppercase
+ * fallback is used only if even the manifest lacks the language.
  */
 
 import pkfLangs from "../../../config/pkf-langs.json"
@@ -29,10 +30,52 @@ export interface PickerLanguage {
   study: boolean
   /** Source category from ALL-langs (e.g. "with-timecode"), if known */
   category?: string
-  /** Has audio in any canon, per the live CDN media-index (/dbt/_app/media-index.json). */
+  /** Has audio in any canon — OR of the DBT media-index (/dbt/_app/media-index.json)
+   *  and the PKF manifest's own Scripture-Earth-sourced `media` flags. */
   audio?: boolean
-  /** Has verse-synced audio in any canon, per the same index. */
+  /** Has verse-synced audio in any canon, same sources as `audio`. */
   timing?: boolean
+  /** Testament coverage from the PKF manifest's `codex` field ("o"/"n"/"d"
+   *  letters, e.g. "on" = full Bible, "n" = NT only), when known. */
+  codex?: string
+}
+
+interface PkfManifestEntry {
+  nm: string
+  v?: string
+  media: string
+  codex: string
+}
+
+let pkfManifestPromise: Promise<Map<string, PkfManifestEntry>> | null = null
+
+/** Live `/pkf/manifest.json`, normalized to an iso→entry map. Cached for the
+ *  session. Backs both `loadLocalPkfSet()` (dev on-disk probing) and the
+ *  picker enrichment step below (names + Scripture-Earth media/codex flags). */
+function loadPkfManifest(): Promise<Map<string, PkfManifestEntry>> {
+  if (pkfManifestPromise) return pkfManifestPromise
+  pkfManifestPromise = (async () => {
+    try {
+      const resp = await fetch(pkfUrl("/pkf/manifest.json"))
+      if (!resp.ok) return new Map<string, PkfManifestEntry>()
+      const m = await resp.json()
+      const langs = m.languages
+      // manifest.json's `languages` has been both an array of {iso, ...} and
+      // a dict keyed by iso (current CDN shape) — handle either.
+      const entries: [string, any][] = Array.isArray(langs)
+        ? langs.map((l: any) => [l.iso, l])
+        : Object.entries(langs ?? {})
+      return new Map<string, PkfManifestEntry>(
+        entries.map(([iso, e]) => [
+          iso,
+          { nm: e?.nm ?? iso.toUpperCase(), v: e?.v, media: e?.media ?? "", codex: e?.codex ?? "" },
+        ]),
+      )
+    } catch {
+      return new Map<string, PkfManifestEntry>()
+    }
+  })()
+  return pkfManifestPromise
 }
 
 const PKF_SET = new Set<string>((pkfLangs as { isos: string[] }).isos)
@@ -52,25 +95,8 @@ export function hasPkf(iso: string): boolean {
 // Dev-only: which .pkf languages are actually present on disk. In production all
 // 588 are deployed, so we trust the committed list; in dev only a subset may be
 // fetched, so we gate probes on the local manifest to avoid 404 noise.
-let localPkfPromise: Promise<Set<string>> | null = null
 function loadLocalPkfSet(): Promise<Set<string>> {
-  if (localPkfPromise) return localPkfPromise
-  localPkfPromise = (async () => {
-    try {
-      const resp = await fetch(pkfUrl("/pkf/manifest.json"))
-      if (!resp.ok) return new Set<string>()
-      const m = await resp.json()
-      const langs = m.languages
-      // manifest.json's `languages` has been both an array of {iso, ...} and
-      // a dict keyed by iso (current CDN shape) — handle either.
-      return new Set<string>(
-        Array.isArray(langs) ? langs.map((l: any) => l.iso) : Object.keys(langs ?? {}),
-      )
-    } catch {
-      return new Set<string>()
-    }
-  })()
-  return localPkfPromise
+  return loadPkfManifest().then((m) => new Set(m.keys()))
 }
 
 /** Should we probe /pkf/{iso}/info.json for this language? In production, true
@@ -129,10 +155,44 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
     })
   }
 
-  // 3. Live CDN media index (/dbt/_app/media-index.json) → real audio/timing
-  // availability per language, independent of (and often broader than) the
-  // .pkf list — many .pkf languages have no CDN media, and many non-.pkf
-  // languages do have audio via the /dbt tree.
+  // 3. Live PKF manifest (/pkf/manifest.json) → authoritative names for .pkf
+  // languages missing from ALL-langs (replaces the ISO-uppercase fallback from
+  // step 2), plus Scripture-Earth's own media/codex flags. `media` here is
+  // SE-scope only (spec §3) — OR'd with the DBT index in step 4 below for the
+  // full picture, never overwritten.
+  try {
+    const pkfManifest = await loadPkfManifest()
+    for (const [iso, e] of pkfManifest) {
+      const seAudio = e.media.includes("a")
+      const seTiming = e.media.includes("t")
+      const entry = byIso.get(iso)
+      if (entry) {
+        if (entry.name === iso.toUpperCase()) entry.name = e.nm
+        if (entry.vernacular === iso.toUpperCase()) entry.vernacular = e.v || e.nm
+        entry.audio = !!(entry.audio || seAudio)
+        entry.timing = !!(entry.timing || seTiming)
+        entry.codex = e.codex || entry.codex
+      } else {
+        byIso.set(iso, {
+          iso,
+          name: e.nm,
+          vernacular: e.v || e.nm,
+          pkf: true,
+          study: isStudyLanguage(iso),
+          audio: seAudio,
+          timing: seTiming,
+          codex: e.codex,
+        })
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to load PKF manifest for picker enrichment:", e)
+  }
+
+  // 4. Live CDN media index (/dbt/_app/media-index.json) → DBT/Bible Brain
+  // audio/timing availability per language, independent of (and often
+  // broader than) the .pkf list. OR'd with whatever step 3 already found —
+  // a language can have SE audio, DBT audio, or both.
   try {
     const media = await loadMediaIndex()
     for (const [iso, avail] of media) {
@@ -140,8 +200,8 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
       const audio = !!(avail.nt?.audio || avail.ot?.audio)
       const timing = !!(avail.nt?.timing || avail.ot?.timing)
       if (entry) {
-        entry.audio = audio
-        entry.timing = timing
+        entry.audio = !!(entry.audio || audio)
+        entry.timing = !!(entry.timing || timing)
       } else {
         byIso.set(iso, {
           iso,
