@@ -141,6 +141,13 @@
             showSettings = true;
         }) as EventListener);
 
+        // Left-nav sidebars' Bookmark item, and StandardBottomBar's Audio
+        // tab — these actions moved out of the topbar (see reader.css /
+        // StandardSidebar / StandardBottomBar), so they're triggered via
+        // window events instead of direct props now.
+        window.addEventListener('toggle-bookmark', toggleBookmark);
+        window.addEventListener('toggle-inline-audio', toggleInlineAudio);
+
         // Sidebar navigation: open a specific book+chapter on demand
         window.addEventListener('navigate-to-chapter', ((e: CustomEvent) => {
             const { book, chapter, highlightVerses } = e.detail;
@@ -223,7 +230,8 @@
                       ) ?? [])
                     : [];
                 const figsForRender = $settings.showIllustrations ? figureUrls : {};
-                rendered = renderSofria(sofria, figsForRender, captionMode, inlineForRender);
+                const hideVerseNumberOne = appCfg?.features?.['hide-verse-number-1'] === true;
+                rendered = renderSofria(sofria, figsForRender, captionMode, inlineForRender, hideVerseNumberOne);
             }
         } catch (e) {
             renderError = e instanceof Error ? e.message : String(e);
@@ -393,62 +401,12 @@
     /** Settings drawer visibility toggle. */
     let showSettings = $state(false);
 
-    // ---- top-bar search (in-chapter find) ----------------------------------
-    let searchActive = $state(false);
-    let searchQuery = $state('');
-    function toggleSearch() {
-        searchActive = !searchActive;
-        if (!searchActive) searchQuery = '';
-    }
-    function onSearchInput(q: string) {
-        searchQuery = q;
-    }
-    /** Wrap every occurrence of query in <mark class="search-hit"> in text
-     *  segments (between HTML tags) only, without touching attribute values
-     *  or tag names. Keeps the existing HTML structure intact. */
-    function addHighlights(html: string, q: string): string {
-        const query = q.trim();
-        if (!query) return html;
-        const esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const re = new RegExp(esc, 'gi');
-        return html.replace(/>([^<]+)</g, (_m, text: string) => {
-            return `>${text.replace(re, (m) => `<mark class="search-hit">${m}</mark>`)}<`;
-        });
-    }
-    let displayHtml = $derived(
-        rendered ? addHighlights(rendered.html, searchActive ? searchQuery : '') : ''
-    );
+    let displayHtml = $derived(rendered?.html ?? '');
 
-    // ---- top-bar share (copy URL) ------------------------------------------
-    let shareFlashing = $state(false);
-    async function copyShareLink() {
-        if (!browser) return;
-        const url = window.location.href;
-        try {
-            if (navigator.share) {
-                await navigator.share({ title: document.title, url });
-            } else {
-                await navigator.clipboard.writeText(url);
-            }
-        } catch {
-            /* user cancelled or clipboard disallowed — silent */
-        }
-        shareFlashing = true;
-        setTimeout(() => (shareFlashing = false), 1400);
-    }
-
-    // ---- top-bar audio toggle ----------------------------------------------
-    // Clicking ♪ toggles an inline audio bar within the Text view (matches
-    // SE: the icon does not leave the text — it overlays an audio player
-    // above the scripture). Independent from the Audio format tab, which
-    // still gives a dedicated audio-only view.
-    let audioInline = $state(false);
-    function toggleInlineAudio() {
-        if (chapterAudio.length === 0) return;
-        audioInline = !audioInline;
-    }
-
-    // ---- top-bar font size A-/A+ -------------------------------------------
+    // Still used by the pinch-to-zoom gesture (doPinch, below) even though
+    // the topbar's own A-/A+ buttons were removed — pinch-zoom isn't one of
+    // the topbar icons, and the Settings panel's font-size slider doesn't
+    // cover gesture-driven adjustment.
     const FONT_SIZE_MIN = 14;
     const FONT_SIZE_MAX = 36;
     function adjustFontSize(delta: number) {
@@ -458,7 +416,30 @@
         }));
     }
 
-    // ---- top-bar bookmark toggle -------------------------------------------
+    // ---- audio toggle --------------------------------------------------
+    // Toggles an inline audio bar within the Text view (matches SE: the
+    // icon does not leave the text — it overlays an audio player above the
+    // scripture). Independent from the Audio format tab, which still gives
+    // a dedicated audio-only view. Trigger moved out of the topbar to
+    // StandardBottomBar's own Audio tab — listens for a window event
+    // instead of a direct prop, and broadcasts its own state back so the
+    // bottom bar can show enabled/active correctly.
+    let audioInline = $state(false);
+    function toggleInlineAudio() {
+        if (chapterAudio.length === 0) return;
+        audioInline = !audioInline;
+    }
+    $effect(() => {
+        window.dispatchEvent(new CustomEvent('audio-bar-state-changed', {
+            detail: { hasAudio: chapterAudio.length > 0, inline: audioInline }
+        }));
+    });
+
+    // ---- bookmark toggle -------------------------------------------
+    // Trigger moved out of the topbar to the left-nav sidebars (see
+    // src/lib/bw/bookmarks.ts) — listens for a window event instead of a
+    // direct prop, and broadcasts state changes back so the sidebars can
+    // reflect the current chapter's bookmark state.
     const BOOKMARKS_KEY = 'bw-bookmarks';
     let bookmarks = $state<Set<string>>(new Set());
     function loadBookmarks() {
@@ -490,6 +471,7 @@
         else next.add(k);
         bookmarks = next;
         saveBookmarks();
+        window.dispatchEvent(new CustomEvent('bookmark-state-changed'));
     }
 
     // ---- top-bar title -----------------------------------------------------
@@ -777,20 +759,6 @@
         <ReaderTopBar
             {bookLabel}
             {chapterLabel}
-            {iso}
-            searchActive={searchActive}
-            bind:searchQuery
-            onSearchToggle={toggleSearch}
-            onSearchInput={onSearchInput}
-            onShare={copyShareLink}
-            shareFlashing={shareFlashing}
-            hasAudio={chapterAudio.length > 0}
-            audioInline={audioInline}
-            onAudioToggle={toggleInlineAudio}
-            onFontSize={adjustFontSize}
-            bookmarked={bookmarked}
-            onBookmarkToggle={toggleBookmark}
-            onSettings={() => (showSettings = !showSettings)}
             onBookTap={(r) => openPicker(r, 'book')}
             onChapterTap={(r) => openPicker(r, 'chapter')}
             onMenu={openSidebar}

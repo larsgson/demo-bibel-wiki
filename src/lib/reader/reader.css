@@ -169,8 +169,15 @@
 .reader-body .verse-block {
     /* default inline flow */
 }
+/* Tap-to-select: original SAB uses a full solid fill (or a dotted
+ * underline in another variant) — both read as too strong for a simple
+ * "you tapped this" acknowledgment. Just a faint tint of the theme's own
+ * highlight color, enough to notice, not enough to shout. color-mix() lets
+ * one rule work across all three themes without hardcoding a percentage
+ * per theme's own --TextHighlightColor value. */
 .reader-body .verse-block.selected {
-    background-color: var(--TextHighlightColor);
+    background-color: color-mix(in srgb, var(--TextHighlightColor) 20%, transparent);
+    border-radius: 3px;
 }
 .reader-body .verse-block.search-highlight {
     background: rgba(255, 215, 0, 0.3);
@@ -359,12 +366,6 @@
 .reader-topbar-select-chapter { max-width: 12vw; flex-shrink: 0; }
 .reader-topbar-title-caret { font-size: 0.7em; opacity: 0.55; flex-shrink: 0; }
 
-.reader-topbar-end {
-    display: flex;
-    align-items: center;
-    gap: 0.15em;
-    justify-content: flex-end;
-}
 .reader-topbar .tb-icon {
     background: transparent;
     border: 0;
@@ -386,46 +387,6 @@
     outline: 2px solid white;
     outline-offset: 1px;
 }
-.reader-topbar .tb-icon:disabled { opacity: 0.35; cursor: default; }
-.reader-topbar .tb-icon.active { background: rgba(255, 255, 255, 0.22); }
-.reader-topbar .tb-icon.flash {
-    background: var(--WordsOfJesusColor, #D32F2F);
-    animation: tb-flash 1.4s ease;
-}
-@keyframes tb-flash {
-    0% { transform: scale(1); }
-    20% { transform: scale(1.15); }
-    100% { transform: scale(1); background: transparent; }
-}
-.reader-topbar .tb-font-dec { font-size: 0.85em; }
-.reader-topbar .tb-font-inc { font-size: 1.25em; font-weight: 700; }
-.reader-topbar-search {
-    display: flex;
-    gap: 0.3em;
-    padding: 0.35em 0.55em;
-    background: rgba(0, 0, 0, 0.1);
-    align-items: center;
-}
-.reader-topbar-search input[type="search"] {
-    flex: 1 1 auto;
-    background: white;
-    color: var(--TextColor);
-    border: 0;
-    border-radius: 3px;
-    padding: 0.35em 0.55em;
-    font-size: 0.9em;
-}
-.reader-topbar-search input[type="search"]:focus { outline: 2px solid rgba(255, 255, 255, 0.65); }
-
-/* Search-hit highlight within the scripture body. */
-.reader-body mark.search-hit {
-    background: #fff59d;
-    color: inherit;
-    padding: 0 1px;
-    border-radius: 1px;
-}
-.reader-root[data-theme="sepia"] .reader-body mark.search-hit { background: #FFE0B2; }
-.reader-root[data-theme="dark"] .reader-body mark.search-hit { background: #FFD54F; color: #000; }
 
 /* Floating chapter-nav arrows — fixed to the viewport sides, vertically
  * centred. Hidden on narrow screens; on mobile the user swipes the body. */
@@ -491,6 +452,13 @@
 .reader-audio-bottom :global(*) { color: rgb(0, 11, 99); }
 .reader-body.has-bottom-bar {
     padding-bottom: 110px;
+}
+/* Standard UI level (2) has its own bottom tab bar (4rem tall, z-index 40 —
+ * see sidebar.css's .standard-bottom-bar) sitting at the very bottom of the
+ * viewport, above this bar's own z-index 30. Without this, the audio bar
+ * renders underneath it — invisible. Lift it to sit flush on top instead. */
+html[data-ui-level="2"] .reader-audio-bottom {
+    bottom: calc(4rem + env(safe-area-inset-bottom, 0));
 }
 
 /* Format-mode tabs: Text / Audio / Video. */

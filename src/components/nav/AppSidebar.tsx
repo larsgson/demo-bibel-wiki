@@ -18,6 +18,10 @@ import { shouldProbePkf } from "../../lib/bw/language-list"
 import { pkfUrl } from "../../lib/bw/pkf-url"
 import { loadBookList } from "../../lib/bw/book-list"
 import { t as translate } from "../../lib/bw/ui-locales"
+import { uiLangForRegion } from "../../lib/data/region-config"
+import { $activeRegion } from "../../stores/region-store"
+import { shareCurrentPage } from "../../lib/bw/share"
+import { currentBookmarkKey, isBookmarked } from "../../lib/bw/bookmarks"
 
 export interface SidebarTreeNode {
   id: string
@@ -144,11 +148,23 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
   const [activeBiblePos, setActiveBiblePos] = useState<{ book: string; chapter: number } | null>(null)
   const [localizedBookNames, setLocalizedBookNames] = useState<Map<string, string>>(new Map())
   const [availableBooks, setAvailableBooks] = useState<Set<string> | null>(null)
+  const [shared, setShared] = useState(false)
+  const [currentBookmarked, setCurrentBookmarked] = useState(false)
   const sidebarRef = useRef<HTMLElement>(null)
   const catalogFetchedForIso = useRef<string>("")
 
   const iso = isoProp || storeIso || "eng"
-  const lang: "en" | "es" = iso === "eng" ? "en" : "es"
+  // UI chrome language follows the region's own configured language (per
+  // region_config.toml — e.g. Mexico deployments default to Spanish), not
+  // the content language currently being read. The CDN deliberately does
+  // NOT deliver per-vernacular UI translations (spec §6.5 — one shared
+  // English nav-base.json for every language), so outside a configured
+  // region this correctly falls back to English rather than guessing.
+  const lang = uiLangForRegion($activeRegion.get())
+  // storyTree/SidebarTreeNode labels only ever ship en/es (see the source
+  // `label: { en, es }` shape) — narrow for indexing; t()'s own fallback
+  // logic handles any other region language for translate() calls above.
+  const labelLang: "en" | "es" = lang === "es" ? "es" : "en"
   const tr = (k: string) => translate(lang, `nav.${k}`)
   const t = {
     nav: tr("navigation"),
@@ -356,6 +372,35 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     window.dispatchEvent(new CustomEvent("sidebar-state-changed", { detail: { isOpen } }))
   }, [isOpen])
 
+  // Track whether the currently-open chapter is bookmarked — Reader.svelte
+  // owns the actual toggle/storage, this just mirrors it (see bookmarks.ts).
+  // Share/Bookmark used to live in the reader topbar; moved here since this
+  // is the Study-mode left nav (StandardSidebar carries the Standard-mode
+  // equivalent — AppSidebar has no bottom bar to fall back on).
+  useEffect(() => {
+    const refresh = () => setCurrentBookmarked(isBookmarked(currentBookmarkKey(iso)))
+    refresh()
+    window.addEventListener("bookmark-state-changed", refresh)
+    window.addEventListener("bible-position-changed", refresh)
+    return () => {
+      window.removeEventListener("bookmark-state-changed", refresh)
+      window.removeEventListener("bible-position-changed", refresh)
+    }
+  }, [iso])
+
+  function toggleCurrentBookmark() {
+    window.dispatchEvent(new CustomEvent("toggle-bookmark"))
+    setCurrentBookmarked((v) => !v)
+  }
+
+  async function share() {
+    const ok = await shareCurrentPage()
+    if (ok) {
+      setShared(true)
+      setTimeout(() => setShared(false), 1400)
+    }
+  }
+
   function toggleTopLevel(id: string) {
     setExpanded((prev) => exclusiveOpen(prev, id, TOP_LEVEL_IDS))
   }
@@ -530,7 +575,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
             href={href}
             style={{ paddingLeft }}
           >
-            {node.label[lang]}
+            {node.label[labelLang]}
           </a>
         </li>
       )
@@ -549,7 +594,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
           aria-expanded={nodeOpen}
         >
           <span className={`app-sidebar-arrow ${nodeOpen ? "open" : ""}`}>›</span>
-          <span className="app-sidebar-tree-label">{node.label[lang]}</span>
+          <span className="app-sidebar-tree-label">{node.label[labelLang]}</span>
           {hasChildren && (
             <span className="app-sidebar-tree-count">{node.children!.length}</span>
           )}
@@ -619,6 +664,21 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
             ✕
           </button>
         </div>
+
+        <ul className="app-sidebar-util">
+          <li>
+            <button type="button" className={currentBookmarked ? "active" : ""} onClick={toggleCurrentBookmark}>
+              <span aria-hidden="true">{currentBookmarked ? "★" : "☆"}</span>
+              {currentBookmarked ? translate(lang, "reader.removeBookmark") : translate(lang, "reader.bookmark")}
+            </button>
+          </li>
+          <li>
+            <button type="button" onClick={share}>
+              <span aria-hidden="true">⇪</span>
+              {shared ? translate(lang, "reader.linkCopied") : translate(lang, "reader.shareLink")}
+            </button>
+          </li>
+        </ul>
 
         <nav className="app-sidebar-nav">
           <ul className="app-sidebar-roots">

@@ -8,6 +8,8 @@ import {
   parseStartRef,
 } from "../lib/data/app-config"
 import { t } from "../lib/bw/ui-locales"
+import { uiLangForRegion } from "../lib/data/region-config"
+import { $activeRegion } from "../stores/region-store"
 import { sectionOf, testamentOf, sectionLabel } from "../lib/bw/bible-sections"
 import { loadBookList } from "../lib/bw/book-list"
 import staticBooks from "../lib/bw/bible-books"
@@ -160,7 +162,11 @@ export function BiblePickerSheet() {
   const panelRef = useRef<HTMLDivElement>(null)
 
   const iso = storeIso || "eng"
-  const lang: "en" | "es" = iso === "eng" ? "en" : "es"
+  // UI chrome language follows the region's own configured language, not
+  // the content language being read — the CDN has no per-vernacular UI
+  // translations to fall back to (see AppSidebar.tsx for the full note).
+  const lang = uiLangForRegion($activeRegion.get())
+  const sectionLang: "en" | "es" = lang === "es" ? "es" : "en"
 
   useEffect(() => {
     initIsoFromUrl()
@@ -322,7 +328,7 @@ export function BiblePickerSheet() {
 
           {tab === "book" && groups.map((g) => (
             <section key={g.section} className="bible-picker-group">
-              <h3 className="bible-picker-section">{sectionLabel(g.section, lang)}</h3>
+              <h3 className="bible-picker-section">{sectionLabel(g.section, sectionLang)}</h3>
               <div className="bible-picker-grid">
                 {g.books.map((b) => (
                   <button

@@ -8,11 +8,14 @@ import { $uiLevel, setUILevel, type UILevel } from "../../stores/ui-level-store"
 /**
  * Standard-mode bottom tab bar — modelled on sab-pwa's BottomNavigationBar
  * (icon + label columns, active-tab highlight). Reduced to the tabs that
- * apply here: Bible, Search (UI shell only for now), Settings (opens the
- * existing Reader settings panel via a window event — no new panel built),
- * and Mode (the interface-level switcher, which the header's gear can no
- * longer reach here since the header is hidden in this mode — see setUILevel,
- * the same store the header's gear already uses).
+ * apply here: Bible, Search (UI shell only for now), Audio (moved here from
+ * the reader topbar's ♪ icon — see Reader.svelte's `toggle-inline-audio`
+ * window event), and Mode (the interface-level switcher, which the header's
+ * gear can no longer reach here since the header is hidden in this mode —
+ * see setUILevel, the same store the header's gear already uses).
+ * Settings was here too but got removed — it's reachable from
+ * StandardSidebar's Settings/Text Appearance items, same reasoning as the
+ * reader topbar's own icon trim.
  * Peripheral sab-pwa tabs (Bookmarks/Plans/About/Contents) are intentionally
  * omitted, not reproduced.
  *
@@ -24,16 +27,23 @@ export function StandardBottomBar() {
   const [pane, setPane] = useState(() => $activePane.get().pane)
   const [level, setLevel] = useState<UILevel>(() => $uiLevel.get())
   const [levelOpen, setLevelOpen] = useState(false)
+  const [audio, setAudio] = useState({ hasAudio: false, inline: false })
   const popoverRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const onPaneChanged = (e: Event) => {
       setPane((e as CustomEvent).detail?.pane)
     }
+    const onAudioState = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail) setAudio({ hasAudio: !!detail.hasAudio, inline: !!detail.inline })
+    }
     window.addEventListener("pane-changed", onPaneChanged)
+    window.addEventListener("audio-bar-state-changed", onAudioState)
     const unsubscribe = $uiLevel.subscribe(setLevel)
     return () => {
       window.removeEventListener("pane-changed", onPaneChanged)
+      window.removeEventListener("audio-bar-state-changed", onAudioState)
       unsubscribe()
     }
   }, [])
@@ -54,8 +64,9 @@ export function StandardBottomBar() {
   const uiLang = uiLangForRegion($activeRegion.get())
   const tr = (k: string) => t(uiLang, `nav.${k}`)
 
-  function openSettings() {
-    window.dispatchEvent(new CustomEvent("open-reader-settings"))
+  function toggleAudio() {
+    if (!audio.hasAudio) return
+    window.dispatchEvent(new CustomEvent("toggle-inline-audio"))
   }
 
   function chooseLevel(n: UILevel) {
@@ -89,11 +100,12 @@ export function StandardBottomBar() {
       </button>
       <button
         type="button"
-        className="standard-bottom-tab"
-        onClick={openSettings}
+        className={`standard-bottom-tab ${audio.inline ? "active" : ""}`}
+        disabled={!audio.hasAudio}
+        onClick={toggleAudio}
       >
-        <span className="standard-bottom-tab-icon" aria-hidden="true">🔤</span>
-        <span className="standard-bottom-tab-label">{tr("settings")}</span>
+        <span className="standard-bottom-tab-icon" aria-hidden="true">♪</span>
+        <span className="standard-bottom-tab-label">{t(uiLang, "reader.tabAudio")}</span>
       </button>
       <div className="standard-bottom-tab-wrapper" ref={popoverRef}>
         <button

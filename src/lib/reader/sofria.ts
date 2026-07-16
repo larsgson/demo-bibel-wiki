@@ -140,6 +140,12 @@ type RenderCtx = {
     captionMode: CaptionMode;
     /** Videos with a `placement.verse` — emitted inline at verse boundaries. */
     inlineVideos: InlineVideo[];
+    /** SAB's `hide-verse-number-1` feature (app-config.json): suppress the
+     *  "1" verse-number label for a chapter's first verse — it's redundant
+     *  next to the chapter drop-cap. Only the very first verse mark in the
+     *  chapter is affected; `firstVerseSeen` tracks that we've passed it. */
+    hideVerseNumberOne: boolean;
+    firstVerseSeen: boolean;
 };
 
 /**
@@ -178,10 +184,16 @@ function shouldShowCaption(caption: string, mode: CaptionMode): boolean {
 
 /** Render a verses_label (verse number). Matches SE's `.v` span convention,
  *  which uses relative positioning rather than <sup> so the baseline shift
- *  is controlled by CSS. */
-function renderVerseMark(atts?: Record<string, string>): string {
+ *  is controlled by CSS. Suppresses the chapter's first verse number when
+ *  `hideVerseNumberOne` is set (SAB's own `hide-verse-number-1` feature) —
+ *  the number is still there as `data-v` for verse-jump/highlight to target,
+ *  just not printed, since it's redundant next to the chapter drop-cap. */
+function renderVerseMark(atts: Record<string, string> | undefined, ctx: RenderCtx): string {
     const n = atts?.number ?? '';
-    return `<span class="v" data-v="${esc(n)}">${esc(n)}</span>`;
+    const isFirst = !ctx.firstVerseSeen;
+    ctx.firstVerseSeen = true;
+    const hideNumber = isFirst && ctx.hideVerseNumberOne;
+    return `<span class="v" data-v="${esc(n)}">${hideNumber ? '' : esc(n)}</span>`;
 }
 
 /** Render a chapter_label (chapter number) as a drop-cap matching SE's
@@ -227,7 +239,7 @@ function renderInlineContent(items: SofriaContent[] | undefined, ctx: RenderCtx)
             continue;
         }
         if (it.type === 'mark') {
-            if (it.subtype === 'verses_label') out += renderVerseMark(it.atts);
+            if (it.subtype === 'verses_label') out += renderVerseMark(it.atts, ctx);
             else if (it.subtype === 'chapter_label') out += renderChapterMark(it.atts);
             continue;
         }
@@ -447,14 +459,17 @@ export function renderSofria(
     doc: SofriaDoc,
     figureUrls: Record<string, string> = {},
     captionMode: CaptionMode = 'hide',
-    inlineVideos: InlineVideo[] = []
+    inlineVideos: InlineVideo[] = [],
+    hideVerseNumberOne: boolean = false
 ): RenderedChapter {
     const ctx: RenderCtx = {
         footnotes: [],
         xrefs: [],
         figureUrls,
         captionMode,
-        inlineVideos
+        inlineVideos,
+        hideVerseNumberOne,
+        firstVerseSeen: false
     };
     const parts: string[] = [];
     for (const block of doc.sequence.blocks ?? []) {

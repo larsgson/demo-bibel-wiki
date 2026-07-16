@@ -57,6 +57,34 @@
 }
 .app-sidebar-close:hover { opacity: 1; }
 
+/* Share / bookmark-this-chapter — moved here from the reader topbar (see
+ * ReaderTopBar.svelte). Flat utility rows, same visual language as
+ * StandardSidebar's own menu, sitting above the hierarchical tree. */
+.app-sidebar-util {
+  list-style: none;
+  margin: 0;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.app-sidebar-util li { margin: 0; }
+.app-sidebar-util button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  transition: background-color 0.15s ease;
+}
+.app-sidebar-util button:hover { background: rgba(255, 255, 255, 0.08); }
+.app-sidebar-util button.active { background: rgba(255, 255, 255, 0.14); color: #fff; font-weight: 600; }
+
 .app-sidebar-nav { padding: 0.4rem 0; }
 .app-sidebar-roots,
 .app-sidebar-items { list-style: none; margin: 0; padding: 0; }
@@ -357,7 +385,7 @@ html[data-ui-level="3"] .standard-sidebar-backdrop {
   display: none !important;
 }
 
-/* ── Standard-mode bottom tab bar (Bible / Search / Settings / Mode) ──
+/* ── Standard-mode bottom tab bar (Bible / Search / Audio / Mode) ──
    Modelled on sab-pwa's BottomNavigationBar. Shown at all viewport widths in
    Standard mode (that mode has no left rail to fall back on at any width). */
 .standard-bottom-bar {
@@ -395,9 +423,24 @@ html[data-ui-level="2"] .app-main {
   font: inherit;
   cursor: pointer;
   color: rgba(0, 11, 99, 0.55);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Firefox draws its own dotted inner focus ring on <button> independent of
+ * `border`/`outline` — needs its own explicit reset or it shows as a stray
+ * box around the label after a tap/click. */
+.standard-bottom-tab::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+.standard-bottom-tab:focus-visible {
+  outline: 2px solid rgba(0, 11, 99, 0.5);
+  outline-offset: -2px;
 }
 .standard-bottom-tab:hover { background: rgba(0, 11, 99, 0.04); }
 .standard-bottom-tab.active { color: rgb(0, 11, 99); }
+.standard-bottom-tab:disabled { opacity: 0.35; cursor: default; }
+.standard-bottom-tab:disabled:hover { background: none; }
 .standard-bottom-tab-icon { font-size: 1.3rem; line-height: 1; }
 .standard-bottom-tab-label { font-size: 0.68rem; font-weight: 600; }
 
@@ -491,12 +534,13 @@ html[data-ui-level="2"] .app-main {
 .standard-sidebar-close:hover { opacity: 1; }
 
 .standard-sidebar-menu {
-  padding: 0.4rem 0;
+  padding: 0.2rem 0;
   margin: 0;
   list-style: none;
 }
 .standard-sidebar-menu li { margin: 0; }
-.standard-sidebar-menu button {
+.standard-sidebar-menu button,
+.standard-sidebar-menu a {
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -507,12 +551,53 @@ html[data-ui-level="2"] .app-main {
   font: inherit;
   font-size: 0.9rem;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   padding: 0.7rem 1rem;
   transition: background-color 0.15s ease;
 }
-.standard-sidebar-menu button:hover { background: rgba(255, 255, 255, 0.08); }
+.standard-sidebar-menu button:hover,
+.standard-sidebar-menu a:hover { background: rgba(255, 255, 255, 0.08); }
 .standard-sidebar-menu button.active { background: rgba(255, 255, 255, 0.14); color: #fff; font-weight: 600; }
+.standard-sidebar-icon { flex-shrink: 0; opacity: 0.85; }
+
+/* Divider between menu groups — matches sab-pwa's dy-divider spacing. */
+.standard-sidebar-divider {
+  height: 1px;
+  margin: 0.4rem 1rem;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Bookmarks: expands inline under its own toggle (this app has no separate
+ * bookmarks page to route to). */
+.standard-sidebar-sublist {
+  margin: 0;
+  padding: 0 0 0.4rem;
+  list-style: none;
+}
+.standard-sidebar-sublist button {
+  padding: 0.45rem 1rem 0.45rem 2.6rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+.standard-sidebar-sublist button:hover { background: rgba(255, 255, 255, 0.06); }
+.standard-sidebar-empty {
+  padding: 0.45rem 1rem 0.45rem 2.6rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-style: italic;
+}
+
+/* About: expands inline under its own toggle, same reasoning as Bookmarks. */
+.standard-sidebar-about {
+  padding: 0.2rem 1rem 0.7rem 2.6rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+.standard-sidebar-about p { margin: 0 0 0.2rem; }
+.standard-sidebar-about-name { color: #fff; font-weight: 600; }
+.standard-sidebar-about-license { opacity: 0.7; }
 
 .standard-sidebar-backdrop {
   display: block;

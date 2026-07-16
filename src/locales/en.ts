@@ -218,6 +218,11 @@ export const en = {
     levelSimple: "Simple",
     levelStandard: "Standard",
     levelStudy: "Study",
+    home: "Home",
+    bookmarks: "Bookmarks",
+    noBookmarks: "No bookmarks yet",
+    textAppearance: "Text Appearance",
+    about: "About",
   },
 
   branches: {

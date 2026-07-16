@@ -218,6 +218,11 @@ export const es = {
     levelSimple: "Básico",
     levelStandard: "Estándar",
     levelStudy: "Estudiar",
+    home: "Inicio",
+    bookmarks: "Marcadores",
+    noBookmarks: "Aún no hay marcadores",
+    textAppearance: "Apariencia del texto",
+    about: "Acerca de",
   },
 
   branches: {

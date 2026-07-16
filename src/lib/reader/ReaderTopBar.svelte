@@ -1,31 +1,22 @@
 <script lang="ts">
     /**
-     * Look-alike of SE's top action bar: left-drawer hamburger, then
-     * separate Book / Chapter dropdown triggers (sab-pwa's Navbar +
-     * BookSelector/ChapterSelector pattern — each opens BiblePickerSheet
-     * landed on its own tab). Icon buttons on the right: search, share,
-     * audio quick-toggle, font size −/+, bookmark, settings. All buttons are
-     * delegated to handlers owned by Reader.svelte.
+     * Look-alike of SE's top action bar, trimmed to just navigation: a
+     * left-drawer hamburger, then separate Book / Chapter dropdown triggers
+     * (sab-pwa's Navbar + BookSelector/ChapterSelector pattern — each opens
+     * BiblePickerSheet landed on its own tab).
+     *
+     * Every icon this bar used to carry (search, in-chapter find, share,
+     * audio, font size, bookmark, settings) has moved: the ones reachable
+     * elsewhere (AI search, font size, settings) were removed outright since
+     * they duplicated StandardBottomBar/StandardSidebar/SettingsPanel;
+     * in-chapter find was dropped (AI search already covers it); share and
+     * bookmark moved to the left-nav sidebars; audio moved to
+     * StandardBottomBar's own tab. See Reader.svelte's `toggle-bookmark` /
+     * `toggle-inline-audio` window-event listeners for the new trigger path.
      */
     type Props = {
         bookLabel: string;
         chapterLabel: string;
-        iso: string;
-        searchActive: boolean;
-        searchQuery: string;
-        onSearchToggle: () => void;
-        onSearchInput: (q: string) => void;
-        onShare: () => void;
-        shareFlashing: boolean;
-        hasAudio: boolean;
-        /** Whether the inline audio strip is currently visible within the
-         *  Text view. ♪ button toggles this, not a mode switch. */
-        audioInline: boolean;
-        onAudioToggle: () => void;
-        onFontSize: (delta: number) => void;
-        bookmarked: boolean;
-        onBookmarkToggle: () => void;
-        onSettings: () => void;
         /** Open the book/chapter picker, landing on the Book/Chapter tab
          *  respectively (sab-pwa's BookSelector/ChapterSelector pattern). */
         onBookTap?: (anchorRect: DOMRect) => void;
@@ -33,33 +24,12 @@
         /** Toggle the left navigation drawer. */
         onMenu?: () => void;
     };
-    let {
-        bookLabel,
-        chapterLabel,
-        iso,
-        searchActive,
-        searchQuery = $bindable(),
-        onSearchToggle,
-        onSearchInput,
-        onShare,
-        shareFlashing,
-        hasAudio,
-        audioInline,
-        onAudioToggle,
-        onFontSize,
-        bookmarked,
-        onBookmarkToggle,
-        onSettings,
-        onBookTap,
-        onChapterTap,
-        onMenu
-    }: Props = $props();
+    let { bookLabel, chapterLabel, onBookTap, onChapterTap, onMenu }: Props = $props();
 
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
     const uiLang = uiLangForRegion(activeRegionStore.get());
-    const tr = (k: string) => t(uiLang, 'reader.' + k);
 </script>
 
 <header class="reader-topbar">
@@ -95,102 +65,5 @@
         </div>
 
         <div class="reader-topbar-center"></div>
-
-        <div class="reader-topbar-end">
-            <a
-                class="tb-icon"
-                href={`/${iso}/search`}
-                aria-label={tr('searchAria')}
-                title={tr('searchAria')}
-            >
-                💬
-            </a>
-            <button
-                type="button"
-                class="tb-icon"
-                class:active={searchActive}
-                onclick={onSearchToggle}
-                aria-label={tr('searchInChapter')}
-                title={tr('searchInChapter')}
-            >
-                🔍
-            </button>
-            <button
-                type="button"
-                class="tb-icon"
-                class:flash={shareFlashing}
-                onclick={onShare}
-                aria-label={tr('shareLink')}
-                title={shareFlashing ? tr('linkCopied') : tr('shareLink')}
-            >
-                ⇪
-            </button>
-            <button
-                type="button"
-                class="tb-icon"
-                class:active={audioInline}
-                disabled={!hasAudio}
-                onclick={onAudioToggle}
-                aria-label={audioInline ? tr('hideAudio') : tr('showAudio')}
-                title={hasAudio
-                    ? audioInline
-                        ? tr('hideAudio')
-                        : tr('showAudio')
-                    : tr('noAudioChapter')}
-            >
-                ♪
-            </button>
-            <button
-                type="button"
-                class="tb-icon tb-font-dec"
-                onclick={() => onFontSize(-1)}
-                aria-label={tr('smallerText')}
-                title={tr('smallerText')}
-            >
-                A
-            </button>
-            <button
-                type="button"
-                class="tb-icon tb-font-inc"
-                onclick={() => onFontSize(1)}
-                aria-label={tr('largerText')}
-                title={tr('largerText')}
-            >
-                A
-            </button>
-            <button
-                type="button"
-                class="tb-icon"
-                class:active={bookmarked}
-                onclick={onBookmarkToggle}
-                aria-label={bookmarked ? tr('removeBookmark') : tr('bookmark')}
-                title={bookmarked ? tr('removeBookmark') : tr('bookmark')}
-            >
-                {bookmarked ? '★' : '☆'}
-            </button>
-            <button
-                type="button"
-                class="tb-icon"
-                onclick={onSettings}
-                aria-label={tr('settings')}
-                title={tr('settings')}
-            >
-                ⚙
-            </button>
-        </div>
     </div>
-
-    {#if searchActive}
-        <div class="reader-topbar-search">
-            <!-- svelte-ignore a11y_autofocus -->
-            <input
-                type="search"
-                placeholder={tr('findInChapter')}
-                bind:value={searchQuery}
-                oninput={() => onSearchInput(searchQuery)}
-                autofocus
-            />
-            <button type="button" class="tb-icon" onclick={onSearchToggle} aria-label={tr('closeSearch')}>×</button>
-        </div>
-    {/if}
 </header>
