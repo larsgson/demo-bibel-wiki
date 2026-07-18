@@ -22,6 +22,7 @@ import { uiLangForRegion } from "../../lib/data/region-config"
 import { $activeRegion } from "../../stores/region-store"
 import { shareCurrentPage } from "../../lib/bw/share"
 import { currentBookmarkKey, isBookmarked } from "../../lib/bw/bookmarks"
+import { loadVernacularNav, vernacularLabel, type VernacularStrings } from "../../lib/bw/vernacular-ui"
 
 export interface SidebarTreeNode {
   id: string
@@ -150,22 +151,30 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
   const [availableBooks, setAvailableBooks] = useState<Set<string> | null>(null)
   const [shared, setShared] = useState(false)
   const [currentBookmarked, setCurrentBookmarked] = useState(false)
+  const [vern, setVern] = useState<VernacularStrings | null>(null)
   const sidebarRef = useRef<HTMLElement>(null)
   const catalogFetchedForIso = useRef<string>("")
 
   const iso = isoProp || storeIso || "eng"
   // UI chrome language follows the region's own configured language (per
-  // region_config.toml — e.g. Mexico deployments default to Spanish), not
-  // the content language currently being read. The CDN deliberately does
-  // NOT deliver per-vernacular UI translations (spec §6.5 — one shared
-  // English nav-base.json for every language), so outside a configured
-  // region this correctly falls back to English rather than guessing.
+  // region_config.toml — e.g. Mexico deployments default to Spanish) as the
+  // baseline, not the content language currently being read — but the
+  // CDN's 2026.07.18 release now ships real vernacular UI strings for a
+  // handful of languages (see vernacular-ui.ts), which win over the region
+  // default when this reading language has one and the concept has a
+  // mapped equivalent.
   const lang = uiLangForRegion($activeRegion.get())
   // storyTree/SidebarTreeNode labels only ever ship en/es (see the source
   // `label: { en, es }` shape) — narrow for indexing; t()'s own fallback
   // logic handles any other region language for translate() calls above.
   const labelLang: "en" | "es" = lang === "es" ? "es" : "en"
-  const tr = (k: string) => translate(lang, `nav.${k}`)
+  const tr = (k: string) => vernacularLabel(vern, `nav.${k}`, translate(lang, `nav.${k}`))
+  const trReader = (k: string) => vernacularLabel(vern, `reader.${k}`, translate(lang, `reader.${k}`))
+
+  useEffect(() => {
+    setVern(null)
+    loadVernacularNav(iso).then(setVern)
+  }, [iso])
   const t = {
     nav: tr("navigation"),
     close: tr("closeMenu"),
@@ -669,13 +678,13 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
           <li>
             <button type="button" className={currentBookmarked ? "active" : ""} onClick={toggleCurrentBookmark}>
               <span aria-hidden="true">{currentBookmarked ? "★" : "☆"}</span>
-              {currentBookmarked ? translate(lang, "reader.removeBookmark") : translate(lang, "reader.bookmark")}
+              {currentBookmarked ? trReader("removeBookmark") : trReader("bookmark")}
             </button>
           </li>
           <li>
             <button type="button" onClick={share}>
               <span aria-hidden="true">⇪</span>
-              {shared ? translate(lang, "reader.linkCopied") : translate(lang, "reader.shareLink")}
+              {shared ? trReader("linkCopied") : trReader("shareLink")}
             </button>
           </li>
         </ul>

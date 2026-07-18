@@ -10,6 +10,7 @@ import {
 import { t } from "../lib/bw/ui-locales"
 import { uiLangForRegion } from "../lib/data/region-config"
 import { $activeRegion } from "../stores/region-store"
+import { loadVernacularNav, vernacularLabel, type VernacularStrings } from "../lib/bw/vernacular-ui"
 import { sectionOf, testamentOf, sectionLabel } from "../lib/bw/bible-sections"
 import { loadBookList } from "../lib/bw/book-list"
 import staticBooks from "../lib/bw/bible-books"
@@ -162,15 +163,23 @@ export function BiblePickerSheet() {
   const panelRef = useRef<HTMLDivElement>(null)
 
   const iso = storeIso || "eng"
-  // UI chrome language follows the region's own configured language, not
-  // the content language being read — the CDN has no per-vernacular UI
-  // translations to fall back to (see AppSidebar.tsx for the full note).
+  // UI chrome language follows the region's own configured language as the
+  // baseline — but the CDN's 2026.07.18 release now ships real vernacular
+  // UI strings for a handful of languages (see vernacular-ui.ts), which win
+  // for the Book/Chapter/Verse tab labels below (they map cleanly to SAB's
+  // own Selector_Book/Chapter/Verse keys).
   const lang = uiLangForRegion($activeRegion.get())
   const sectionLang: "en" | "es" = lang === "es" ? "es" : "en"
+  const [vern, setVern] = useState<VernacularStrings | null>(null)
 
   useEffect(() => {
     initIsoFromUrl()
   }, [])
+
+  useEffect(() => {
+    setVern(null)
+    loadVernacularNav(iso).then(setVern)
+  }, [iso])
 
   const ensureBooks = useCallback(
     async (forIso: string) => {
@@ -257,9 +266,9 @@ export function BiblePickerSheet() {
 
   if (!open) return null
 
-  const bookLabel = t(lang, "biblePicker.bookTab")
-  const chapterLabel = t(lang, "biblePicker.chapterTab")
-  const verseLabel = t(lang, "biblePicker.verseTab")
+  const bookLabel = vernacularLabel(vern, "biblePicker.bookTab", t(lang, "biblePicker.bookTab"))
+  const chapterLabel = vernacularLabel(vern, "biblePicker.chapterTab", t(lang, "biblePicker.chapterTab"))
+  const verseLabel = vernacularLabel(vern, "biblePicker.verseTab", t(lang, "biblePicker.verseTab"))
   const pickedBookEntry = groups.flatMap((g) => g.books).find((b) => b.code === pickedBook) ?? null
   const verseKeys = pickedBook && pickedChapter
     ? verseData?.get(pickedBook)?.[String(pickedChapter)]

@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react"
+import { useStore } from "@nanostores/react"
 import { $activePane, showBible, showSearch } from "../../stores/branch-view-store"
 import { uiLangForRegion } from "../../lib/data/region-config"
 import { $activeRegion } from "../../stores/region-store"
+import { $selectedIso } from "../../stores/iso-store"
 import { t } from "../../lib/bw/ui-locales"
 import { $uiLevel, setUILevel, type UILevel } from "../../stores/ui-level-store"
+import { loadVernacularNav, vernacularLabel, type VernacularStrings } from "../../lib/bw/vernacular-ui"
 
 /**
  * Standard-mode bottom tab bar — modelled on sab-pwa's BottomNavigationBar
@@ -28,7 +31,14 @@ export function StandardBottomBar() {
   const [level, setLevel] = useState<UILevel>(() => $uiLevel.get())
   const [levelOpen, setLevelOpen] = useState(false)
   const [audio, setAudio] = useState({ hasAudio: false, inline: false })
+  const [vern, setVern] = useState<VernacularStrings | null>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
+  const iso = useStore($selectedIso) || "eng"
+
+  useEffect(() => {
+    setVern(null)
+    loadVernacularNav(iso).then(setVern)
+  }, [iso])
 
   useEffect(() => {
     const onPaneChanged = (e: Event) => {
@@ -62,7 +72,7 @@ export function StandardBottomBar() {
   }, [levelOpen])
 
   const uiLang = uiLangForRegion($activeRegion.get())
-  const tr = (k: string) => t(uiLang, `nav.${k}`)
+  const tr = (k: string) => vernacularLabel(vern, `nav.${k}`, t(uiLang, `nav.${k}`))
 
   function toggleAudio() {
     if (!audio.hasAudio) return

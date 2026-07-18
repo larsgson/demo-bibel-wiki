@@ -59,6 +59,12 @@ export interface Copyright {
   license: string
   holder?: string
   source?: string
+  /** Path (relative to the CDN's /pkf/ root, e.g. "ind/license-notice.html")
+   *  to the full verbatim source attribution page for this language — added
+   *  in the 2026.07.18 release. Present whenever the source deployment had
+   *  one; hosted on our own CDN rather than the original (often
+   *  private/staging) source. */
+  notice_url?: string
 }
 
 /**

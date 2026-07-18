@@ -119,6 +119,7 @@ export const en = {
     searchInChapter: "Search in chapter",
     shareLink: "Share link",
     linkCopied: "Link copied",
+    fullSourceNotice: "Full source attribution",
     showAudio: "Show audio player",
     hideAudio: "Hide audio player",
     noAudioChapter: "No audio for this chapter",

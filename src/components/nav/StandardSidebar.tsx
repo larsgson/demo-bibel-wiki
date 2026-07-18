@@ -8,6 +8,8 @@ import { uiLangForRegion } from "../../lib/data/region-config"
 import { $activeRegion } from "../../stores/region-store"
 import { shareCurrentPage } from "../../lib/bw/share"
 import { currentBookmarkKey, isBookmarked } from "../../lib/bw/bookmarks"
+import { loadVernacularNav, vernacularLabel, type VernacularStrings } from "../../lib/bw/vernacular-ui"
+import { pkfUrl } from "../../lib/bw/pkf-url"
 
 /**
  * Standard-mode left navigation drawer — a flat menu list modelled directly
@@ -99,13 +101,23 @@ export function StandardSidebar() {
   const [appCfg, setAppCfg] = useState<AppConfig | null>(null)
   const [shared, setShared] = useState(false)
   const [currentBookmarked, setCurrentBookmarked] = useState(false)
+  const [vern, setVern] = useState<VernacularStrings | null>(null)
 
   const iso = storeIso || "eng"
-  // UI chrome language follows the region's own configured language, not
-  // the content language being read — the CDN has no per-vernacular UI
-  // translations to fall back to (see AppSidebar.tsx for the full note).
+  // UI chrome language follows the region's own configured language as the
+  // baseline, not the content language being read — but the CDN's
+  // 2026.07.18 release now also ships real vernacular UI strings for a
+  // handful of languages (see vernacular-ui.ts), which win over the region
+  // default when this reading language has one and the concept has a
+  // mapped equivalent.
   const lang = uiLangForRegion($activeRegion.get())
-  const tr = (k: string) => translate(lang, `nav.${k}`)
+  const tr = (k: string) => vernacularLabel(vern, `nav.${k}`, translate(lang, `nav.${k}`))
+  const trReader = (k: string) => vernacularLabel(vern, `reader.${k}`, translate(lang, `reader.${k}`))
+
+  useEffect(() => {
+    setVern(null)
+    loadVernacularNav(iso).then(setVern)
+  }, [iso])
 
   useEffect(() => {
     const onToggle = () => setIsOpen((v) => !v)
@@ -216,7 +228,7 @@ export function StandardSidebar() {
           </li>
           <li>
             <button type="button" onClick={share}>
-              <Icon name="share" /> {shared ? translate(lang, "reader.linkCopied") : translate(lang, "reader.shareLink")}
+              <Icon name="share" /> {shared ? trReader("linkCopied") : trReader("shareLink")}
             </button>
           </li>
         </ul>
@@ -226,7 +238,7 @@ export function StandardSidebar() {
           <li>
             <button type="button" className={currentBookmarked ? "active" : ""} onClick={toggleCurrentBookmark}>
               <Icon name="bookmark" />
-              {currentBookmarked ? translate(lang, "reader.removeBookmark") : translate(lang, "reader.bookmark")}
+              {currentBookmarked ? trReader("removeBookmark") : trReader("bookmark")}
             </button>
           </li>
           <li>
@@ -262,7 +274,7 @@ export function StandardSidebar() {
               type="button"
               onClick={() => { window.dispatchEvent(new CustomEvent("open-reader-settings")); close() }}
             >
-              <Icon name="settings" /> {translate(lang, "reader.settings")}
+              <Icon name="settings" /> {trReader("settings")}
             </button>
           </li>
           <li>
@@ -291,6 +303,13 @@ export function StandardSidebar() {
                 {appCfg?.copyright?.holder && <p>{appCfg.copyright.holder}</p>}
                 {appCfg?.copyright?.license && (
                   <p className="standard-sidebar-about-license">{appCfg.copyright.license}</p>
+                )}
+                {appCfg?.copyright?.notice_url && (
+                  <p>
+                    <a href={pkfUrl(`/pkf/${appCfg.copyright.notice_url}`)} target="_blank" rel="noreferrer">
+                      {trReader("fullSourceNotice")}
+                    </a>
+                  </p>
                 )}
               </div>
             )}

@@ -119,6 +119,7 @@ export const es = {
     searchInChapter: "Buscar en el capítulo",
     shareLink: "Compartir enlace",
     linkCopied: "Enlace copiado",
+    fullSourceNotice: "Atribución completa de la fuente",
     showAudio: "Mostrar reproductor de audio",
     hideAudio: "Ocultar reproductor de audio",
     noAudioChapter: "Sin audio para este capítulo",
