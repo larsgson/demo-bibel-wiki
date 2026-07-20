@@ -255,6 +255,9 @@ name = { en = "By language family", es = "Por familia lingüística" }
 # ── Region landing page (/r/mx) ──────────────────────────────────────────────
 
 [landing]
+# Photo by Hector Iván Patricio Moreno on Unsplash — free to use under the
+# Unsplash License (no attribution legally required, credited here anyway).
+# https://unsplash.com/photos/yellow-sunflower-in-bloom-during-daytime-aQetBFIjsho
 heroImage = "/img/regions/mx-hero.jpg"
 accentColor = "#006847"
 featuredTemplates = ["John", "OBS"]
