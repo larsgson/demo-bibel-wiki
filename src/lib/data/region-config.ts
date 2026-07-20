@@ -40,6 +40,10 @@ export interface RegionConfig {
   grouping: RegionGrouping[]
   landing?: {
     heroImage?: string
+    /** Attribution for `heroImage` (e.g. an Unsplash photo credit). Rendered
+     *  as a small click-to-reveal "ⓘ" in the hero corner — present only when
+     *  a licensed/stock photo needs crediting. */
+    heroCredit?: { text: string; url: string }
     accentColor?: string
     featuredTemplates?: string[]
     headline?: Localized

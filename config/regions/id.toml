@@ -444,6 +444,9 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 
 [landing]
 heroImage = "/img/regions/id-hero.jpg"
+# Free to use under the Unsplash License (no attribution legally required,
+# credited anyway via the site footer).
+heroCredit = { text = "Photo by Silas Baisch on Unsplash", url = "https://unsplash.com/photos/aerial-photography-of-rice-terraces-during-daytime-rf5R1qXwlDU" }
 accentColor = "#CE1126"
 featuredTemplates = ["John", "OBS"]
 headline = { en = "The Bible in the languages of Indonesia", id = "Alkitab dalam bahasa-bahasa Indonesia" }

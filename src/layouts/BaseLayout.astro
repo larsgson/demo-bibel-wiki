@@ -15,9 +15,13 @@ interface Props {
   title?: string
   /** Landing pages hide the left navigation entirely (no sidebar / menu). */
   landing?: boolean
+  /** Region hero photo credit (config/regions/<code>.toml `landing.heroCredit`),
+   *  appended to the footer's attribution line — a region landing page's only
+   *  extra provenance need, so it doesn't warrant its own footer variant. */
+  heroCredit?: { text: string; url: string }
 }
 
-const { title = "Bibel Wiki", landing = false } = Astro.props
+const { title = "Bibel Wiki", landing = false, heroCredit } = Astro.props
 
 // Build story tree for the sidebar (Templates → Categories → Stories)
 const templates = loadAllTemplates()
@@ -144,6 +148,11 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
     >
       <div class="max-w-5xl mx-auto">
         Data from scriptureearth.org · CC BY-NC-ND 4.0 for included languages (see config/licenses.json).
+        {heroCredit && (
+          <>
+            {" "}· <a href={heroCredit.url} target="_blank" rel="noopener noreferrer nofollow" style="color:inherit;text-decoration:underline">{heroCredit.text}</a>
+          </>
+        )}
       </div>
     </footer>
     </div>

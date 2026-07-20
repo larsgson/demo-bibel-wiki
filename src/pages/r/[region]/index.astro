@@ -47,7 +47,7 @@ const tr = (k: string) => t(lang, `regionLanding.${k}`)
 const title = rc.name[lang] ?? rc.code
 ---
 
-<BaseLayout title={title} landing={true}>
+<BaseLayout title={title} landing={true} heroCredit={rc.landing?.heroCredit}>
   <div class="region-landing">
     <section
       class={`region-hero${heroImage ? " has-image" : ""}`}
