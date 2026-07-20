@@ -33,14 +33,19 @@
 # Domain-scoped redirects — only match requests to that specific host, so
 # they don't affect the primary demo.bibel.wiki domain. Add one line per
 # region subdomain once its config/regions/<code>.toml exists.
+#
+# The scheme (https://) is REQUIRED for Netlify to treat `from` as a host
+# match instead of a literal (unmatchable) path — a bare domain here is
+# silently a no-op, which is exactly what shipped and shadowed the region
+# landing pages on both subdomains until this fix.
 [[redirects]]
-  from = "mx.demo.bibel.wiki/"
+  from = "https://mx.demo.bibel.wiki/"
   to = "/r/mx/"
   status = 200
   force = true
 
 [[redirects]]
-  from = "id.demo.bibel.wiki/"
+  from = "https://id.demo.bibel.wiki/"
   to = "/r/id/"
   status = 200
   force = true
