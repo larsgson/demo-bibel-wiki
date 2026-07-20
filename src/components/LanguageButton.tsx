@@ -9,18 +9,15 @@ import {
   initLanguageFromUrl,
 } from "../stores/language-store"
 import { buildLangHref } from "../lib/bw/url-utils"
-import { t as translate } from "../lib/bw/ui-locales"
+import { t as translate, resolveUILang, localeCode } from "../lib/bw/ui-locales"
 import LanguagePicker from "./LanguagePicker"
 
-interface Props {
-  lang?: "en" | "es"
-}
-
-export default function LanguageButton({ lang = "es" }: Props) {
+export default function LanguageButton() {
   const primary = useStore($selectedLanguage)
   const secondaries = useStore($secondaryLanguages)
   const names = useStore($languageNames)
   const [open, setOpen] = useState(false)
+  const lang = localeCode(resolveUILang(primary, secondaries))
 
   useEffect(() => {
     initLanguageFromUrl()

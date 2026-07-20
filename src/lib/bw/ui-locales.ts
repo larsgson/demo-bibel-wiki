@@ -80,6 +80,16 @@ export function getLocale(langCode: string): any {
   return locales[mappedCode] || locales[defaultLocale]
 }
 
+/**
+ * Map any recognized language code (3-letter ISO 639-3 like "eng"/"ind" or
+ * the locale's own 2-letter key) to its 2-letter locale key. Needed wherever
+ * a `Localized` object (`{ en, es, id, ... }`) is indexed directly instead
+ * of going through `t()`, which already does this mapping internally.
+ */
+export function localeCode(langCode: string): string {
+  return localeMap[langCode] || defaultLocale
+}
+
 function lookup(locale: any, keys: string[]): string | undefined {
   let value: any = locale
   for (const key of keys) {

@@ -11,7 +11,7 @@ interface Props {
   /** Currently-selected iso(s) to mark as active in the list. */
   selected?: string[]
   title?: string
-  lang?: "en" | "es"
+  lang?: string
 }
 
 // Section id → locale key (labels live in the locale files).
@@ -32,7 +32,7 @@ function LanguageRow({
   lang: PickerLanguage
   selected: boolean
   onSelect: (iso: string) => void
-  uiLang: "en" | "es"
+  uiLang: string
 }) {
   return (
     <button
@@ -68,7 +68,7 @@ export default function LanguagePicker({
   onSelect,
   selected = [],
   title,
-  lang = "es",
+  lang = "en",
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const {
