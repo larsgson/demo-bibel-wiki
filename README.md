@@ -1,4 +1,4 @@
-# se-regional-pwa
+# demo-bibel-wiki
 
 Scripture reading and Bible story PWA for Mexican indigenous languages + English (BSB).
 

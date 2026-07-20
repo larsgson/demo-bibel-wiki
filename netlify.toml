@@ -3,6 +3,11 @@
   publish = "dist"
 
 [build.environment]
+  # These are public base URLs, not credentials (see comments below on each) —
+  # Netlify's secret scanner still flags them because their values happen to
+  # match a configured env var. Exempt them explicitly rather than disabling
+  # the scanner outright.
+  SECRETS_SCAN_OMIT_KEYS = "PUBLIC_PKF_BASE_URL,PUBLIC_API_BASE_URL,DBT_API_BASE_URL"
   # Public CDN host for PKF/DBT scripture data (see src/lib/bw/pkf-url.ts).
   # Not a secret — already inlined into the client bundle. Without it,
   # scripts/fetch-data.mjs falls back to downloading the full data tarball
