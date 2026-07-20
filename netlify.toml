@@ -29,6 +29,22 @@
 [functions]
   directory = "netlify/functions"
 
+# Regional entry-point subdomains (see config/regions/*.toml, `seo.host`).
+# Domain-scoped redirects — only match requests to that specific host, so
+# they don't affect the primary demo.bibel.wiki domain. Add one line per
+# region subdomain once its config/regions/<code>.toml exists.
+[[redirects]]
+  from = "mx.demo.bibel.wiki/"
+  to = "/r/mx/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "id.demo.bibel.wiki/"
+  to = "/r/id/"
+  status = 200
+  force = true
+
 # Non-prerendered ISOs fall through to the generic /l/ pages.
 # Netlify serves static files first, so prerendered pages take priority.
 [[redirects]]

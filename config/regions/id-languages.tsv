@@ -1,0 +1,152 @@
+# Indonesia language classification — family + primary province per ISO 639-3.
+# Anchors the "by family" and "by province" groupings in id.toml.
+# Sources: Glottolog (family classification + coordinates), OpenStreetMap/
+# Nominatim (coordinate -> province reverse geocode), Wikidata (country tagging
+# to shortlist candidate ISOs). Scope: intersection of Indonesia-tagged ISO
+# 639-3 codes (Wikidata P17=Indonesia) against the three live content sources
+# (PKF manifest, DBT media index, helloAO catalog) — see id-source-scan.md.
+# STATUS: family = Glottolog top/mid-level branch, high confidence; province =
+# best-effort single primary province from language-centroid coordinates, a
+# few hand-corrected for cross-border languages (see notes). Review before
+# treating as final — this is the same caveat mx-languages.tsv carries.
+#
+# iso	name	family	province
+aau	Abau	Sepik	Papua Pegunungan
+aaz	Amarasi	Rote-Meto (Timor)	Nusa Tenggara Timur
+abs	Ambonese Malay	Malay varieties	Maluku
+ace	Acehnese	Acehnese	Aceh
+akb	Batak Angkola	Batak	Sumatera Utara
+alp	Alune	Nunusaku (Seram)	Maluku
+amk	Ambai	Cenderawasih Bay	Papua
+aoz	Uab Meto	Rote-Meto (Timor)	Nusa Tenggara Timur
+atq	Aralle-Tabulahan	Pitu Ulunna Salu	Sulawesi Barat
+auu	Auye	Paniai Lakes	Papua Tengah
+awu	Central Awyu	Asmat-Awyu-Ok	Papua Selatan
+ayz	Maybrat	Maybratic	Papua Barat Daya
+ban	Balinese	Bali-Sasak-Sumbawa	Bali
+bbc	Batak Toba	Batak	Sumatera Utara
+bep	Besoa	Rampi-Seko-Badaic	Sulawesi Tengah
+beu	Blagar	Alor-Pantar	Nusa Tenggara Timur
+bgz	Banggai	Saluan-Banggai	Sulawesi Tengah
+bhp	Bima	Bima-Sumba	Nusa Tenggara Barat
+bhw	Biak	Cenderawasih Bay	Papua
+bhz	Bada (Indonesia)	Rampi-Seko-Badaic	Sulawesi Tengah
+bkl	Berik	Tor-Orya	Papua
+blz	Balantak	Saluan-Banggai	Sulawesi Tengah
+btd	Batak Dairi	Batak	Sumatera Utara
+bth	Biatah Bidayuh	Land Dayak	Kalimantan Barat
+bts	Batak Simalungun	Batak	Sumatera Utara
+btx	Batak Karo	Batak	Sumatera Utara
+bug	Buginese	Bugis	Sulawesi Selatan
+bvz	Bauzi	Geelvink Bay	Papua
+dna	Upper Grand Valley Dani	Dani	Papua Pegunungan
+dni	Lower Grand Valley Dani	Dani	Papua Pegunungan
+dnt	Mid Grand Valley Dani	Dani	Papua Pegunungan
+dnw	Western Dani	Dani	Papua Tengah
+eip	Eipomek	Mek	Papua Pegunungan
+ekg	Ekari	Paniai Lakes	Papua Tengah
+emb	Embaloh	Bugis	Kalimantan Barat
+eno	Enggano	Barrier Islands & Enggano	Bengkulu
+frd	Fordata	Tanimbar	Maluku
+gbi	Galela	North Halmahera	Maluku Utara
+gef	Gerai	Malayic Dayak	Kalimantan Barat
+gor	Gorontalo	Gorontalo-Mongondow	Gorontalo
+had	Hatam	Hatam-Mansim	Papua Barat
+hap	Hupla	Dani	Papua Pegunungan
+heg	Helong	Rote-Meto (Timor)	Nusa Tenggara Timur
+hvn	Hawu	Bima-Sumba	Nusa Tenggara Timur
+iba	Iban	Iban	Kalimantan Barat
+jav	Javanese	Javanese	Jawa Tengah
+jmd	Yamdena	Tanimbar	Maluku
+kgr	Abun	Papuan isolates	Papua Barat Daya
+kjc	Coastal Konjo	Makassarese	Sulawesi Selatan
+kje	Kisar	Southwest Maluku	Maluku
+kkl	Kosarek Yale	Mek	Papua Pegunungan
+kli	Kalumpang	Toraja-Duri	Sulawesi Barat
+klw	Tado-Lindu	Kaili-Wolio	Sulawesi Tengah
+kmt	Kemtuik	Nimboranic	Papua
+kpq	Korupun-Sela	Mek	Papua Pegunungan
+kvo	Dobel	Aru	Maluku
+kzf	Da'a Kaili	Kaili-Wolio	Sulawesi Barat
+law	Lauje	Tominic (Lauje)	Sulawesi Tengah
+lbw	Tolaki	Bungku-Tolaki	Sulawesi Tenggara
+lew	Ledo Kaili	Kaili-Wolio	Sulawesi Tengah
+lex	Luang	Southwest Maluku	Maluku
+lje	Rampi	Rampi-Seko-Badaic	Sulawesi Selatan
+ljp	Lampung Api	Lampung	Lampung
+llg	Lole	Rote-Meto (Timor)	Nusa Tenggara Timur
+lnd	Lundayeh	Kenyah-Lun Bawang	Kalimantan Utara
+mad	Madurese	Madurese	Jawa Timur
+mak	Makasar	Makassarese	Sulawesi Selatan
+max	North Moluccan Malay	Malay varieties	Maluku Utara
+mej	Meyah	East Bird's Head	Papua Barat
+mhy	Ma'anyan	Barito	Kalimantan Tengah
+min	Minangkabau	Malay varieties	Sumatera Barat
+mkn	Kupang Malay	Malay varieties	Nusa Tenggara Timur
+mnb	Muna	Muna-Buton	Sulawesi Tenggara
+mnx	Sougb	East Bird's Head	Papua Barat
+mnz	Moni	Paniai Lakes	Papua Tengah
+mog	Mongondow	Gorontalo-Mongondow	Sulawesi Utara
+mqf	Momuna	Papuan isolates	Papua Selatan
+mqj	Mamasa	Toraja-Duri	Sulawesi Barat
+mqn	Moronene	Bungku-Tolaki	Sulawesi Tenggara
+mtg	Una	Mek	Papua Pegunungan
+mtj	Moskona	East Bird's Head	Papua Barat
+mvp	Duri	Toraja-Duri	Sulawesi Selatan
+mwv	Mentawai	Barrier Islands & Enggano	Sumatera Barat
+myl	Moma	Kaili-Wolio	Sulawesi Tengah
+mzq	Mori Atas	Bungku-Tolaki	Sulawesi Tengah
+nbq	Nggem	Dani	Papua Pegunungan
+ndx	Nduga	Dani	Papua Pegunungan
+nfa	Dhao	Bima-Sumba	Nusa Tenggara Timur
+nia	Nias	Barrier Islands & Enggano	Sumatera Utara
+nij	Ngaju	Barito	Kalimantan Tengah
+nlc	Nalca	Mek	Papua Pegunungan
+nlk	Ninia Yali	Dani	Papua Pegunungan
+npy	Napu	Rampi-Seko-Badaic	Sulawesi Tengah
+osi	Osing	Javanese	Jawa Timur
+pdo	Padoe	Bungku-Tolaki	Sulawesi Tenggara
+pmf	Pamona	Kaili-Wolio	Sulawesi Tengah
+ppk	Uma	Kaili-Wolio	Sulawesi Tengah
+pse	South Barisan Malay	Malay varieties	Sumatera Selatan
+ptu	Bambam	Pitu Ulunna Salu	Sulawesi Barat
+rej	Rejang	Other Austronesian	Bengkulu
+rgu	Ringgou	Rote-Meto (Timor)	Nusa Tenggara Timur
+row	Dela-Oenale	Rote-Meto (Timor)	Nusa Tenggara Timur
+saj	Sahu	North Halmahera	Maluku Utara
+sas	Sasak	Bali-Sasak-Sumbawa	Nusa Tenggara Barat
+sda	Toraja-Sa'dan	Toraja-Duri	Sulawesi Selatan
+sdq	Semandang	Land Dayak	Kalimantan Barat
+set	Sentani	Sentanic	Papua
+skx	Seko Padang	Rampi-Seko-Badaic	Sulawesi Selatan
+sly	Selayar	Makassarese	Sulawesi Selatan
+sun	Sundanese	Other Austronesian	Jawa Barat
+sxn	Sangir	Sangir-Minahasan	Sulawesi Utara
+sya	Siang	Barito	Kalimantan Tengah
+tby	Tabaru	North Halmahera	Maluku Utara
+tes	Tengger	Javanese	Jawa Timur
+tet	Tetum	Tetum	Nusa Tenggara Timur
+tlb	Tobelo	North Halmahera	Maluku Utara
+tld	Talaud	Sangir-Minahasan	Sulawesi Utara
+tnt	Tontemboan	Sangir-Minahasan	Sulawesi Utara
+tom	Tombulu	Sangir-Minahasan	Sulawesi Utara
+tuj	Tugutil	North Halmahera	Maluku Utara
+tvw	Sedoa	Kaili-Wolio	Sulawesi Tengah
+twu	Termanu	Rote-Meto (Timor)	Nusa Tenggara Timur
+twy	Tawoyan	Barito	Kalimantan Tengah
+txq	Tii	Rote-Meto (Timor)	Nusa Tenggara Timur
+uhn	Damal	Amung-Damal	Papua Tengah
+ury	Orya	Tor-Orya	Papua
+wlo	Wolio	Kaili-Wolio	Sulawesi Tenggara
+wms	Wambon	Asmat-Awyu-Ok	Papua Selatan
+wrs	Waris	Border	Papua
+wul	Silimo	Dani	Papua Pegunungan
+xbr	Kambera	Bima-Sumba	Nusa Tenggara Timur
+xdy	Malayic Dayak	Malay varieties	Kalimantan Tengah
+xkl	Usun Apau Kenyah	Kenyah-Lun Bawang	Kalimantan Utara
+xmm	Manado Malay	Malay varieties	Sulawesi Utara
+xmz	Mori Bawah	Bungku-Tolaki	Sulawesi Tengah
+xte	Ketengban	Mek	Papua Pegunungan
+yli	Angguruk Yali	Dani	Papua Pegunungan
+yon	Yonggom	Asmat-Awyu-Ok	Papua Selatan
+yva	Yawa	Yawa-Saweru	Papua
