@@ -47,6 +47,7 @@ eip	Eipomek	Mek	Papua Pegunungan
 ekg	Ekari	Paniai Lakes	Papua Tengah
 emb	Embaloh	Bugis	Kalimantan Barat
 eno	Enggano	Barrier Islands & Enggano	Bengkulu
+flh	Abawiri	Lakes Plain	Papua
 frd	Fordata	Tanimbar	Maluku
 gbi	Galela	North Halmahera	Maluku Utara
 gef	Gerai	Malayic Dayak	Kalimantan Barat
@@ -59,6 +60,7 @@ iba	Iban	Iban	Kalimantan Barat
 jav	Javanese	Javanese	Jawa Tengah
 jmd	Yamdena	Tanimbar	Maluku
 kgr	Abun	Papuan isolates	Papua Barat Daya
+khe	Korowai	Asmat-Awyu-Ok	Papua Selatan
 kjc	Coastal Konjo	Makassarese	Sulawesi Selatan
 kje	Kisar	Southwest Maluku	Maluku
 kkl	Kosarek Yale	Mek	Papua Pegunungan
@@ -66,7 +68,10 @@ kli	Kalumpang	Toraja-Duri	Sulawesi Barat
 klw	Tado-Lindu	Kaili-Wolio	Sulawesi Tengah
 kmt	Kemtuik	Nimboranic	Papua
 kpq	Korupun-Sela	Mek	Papua Pegunungan
+kps	Tehit	West Bird's Head	Papua Barat Daya
 kvo	Dobel	Aru	Maluku
+kvw	Wersing	Alor-Pantar	Nusa Tenggara Timur
+kyo	Klon	Alor-Pantar	Nusa Tenggara Timur
 kzf	Da'a Kaili	Kaili-Wolio	Sulawesi Barat
 law	Lauje	Tominic (Lauje)	Sulawesi Tengah
 lbw	Tolaki	Bungku-Tolaki	Sulawesi Tenggara
@@ -90,6 +95,7 @@ mog	Mongondow	Gorontalo-Mongondow	Sulawesi Utara
 mqf	Momuna	Papuan isolates	Papua Selatan
 mqj	Mamasa	Toraja-Duri	Sulawesi Barat
 mqn	Moronene	Bungku-Tolaki	Sulawesi Tenggara
+mtd	Mualang	Iban	Kalimantan Barat
 mtg	Una	Mek	Papua Pegunungan
 mtj	Moskona	East Bird's Head	Papua Barat
 mvp	Duri	Toraja-Duri	Sulawesi Selatan
@@ -104,6 +110,7 @@ nij	Ngaju	Barito	Kalimantan Tengah
 nlc	Nalca	Mek	Papua Pegunungan
 nlk	Ninia Yali	Dani	Papua Pegunungan
 npy	Napu	Rampi-Seko-Badaic	Sulawesi Tengah
+nxl	South Nuaulu	Nunusaku (Seram)	Maluku
 osi	Osing	Javanese	Jawa Timur
 pdo	Padoe	Bungku-Tolaki	Sulawesi Tenggara
 pmf	Pamona	Kaili-Wolio	Sulawesi Tengah
@@ -119,11 +126,14 @@ sda	Toraja-Sa'dan	Toraja-Duri	Sulawesi Selatan
 sdq	Semandang	Land Dayak	Kalimantan Barat
 set	Sentani	Sentanic	Papua
 skx	Seko Padang	Rampi-Seko-Badaic	Sulawesi Selatan
+slu	Selaru	Southwest Maluku	Maluku
 sly	Selayar	Makassarese	Sulawesi Selatan
 sun	Sundanese	Other Austronesian	Jawa Barat
 sxn	Sangir	Sangir-Minahasan	Sulawesi Utara
 sya	Siang	Barito	Kalimantan Tengah
 tby	Tabaru	North Halmahera	Maluku Utara
+tdj	Tajio	Tominic (Lauje)	Sulawesi Tengah
+tdn	Tondano	Sangir-Minahasan	Sulawesi Utara
 tes	Tengger	Javanese	Jawa Timur
 tet	Tetum	Tetum	Nusa Tenggara Timur
 tlb	Tobelo	North Halmahera	Maluku Utara
@@ -132,9 +142,11 @@ tnt	Tontemboan	Sangir-Minahasan	Sulawesi Utara
 tom	Tombulu	Sangir-Minahasan	Sulawesi Utara
 tuj	Tugutil	North Halmahera	Maluku Utara
 tvw	Sedoa	Kaili-Wolio	Sulawesi Tengah
+twe	Teiwa	Alor-Pantar	Nusa Tenggara Timur
 twu	Termanu	Rote-Meto (Timor)	Nusa Tenggara Timur
 twy	Tawoyan	Barito	Kalimantan Tengah
 txq	Tii	Rote-Meto (Timor)	Nusa Tenggara Timur
+txs	Tonsea	Sangir-Minahasan	Sulawesi Utara
 uhn	Damal	Amung-Damal	Papua Tengah
 ury	Orya	Tor-Orya	Papua
 wlo	Wolio	Kaili-Wolio	Sulawesi Tenggara

@@ -8,9 +8,14 @@
 # P17=Indonesia) against the three content sources this app actually draws
 # from — PKF (cdn.bibel.wiki), DBT/Bible Brain (cdn.bibel.wiki media index),
 # and helloAO (bible.helloao.org) — so every language listed here has at
-# least one real fileset behind it. See config/regions/id-languages.tsv for
-# the per-language family/province classification (Glottolog + OSM reverse
-# geocoding) this file was generated from.
+# least one real fileset behind it (audio and/or text — not every language
+# has text; DBT audio-only languages still get a real reading experience via
+# the DbtChapterReader fallback, see src/components/ReaderLoader.tsx). See
+# config/regions/id-languages.tsv for the per-language family/province
+# classification (Glottolog + OSM reverse geocoding) this file was generated
+# from, and cdn.bibel.wiki/dbt/_app/{catalog-index,catalog-overlap}.json for
+# the authoritative per-language source-availability data used to expand
+# this list beyond the original hand-cross-referenced set.
 
 code = "id"
 name = { en = "Indonesia", id = "Indonesia" }
@@ -24,23 +29,25 @@ uiLanguage = "id"         # entering this region DEFAULTS the UI to Indonesian
 # Bridge/trade language — surfaced first; natural audio/study fallback.
 tradeLanguages = ["ind"]
 
-# Every language in this region (ISO 639-3). 139 languages — see the scope
+# Every language in this region (ISO 639-3). 151 languages — see the scope
 # note above for why this isn't exhaustive.
 languages = [
   "aau", "aaz", "abs", "ace", "akb", "alp", "amk", "aoz", "atq", "auu",
   "awu", "ayz", "ban", "bbc", "bep", "beu", "bgz", "bhp", "bhw", "bhz",
   "bkl", "blz", "btd", "bth", "bts", "btx", "bug", "bvz", "dna", "dni",
-  "dnt", "dnw", "eip", "ekg", "emb", "eno", "frd", "gbi", "gef", "gor",
-  "had", "hap", "heg", "hvn", "iba", "jav", "jmd", "kgr", "kjc", "kje",
-  "kkl", "kli", "klw", "kmt", "kpq", "kvo", "kzf", "law", "lbw", "lew",
-  "lex", "lje", "ljp", "llg", "lnd", "mad", "mak", "max", "mej", "mhy",
-  "min", "mkn", "mnb", "mnx", "mnz", "mog", "mqf", "mqj", "mqn", "mtg",
-  "mtj", "mvp", "mwv", "myl", "mzq", "nbq", "ndx", "nfa", "nia", "nij",
-  "nlc", "nlk", "npy", "osi", "pdo", "pmf", "ppk", "pse", "ptu", "rej",
-  "rgu", "row", "saj", "sas", "sda", "sdq", "set", "skx", "sly", "sun",
-  "sxn", "sya", "tby", "tes", "tet", "tlb", "tld", "tnt", "tom", "tuj",
-  "tvw", "twu", "twy", "txq", "uhn", "ury", "wlo", "wms", "wrs", "wul",
-  "xbr", "xdy", "xkl", "xmm", "xmz", "xte", "yli", "yon", "yva"
+  "dnt", "dnw", "eip", "ekg", "emb", "eno", "flh", "frd", "gbi", "gef",
+  "gor", "had", "hap", "heg", "hvn", "iba", "jav", "jmd", "kgr", "khe",
+  "kjc", "kje", "kkl", "kli", "klw", "kmt", "kpq", "kps", "kvo", "kvw",
+  "kyo", "kzf", "law", "lbw", "lew", "lex", "lje", "ljp", "llg", "lnd",
+  "mad", "mak", "max", "mej", "mhy", "min", "mkn", "mnb", "mnx", "mnz",
+  "mog", "mqf", "mqj", "mqn", "mtd", "mtg", "mtj", "mvp", "mwv", "myl",
+  "mzq", "nbq", "ndx", "nfa", "nia", "nij", "nlc", "nlk", "npy", "nxl",
+  "osi", "pdo", "pmf", "ppk", "pse", "ptu", "rej", "rgu", "row", "saj",
+  "sas", "sda", "sdq", "set", "skx", "slu", "sly", "sun", "sxn", "sya",
+  "tby", "tdj", "tdn", "tes", "tet", "tlb", "tld", "tnt", "tom", "tuj",
+  "tvw", "twe", "twu", "twy", "txq", "txs", "uhn", "ury", "wlo", "wms",
+  "wrs", "wul", "xbr", "xdy", "xkl", "xmm", "xmz", "xte", "yli", "yon",
+  "yva"
 ]
 
 # ── Groupings ────────────────────────────────────────────────────────────────
@@ -57,7 +64,7 @@ languages = [
 #
 # Indonesia has ~700 languages across 6 major islands/archipelagos, so unlike
 # Mexico's mx.toml (where "by family" is the intuitive, well-known grouping
-# to a Mexican audience), a 52-way linguistic-family breakdown here would be
+# to a Mexican audience), a 54-way linguistic-family breakdown here would be
 # unusably granular as the DEFAULT picker view. "By island" (7 groups) is
 # the primary filter instead — geography is the intuitive axis for a general
 # audience. "By language family" is kept as commented reference data (same
@@ -72,19 +79,19 @@ name = { en = "By island", id = "Berdasarkan pulau" }
   [[grouping.group]]
   slug = "papua"
   name = { en = "Papua", id = "Papua" }
-  languages = ["aau", "amk", "auu", "awu", "ayz", "bhw", "bkl", "bvz", "dna", "dni", "dnt", "dnw", "eip", "ekg", "had", "hap", "kgr", "kkl", "kmt", "kpq", "mej", "mnx", "mnz", "mqf", "mtg", "mtj", "nbq", "ndx", "nlc", "nlk", "set", "uhn", "ury", "wms", "wrs", "wul", "xte", "yli", "yon", "yva"]
+  languages = ["aau", "amk", "auu", "awu", "ayz", "bhw", "bkl", "bvz", "dna", "dni", "dnt", "dnw", "eip", "ekg", "flh", "had", "hap", "kgr", "khe", "kkl", "kmt", "kpq", "kps", "mej", "mnx", "mnz", "mqf", "mtg", "mtj", "nbq", "ndx", "nlc", "nlk", "set", "uhn", "ury", "wms", "wrs", "wul", "xte", "yli", "yon", "yva"]
   [[grouping.group]]
   slug = "sulawesi"
   name = { en = "Sulawesi", id = "Sulawesi" }
-  languages = ["atq", "bep", "bgz", "bhz", "blz", "bug", "gor", "kjc", "kli", "klw", "kzf", "law", "lbw", "lew", "lje", "mak", "mnb", "mog", "mqj", "mqn", "mvp", "myl", "mzq", "npy", "pdo", "pmf", "ppk", "ptu", "sda", "skx", "sly", "sxn", "tld", "tnt", "tom", "tvw", "wlo", "xmm", "xmz"]
+  languages = ["atq", "bep", "bgz", "bhz", "blz", "bug", "gor", "kjc", "kli", "klw", "kzf", "law", "lbw", "lew", "lje", "mak", "mnb", "mog", "mqj", "mqn", "mvp", "myl", "mzq", "npy", "pdo", "pmf", "ppk", "ptu", "sda", "skx", "sly", "sxn", "tdj", "tdn", "tld", "tnt", "tom", "tvw", "txs", "wlo", "xmm", "xmz"]
   [[grouping.group]]
   slug = "bali-nusa-tenggara"
   name = { en = "Bali & Nusa Tenggara", id = "Bali & Nusa Tenggara" }
-  languages = ["aaz", "aoz", "ban", "beu", "bhp", "heg", "hvn", "llg", "mkn", "nfa", "rgu", "row", "sas", "tet", "twu", "txq", "xbr"]
+  languages = ["aaz", "aoz", "ban", "beu", "bhp", "heg", "hvn", "kvw", "kyo", "llg", "mkn", "nfa", "rgu", "row", "sas", "tet", "twe", "twu", "txq", "xbr"]
   [[grouping.group]]
   slug = "maluku"
   name = { en = "Maluku", id = "Maluku" }
-  languages = ["abs", "alp", "frd", "gbi", "jmd", "kje", "kvo", "lex", "max", "saj", "tby", "tlb", "tuj"]
+  languages = ["abs", "alp", "frd", "gbi", "jmd", "kje", "kvo", "lex", "max", "nxl", "saj", "slu", "tby", "tlb", "tuj"]
   [[grouping.group]]
   slug = "sumatra"
   name = { en = "Sumatra", id = "Sumatera" }
@@ -92,7 +99,7 @@ name = { en = "By island", id = "Berdasarkan pulau" }
   [[grouping.group]]
   slug = "kalimantan"
   name = { en = "Kalimantan", id = "Kalimantan" }
-  languages = ["bth", "emb", "gef", "iba", "lnd", "mhy", "nij", "sdq", "sya", "twy", "xdy", "xkl"]
+  languages = ["bth", "emb", "gef", "iba", "lnd", "mhy", "mtd", "nij", "sdq", "sya", "twy", "xdy", "xkl"]
   [[grouping.group]]
   slug = "java"
   name = { en = "Java", id = "Jawa" }
@@ -126,6 +133,10 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 #   name = { en = "Mek" }
 #   languages = ["eip", "kkl", "kpq", "mtg", "nlc", "xte"]
 #   [[grouping.group]]
+#   slug = "sangir-minahasan"
+#   name = { en = "Sangir-Minahasan" }
+#   languages = ["sxn", "tdn", "tld", "tnt", "tom", "txs"]
+#   [[grouping.group]]
 #   slug = "batak"
 #   name = { en = "Batak" }
 #   languages = ["akb", "bbc", "btd", "bts", "btx"]
@@ -142,6 +153,14 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 #   name = { en = "Bungku-Tolaki" }
 #   languages = ["lbw", "mqn", "mzq", "pdo", "xmz"]
 #   [[grouping.group]]
+#   slug = "asmat-awyu-ok"
+#   name = { en = "Asmat-Awyu-Ok" }
+#   languages = ["awu", "khe", "wms", "yon"]
+#   [[grouping.group]]
+#   slug = "alor-pantar"
+#   name = { en = "Alor-Pantar" }
+#   languages = ["beu", "kvw", "kyo", "twe"]
+#   [[grouping.group]]
 #   slug = "bima-sumba"
 #   name = { en = "Bima-Sumba" }
 #   languages = ["bhp", "hvn", "nfa", "xbr"]
@@ -154,17 +173,9 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 #   name = { en = "Barito" }
 #   languages = ["mhy", "nij", "sya", "twy"]
 #   [[grouping.group]]
-#   slug = "sangir-minahasan"
-#   name = { en = "Sangir-Minahasan" }
-#   languages = ["sxn", "tld", "tnt", "tom"]
-#   [[grouping.group]]
 #   slug = "paniai-lakes"
 #   name = { en = "Paniai Lakes" }
 #   languages = ["auu", "ekg", "mnz"]
-#   [[grouping.group]]
-#   slug = "asmat-awyu-ok"
-#   name = { en = "Asmat-Awyu-Ok" }
-#   languages = ["awu", "wms", "yon"]
 #   [[grouping.group]]
 #   slug = "barrier-islands-enggano"
 #   name = { en = "Barrier Islands & Enggano" }
@@ -178,9 +189,17 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 #   name = { en = "Makassarese" }
 #   languages = ["kjc", "mak", "sly"]
 #   [[grouping.group]]
+#   slug = "southwest-maluku"
+#   name = { en = "Southwest Maluku" }
+#   languages = ["kje", "lex", "slu"]
+#   [[grouping.group]]
 #   slug = "east-bird-s-head"
 #   name = { en = "East Bird's Head" }
 #   languages = ["mej", "mnx", "mtj"]
+#   [[grouping.group]]
+#   slug = "nunusaku-seram"
+#   name = { en = "Nunusaku (Seram)" }
+#   languages = ["alp", "nxl"]
 #   [[grouping.group]]
 #   slug = "cenderawasih-bay"
 #   name = { en = "Cenderawasih Bay" }
@@ -218,13 +237,17 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 #   name = { en = "Gorontalo-Mongondow" }
 #   languages = ["gor", "mog"]
 #   [[grouping.group]]
+#   slug = "iban"
+#   name = { en = "Iban" }
+#   languages = ["iba", "mtd"]
+#   [[grouping.group]]
 #   slug = "papuan-isolates"
 #   name = { en = "Papuan isolates" }
 #   languages = ["kgr", "mqf"]
 #   [[grouping.group]]
-#   slug = "southwest-maluku"
-#   name = { en = "Southwest Maluku" }
-#   languages = ["kje", "lex"]
+#   slug = "tominic-lauje"
+#   name = { en = "Tominic (Lauje)" }
+#   languages = ["law", "tdj"]
 #   [[grouping.group]]
 #   slug = "kenyah-lun-bawang"
 #   name = { en = "Kenyah-Lun Bawang" }
@@ -242,21 +265,17 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 #   name = { en = "Acehnese" }
 #   languages = ["ace"]
 #   [[grouping.group]]
-#   slug = "nunusaku-seram"
-#   name = { en = "Nunusaku (Seram)" }
-#   languages = ["alp"]
-#   [[grouping.group]]
 #   slug = "maybratic"
 #   name = { en = "Maybratic" }
 #   languages = ["ayz"]
 #   [[grouping.group]]
-#   slug = "alor-pantar"
-#   name = { en = "Alor-Pantar" }
-#   languages = ["beu"]
-#   [[grouping.group]]
 #   slug = "geelvink-bay"
 #   name = { en = "Geelvink Bay" }
 #   languages = ["bvz"]
+#   [[grouping.group]]
+#   slug = "lakes-plain"
+#   name = { en = "Lakes Plain" }
+#   languages = ["flh"]
 #   [[grouping.group]]
 #   slug = "malayic-dayak"
 #   name = { en = "Malayic Dayak" }
@@ -266,21 +285,17 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 #   name = { en = "Hatam-Mansim" }
 #   languages = ["had"]
 #   [[grouping.group]]
-#   slug = "iban"
-#   name = { en = "Iban" }
-#   languages = ["iba"]
-#   [[grouping.group]]
 #   slug = "nimboranic"
 #   name = { en = "Nimboranic" }
 #   languages = ["kmt"]
 #   [[grouping.group]]
+#   slug = "west-bird-s-head"
+#   name = { en = "West Bird's Head" }
+#   languages = ["kps"]
+#   [[grouping.group]]
 #   slug = "aru"
 #   name = { en = "Aru" }
 #   languages = ["kvo"]
-#   [[grouping.group]]
-#   slug = "tominic-lauje"
-#   name = { en = "Tominic (Lauje)" }
-#   languages = ["law"]
 #   [[grouping.group]]
 #   slug = "lampung"
 #   name = { en = "Lampung" }
@@ -324,41 +339,45 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 # name = { en = "By province" }
 #
 #   [[grouping.group]]
+#   slug = "nusa-tenggara-timur"
+#   name = { en = "Nusa Tenggara Timur" }
+#   languages = ["aaz", "aoz", "beu", "heg", "hvn", "kvw", "kyo", "llg", "mkn", "nfa", "rgu", "row", "tet", "twe", "twu", "txq", "xbr"]
+#   [[grouping.group]]
 #   slug = "papua-pegunungan"
 #   name = { en = "Papua Pegunungan" }
 #   languages = ["aau", "dna", "dni", "dnt", "eip", "hap", "kkl", "kpq", "mtg", "nbq", "ndx", "nlc", "nlk", "wul", "xte", "yli"]
 #   [[grouping.group]]
-#   slug = "nusa-tenggara-timur"
-#   name = { en = "Nusa Tenggara Timur" }
-#   languages = ["aaz", "aoz", "beu", "heg", "hvn", "llg", "mkn", "nfa", "rgu", "row", "tet", "twu", "txq", "xbr"]
-#   [[grouping.group]]
 #   slug = "sulawesi-tengah"
 #   name = { en = "Sulawesi Tengah" }
-#   languages = ["bep", "bgz", "bhz", "blz", "klw", "law", "lew", "myl", "mzq", "npy", "pmf", "ppk", "tvw", "xmz"]
+#   languages = ["bep", "bgz", "bhz", "blz", "klw", "law", "lew", "myl", "mzq", "npy", "pmf", "ppk", "tdj", "tvw", "xmz"]
 #   [[grouping.group]]
 #   slug = "papua"
 #   name = { en = "Papua" }
-#   languages = ["amk", "bhw", "bkl", "bvz", "kmt", "set", "ury", "wrs", "yva"]
+#   languages = ["amk", "bhw", "bkl", "bvz", "flh", "kmt", "set", "ury", "wrs", "yva"]
+#   [[grouping.group]]
+#   slug = "maluku"
+#   name = { en = "Maluku" }
+#   languages = ["abs", "alp", "frd", "jmd", "kje", "kvo", "lex", "nxl", "slu"]
 #   [[grouping.group]]
 #   slug = "sulawesi-selatan"
 #   name = { en = "Sulawesi Selatan" }
 #   languages = ["bug", "kjc", "lje", "mak", "mvp", "sda", "skx", "sly"]
 #   [[grouping.group]]
-#   slug = "maluku"
-#   name = { en = "Maluku" }
-#   languages = ["abs", "alp", "frd", "jmd", "kje", "kvo", "lex"]
+#   slug = "sulawesi-utara"
+#   name = { en = "Sulawesi Utara" }
+#   languages = ["mog", "sxn", "tdn", "tld", "tnt", "tom", "txs", "xmm"]
 #   [[grouping.group]]
 #   slug = "sumatera-utara"
 #   name = { en = "Sumatera Utara" }
 #   languages = ["akb", "bbc", "btd", "bts", "btx", "nia"]
 #   [[grouping.group]]
+#   slug = "kalimantan-barat"
+#   name = { en = "Kalimantan Barat" }
+#   languages = ["bth", "emb", "gef", "iba", "mtd", "sdq"]
+#   [[grouping.group]]
 #   slug = "maluku-utara"
 #   name = { en = "Maluku Utara" }
 #   languages = ["gbi", "max", "saj", "tby", "tlb", "tuj"]
-#   [[grouping.group]]
-#   slug = "sulawesi-utara"
-#   name = { en = "Sulawesi Utara" }
-#   languages = ["mog", "sxn", "tld", "tnt", "tom", "xmm"]
 #   [[grouping.group]]
 #   slug = "sulawesi-barat"
 #   name = { en = "Sulawesi Barat" }
@@ -368,9 +387,9 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 #   name = { en = "Papua Tengah" }
 #   languages = ["auu", "dnw", "ekg", "mnz", "uhn"]
 #   [[grouping.group]]
-#   slug = "kalimantan-barat"
-#   name = { en = "Kalimantan Barat" }
-#   languages = ["bth", "emb", "gef", "iba", "sdq"]
+#   slug = "papua-selatan"
+#   name = { en = "Papua Selatan" }
+#   languages = ["awu", "khe", "mqf", "wms", "yon"]
 #   [[grouping.group]]
 #   slug = "sulawesi-tenggara"
 #   name = { en = "Sulawesi Tenggara" }
@@ -380,21 +399,17 @@ name = { en = "By island", id = "Berdasarkan pulau" }
 #   name = { en = "Kalimantan Tengah" }
 #   languages = ["mhy", "nij", "sya", "twy", "xdy"]
 #   [[grouping.group]]
-#   slug = "papua-selatan"
-#   name = { en = "Papua Selatan" }
-#   languages = ["awu", "mqf", "wms", "yon"]
-#   [[grouping.group]]
 #   slug = "papua-barat"
 #   name = { en = "Papua Barat" }
 #   languages = ["had", "mej", "mnx", "mtj"]
 #   [[grouping.group]]
+#   slug = "papua-barat-daya"
+#   name = { en = "Papua Barat Daya" }
+#   languages = ["ayz", "kgr", "kps"]
+#   [[grouping.group]]
 #   slug = "jawa-timur"
 #   name = { en = "Jawa Timur" }
 #   languages = ["mad", "osi", "tes"]
-#   [[grouping.group]]
-#   slug = "papua-barat-daya"
-#   name = { en = "Papua Barat Daya" }
-#   languages = ["ayz", "kgr"]
 #   [[grouping.group]]
 #   slug = "nusa-tenggara-barat"
 #   name = { en = "Nusa Tenggara Barat" }
