@@ -45,16 +45,25 @@ const templateList = Object.values(templates).map((t) => {
   // Once it appears, mount the Svelte Reader.
   const root = document.getElementById("reader-root")!
 
+  // Mounted manually (outside Astro's own client-directive lifecycle), so
+  // cleanup is our responsibility too: leaving a mounted instance behind
+  // when the page navigates away lets its pending $effects (e.g. the
+  // video/text fallback in Reader.svelte) flush after the component's
+  // owner is already gone, which Svelte reports as "effect_orphan".
+  let readerApp: object | null = null
+  let svelteUnmount: ((app: object) => void) | null = null
+
   const observer = new MutationObserver(async () => {
     const mount = document.getElementById("reader-mount")
     if (!mount) return
     observer.disconnect()
 
-    const { mount: svelteMount } = await import("svelte")
+    const { mount: svelteMount, unmount } = await import("svelte")
     const { default: Reader } = await import("../../lib/reader/Reader.svelte")
+    svelteUnmount = unmount
 
     root.innerHTML = ""
-    svelteMount(Reader, {
+    readerApp = svelteMount(Reader, {
       target: root,
       props: {
         iso: mount.dataset.iso!,
@@ -70,4 +79,12 @@ const templateList = Object.values(templates).map((t) => {
     })
   })
   observer.observe(document.body, { childList: true, subtree: true })
+
+  // Synchronous cleanup — pagehide can fire right before the JS context is
+  // torn down, so this can't afford to wait on another dynamic import.
+  window.addEventListener("pagehide", () => {
+    if (!readerApp || !svelteUnmount) return
+    svelteUnmount(readerApp)
+    readerApp = null
+  })
 </script>

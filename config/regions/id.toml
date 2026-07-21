@@ -448,7 +448,6 @@ heroImage = "/img/regions/id-hero.jpg"
 # credited anyway via the site footer).
 heroCredit = { text = "Photo by Silas Baisch on Unsplash", url = "https://unsplash.com/photos/aerial-photography-of-rice-terraces-during-daytime-rf5R1qXwlDU" }
 accentColor = "#CE1126"
-featuredTemplates = ["John", "OBS"]
 headline = { en = "The Bible in the languages of Indonesia", id = "Alkitab dalam bahasa-bahasa Indonesia" }
 subhead  = { en = "Read and listen to Scripture in Indonesia's regional and minority languages.", id = "Baca dan dengarkan Firman Tuhan dalam bahasa daerah dan bahasa minoritas di Indonesia." }
 

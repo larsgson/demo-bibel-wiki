@@ -38,8 +38,10 @@ const groups = (grouping?.group ?? [])
   }))
   .sort((a, b) => b.tiles.length - a.tiles.length)
 
-// Featured story templates + hero image (from the region config).
-const featuredTemplates = rc.landing?.featuredTemplates ?? []
+// Hero image (from the region config). Featured-template chips were removed:
+// this page is a language picker, not a story browser — clicking a template
+// dropped the visitor straight into a chapter reader without a language
+// having been chosen, which isn't this page's job.
 const heroImage = rc.landing?.heroImage
 
 const tr = (k: string) => t(lang, `regionLanding.${k}`)
@@ -61,17 +63,6 @@ const title = rc.name[lang] ?? rc.code
         </button>
       </div>
     </section>
-
-    {featuredTemplates.length > 0 && (
-      <section class="region-featured-templates">
-        <h2 class="region-section-title">{tr("featuredStories")}</h2>
-        <div class="region-template-row">
-          {featuredTemplates.map((tpl) => (
-            <a class="region-template-chip" href={`/${rc.defaultLanguage}/${tpl}/`}>{tpl}</a>
-          ))}
-        </div>
-      </section>
-    )}
 
     <section class="region-groups">
       {groups.map((g) =>

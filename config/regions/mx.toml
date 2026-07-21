@@ -257,10 +257,9 @@ name = { en = "By language family", es = "Por familia lingüística" }
 [landing]
 heroImage = "/img/regions/mx-hero.jpg"
 # Free to use under the Unsplash License (no attribution legally required,
-# credited anyway via the region-hero's click-to-reveal "ⓘ").
+# credited anyway via the site footer's attribution line).
 heroCredit = { text = "Photo by Hector Iván Patricio Moreno on Unsplash", url = "https://unsplash.com/photos/yellow-sunflower-in-bloom-during-daytime-aQetBFIjsho" }
 accentColor = "#006847"
-featuredTemplates = ["John", "OBS"]
 headline = { en = "The Bible in the languages of Mexico", es = "La Biblia en las lenguas de México" }
 subhead  = { en = "Read and listen to Scripture in Mexican indigenous languages.", es = "Lee y escucha las Escrituras en lenguas indígenas mexicanas." }
 

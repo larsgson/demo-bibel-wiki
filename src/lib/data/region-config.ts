@@ -45,7 +45,6 @@ export interface RegionConfig {
      *  a licensed/stock photo needs crediting. */
     heroCredit?: { text: string; url: string }
     accentColor?: string
-    featuredTemplates?: string[]
     headline?: Localized
     subhead?: Localized
   }
