@@ -220,6 +220,7 @@ export const en = {
     levelSimple: "Simple",
     levelStandard: "Standard",
     levelStudy: "Study",
+    confirmSimpleMode: "Simple mode can't show a specific chapter — you'll be taken to the story picker instead. Your place is saved, so switching back to Standard or Study returns you here. Continue?",
     home: "Home",
     bookmarks: "Bookmarks",
     noBookmarks: "No bookmarks yet",

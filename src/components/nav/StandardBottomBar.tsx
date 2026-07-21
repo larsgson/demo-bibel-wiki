@@ -5,7 +5,7 @@ import { uiLangForRegion } from "../../lib/data/region-config"
 import { $activeRegion } from "../../stores/region-store"
 import { $selectedIso } from "../../stores/iso-store"
 import { t } from "../../lib/bw/ui-locales"
-import { $uiLevel, setUILevel, type UILevel } from "../../stores/ui-level-store"
+import { $uiLevel, requestUILevel, type UILevel } from "../../stores/ui-level-store"
 import { loadVernacularNav, vernacularLabel, type VernacularStrings } from "../../lib/bw/vernacular-ui"
 
 /**
@@ -80,7 +80,7 @@ export function StandardBottomBar() {
   }
 
   function chooseLevel(n: UILevel) {
-    setUILevel(n)
+    requestUILevel(n, t(uiLang, "nav.confirmSimpleMode"))
     setLevelOpen(false)
   }
 

@@ -221,6 +221,7 @@ export const id = {
     levelSimple: "Dasar",
     levelStandard: "Standar",
     levelStudy: "Studi",
+    confirmSimpleMode: "Mode Dasar tidak dapat menampilkan pasal tertentu — Anda akan dibawa ke pemilih cerita. Posisi Anda tersimpan, jadi beralih kembali ke Standar atau Studi akan mengembalikan Anda ke sini. Lanjutkan?",
     home: "Beranda",
     bookmarks: "Tanda buku",
     noBookmarks: "Belum ada tanda buku",

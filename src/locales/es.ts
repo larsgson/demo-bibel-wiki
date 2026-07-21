@@ -220,6 +220,7 @@ export const es = {
     levelSimple: "Básico",
     levelStandard: "Estándar",
     levelStudy: "Estudiar",
+    confirmSimpleMode: "El modo Básico no puede mostrar un capítulo específico — se te llevará al selector de historias. Tu lugar queda guardado, así que volver a Estándar o Estudiar te devuelve aquí. ¿Continuar?",
     home: "Inicio",
     bookmarks: "Marcadores",
     noBookmarks: "Aún no hay marcadores",

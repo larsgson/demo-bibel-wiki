@@ -215,7 +215,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       import { initIsoFromUrl } from "../stores/iso-store"
       import { initApiConfig } from "../stores/api-store"
       import { initSearchMode } from "../stores/search-store"
-      import { $uiLevel, setUILevel, type UILevel } from "../stores/ui-level-store"
+      import { $uiLevel, requestUILevel, type UILevel } from "../stores/ui-level-store"
       import {
         $audioPlayState,
         $isPlaying,
@@ -299,8 +299,10 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       levelOptions.forEach((opt) => {
         opt.addEventListener("click", () => {
           const level = Number(opt.dataset.level) as UILevel
-          setUILevel(level)
-          renderBadge(level)
+          const regionLang = uiLangForRegion($activeRegion.get())
+          // $uiLevel.subscribe (below) re-renders the badge on an actual
+          // switch; nothing to do here if the visitor cancelled.
+          requestUILevel(level, t(regionLang, "nav.confirmSimpleMode"))
           levelPopover.classList.remove("open")
         })
       })
