@@ -860,7 +860,7 @@
                         minSwipeDistance: 60,
                         touchAction: 'pan-y'
                     }))}
-                    {...usePinch(doPinch)}
+                    {...usePinch(doPinch, () => ({ touchAction: 'pan-y' }))}
                 >
                     {#if rendering}
                         <div class="text-sm text-base-content/60">{tr('loadingChapter')}</div>
