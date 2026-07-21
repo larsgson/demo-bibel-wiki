@@ -19,9 +19,16 @@ interface Props {
    *  appended to the footer's attribution line — a region landing page's only
    *  extra provenance need, so it doesn't warrant its own footer variant. */
   heroCredit?: { text: string; url: string }
+  /** Set by [iso]/[template]/[...path].astro. On mobile in Simple mode (UI
+   *  level 1) the site header docks to the bottom of the screen as an app
+   *  bar — appropriate while browsing stories, but it sits on top of actual
+   *  story content once you're reading one. "story" hides it there; plain
+   *  navigation (back out to the category grid) is a full page load, so it
+   *  reappears on its own, no client-side state to reset. */
+  pageType?: "story" | "category"
 }
 
-const { title = "Bibel Wiki", landing = false, heroCredit } = Astro.props
+const { title = "Bibel Wiki", landing = false, heroCredit, pageType } = Astro.props
 
 // Build story tree for the sidebar (Templates → Categories → Stories)
 const templates = loadAllTemplates()
@@ -80,7 +87,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-page-type={pageType}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -666,6 +673,20 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       bottom: 100%;
       margin-top: 0;
       margin-bottom: 0.4rem;
+    }
+  }
+
+  /* Simple mode (1): the header — docked to the bottom on mobile, a normal
+     top bar on desktop — has no place on template pages (story browsing
+     AND story content alike), so hide it at any viewport width whenever
+     data-page-type is set (level 2 already hides .site-header outright,
+     see sidebar.css). */
+  html[data-ui-level="1"][data-page-type] .site-header {
+    display: none !important;
+  }
+  @media (max-width: 768px) {
+    html[data-ui-level="1"][data-page-type] .app-main {
+      padding-bottom: 0 !important;
     }
   }
 </style>
