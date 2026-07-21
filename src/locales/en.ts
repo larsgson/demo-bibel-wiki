@@ -162,6 +162,7 @@ export const en = {
     fullTextAudio: "Full offline text",
     studyAvailable: "Study available",
     noData: "No Scripture data available.",
+    tradeLanguageIntro: "Not your language? Try this region's shared language:",
   },
 
   biblePicker: {

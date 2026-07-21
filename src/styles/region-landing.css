@@ -8,7 +8,8 @@
 }
 
 .region-hero {
-  --accent: #000b63;
+  /* --accent is set on the parent .region-landing (see index.astro) so it's
+     also visible to sibling sections like .region-trade. */
   text-align: center;
   padding: 2.5rem 1rem 2rem;
   border-bottom: 3px solid var(--accent);
@@ -32,7 +33,7 @@
 .region-hero.has-image {
   /* Accent colour underneath so a missing/slow image still looks intentional. */
   background-color: var(--accent);
-  background-image: linear-gradient(rgba(0, 6, 40, 0.5), rgba(0, 6, 40, 0.62)), var(--hero-image);
+  background-image: linear-gradient(rgba(0, 6, 40, 0.25), rgba(0, 6, 40, 0.35)), var(--hero-image);
   background-size: cover;
   background-position: center;
   border-bottom: none;
@@ -65,6 +66,42 @@
   cursor: pointer;
 }
 .region-all-btn:hover { opacity: 0.92; }
+
+/* Trade/bridge language callout — deliberately separate from .region-groups
+   so it never reads as "one of the region's languages"; it's the fallback
+   for a visitor whose own language has no resources yet. */
+.region-trade {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px dashed rgba(0, 11, 99, 0.15);
+}
+.region-trade-label {
+  font-size: 0.82rem;
+  color: rgba(0, 11, 99, 0.6);
+  margin: 0 0 0.6rem;
+}
+.region-trade-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.region-trade-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--accent, #000b63);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent, #000b63);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.region-trade-chip:hover { background: rgba(0, 11, 99, 0.06); }
+.region-trade-chip .lang-tile-alt { font-weight: 400; opacity: 0.75; }
 
 /* Group cards grid */
 .region-groups {

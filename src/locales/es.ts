@@ -162,6 +162,7 @@ export const es = {
     fullTextAudio: "Texto completo sin conexión",
     studyAvailable: "Estudio disponible",
     noData: "No hay datos bíblicos disponibles.",
+    tradeLanguageIntro: "¿No es tu idioma? Prueba el idioma común de esta región:",
   },
 
   biblePicker: {

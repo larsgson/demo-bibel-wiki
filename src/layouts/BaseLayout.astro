@@ -231,7 +231,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
 
       import { $selectedIso } from "../stores/iso-store"
       import { $activeRegion } from "../stores/region-store"
-      import { regionConfigByCode } from "../lib/data/region-config"
+      import { regionConfigByCode, uiLangForRegion } from "../lib/data/region-config"
 
       initIsoFromUrl()
       initApiConfig()
@@ -252,13 +252,22 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       }
       renderBadge($uiLevel.get())
 
+      // Only en/es data-* attrs exist on .ui-level-label below, so this stays
+      // a binary fallback for that one legacy widget — not a general-purpose
+      // UI-language resolver (that's uiLangForRegion, used just below for
+      // the header title, which needs to reflect the REGION's own language,
+      // not whatever scripture the visitor happens to be reading).
       const uiLang = $selectedIso.get() === "eng" ? "en" : "es"
 
       // Header title: region TOML title if a region is active, otherwise "Bibel Wiki".
+      // Always rendered in the region's own uiLanguage (config/regions/<code>.toml),
+      // regardless of which language the visitor is currently reading in.
       const headerTitleEl = document.getElementById("header-title")
       if (headerTitleEl) {
-        const cfg = $activeRegion.get() ? regionConfigByCode.get($activeRegion.get()) : null
-        const title = cfg?.title?.[uiLang] ?? cfg?.title?.en ?? "Bibel Wiki"
+        const activeRegion = $activeRegion.get()
+        const cfg = activeRegion ? regionConfigByCode.get(activeRegion) : null
+        const regionLang = uiLangForRegion(activeRegion)
+        const title = cfg?.title?.[regionLang] ?? cfg?.title?.en ?? "Bibel Wiki"
         headerTitleEl.textContent = title
         headerTitleEl.style.display = ""
       }

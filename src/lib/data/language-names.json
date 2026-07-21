@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "total": 135,
+    "total": 137,
     "source_all_langs": "example/ALL-langs-compact.json",
     "schema": "iso → { n?: English name, v?: vernacular name, d?: direction (rtl), s?: script }. Either or both may be present. Consumers must fall back n↔v when only one exists."
   },
@@ -80,9 +80,17 @@
       "n": "Cuicatec, Tepeuxila: Papalo",
       "v": "Cuicateco de Santa María Pápalo"
     },
+    "eng": {
+      "n": "English",
+      "v": "English"
+    },
     "huv": {
       "n": "Huave de San Mateo del Mar",
       "v": "Huave, San Mateo del Mar"
+    },
+    "ind": {
+      "n": "Indonesian",
+      "v": "Bahasa Indonesia"
     },
     "jmx": {
       "v": "Mixteco Coicoyán"
@@ -288,6 +296,10 @@
     "pps": {
       "n": "Ngigua, San Luis Temalacayuca",
       "v": "Popoloca, San Luís Temalacayuca"
+    },
+    "spa": {
+      "n": "Spanish",
+      "v": "español"
     },
     "stp": {
       "n": "Southeastern Tepehuan",
@@ -505,10 +517,6 @@
     "zty": {
       "n": "Yatee Zapotec",
       "v": "Zapoteco, Yatée"
-    },
-    "eng": {
-      "n": "English",
-      "v": "English"
     }
   }
 }

@@ -44,16 +44,22 @@ const groups = (grouping?.group ?? [])
 // having been chosen, which isn't this page's job.
 const heroImage = rc.landing?.heroImage
 
+// Trade/bridge language(s) — a visible escape hatch for visitors whose own
+// minority language has no resources yet. Kept out of the island/family
+// tile grid entirely (it's not "one of the region's languages" in the same
+// sense) and always shown, however many there are (regions can have 2-3).
+const tradeLangs = rc.tradeLanguages.map(tile)
+
 const tr = (k: string) => t(lang, `regionLanding.${k}`)
 
 const title = rc.name[lang] ?? rc.code
 ---
 
 <BaseLayout title={title} landing={true} heroCredit={rc.landing?.heroCredit}>
-  <div class="region-landing">
+  <div class="region-landing" style={`--accent:${rc.landing?.accentColor ?? "#000b63"}`}>
     <section
       class={`region-hero${heroImage ? " has-image" : ""}`}
-      style={`--accent:${rc.landing?.accentColor ?? "#000b63"}${heroImage ? `;--hero-image:url('${heroImage}')` : ""}`}
+      style={heroImage ? `--hero-image:url('${heroImage}')` : ""}
     >
       <h1>{rc.landing?.headline?.[lang] ?? title}</h1>
       {rc.landing?.subhead?.[lang] && <p>{rc.landing.subhead[lang]}</p>}
@@ -63,6 +69,20 @@ const title = rc.name[lang] ?? rc.code
         </button>
       </div>
     </section>
+
+    {tradeLangs.length > 0 && (
+      <section class="region-trade">
+        <p class="region-trade-label">{tr("tradeLanguageIntro")}</p>
+        <div class="region-trade-row">
+          {tradeLangs.map((tl) => (
+            <a class="region-trade-chip" href={tl.href}>
+              {tl.name}
+              {tl.alt && <span class="lang-tile-alt">{tl.alt}</span>}
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
 
     <section class="region-groups">
       {groups.map((g) =>

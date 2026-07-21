@@ -162,6 +162,7 @@ export const id = {
     fullTextAudio: "Teks lengkap luring",
     studyAvailable: "Studi tersedia",
     noData: "Tidak ada data Alkitab tersedia.",
+    tradeLanguageIntro: "Bukan bahasa Anda? Coba bahasa penghubung wilayah ini:",
   },
 
   biblePicker: {
