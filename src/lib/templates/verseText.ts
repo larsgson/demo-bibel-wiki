@@ -1,6 +1,7 @@
 import type { Catalog } from '../reader/catalog';
 import { fetchSofria, type SofriaDoc } from '../reader/sofria';
 import { isLoaded, loadDocSet } from '../reader/store';
+import { fetchHelloaoText } from '../bw/content-sources';
 import type { VerseEntry } from './types';
 
 /**
@@ -96,23 +97,8 @@ function extractVersesFromSofria(doc: SofriaDoc): VerseEntry[] {
 }
 
 async function fetchBsbVerses(bookCode: string, chapter: number): Promise<VerseEntry[]> {
-    try {
-        const url = `/bsb/chapters/${bookCode}/${bookCode}${chapter}.json`;
-        const r = await fetch(url);
-        if (!r.ok) return [];
-        const data = (await r.json()) as { eng?: Record<string, [string, string | null][]> };
-        const eng = data.eng;
-        if (!eng) return [];
-        return Object.entries(eng)
-            .map(([vNum, words]) => ({
-                num: parseInt(vNum, 10),
-                text: words.map(([w]) => w).join('')
-            }))
-            .filter((v) => Number.isFinite(v.num))
-            .sort((a, b) => a.num - b.num);
-    } catch {
-        return [];
-    }
+    const verses = await fetchHelloaoText('BSB', bookCode, chapter);
+    return (verses ?? []).sort((a, b) => a.num - b.num);
 }
 
 const chapterCache = new Map<string, VerseEntry[]>();

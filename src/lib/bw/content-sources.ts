@@ -79,6 +79,27 @@ export async function checkContribAudioExists(
 }
 
 /**
+ * Flatten a helloao verse's `content` array to plain text. Items are either
+ * plain strings (appended as-is — e.g. a footnote-adjacent closing quote,
+ * which must NOT get an inserted space), `{ text, poem }` objects
+ * (poetry/genealogy lines — consecutive poem lines aren't always separated
+ * by an explicit lineBreak marker, e.g. Matthew 1:11's `poem: 1`→`poem: 2`
+ * transition, so every `.text` object gets a trailing boundary space), or
+ * `{ lineBreak: true }` / `{ noteId }` markers with no text of their own.
+ */
+export function helloaoVerseText(content: unknown[]): string {
+  let out = ""
+  for (const c of content) {
+    if (typeof c === "string") out += c
+    else if (c && typeof c === "object") {
+      if (typeof (c as any).text === "string") out += (c as any).text + " "
+      if ((c as any).lineBreak) out += " "
+    }
+  }
+  return out.replace(/\s+/g, " ").trim()
+}
+
+/**
  * Fetch text from helloao API.
  */
 export async function fetchHelloaoText(
@@ -99,9 +120,7 @@ export async function fetchHelloaoText(
       .map((item: any) => ({
         num: item.number,
         text: Array.isArray(item.content)
-          ? item.content
-              .filter((c: any) => typeof c === "string")
-              .join("")
+          ? helloaoVerseText(item.content)
           : String(item.content || ""),
       }))
   } catch {

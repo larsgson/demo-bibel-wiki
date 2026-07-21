@@ -1,22 +1,29 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro"
 import LanguageSearch from "../lib/components/LanguageSearch.svelte"
-import { regions, pkfSizeBytes } from "../lib/data/regions"
+import { regions } from "../lib/data/regions"
+import { regionConfigByCode } from "../lib/data/region-config"
 import { displayName, altName } from "../lib/data/languageNames"
-import { formatKB } from "../lib/data/pkfInfo"
 import { en as t } from "../locales/en"
+import "../styles/home-landing.css"
 
-const regionsData = regions.map((r) => ({
-  id: r.id,
-  displayName: r.displayName,
-  languages: r.available.map((iso) => ({
-    iso,
-    name: displayName(iso),
-    alt: altName(iso),
-    sizeBytes: pkfSizeBytes(iso),
-  })),
-}))
+// Cards: one per configured region (config/regions/*.toml), plus a fixed
+// "English (BSB)" entry — this page is a router into those, not a second
+// copy of what /r/<code>/ already does with proper island/family grouping.
+const regionCards = regions.map((r) => {
+  const cfg = regionConfigByCode.get(r.id)
+  return {
+    id: r.id,
+    displayName: r.displayName,
+    count: r.available.length,
+    heroImage: cfg?.landing?.heroImage,
+    accentColor: cfg?.landing?.accentColor ?? "#000b63",
+    headline: cfg?.landing?.headline?.en,
+  }
+})
 
+// Search still needs the flat iso list (region cards only link out to /r/<code>/,
+// they don't enumerate languages here).
 const seen = new Set<string>()
 const allLanguages: Array<{
   iso: string
@@ -25,17 +32,11 @@ const allLanguages: Array<{
   regionId: string
   regionName: string
 }> = []
-for (const r of regionsData) {
-  for (const lang of r.languages) {
-    if (seen.has(lang.iso)) continue
-    seen.add(lang.iso)
-    allLanguages.push({
-      iso: lang.iso,
-      name: lang.name,
-      alt: lang.alt,
-      regionId: r.id,
-      regionName: r.displayName,
-    })
+for (const r of regions) {
+  for (const iso of r.available) {
+    if (seen.has(iso)) continue
+    seen.add(iso)
+    allLanguages.push({ iso, name: displayName(iso), alt: altName(iso), regionId: r.id, regionName: r.displayName })
   }
 }
 allLanguages.sort((a, b) => a.name.localeCompare(b.name))
@@ -51,78 +52,38 @@ allLanguages.sort((a, b) => a.name.localeCompare(b.name))
     </h1>
   </section>
 
-  <div class="mb-6">
+  <div class="mb-8">
     <LanguageSearch client:load languages={allLanguages} />
   </div>
 
-  <!-- English BSB -->
-  <div class="mb-6">
-    <a
-      href="/eng"
-      class="lang-card"
-      style="display:inline-flex;gap:0.5rem;align-items:center;text-decoration:none"
-    >
-      <span class="lang-name">English (BSB)</span>
-      <span class="lang-iso">eng</span>
+  <div class="home-entry-grid">
+    <a href="/eng" class="home-entry-card" style="--accent:#000b63">
+      <span class="home-entry-name">English</span>
+      <span class="home-entry-sub">Berean Standard Bible</span>
     </a>
-  </div>
 
-  <div class="space-y-3" id="regions-container">
-    {regionsData.map((region) => (
-      <details class="region-acc" id={region.id} data-id={region.id}>
-        <summary>
-          <span class="region-chevron" aria-hidden="true">
-            <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
-              <path d="M7 5l6 5-6 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-          <span class="region-title">{region.displayName}</span>
-          <span class="region-count">{region.languages.length}</span>
-        </summary>
-
-        <div class="region-body">
-          {region.languages.length === 0 ? (
-            <p class="text-sm" style="color:rgba(0,11,99,0.55)">
-              {t.regionLanding.noData}
-            </p>
-          ) : (
-            <ul class="lang-grid">
-              {region.languages.map((lang) => (
-                <li>
-                  <a href={`/${lang.iso}`} class="lang-card">
-                    <span class="lang-name">{lang.name}</span>
-                    {lang.alt && <span class="lang-alt">{lang.alt}</span>}
-                    <span class="lang-meta">
-                      <span class="lang-iso">{lang.iso}</span>
-                      <span>{formatKB(lang.sizeBytes)}</span>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </details>
+    {regionCards.map((r) => (
+      <a
+        href={`/r/${r.id}/`}
+        class={`home-entry-card${r.heroImage ? " has-image" : ""}`}
+        style={`--accent:${r.accentColor}${r.heroImage ? `;--hero-image:url('${r.heroImage}')` : ""}`}
+      >
+        <span class="home-entry-count">{r.count}</span>
+        <span class="home-entry-name">{r.displayName}</span>
+        {r.headline && <span class="home-entry-sub">{r.headline}</span>}
+      </a>
     ))}
   </div>
 
-  <script>
-    const container = document.getElementById("regions-container")
-    if (container) {
-      const accs = Array.from(container.querySelectorAll<HTMLDetailsElement>(".region-acc"))
-      function closeOthers(opened: HTMLDetailsElement) {
-        for (const d of accs) if (d !== opened && d.open) d.open = false
-      }
-      for (const d of accs) d.addEventListener("toggle", () => { if (d.open) closeOthers(d) })
+  <div class="home-browse-all">
+    <button type="button" class="home-browse-all-btn" id="home-all-btn">
+      🌐 {t.regionLanding.searchAll}
+    </button>
+  </div>
 
-      const hash = decodeURIComponent(location.hash.replace(/^#/, ""))
-      if (hash) {
-        const match = accs.find((d) => d.dataset.id === hash)
-        if (match) {
-          match.open = true
-          match.scrollIntoView({ behavior: "smooth", block: "start" })
-        }
-      }
-    }
+  <script is:inline>
+    document.getElementById("home-all-btn")?.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("open-language-picker"))
+    })
   </script>
 </BaseLayout>

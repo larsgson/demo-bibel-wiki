@@ -1,0 +1,92 @@
+/* Homepage — router into region pages (config/regions/*.toml) + English +
+   a full-language-picker fallback. Not a second copy of /r/<code>/, which
+   already does island/family grouping and a hero of its own. */
+
+.home-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.home-entry-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 160px;
+  padding: 1.1rem 1.2rem;
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  color: #fff;
+  background-color: var(--accent, #000b63);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 10px 26px -16px rgba(0, 11, 99, 0.45);
+  transition: transform 180ms ease, box-shadow 220ms ease;
+}
+.home-entry-card.has-image {
+  background-image:
+    linear-gradient(180deg, rgba(0, 6, 40, 0.15) 0%, rgba(0, 6, 40, 0.78) 100%),
+    var(--hero-image);
+}
+.home-entry-card:hover,
+.home-entry-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px -16px rgba(0, 11, 99, 0.55);
+  outline: none;
+}
+
+.home-entry-count {
+  align-self: flex-start;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+  margin-bottom: 0.7rem;
+}
+
+.home-entry-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.home-entry-sub {
+  font-size: 0.82rem;
+  line-height: 1.3;
+  opacity: 0.92;
+  margin-top: 0.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.home-browse-all {
+  margin-top: 1.75rem;
+  text-align: center;
+}
+.home-browse-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  color: rgb(0, 11, 99);
+  border: 1px solid rgba(0, 11, 99, 0.2);
+  border-radius: 999px;
+  padding: 0.55rem 1.1rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.home-browse-all-btn:hover {
+  background: rgba(0, 11, 99, 0.06);
+  border-color: rgba(0, 11, 99, 0.35);
+}

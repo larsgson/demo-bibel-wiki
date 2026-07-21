@@ -137,6 +137,8 @@ export function StandardBottomBar() {
                 key={l.value}
                 type="button"
                 className={`standard-level-option ${level === l.value ? "active" : ""}`}
+                disabled={l.value === 3}
+                title={l.value === 3 ? "Study mode is temporarily disabled" : undefined}
                 onClick={() => chooseLevel(l.value)}
               >
                 <span className="standard-level-dots">

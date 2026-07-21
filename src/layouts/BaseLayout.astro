@@ -135,7 +135,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
                 <span class="ui-level-dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot"></span></span>
                 <span class="ui-level-label" data-en="Standard" data-es="Estándar"></span>
               </button>
-              <button class="ui-level-option" data-level="3" type="button">
+              <button class="ui-level-option" data-level="3" type="button" disabled title="Study mode is temporarily disabled">
                 <span class="ui-level-dots"><span class="dot filled"></span><span class="dot filled"></span><span class="dot filled"></span></span>
                 <span class="ui-level-label" data-en="Study" data-es="Estudiar"></span>
               </button>
@@ -650,6 +650,13 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
   .ui-level-option.active {
     background: rgba(255, 255, 255, 0.15);
     color: #fff;
+  }
+  .ui-level-option:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+  .ui-level-option:disabled:hover {
+    background: none;
   }
   .ui-level-dots {
     display: flex;

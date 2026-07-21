@@ -478,6 +478,8 @@ html[data-ui-level="2"] .app-main {
 }
 .standard-level-option:hover { background: rgba(255, 255, 255, 0.1); }
 .standard-level-option.active { background: rgba(255, 255, 255, 0.15); color: #fff; }
+.standard-level-option:disabled { cursor: not-allowed; opacity: 0.4; }
+.standard-level-option:disabled:hover { background: none; }
 .standard-level-dots { letter-spacing: 0.1em; color: rgba(255, 215, 0, 0.9); font-size: 0.7rem; }
 
 /* ── StandardSidebar (level 2) — flat drawer modelled on sab-pwa's

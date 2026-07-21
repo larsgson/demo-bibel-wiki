@@ -39,27 +39,6 @@ async function loadPkfInfo(langCode: string): Promise<any | null> {
   }
 }
 
-async function fetchBsbText(
-  book: string,
-  chapter: number,
-): Promise<any[] | null> {
-  try {
-    const resp = await fetch(`/bsb/chapters/${book}/${book}${chapter}.json`)
-    if (!resp.ok) return null
-    const data = await resp.json()
-    const eng = data?.eng
-    if (!eng) return null
-    return Object.entries(eng).map(([num, parts]) => ({
-      num: parseInt(num, 10),
-      text: Array.isArray(parts)
-        ? parts.map((p: any) => (Array.isArray(p) ? p[0] : p)).join("")
-        : String(parts),
-    }))
-  } catch {
-    return null
-  }
-}
-
 export async function loadChapter(
   book: string,
   chapter: number,
@@ -102,9 +81,9 @@ export async function loadChapter(
     }
   }
 
-  // 2. Try BSB for English
+  // 2. Try BSB for English (helloAO's hosted copy of the same translation)
   if (!verses && langCode === "eng") {
-    verses = await fetchBsbText(book, chapter)
+    verses = await fetchHelloaoText("BSB", book, chapter)
   }
 
   // 3. Try contrib (local files)
