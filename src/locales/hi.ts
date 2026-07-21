@@ -92,6 +92,12 @@ export const hi = {
     peekTooltip: "पाठ देखें",
     completed: "शाबाश!",
   },
+
+  nav: {
+    confirmSimpleMode: "आप इस अध्याय को छोड़ देंगे।",
+    cancel: "रद्द करें",
+    continueAction: "जारी रखें",
+  },
 };
 
 export default hi;

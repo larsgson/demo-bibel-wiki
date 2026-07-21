@@ -93,6 +93,12 @@ export const ru = {
     peekTooltip: "Посмотреть текст",
     completed: "Отлично!",
   },
+
+  nav: {
+    confirmSimpleMode: "Вы покинете эту главу.",
+    cancel: "Отмена",
+    continueAction: "Продолжить",
+  },
 };
 
 export default ru;

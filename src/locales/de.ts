@@ -94,6 +94,12 @@ export const de = {
     peekTooltip: "Text anzeigen",
     completed: "Gut gemacht!",
   },
+
+  nav: {
+    confirmSimpleMode: "Sie verlassen dieses Kapitel.",
+    cancel: "Abbrechen",
+    continueAction: "Fortfahren",
+  },
 };
 
 export default de;

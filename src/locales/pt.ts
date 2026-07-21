@@ -93,6 +93,12 @@ export const pt = {
     peekTooltip: "Ver o texto",
     completed: "Muito bem!",
   },
+
+  nav: {
+    confirmSimpleMode: "Você vai sair deste capítulo.",
+    cancel: "Cancelar",
+    continueAction: "Continuar",
+  },
 };
 
 export default pt;

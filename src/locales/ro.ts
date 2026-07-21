@@ -93,6 +93,12 @@ export const ro = {
     peekTooltip: "Vezi textul",
     completed: "Bravo!",
   },
+
+  nav: {
+    confirmSimpleMode: "Vei părăsi acest capitol.",
+    cancel: "Anulează",
+    continueAction: "Continuă",
+  },
 };
 
 export default ro;

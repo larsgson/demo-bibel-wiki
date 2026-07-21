@@ -92,6 +92,12 @@ export const ar = {
     peekTooltip: "انظر إلى النص",
     completed: "أحسنت!",
   },
+
+  nav: {
+    confirmSimpleMode: "ستغادر هذا الإصحاح.",
+    cancel: "إلغاء",
+    continueAction: "متابعة",
+  },
 };
 
 export default ar;

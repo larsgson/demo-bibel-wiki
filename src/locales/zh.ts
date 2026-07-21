@@ -92,6 +92,12 @@ export const zh = {
     peekTooltip: "偷看文本",
     completed: "做得好！",
   },
+
+  nav: {
+    confirmSimpleMode: "您将离开本章。",
+    cancel: "取消",
+    continueAction: "继续",
+  },
 };
 
 export default zh;

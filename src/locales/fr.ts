@@ -95,6 +95,12 @@ export const fr = {
     peekTooltip: "Voir le texte",
     completed: "Bravo !",
   },
+
+  nav: {
+    confirmSimpleMode: "Vous allez quitter ce chapitre.",
+    cancel: "Annuler",
+    continueAction: "Continuer",
+  },
 };
 
 export default fr;

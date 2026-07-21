@@ -211,6 +211,15 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       <div class="listen-player-pulse" id="player-pulse" style="display:none"></div>
     </div>
 
+    <!-- Confirm dialog (singleton — see src/lib/bw/confirm-dialog.ts) -->
+    <dialog class="confirm-dialog" id="confirm-dialog">
+      <p class="confirm-dialog-message" id="confirm-dialog-message"></p>
+      <div class="confirm-dialog-actions">
+        <button type="button" class="confirm-dialog-btn confirm-dialog-cancel" id="confirm-dialog-cancel"></button>
+        <button type="button" class="confirm-dialog-btn confirm-dialog-continue" id="confirm-dialog-continue"></button>
+      </div>
+    </dialog>
+
     <script>
       import { initIsoFromUrl } from "../stores/iso-store"
       import { initApiConfig } from "../stores/api-store"
@@ -297,12 +306,15 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       })
 
       levelOptions.forEach((opt) => {
-        opt.addEventListener("click", () => {
+        opt.addEventListener("click", async () => {
           const level = Number(opt.dataset.level) as UILevel
           const regionLang = uiLangForRegion($activeRegion.get())
           // $uiLevel.subscribe (below) re-renders the badge on an actual
           // switch; nothing to do here if the visitor cancelled.
-          requestUILevel(level, t(regionLang, "nav.confirmSimpleMode"))
+          await requestUILevel(level, t(regionLang, "nav.confirmSimpleMode"), {
+            cancel: t(regionLang, "nav.cancel"),
+            continueAction: t(regionLang, "nav.continueAction"),
+          })
           levelPopover.classList.remove("open")
         })
       })
@@ -690,5 +702,57 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
     html[data-ui-level="1"][data-page-type] .app-main {
       padding-bottom: 0 !important;
     }
+  }
+
+  /* Confirm dialog — same visual language as .lang-dialog (language-picker.css),
+     just centered and small since the content here is a short question, not
+     a scrollable list. */
+  .confirm-dialog {
+    margin: auto;
+    padding: 1.5rem;
+    border: none;
+    width: calc(100% - 2.5rem);
+    max-width: 22rem;
+    border-radius: 16px;
+    background: #fff;
+    color: rgb(0, 11, 99);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+  }
+  .confirm-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+  }
+  .confirm-dialog-message {
+    margin: 0 0 1.25rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+  .confirm-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+  }
+  .confirm-dialog-btn {
+    border: none;
+    border-radius: 999px;
+    padding: 0.5rem 1.1rem;
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 160ms ease, opacity 160ms ease;
+  }
+  .confirm-dialog-cancel {
+    background: rgba(0, 11, 99, 0.08);
+    color: rgb(0, 11, 99);
+  }
+  .confirm-dialog-cancel:hover {
+    background: rgba(0, 11, 99, 0.14);
+  }
+  .confirm-dialog-continue {
+    background: rgb(0, 11, 99);
+    color: #fff;
+  }
+  .confirm-dialog-continue:hover {
+    opacity: 0.88;
   }
 </style>

@@ -1,5 +1,6 @@
 import { atom } from "nanostores"
 import { $activePane, showStory } from "./branch-view-store"
+import { confirmDialog } from "../lib/bw/confirm-dialog"
 
 export type UILevel = 1 | 2 | 3
 
@@ -41,9 +42,14 @@ export function setUILevel(level: UILevel) {
  * Returns false if the visitor cancelled (callers can skip their own UI
  * updates in that case).
  */
-export function requestUILevel(level: UILevel, confirmMessage: string): boolean {
+export async function requestUILevel(
+  level: UILevel,
+  confirmMessage: string,
+  labels: { cancel: string; continueAction: string },
+): Promise<boolean> {
   if (level === 1 && $activePane.get().pane === "bible") {
-    if (typeof window !== "undefined" && !window.confirm(confirmMessage)) return false
+    const ok = typeof window === "undefined" || (await confirmDialog(confirmMessage, labels))
+    if (!ok) return false
     showStory()
   }
   setUILevel(level)

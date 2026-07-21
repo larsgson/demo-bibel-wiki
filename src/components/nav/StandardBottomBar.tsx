@@ -80,7 +80,10 @@ export function StandardBottomBar() {
   }
 
   function chooseLevel(n: UILevel) {
-    requestUILevel(n, t(uiLang, "nav.confirmSimpleMode"))
+    requestUILevel(n, t(uiLang, "nav.confirmSimpleMode"), {
+      cancel: t(uiLang, "nav.cancel"),
+      continueAction: t(uiLang, "nav.continueAction"),
+    })
     setLevelOpen(false)
   }
 
