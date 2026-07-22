@@ -17,6 +17,7 @@
  */
 
 import { pkfUrl } from "../bw/pkf-url"
+import { hasPkf } from "../bw/language-list"
 
 // ── Types (modelled on the live contract) ──────────────────────────────────
 
@@ -106,9 +107,13 @@ const appConfigCache = new Map<string, Promise<AppConfig | null>>()
 export function loadAppConfig(iso: string): Promise<AppConfig | null> {
   const cached = appConfigCache.get(iso)
   if (cached) return cached
-  const p = fetch(pkfUrl(`/pkf/${iso}/app-config.json`))
-    .then((r) => (r.ok ? (r.json() as Promise<AppConfig>) : null))
-    .catch(() => null)
+  // English (BSB/helloAO) and Spanish (DBT) aren't on this CDN at all (see file
+  // header) — skip the fetch rather than let it 404 on every page load.
+  const p = hasPkf(iso)
+    ? fetch(pkfUrl(`/pkf/${iso}/app-config.json`))
+        .then((r) => (r.ok ? (r.json() as Promise<AppConfig>) : null))
+        .catch(() => null)
+    : Promise.resolve(null)
   appConfigCache.set(iso, p)
   return p
 }
