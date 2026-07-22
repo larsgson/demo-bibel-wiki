@@ -332,6 +332,13 @@
     min-width: 0;
 }
 .reader-topbar-center { overflow: hidden; }
+.reader-topbar-end {
+    display: flex;
+    align-items: center;
+    gap: 0.2em;
+    min-width: 0;
+    flex-shrink: 0;
+}
 .reader-topbar-menu-btn {
     flex-shrink: 0;
 }
@@ -383,6 +390,7 @@
     transition: background-color 0.1s, transform 0.2s;
 }
 .reader-topbar .tb-icon:hover { background: rgba(255, 255, 255, 0.14); }
+.reader-topbar .tb-icon.active { background: rgba(255, 255, 255, 0.22); }
 .reader-topbar .tb-icon:focus-visible {
     outline: 2px solid white;
     outline-offset: 1px;
@@ -689,6 +697,16 @@ html[data-ui-level="2"] .reader-audio-bottom {
     max-width: 640px;
     margin: 0 auto;
     padding: 0 0.5em;
+}
+
+/* Parallel view needs a bounded height (unlike the normal single-pane body,
+ * which just flows with the page) so its two panels can each scroll
+ * independently and stay in sync — see ParallelView.svelte / scrollSync.ts.
+ * The actual height is computed and set inline by ParallelView.svelte itself
+ * (measured against the real viewport + bottom-bar chrome, not guessed). */
+.reader-body-parallel {
+    max-width: 900px;
+    padding: 0;
 }
 
 /* Glossary-linkable terms (USFM \w and \k inside scripture body). Rendered

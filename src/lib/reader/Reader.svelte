@@ -28,6 +28,8 @@
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
+    import { $parallelView as parallelViewStore, toggleParallelView } from '../../stores/parallel-view-store';
+    import ParallelView from './ParallelView.svelte';
     import './reader.css';
 
     // UI language follows the active region (never the scripture ISO).
@@ -769,6 +771,8 @@
             onBookTap={(r) => openPicker(r, 'book')}
             onChapterTap={(r) => openPicker(r, 'chapter')}
             onMenu={openSidebar}
+            onParallelView={toggleParallelView}
+            parallelViewActive={$parallelViewStore}
         />
 
         <!-- Floating side arrows: vertically centred on the viewport, hidden on
@@ -854,7 +858,11 @@
                 </div>
             {/if}
 
-            {#if mode === 'text'}
+            {#if mode === 'text' && $parallelViewStore && currentBook}
+                <div class="reader-body reader-body-parallel">
+                    <ParallelView bookCode={currentBook.bookCode} chapter={currentChapter} {iso} />
+                </div>
+            {:else if mode === 'text'}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div

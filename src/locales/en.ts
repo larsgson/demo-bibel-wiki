@@ -228,6 +228,7 @@ export const en = {
     noBookmarks: "No bookmarks yet",
     textAppearance: "Text Appearance",
     about: "About",
+    parallelView: "Parallel view",
   },
 
   branches: {

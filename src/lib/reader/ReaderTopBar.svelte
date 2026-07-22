@@ -23,8 +23,19 @@
         onChapterTap?: (anchorRect: DOMRect) => void;
         /** Toggle the left navigation drawer. */
         onMenu?: () => void;
+        /** Toggle the two-language parallel/interlinear view. */
+        onParallelView?: () => void;
+        parallelViewActive?: boolean;
     };
-    let { bookLabel, chapterLabel, onBookTap, onChapterTap, onMenu }: Props = $props();
+    let {
+        bookLabel,
+        chapterLabel,
+        onBookTap,
+        onChapterTap,
+        onMenu,
+        onParallelView,
+        parallelViewActive = false
+    }: Props = $props();
 
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
@@ -65,5 +76,22 @@
         </div>
 
         <div class="reader-topbar-center"></div>
+
+        <div class="reader-topbar-end">
+            <button
+                type="button"
+                class="tb-icon reader-topbar-parallel-btn"
+                class:active={parallelViewActive}
+                onclick={onParallelView}
+                aria-label={t(uiLang, 'nav.parallelView')}
+                aria-pressed={parallelViewActive}
+                title={t(uiLang, 'nav.parallelView')}
+            >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="8" height="16" rx="1.5" />
+                    <rect x="13" y="4" width="8" height="16" rx="1.5" />
+                </svg>
+            </button>
+        </div>
     </div>
 </header>
