@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { pkfUrl } from "../lib/bw/pkf-url"
 import { hasPkf } from "../lib/bw/language-list"
 import { resolveVersion } from "../lib/bw/version-config"
+import { resolveTextSource } from "../lib/bw/source-catalog"
 import { t as translate } from "../lib/bw/ui-locales"
 import { uiLangForRegion } from "../lib/data/region-config"
 import { $activeRegion } from "../stores/region-store"
@@ -9,7 +10,9 @@ import { DbtChapterReader } from "./DbtChapterReader"
 
 interface ReaderData {
   iso: string
-  isBsb: boolean
+  /** Any helloAO translation id (e.g. "BSB") — set for ANY helloAO-backed
+   *  full-chapter language, not just English. Null for the PKF/Proskomma path. */
+  helloaoTranslationId: string | null
   docSetId: string
   pkfUrl: string
   catalogUrl: string
@@ -69,7 +72,7 @@ export function ReaderLoader({ iso: isoProp }: Props) {
       data-figure-urls={JSON.stringify(data.figureUrls)}
       data-caption-mode={data.captionMode}
       data-media={JSON.stringify(data.media)}
-      data-bsb-mode={data.isBsb ? "true" : "false"}
+      data-helloao-tid={data.helloaoTranslationId ?? ""}
     />
   )
 }
@@ -77,19 +80,28 @@ export function ReaderLoader({ iso: isoProp }: Props) {
 async function loadReaderData(iso: string): Promise<ReaderData> {
   // Text channel from the version config. Only an EXPLICIT catalog entry
   // (slug !== null) overrides the auto-detection below; unconfigured languages
-  // keep today's behaviour (eng → BSB, .pkf → pkf reader, else → DBT/helloao).
+  // keep today's behaviour (eng → helloAO's BSB, .pkf → pkf reader, else →
+  // DBT/helloao chapter reader). "bsb" is a back-compat provider alias for
+  // "helloao, full chapter reader" — the mechanism itself (catalog + chapter
+  // render) is generic to any helloAO translation id, not just BSB/English.
   const resolved = resolveVersion(iso)
   const textProvider = resolved.slug ? resolved.text.provider : null
 
-  const isBsb = textProvider === "bsb" || (!textProvider && iso === "eng")
+  const wantsFullHelloaoReader = textProvider === "bsb" || (!textProvider && iso === "eng")
 
-  if (isBsb) {
+  if (wantsFullHelloaoReader) {
+    // Explicit config id wins; otherwise the build-time-resolved catalog
+    // (unambiguous case only — see source-catalog.ts); "BSB" is English's
+    // own long-standing default, not a general fallback for other languages.
+    const catalogSource = await resolveTextSource(iso, "nt")
+    const tid = resolved.text.id ?? catalogSource?.id ?? (iso === "eng" ? "BSB" : null)
+    if (!tid) throw new Error(`NO_CHAPTER_READER:${iso}`)
     return {
       iso,
-      isBsb: true,
-      docSetId: "eng_bsb",
+      helloaoTranslationId: tid,
+      docSetId: `helloao_${tid}`,
       pkfUrl: "",
-      catalogUrl: "/bsb/catalog.json",
+      catalogUrl: "",
       styleUrl: null,
       figureUrls: {},
       captionMode: "hide",
@@ -118,7 +130,7 @@ async function loadReaderData(iso: string): Promise<ReaderData> {
 
   return {
     iso,
-    isBsb: false,
+    helloaoTranslationId: null,
     docSetId: pkfAsset.base,
     pkfUrl: pkfUrl(`/pkf/${iso}/${pkfAsset.name}`),
     catalogUrl: pkfUrl(`/pkf/${iso}/${catalogAsset.name}`),

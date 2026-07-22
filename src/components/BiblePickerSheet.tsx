@@ -15,6 +15,7 @@ import { sectionOf, testamentOf, sectionLabel } from "../lib/bw/bible-sections"
 import { loadBookList } from "../lib/bw/book-list"
 import staticBooks from "../lib/bw/bible-books"
 import { pkfUrl } from "../lib/bw/pkf-url"
+import { fetchHelloaoCatalog } from "../lib/reader/helloaoCatalog"
 import "../styles/bible-picker.css"
 
 /**
@@ -115,30 +116,33 @@ async function loadPickerBooks(iso: string): Promise<Group[]> {
 /** bookCode -> chapter -> verse-number keys (from versesByChapters). */
 type VerseData = Map<string, Record<string, Record<string, string>>>
 
+function catalogToVerseData(catalog: { documents?: any[] }): VerseData {
+  const map: VerseData = new Map()
+  for (const doc of catalog.documents ?? []) {
+    if (doc.bookCode && doc.versesByChapters) map.set(doc.bookCode, doc.versesByChapters)
+  }
+  return map
+}
+
 async function loadVerseData(iso: string): Promise<VerseData | null> {
   try {
-    let catalogUrl: string | null = null
+    // English (and any other language routed to the full helloAO chapter
+    // reader) has no PKF catalog on the CDN — its catalog is fetched live
+    // from helloAO instead, same mechanism as the reader itself.
     if (iso === "eng") {
-      catalogUrl = "/bsb/catalog.json"
-    } else {
-      const infoRes = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
-      if (!infoRes.ok) return null
-      const info = await infoRes.json()
-      const pkfAsset = info.assets?.find((a: any) => a.kind === "pkf")
-      const catalogAsset = pkfAsset
-        ? info.assets?.find((a: any) => a.kind === "json" && a.base === pkfAsset.base)
-        : null
-      if (!catalogAsset) return null
-      catalogUrl = pkfUrl(`/pkf/${iso}/${catalogAsset.name}`)
+      return catalogToVerseData(await fetchHelloaoCatalog("BSB"))
     }
-    const catRes = await fetch(catalogUrl)
+    const infoRes = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
+    if (!infoRes.ok) return null
+    const info = await infoRes.json()
+    const pkfAsset = info.assets?.find((a: any) => a.kind === "pkf")
+    const catalogAsset = pkfAsset
+      ? info.assets?.find((a: any) => a.kind === "json" && a.base === pkfAsset.base)
+      : null
+    if (!catalogAsset) return null
+    const catRes = await fetch(pkfUrl(`/pkf/${iso}/${catalogAsset.name}`))
     if (!catRes.ok) return null
-    const catalog = await catRes.json()
-    const map: VerseData = new Map()
-    for (const doc of catalog.documents ?? []) {
-      if (doc.bookCode && doc.versesByChapters) map.set(doc.bookCode, doc.versesByChapters)
-    }
-    return map
+    return catalogToVerseData(await catRes.json())
   } catch {
     return null
   }

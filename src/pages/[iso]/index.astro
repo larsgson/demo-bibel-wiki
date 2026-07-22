@@ -12,6 +12,8 @@ import { displayName } from "../../lib/data/languageNames"
 import { getIsoPaths } from "../../lib/prerender"
 import { loadAllTemplates, loadLocaleData, loadAllLocaleData } from "../../lib/bw/template-utils"
 import { pkfUrl as pkfUrlOf } from "../../lib/bw/pkf-url"
+import { resolveVersion } from "../../lib/bw/version-config"
+import sourceCatalog from "../../../data/source-catalog.json"
 import "../../styles/search.css"
 
 export function getStaticPaths() {
@@ -21,13 +23,25 @@ export function getStaticPaths() {
 const { iso } = Astro.params
 const lang = languagesByIso.get(iso)
 
-// BSB English is not in the PKF manifest — handle as a special case
-const isBsb = iso === "eng" || lang?.type === "bsb"
+// Any language routed to the full helloAO chapter reader (English's BSB
+// today; not hardcoded — a region config can flag another language the same
+// way via `type = "bsb"`, or an explicit bible-sources.json entry with
+// `text.provider = "bsb"` and its own `text.id`). The mechanism (catalog +
+// chapter render) is generic to any helloAO translation id.
+const wantsFullHelloaoReader = iso === "eng" || lang?.type === "bsb"
+// Explicit config id wins; otherwise the build-time-resolved catalog
+// (data/source-catalog.json — unambiguous case only, see
+// src/lib/bw/source-catalog.ts); "BSB" is English's own long-standing
+// default, not a general fallback for other languages.
+const catalogSource = (sourceCatalog as Record<string, { nt?: { provider: string; id?: string } }>)[iso]?.nt
+const helloaoTranslationId = wantsFullHelloaoReader
+  ? (resolveVersion(iso).text.id ?? catalogSource?.id ?? (iso === "eng" ? "BSB" : null))
+  : null
 
-if (!lang && !isBsb) {
+if (!lang && !wantsFullHelloaoReader) {
   return Astro.redirect("/")
 }
-const info = isBsb ? null : await loadInfo(iso)
+const info = wantsFullHelloaoReader ? null : await loadInfo(iso)
 
 const pkfAsset = info?.assets.find((a) => a.kind === "pkf") ?? null
 const catalogAsset = pkfAsset
@@ -35,12 +49,8 @@ const catalogAsset = pkfAsset
   : null
 
 const pkfUrl = pkfAsset ? pkfUrlOf(`/pkf/${iso}/${pkfAsset.name}`) : null
-const catalogUrl = isBsb
-  ? "/bsb/catalog.json"
-  : catalogAsset
-    ? pkfUrlOf(`/pkf/${iso}/${catalogAsset.name}`)
-    : null
-const docSetId = isBsb ? "eng_bsb" : (pkfAsset?.base ?? null)
+const catalogUrl = catalogAsset ? pkfUrlOf(`/pkf/${iso}/${catalogAsset.name}`) : null
+const docSetId = helloaoTranslationId ? `helloao_${helloaoTranslationId}` : (pkfAsset?.base ?? null)
 const styleUrl = info?.style_delta ? pkfUrlOf(`/pkf/${iso}/${info.style_delta}`) : null
 const region = regionForIso(iso)
 const title = `${displayName(iso)} — ${region?.displayName ?? ""}`.trim()
@@ -48,7 +58,7 @@ const media = info?.media ?? { videos: [], audio: { base_url: null, items: [] } 
 const figureUrls = info?.figure_urls ?? {}
 const captionMode = captionModeFor(iso)
 
-const hasReader = !!(catalogUrl && docSetId)
+const hasReader = !!(docSetId && (helloaoTranslationId || catalogUrl))
 
 // Stories landing (Simple mode): the template picker grid
 const templates = loadAllTemplates()
@@ -78,14 +88,13 @@ const templateList = Object.values(templates).map((t) => {
   <SearchPlaceholder client:only="react" />
   <BranchContentPane client:only="react" />
   {hasReader ? (
-    isBsb ? (
+    helloaoTranslationId ? (
       <Reader
         client:load
         iso={iso}
         docSetId={docSetId}
         pkfUrl=""
-        catalogUrl={catalogUrl}
-        bsbMode={true}
+        helloaoTranslationId={helloaoTranslationId}
         media={media}
       />
     ) : (

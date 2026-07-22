@@ -74,7 +74,7 @@ const templateList = Object.values(templates).map((t) => {
         figureUrls: JSON.parse(mount.dataset.figureUrls || "{}"),
         captionMode: mount.dataset.captionMode || "hide",
         media: JSON.parse(mount.dataset.media || "{}"),
-        bsbMode: mount.dataset.bsbMode === "true",
+        helloaoTranslationId: mount.dataset.helloaoTid || null,
       },
     })
   })

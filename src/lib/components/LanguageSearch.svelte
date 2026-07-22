@@ -2,6 +2,7 @@
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
+    import { prefetchPkfText } from '../reader/prefetch';
     const uiLang = uiLangForRegion(activeRegionStore.get());
     function goto(path: string) { window.location.href = path; }
 
@@ -62,6 +63,7 @@
     }
 
     function select(lang: LangEntry) {
+        prefetchPkfText(lang.iso);
         goto(`/${lang.iso}`);
     }
 
@@ -138,7 +140,7 @@
                         class="lang-search-row"
                         class:highlighted={idx === highlightIdx}
                         onmousedown={(e) => { e.preventDefault(); select(lang); }}
-                        onmouseenter={() => (highlightIdx = idx)}
+                        onmouseenter={() => { highlightIdx = idx; prefetchPkfText(lang.iso); }}
                     >
                         <div class="lang-search-names">
                             <span class="lang-search-primary">{@html highlight(lang.name, query_str)}</span>

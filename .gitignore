@@ -10,6 +10,7 @@ build/
 data/pkf/
 data/BSB/
 data/.fetch-tmp/
+data/source-catalog.json
 
 # Public data copied from bibel-wiki (fetched, not committed)
 public/ALL-langs-data/
@@ -19,7 +20,7 @@ public/templates/
 
 # Symlinks into data/ (resolved at runtime)
 public/pkf
-public/bsb/
+public/source-catalog.json
 
 # Example projects
 example/

@@ -8,9 +8,10 @@
         type PinchCustomEvent
     } from 'svelte-gestures';
     import { fetchCatalog, chapterCount, type Catalog, type CatalogDoc } from './catalog';
+    import { fetchHelloaoCatalog } from './helloaoCatalog';
     import { loadDocSet, isLoaded } from './store';
     import { fetchSofria, renderSofria, type RenderedChapter, type CaptionMode } from './sofria';
-    import { fetchAndRenderBSB } from './bsbRender';
+    import { fetchAndRenderHelloaoChapter } from './helloaoChapterRender';
     import type { MediaManifest, VideoEntry, AudioEntry } from '../data/pkfInfo';
     import { settings } from './settings';
     import SettingsPanel from './SettingsPanel.svelte';
@@ -37,12 +38,16 @@
         iso: string;          // e.g. "zai"
         docSetId: string;     // e.g. "zai_zai"
         pkfUrl: string;       // e.g. "/pkf/zai/zai_zai.0HgVnSWZ.pkf"
-        catalogUrl: string;   // e.g. "/pkf/zai/zai_zai.C3ggCijo.json"
+        catalogUrl?: string;  // e.g. "/pkf/zai/zai_zai.C3ggCijo.json" — ignored when helloaoTranslationId is set
         styleUrl?: string | null;                      // e.g. "/pkf/zai/styles/delta.css"
         figureUrls?: Record<string, string>;           // filename -> hosted URL
         captionMode?: CaptionMode;                     // from config/figure_captions.json
         media?: MediaManifest;                         // per-iso video + audio manifest
-        bsbMode?: boolean;                             // true for Berean Standard Bible
+        // Any helloAO translation id (e.g. "BSB", "eng-NASB") — when set, the
+        // catalog and every chapter are fetched live from helloAO instead of
+        // the PKF/Proskomma pipeline. Not English/BSB-specific: any language
+        // configured with a helloAO text source can use this.
+        helloaoTranslationId?: string | null;
     };
     let {
         iso,
@@ -53,7 +58,7 @@
         figureUrls = {},
         captionMode = 'hide',
         media,
-        bsbMode = false
+        helloaoTranslationId = null
     }: Props = $props();
 
     let catalog = $state<Catalog | null>(null);
@@ -114,14 +119,16 @@
         document.addEventListener('keydown', onGlobalKey);
         loadBookmarks();
         try {
-            catalog = await fetchCatalog(catalogUrl);
+            catalog = helloaoTranslationId
+                ? await fetchHelloaoCatalog(helloaoTranslationId)
+                : await fetchCatalog(catalogUrl ?? '');
         } catch (e) {
             loadError = e instanceof Error ? e.message : String(e);
             return;
         }
         // Eagerly load the PKF binary in the background so the first chapter
         // open is instant instead of waiting for fetch + parse.
-        if (!bsbMode) ensurePkf();
+        if (!helloaoTranslationId) ensurePkf();
 
         // Initial visibility from the current pane — the default can be
         // overridden by a ?pane= signal (e.g. arriving on the study pane), which
@@ -216,8 +223,8 @@
         saveLastPosition({ book: book.bookCode, chapter: ch });
         window.dispatchEvent(new CustomEvent('bible-position-changed', { detail: { book: book.bookCode, chapter: ch } }));
         try {
-            if (bsbMode) {
-                rendered = await fetchAndRenderBSB(book.bookCode, ch);
+            if (helloaoTranslationId) {
+                rendered = await fetchAndRenderHelloaoChapter(helloaoTranslationId, book.bookCode, ch);
             } else {
                 await ensurePkf();
                 const sofria = fetchSofria(docSetId, book.bookCode, ch);

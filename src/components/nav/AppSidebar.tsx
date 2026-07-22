@@ -17,6 +17,7 @@ import { getUILevel, type UILevel } from "../../stores/ui-level-store"
 import { shouldProbePkf } from "../../lib/bw/language-list"
 import { pkfUrl } from "../../lib/bw/pkf-url"
 import { loadBookList } from "../../lib/bw/book-list"
+import { fetchHelloaoCatalog } from "../../lib/reader/helloaoCatalog"
 import { t as translate } from "../../lib/bw/ui-locales"
 import { uiLangForRegion } from "../../lib/data/region-config"
 import { $activeRegion } from "../../stores/region-store"
@@ -202,43 +203,47 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     if (catalogFetchedForIso.current === iso) return
     catalogFetchedForIso.current = iso
 
+    function applyCatalog(catalog: { documents?: any[] }) {
+      const names = new Map<string, string>()
+      const codes = new Set<string>()
+      for (const doc of catalog.documents ?? []) {
+        if (doc.bookCode) {
+          codes.add(doc.bookCode)
+          if (doc.h) names.set(doc.bookCode, doc.h)
+        }
+      }
+      if (codes.size > 0) setAvailableBooks(codes)
+      if (names.size > 0) setLocalizedBookNames(names)
+    }
+
     async function fetchCatalog() {
       try {
-        let catalogUrl: string | null = null
+        // English (and any other language routed to the full helloAO chapter
+        // reader) has no PKF catalog on the CDN — fetch it live from helloAO,
+        // same mechanism the reader itself uses.
         if (iso === "eng") {
-          catalogUrl = "/bsb/catalog.json"
-        } else {
-          // Non-.pkf language (e.g. Spanish via DBT): get the vernacular book
-          // list from helloao for the left-pane Bible tree.
-          if (!(await shouldProbePkf(iso))) {
-            const list = await loadBookList(iso)
-            if (list) {
-              setAvailableBooks(new Set(list.map((b) => b.code)))
-              setLocalizedBookNames(new Map(list.map((b) => [b.code, b.name])))
-            }
-            return
-          }
-          const infoRes = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
-          if (!infoRes.ok) return
-          const info = await infoRes.json()
-          const pkf = info.assets?.find((a: any) => a.kind === "pkf")
-          const cat = pkf ? info.assets?.find((a: any) => a.kind === "json" && a.base === pkf.base) : null
-          if (cat) catalogUrl = pkfUrl(`/pkf/${iso}/${cat.name}`)
+          applyCatalog(await fetchHelloaoCatalog("BSB"))
+          return
         }
-        if (!catalogUrl) return
-        const catRes = await fetch(catalogUrl)
+        // Non-.pkf language (e.g. Spanish via DBT): get the vernacular book
+        // list from helloao for the left-pane Bible tree.
+        if (!(await shouldProbePkf(iso))) {
+          const list = await loadBookList(iso)
+          if (list) {
+            setAvailableBooks(new Set(list.map((b) => b.code)))
+            setLocalizedBookNames(new Map(list.map((b) => [b.code, b.name])))
+          }
+          return
+        }
+        const infoRes = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
+        if (!infoRes.ok) return
+        const info = await infoRes.json()
+        const pkf = info.assets?.find((a: any) => a.kind === "pkf")
+        const cat = pkf ? info.assets?.find((a: any) => a.kind === "json" && a.base === pkf.base) : null
+        if (!cat) return
+        const catRes = await fetch(pkfUrl(`/pkf/${iso}/${cat.name}`))
         if (!catRes.ok) return
-        const catalog = await catRes.json()
-        const names = new Map<string, string>()
-        const codes = new Set<string>()
-        for (const doc of catalog.documents ?? []) {
-          if (doc.bookCode) {
-            codes.add(doc.bookCode)
-            if (doc.h) names.set(doc.bookCode, doc.h)
-          }
-        }
-        if (codes.size > 0) setAvailableBooks(codes)
-        if (names.size > 0) setLocalizedBookNames(names)
+        applyCatalog(await catRes.json())
       } catch {}
     }
     fetchCatalog()

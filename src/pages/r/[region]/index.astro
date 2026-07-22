@@ -124,4 +124,28 @@ const title = rc.name[lang] ?? rc.code
       window.dispatchEvent(new CustomEvent("open-language-picker"))
     })
   </script>
+
+  <script>
+    // Start a PKF language's full-Bible binary downloading as soon as the
+    // visitor's pointer lands on (or taps) its tile — before navigation even
+    // completes — so it's already in flight by the time the reader mounts.
+    // See src/lib/reader/prefetch.ts for why this is the high-leverage spot
+    // (the .pkf fetch+parse, not any catalog lookup, is what's slow).
+    import { prefetchPkfText } from "../../../lib/reader/prefetch"
+
+    function isoFromHref(href: string): string | null {
+      const m = href.match(/^\/([a-z]{3})\/?$/)
+      return m ? m[1] : null
+    }
+
+    document
+      .querySelectorAll<HTMLAnchorElement>(".lang-tile, .group-card--single, .region-trade-chip")
+      .forEach((a) => {
+        const iso = isoFromHref(new URL(a.href).pathname)
+        if (!iso) return
+        const trigger = () => prefetchPkfText(iso)
+        a.addEventListener("pointerenter", trigger, { once: true })
+        a.addEventListener("pointerdown", trigger, { once: true })
+      })
+  </script>
 </BaseLayout>

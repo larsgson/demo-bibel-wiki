@@ -94,12 +94,19 @@ function renderVerse(
     return lines;
 }
 
-export async function fetchAndRenderBSB(
+/**
+ * Fetch + render one chapter from ANY helloAO translation id (e.g. "BSB",
+ * "eng-NASB", "ind_ayt") — not hardcoded to a single language/version, so
+ * every helloAO-backed translation gets the same headings, Psalm
+ * superscriptions, poetry line breaks, and footnotes, not just English/BSB.
+ */
+export async function fetchAndRenderHelloaoChapter(
+    translationId: string,
     bookCode: string,
     chapter: number
 ): Promise<RenderedChapter> {
-    const resp = await fetch(`${HELLOAO_API}/BSB/${bookCode}/${chapter}.json`);
-    if (!resp.ok) return { html: '<p>No English text available.</p>', footnotes: [], xrefs: [] };
+    const resp = await fetch(`${HELLOAO_API}/${translationId}/${bookCode}/${chapter}.json`);
+    if (!resp.ok) return { html: '<p>No text available.</p>', footnotes: [], xrefs: [] };
     const json = await resp.json();
     const content: HelloaoChapterContent[] = json?.chapter?.content ?? [];
     const rawFootnotes: HelloaoFootnote[] = json?.chapter?.footnotes ?? [];
@@ -162,7 +169,7 @@ export async function fetchAndRenderBSB(
     }
     flushProse();
 
-    if (parts.length === 0) return { html: '<p>No English text available.</p>', footnotes: [], xrefs: [] };
+    if (parts.length === 0) return { html: '<p>No text available.</p>', footnotes: [], xrefs: [] };
 
     return {
         html: parts.join('\n'),

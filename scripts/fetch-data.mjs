@@ -2,8 +2,12 @@
 /**
  * Fetch build-time data:
  *   1. PKF data from the se-regional-data GitHub release
- *   2. BSB (Berean Standard Bible) from BSB-publishing/bsb-data-output
- *   3. Story data (language catalog + audio timings) from bible-story-builder
+ *   2. Story data (language catalog + audio timings) from bible-story-builder
+ *   3. Source catalog (per-language text-provider resolution) from cdn.bibel.wiki
+ *
+ * English/BSB text now comes live from helloAO (see src/lib/reader/helloaoCatalog.ts
+ * and helloaoChapterRender.ts) — this script no longer fetches/generates any local
+ * BSB data.
  *
  * Run via: pnpm fetch:data   (or automatically as prebuild)
  *
@@ -24,12 +28,10 @@ const REPO = process.env.DATA_REPO ?? "larsgson/se-regional-data"
 const TAG = process.env.DATA_RELEASE_TAG ?? "latest"
 const SKIP = process.env.SKIP_DATA_FETCH === "1"
 const DATA_DIR = "data/pkf"
-const BSB_DIR = "public/bsb"
-const BSB_REPO = "BSB-publishing/bsb-data-output"
-const BSB_BRANCH = "main"
 const STORY_REPO = process.env.STORY_REPO ?? "larsgson/bible-story-builder"
 const STORY_TAG = process.env.STORY_RELEASE_TAG ?? "latest"
 const PUBLIC_DIR = "public"
+const SOURCE_CATALOG_PATH = "data/source-catalog.json"
 
 if (SKIP) {
   console.log("SKIP_DATA_FETCH=1 — skipping data fetch.")
@@ -173,130 +175,7 @@ if (!needManifest && !needFullData) {
 // Ensure public/pkf symlink
 ensureSymlink("../data/pkf", "public/pkf")
 
-// ── 2. BSB data ──
-
-if (existsSync(join(BSB_DIR, "catalog.json"))) {
-  console.log(`BSB data already present at ${BSB_DIR}/catalog.json — skipping.`)
-} else {
-  console.log(`\n── Fetching BSB data from ${BSB_REPO} ──\n`)
-  mkdirSync(BSB_DIR, { recursive: true })
-
-  const rawBase = `https://raw.githubusercontent.com/${BSB_REPO}/${BSB_BRANCH}/base`
-
-  // Fetch headings.jsonl
-  console.log("  Downloading headings.jsonl...")
-  const headingsRes = await fetch(`${rawBase}/headings.jsonl`)
-  if (!headingsRes.ok) throw new Error(`Failed to fetch headings: ${headingsRes.status}`)
-  const headingsText = await headingsRes.text()
-  writeFileSync(join(BSB_DIR, "headings.jsonl"), headingsText)
-
-  // Fetch display files list
-  console.log("  Fetching book list...")
-  const listRes = await fetch(
-    `https://api.github.com/repos/${BSB_REPO}/contents/base/display`,
-    { headers: { Accept: "application/vnd.github+json" } }
-  )
-  if (!listRes.ok) throw new Error(`Failed to list display dir: ${listRes.status}`)
-  const files = await listRes.json()
-  const bookFiles = files.filter((f) => f.name.endsWith(".jsonl") && f.name !== "stats.json")
-
-  // Book name lookup (USFM code → full name / abbreviation)
-  const BOOK_NAMES = {
-    GEN:"Genesis",EXO:"Exodus",LEV:"Leviticus",NUM:"Numbers",DEU:"Deuteronomy",
-    JOS:"Joshua",JDG:"Judges",RUT:"Ruth","1SA":"1 Samuel","2SA":"2 Samuel",
-    "1KI":"1 Kings","2KI":"2 Kings","1CH":"1 Chronicles","2CH":"2 Chronicles",
-    EZR:"Ezra",NEH:"Nehemiah",EST:"Esther",JOB:"Job",PSA:"Psalms",PRO:"Proverbs",
-    ECC:"Ecclesiastes",SNG:"Song of Solomon",ISA:"Isaiah",JER:"Jeremiah",
-    LAM:"Lamentations",EZK:"Ezekiel",DAN:"Daniel",HOS:"Hosea",JOL:"Joel",
-    AMO:"Amos",OBA:"Obadiah",JON:"Jonah",MIC:"Micah",NAM:"Nahum",HAB:"Habakkuk",
-    ZEP:"Zephaniah",HAG:"Haggai",ZEC:"Zechariah",MAL:"Malachi",
-    MAT:"Matthew",MRK:"Mark",LUK:"Luke",JHN:"John",ACT:"Acts",ROM:"Romans",
-    "1CO":"1 Corinthians","2CO":"2 Corinthians",GAL:"Galatians",EPH:"Ephesians",
-    PHP:"Philippians",COL:"Colossians","1TH":"1 Thessalonians","2TH":"2 Thessalonians",
-    "1TI":"1 Timothy","2TI":"2 Timothy",TIT:"Titus",PHM:"Philemon",HEB:"Hebrews",
-    JAS:"James","1PE":"1 Peter","2PE":"2 Peter","1JN":"1 John","2JN":"2 John",
-    "3JN":"3 John",JUD:"Jude",REV:"Revelation",
-  }
-  const BOOK_ABBR = {
-    GEN:"Gen",EXO:"Exo",LEV:"Lev",NUM:"Num",DEU:"Deu",JOS:"Jos",JDG:"Jdg",RUT:"Rut",
-    "1SA":"1Sa","2SA":"2Sa","1KI":"1Ki","2KI":"2Ki","1CH":"1Ch","2CH":"2Ch",
-    EZR:"Ezr",NEH:"Neh",EST:"Est",JOB:"Job",PSA:"Psa",PRO:"Pro",ECC:"Ecc",SNG:"Sng",
-    ISA:"Isa",JER:"Jer",LAM:"Lam",EZK:"Ezk",DAN:"Dan",HOS:"Hos",JOL:"Jol",AMO:"Amo",
-    OBA:"Oba",JON:"Jon",MIC:"Mic",NAM:"Nam",HAB:"Hab",ZEP:"Zep",HAG:"Hag",ZEC:"Zec",
-    MAL:"Mal",MAT:"Mat",MRK:"Mrk",LUK:"Luk",JHN:"Jhn",ACT:"Act",ROM:"Rom",
-    "1CO":"1Co","2CO":"2Co",GAL:"Gal",EPH:"Eph",PHP:"Php",COL:"Col",
-    "1TH":"1Th","2TH":"2Th","1TI":"1Ti","2TI":"2Ti",TIT:"Tit",PHM:"Phm",HEB:"Heb",
-    JAS:"Jas","1PE":"1Pe","2PE":"2Pe","1JN":"1Jn","2JN":"2Jn","3JN":"3Jn",
-    JUD:"Jud",REV:"Rev",
-  }
-
-  // Build catalog and chapter files from display JSONL
-  const documents = []
-  const chaptersDir = join(BSB_DIR, "chapters")
-
-  for (const file of bookFiles) {
-    const bookCode = file.name.replace(".jsonl", "")
-    process.stdout.write(`  ${bookCode}...`)
-
-    const res = await fetch(file.download_url)
-    if (!res.ok) {
-      console.warn(` ⚠ failed (${res.status})`)
-      continue
-    }
-    const text = await res.text()
-    const lines = text.trim().split("\n").map((l) => JSON.parse(l))
-
-    // Group verses by chapter
-    const byChapter = {}
-    for (const { c, v, w } of lines) {
-      if (!byChapter[c]) byChapter[c] = {}
-      byChapter[c][v] = w
-    }
-
-    // Write per-chapter JSON files
-    const bookChapterDir = join(chaptersDir, bookCode)
-    mkdirSync(bookChapterDir, { recursive: true })
-    for (const [ch, verses] of Object.entries(byChapter)) {
-      writeFileSync(
-        join(bookChapterDir, `${bookCode}${ch}.json`),
-        JSON.stringify({ eng: verses })
-      )
-    }
-
-    // Build catalog entry
-    const chapterNums = Object.keys(byChapter).map(Number).sort((a, b) => a - b)
-    const versesByChapters = {}
-    for (const ch of chapterNums) {
-      versesByChapters[ch] = {}
-      for (const v of Object.keys(byChapter[ch])) {
-        versesByChapters[ch][v] = ""
-      }
-    }
-
-    documents.push({
-      id: `eng_bsb/${bookCode}`,
-      bookCode,
-      h: BOOK_NAMES[bookCode] ?? bookCode,
-      toc: BOOK_NAMES[bookCode] ?? bookCode,
-      toc2: BOOK_ABBR[bookCode] ?? bookCode,
-      toc3: null,
-      versesByChapters,
-    })
-
-    process.stdout.write(" ✓\n")
-  }
-
-  // Write catalog.json
-  const catalog = {
-    id: "eng_bsb",
-    selectors: { lang: "eng", abbr: "bsb" },
-    documents,
-  }
-  writeFileSync(join(BSB_DIR, "catalog.json"), JSON.stringify(catalog, null, 2))
-  console.log(`  ✓ BSB data ready (${documents.length} books)`)
-}
-
-// ── 3. Story data (language catalog + audio timings) from bible-story-builder ──
+// ── 2. Story data (language catalog + audio timings) from bible-story-builder ──
 //
 // Browser-fetched at runtime from public/:
 //   • ALL-langs-compact.json / ALL-langs-mini.json  — language names + catalog
@@ -361,6 +240,60 @@ if (existsSync(join(PUBLIC_DIR, "ALL-langs-data", "manifest.json"))) {
   rmSync(tmpDir, { recursive: true, force: true })
   console.log(`  ✓ Story data ready`)
 }
+
+// ── 3. Source catalog (per-language text-provider resolution) ──
+//
+// cdn.bibel.wiki/dbt/_app/catalog-overlap.json already computes, build-side,
+// which provider (pkf/helloao/dbt) is the right default per language+canon,
+// with priority pkf > helloao > dbt and dedup/overlap probing behind it. That
+// changes rarely (only when the CDN's own catalog is regenerated), so we bake
+// a small derived lookup here rather than re-deriving it — via live probes
+// (info.json presence checks, the old helloao-crosswalk fetch, filtering
+// helloAO's full 4000+-translation list client-side) — on every chapter load.
+//
+// The DERIVED file only resolves the PROVIDER, plus a translation id when the
+// catalog has exactly one candidate for that provider. When several exist
+// (e.g. English has 34 helloAO translations), `id` is left out — the app's
+// own config/bible-sources.json curated override (or a hardcoded default,
+// e.g. "BSB" for English) still wins in that case. See src/lib/bw/version-config.ts.
+
+if (existsSync(SOURCE_CATALOG_PATH)) {
+  console.log(`Source catalog already present at ${SOURCE_CATALOG_PATH} — skipping.`)
+} else {
+  console.log(`\n── Building source catalog from cdn.bibel.wiki ──\n`)
+  let catalog = {}
+  try {
+    const res = await fetch("https://cdn.bibel.wiki/dbt/_app/catalog-overlap.json")
+    if (!res.ok) throw new Error(`fetch catalog-overlap.json: ${res.status}`)
+    const overlap = await res.json()
+
+    // First candidate id per iso+canon+provider (order as published).
+    const idByGroup = new Map()
+    for (const [iso, canon, provider, id] of overlap.entries ?? []) {
+      const key = `${iso}:${canon}:${provider}`
+      if (!idByGroup.has(key)) idByGroup.set(key, id)
+    }
+
+    for (const [key, provider] of Object.entries(overlap.defaults ?? {})) {
+      const [iso, canon] = key.split(":")
+      const id = provider === "pkf" ? undefined : idByGroup.get(`${iso}:${canon}:${provider}`)
+      catalog[iso] ??= {}
+      catalog[iso][canon] = id ? { provider, id } : { provider }
+    }
+
+    mkdirSync("data", { recursive: true })
+    writeFileSync(SOURCE_CATALOG_PATH, JSON.stringify(catalog))
+    console.log(`  ✓ source-catalog.json ready (${Object.keys(catalog).length} languages)`)
+  } catch (err) {
+    console.warn(`  ⚠ Could not build source catalog: ${err.message}`)
+    console.warn(`    App falls back to its own runtime resolution for text sources.`)
+    mkdirSync("data", { recursive: true })
+    writeFileSync(SOURCE_CATALOG_PATH, "{}")
+  }
+}
+
+// Ensure public/source-catalog.json symlink (client-side fetch access)
+ensureSymlink("../data/source-catalog.json", "public/source-catalog.json")
 
 console.log("\n── Data fetch complete ──\n")
 

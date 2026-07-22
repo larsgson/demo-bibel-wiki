@@ -9,6 +9,7 @@ import {
   clearSecondaryLanguages,
 } from "../stores/language-store"
 import { t, resolveUILang } from "../lib/bw/ui-locales"
+import { prefetchPkfText } from "../lib/reader/prefetch"
 
 interface Language {
   code: string
@@ -164,6 +165,7 @@ export default function LanguageSelectorIsland({ mode, onClose }: Props) {
   const handleSelect = useCallback((lang: Language) => {
     addRecentLang(lang.code)
     if (mode === "primary") {
+      prefetchPkfText(lang.code)
       setLanguage(lang.code)
       onClose()
     } else {
@@ -242,6 +244,7 @@ export default function LanguageSelectorIsland({ mode, onClose }: Props) {
                 <button
                   key={lang.code}
                   onClick={() => handleSelect(lang)}
+                  onMouseEnter={() => prefetchPkfText(lang.code)}
                   className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                     selected ? "font-semibold" : ""
                   }`}
@@ -297,7 +300,7 @@ export default function LanguageSelectorIsland({ mode, onClose }: Props) {
                   key={lang.code}
                   data-idx={idx}
                   onClick={() => handleSelect(lang)}
-                  onMouseEnter={() => setHighlightIdx(idx)}
+                  onMouseEnter={() => { setHighlightIdx(idx); prefetchPkfText(lang.code) }}
                   className={`w-full text-left px-3 py-2 rounded-md mb-1 flex items-center gap-2 ${
                     selected ? "font-semibold" : ""
                   }`}
