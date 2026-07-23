@@ -11,8 +11,8 @@
 # (cdn.bibel.wiki), DBT/Bible Brain (cdn.bibel.wiki/dbt/_catalog.json), and
 # helloAO (bible.helloao.org/api/available_translations.json) — so every
 # language listed here has at least one real fileset behind it (audio and/or
-# text; DBT audio-only languages still get a real reading experience via the
-# DbtChapterReader fallback, see src/components/ReaderLoader.tsx).
+# text; DBT-sourced languages still get a real reading experience via
+# Reader.svelte's flat-text mode, see src/components/ReaderLoader.tsx).
 #
 # cdn.bibel.wiki/dbt/_app/catalog-overlap.json was checked too but under-
 # counted badly here (22 of 73 vs. 42 found by checking PKF/DBT/helloAO
