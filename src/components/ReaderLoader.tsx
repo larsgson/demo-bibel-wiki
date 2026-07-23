@@ -117,8 +117,13 @@ async function loadReaderData(iso: string): Promise<ReaderData> {
   // is no .pkf and the config didn't force one, hand off to the chapter reader.
   if (textProvider !== "pkf" && !hasPkf(iso)) throw new Error(`NO_CHAPTER_READER:${iso}`)
 
+  // hasPkf(iso) said this language should have a PKF asset, but the info.json
+  // fetch or the asset lookup can still fail (missing/malformed data) — fall
+  // back to the DBT/helloao chapter reader same as every other "no PKF path"
+  // case above, rather than surfacing a raw error screen for what a visitor
+  // experiences identically either way (this language's PKF text isn't usable).
   const infoResp = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
-  if (!infoResp.ok) throw new Error(`No data for language: ${iso}`)
+  if (!infoResp.ok) throw new Error(`NO_CHAPTER_READER:${iso}`)
   const info = await infoResp.json()
 
   const pkfAsset = info.assets?.find((a: any) => a.kind === "pkf") ?? null
@@ -126,7 +131,7 @@ async function loadReaderData(iso: string): Promise<ReaderData> {
     ? info.assets?.find((a: any) => a.kind === "json" && a.base === pkfAsset.base) ?? null
     : null
 
-  if (!pkfAsset || !catalogAsset) throw new Error(`No PKF/catalog for: ${iso}`)
+  if (!pkfAsset || !catalogAsset) throw new Error(`NO_CHAPTER_READER:${iso}`)
 
   return {
     iso,

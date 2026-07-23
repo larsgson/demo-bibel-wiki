@@ -1,0 +1,74 @@
+---
+/**
+ * Shared reader-mounting partial — used by both src/pages/l/index.astro and
+ * src/pages/[iso]/index.astro, which previously each duplicated this same
+ * ReaderLoader + manual Svelte-mount dance independently (the [iso] route
+ * used to *also* have its own separate direct-PKF/helloAO-full logic on top
+ * of that, now folded away — see git history if that's ever needed again).
+ *
+ * ReaderLoader (client:only="react") resolves the language's text source
+ * (PKF / helloAO-full / DBT-helloao) itself and either renders a
+ * #reader-mount data-attribute div (PKF/helloAO-full — needs Reader.svelte,
+ * mounted manually below since Svelte components can't be client:only from
+ * an .astro file directly) or mounts <DbtChapterReader> itself directly (no
+ * further action needed here for that path).
+ */
+import { ReaderLoader } from "./ReaderLoader"
+
+interface Props {
+  iso?: string
+}
+const { iso } = Astro.props as Props
+---
+
+<div id="reader-root"></div>
+<ReaderLoader client:only="react" iso={iso} />
+
+<script>
+  // ReaderLoader renders a #reader-mount div with data attributes.
+  // Once it appears, mount the Svelte Reader.
+  const root = document.getElementById("reader-root")!
+
+  // Mounted manually (outside Astro's own client-directive lifecycle), so
+  // cleanup is our responsibility too: leaving a mounted instance behind
+  // when the page navigates away lets its pending $effects (e.g. the
+  // video/text fallback in Reader.svelte) flush after the component's
+  // owner is already gone, which Svelte reports as "effect_orphan".
+  let readerApp: object | null = null
+  let svelteUnmount: ((app: object) => void) | null = null
+
+  const observer = new MutationObserver(async () => {
+    const mount = document.getElementById("reader-mount")
+    if (!mount) return
+    observer.disconnect()
+
+    const { mount: svelteMount, unmount } = await import("svelte")
+    const { default: Reader } = await import("../lib/reader/Reader.svelte")
+    svelteUnmount = unmount
+
+    root.innerHTML = ""
+    readerApp = svelteMount(Reader, {
+      target: root,
+      props: {
+        iso: mount.dataset.iso!,
+        docSetId: mount.dataset.docSetId!,
+        pkfUrl: mount.dataset.pkfUrl!,
+        catalogUrl: mount.dataset.catalogUrl!,
+        styleUrl: mount.dataset.styleUrl || null,
+        figureUrls: JSON.parse(mount.dataset.figureUrls || "{}"),
+        captionMode: mount.dataset.captionMode || "hide",
+        media: JSON.parse(mount.dataset.media || "{}"),
+        helloaoTranslationId: mount.dataset.helloaoTid || null,
+      },
+    })
+  })
+  observer.observe(document.body, { childList: true, subtree: true })
+
+  // Synchronous cleanup — pagehide can fire right before the JS context is
+  // torn down, so this can't afford to wait on another dynamic import.
+  window.addEventListener("pagehide", () => {
+    if (!readerApp || !svelteUnmount) return
+    svelteUnmount(readerApp)
+    readerApp = null
+  })
+</script>

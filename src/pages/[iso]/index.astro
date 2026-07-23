@@ -1,19 +1,14 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro"
-import Reader from "../../lib/reader/Reader.svelte"
+import ReaderMount from "../../components/ReaderMount.astro"
 import { SearchIsland } from "../../components/search/SearchIsland"
 import { SearchPlaceholder } from "../../components/SearchPlaceholder"
 import { BranchContentPane } from "../../components/nav/BranchContentPane"
 import TemplateSelectorIsland from "../../components/TemplateSelectorIsland"
-import { languages, languagesByIso, regionForIso } from "../../lib/data/regions"
-import { loadInfo } from "../../lib/data/pkfInfo"
-import { captionModeFor } from "../../lib/data/figureCaptions"
+import { regionForIso } from "../../lib/data/regions"
 import { displayName } from "../../lib/data/languageNames"
 import { getIsoPaths } from "../../lib/prerender"
 import { loadAllTemplates, loadLocaleData, loadAllLocaleData } from "../../lib/bw/template-utils"
-import { pkfUrl as pkfUrlOf } from "../../lib/bw/pkf-url"
-import { resolveVersion } from "../../lib/bw/version-config"
-import sourceCatalog from "../../../data/source-catalog.json"
 import "../../styles/search.css"
 
 export function getStaticPaths() {
@@ -21,44 +16,15 @@ export function getStaticPaths() {
 }
 
 const { iso } = Astro.params
-const lang = languagesByIso.get(iso)
 
-// Any language routed to the full helloAO chapter reader (English's BSB
-// today; not hardcoded — a region config can flag another language the same
-// way via `type = "bsb"`, or an explicit bible-sources.json entry with
-// `text.provider = "bsb"` and its own `text.id`). The mechanism (catalog +
-// chapter render) is generic to any helloAO translation id.
-const wantsFullHelloaoReader = iso === "eng" || lang?.type === "bsb"
-// Explicit config id wins; otherwise the build-time-resolved catalog
-// (data/source-catalog.json — unambiguous case only, see
-// src/lib/bw/source-catalog.ts); "BSB" is English's own long-standing
-// default, not a general fallback for other languages.
-const catalogSource = (sourceCatalog as Record<string, { nt?: { provider: string; id?: string } }>)[iso]?.nt
-const helloaoTranslationId = wantsFullHelloaoReader
-  ? (resolveVersion(iso).text.id ?? catalogSource?.id ?? (iso === "eng" ? "BSB" : null))
-  : null
-
-if (!lang && !wantsFullHelloaoReader) {
-  return Astro.redirect("/")
-}
-const info = wantsFullHelloaoReader ? null : await loadInfo(iso)
-
-const pkfAsset = info?.assets.find((a) => a.kind === "pkf") ?? null
-const catalogAsset = pkfAsset
-  ? info?.assets.find((a) => a.kind === "json" && a.base === pkfAsset.base) ?? null
-  : null
-
-const pkfUrl = pkfAsset ? pkfUrlOf(`/pkf/${iso}/${pkfAsset.name}`) : null
-const catalogUrl = catalogAsset ? pkfUrlOf(`/pkf/${iso}/${catalogAsset.name}`) : null
-const docSetId = helloaoTranslationId ? `helloao_${helloaoTranslationId}` : (pkfAsset?.base ?? null)
-const styleUrl = info?.style_delta ? pkfUrlOf(`/pkf/${iso}/${info.style_delta}`) : null
+// Reader resolution (PKF / helloAO-full / DBT-helloao) is entirely
+// ReaderLoader's job now, via <ReaderMount> — same component /l/ uses for
+// every non-prerendered ISO. This page used to duplicate a direct-PKF/
+// helloAO-full attempt on top of that, with its own separate "no reader"
+// dead end; ReaderLoader's fallback chain already covers everything this
+// did, so there's only one reader-resolution path to maintain now.
 const region = regionForIso(iso)
 const title = `${displayName(iso)} — ${region?.displayName ?? ""}`.trim()
-const media = info?.media ?? { videos: [], audio: { base_url: null, items: [] } }
-const figureUrls = info?.figure_urls ?? {}
-const captionMode = captionModeFor(iso)
-
-const hasReader = !!(docSetId && (helloaoTranslationId || catalogUrl))
 
 // Stories landing (Simple mode): the template picker grid
 const templates = loadAllTemplates()
@@ -87,32 +53,5 @@ const templateList = Object.values(templates).map((t) => {
   <SearchIsland client:only="react" iso={iso} />
   <SearchPlaceholder client:only="react" />
   <BranchContentPane client:only="react" />
-  {hasReader ? (
-    helloaoTranslationId ? (
-      <Reader
-        client:load
-        iso={iso}
-        docSetId={docSetId}
-        pkfUrl=""
-        helloaoTranslationId={helloaoTranslationId}
-        media={media}
-      />
-    ) : (
-      <Reader
-        client:load
-        iso={iso}
-        docSetId={docSetId}
-        pkfUrl={pkfUrl ?? ""}
-        catalogUrl={catalogUrl}
-        styleUrl={styleUrl}
-        figureUrls={figureUrls}
-        captionMode={captionMode}
-        media={media}
-      />
-    )
-  ) : (
-    <div class="py-8 text-brand/60">
-      No PKF / catalog asset found for this language.
-    </div>
-  )}
+  <ReaderMount iso={iso} />
 </BaseLayout>
