@@ -6,14 +6,14 @@ Scripture reading and Bible story PWA for Mexican indigenous languages + English
 
 - **Astro** — static site generator with islands architecture
 - **React** — stories, browse/search/chunk islands, audio UI
-- **Svelte** — Bible reader (Proskomma-based PKF rendering)
+- **Svelte** — Bible reader; renders PKF (Proskomma), helloAO-full, and DBT-sourced text through one component
 - **nanostores** — shared state (ISO, API config, audio, search mode)
 - **Tailwind CSS** — utility styling
 - **Netlify** — hosting, serverless functions (DBT proxy)
 
 ## Features
 
-- **Bible Reader** — chapter-by-chapter scripture reading with audio playback, verse-synced timing, glossary, swipe navigation
+- **Bible Reader** — chapter-by-chapter scripture reading with audio playback, verse-synced timing, glossary, swipe navigation, and a Hebrew/Greek parallel view
 - **Bible Stories** — OBS, John, TGS templates with multilingual text, images, and verse-synced audio (adopted from bibel-wiki)
 - **Browse** — hierarchical tree navigation of resources (terms, topics, entities, etc.) via backend API
 - **AI Search** — free keyword search + premium RAG-powered Q&A with citations
@@ -70,7 +70,7 @@ src/
     l/               # fallback pages for non-prerendered ISOs
   components/        # React islands (stories, browse, search, chunk)
   lib/
-    reader/          # Svelte Reader + Proskomma pipeline
+    reader/          # Svelte Reader (PKF/Proskomma, helloAO-full, DBT-flat) + parallel view
     api/             # Backend API client (search, ask, tree, chunk)
     bw/              # Adopted from bibel-wiki (audio, timing, content sources)
     data/            # Language names, regions, PKF info
