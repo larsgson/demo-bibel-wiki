@@ -29,11 +29,10 @@
         bookCode: string;
         chapter: number;
         iso: string;
-        /** DBT-style fileset id — only consulted by chapter-store's DBT/helloao
-         *  fallback tiers; PKF and the eng/helloAO-full-reader path (this
-         *  component's only callers today) never reach those, so an empty
-         *  string is safe here for now. Pass the real id once this is wired
-         *  into DbtChapterReader too. */
+        /** DBT-style fileset id — only consulted by chapter-store's DBT
+         *  fallback tier. Empty string is safe for PKF/helloAO-full
+         *  languages (never reach that tier); Reader.svelte passes the real
+         *  per-testament id for flat-mode (DBT-sourced) languages. */
         filesetId?: string;
     };
     let { bookCode, chapter, iso, filesetId = '' }: Props = $props();

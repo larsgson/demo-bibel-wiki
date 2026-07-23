@@ -7,11 +7,12 @@
  * of that, now folded away — see git history if that's ever needed again).
  *
  * ReaderLoader (client:only="react") resolves the language's text source
- * (PKF / helloAO-full / DBT-helloao) itself and either renders a
- * #reader-mount data-attribute div (PKF/helloAO-full — needs Reader.svelte,
- * mounted manually below since Svelte components can't be client:only from
- * an .astro file directly) or mounts <DbtChapterReader> itself directly (no
- * further action needed here for that path).
+ * (PKF / helloAO-full / DBT-flat — see Reader.svelte's own doc comments for
+ * what each means) and always renders a #reader-mount data-attribute div;
+ * Reader.svelte itself now covers every case (DbtChapterReader.tsx, the
+ * previous separate flat-text-only reader, has been retired), mounted
+ * manually below since Svelte components can't be client:only from an
+ * .astro file directly.
  */
 import { ReaderLoader } from "./ReaderLoader"
 
@@ -59,6 +60,9 @@ const { iso } = Astro.props as Props
         captionMode: mount.dataset.captionMode || "hide",
         media: JSON.parse(mount.dataset.media || "{}"),
         helloaoTranslationId: mount.dataset.helloaoTid || null,
+        flatFilesets: (mount.dataset.flatNt || mount.dataset.flatOt)
+          ? { nt: mount.dataset.flatNt || null, ot: mount.dataset.flatOt || null }
+          : null,
       },
     })
   })

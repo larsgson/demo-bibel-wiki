@@ -9,9 +9,15 @@
     } from 'svelte-gestures';
     import { fetchCatalog, chapterCount, type Catalog, type CatalogDoc } from './catalog';
     import { fetchHelloaoCatalog } from './helloaoCatalog';
+    import { buildStaticCatalog } from './staticCatalog';
     import { loadDocSet, isLoaded } from './store';
     import { fetchSofria, renderSofria, type RenderedChapter, type CaptionMode } from './sofria';
     import { fetchAndRenderHelloaoChapter } from './helloaoChapterRender';
+    import { renderFlatChapter } from './flatChapterRender';
+    import { loadChapter as loadFlatChapter } from '../../stores/chapter-store';
+    import { loadBookList } from '../bw/book-list';
+    import { nameFor } from '../data/languageNames';
+    import { getTestament } from '../bw/bible-utils';
     import type { MediaManifest, VideoEntry, AudioEntry } from '../data/pkfInfo';
     import { settings } from './settings';
     import SettingsPanel from './SettingsPanel.svelte';
@@ -50,6 +56,17 @@
         // the PKF/Proskomma pipeline. Not English/BSB-specific: any language
         // configured with a helloAO text source can use this.
         helloaoTranslationId?: string | null;
+        // DBT-style fileset ids, one per testament (DBT can use a different
+        // fileset for NT vs OT) — when set, chapters come from
+        // chapter-store.loadChapter's plain verse text (the DBT proxy has no
+        // headings/poetry/footnote structure, unlike PKF or helloAO's API —
+        // see flatChapterRender.ts). Only for provider === "dbt"; any
+        // helloAO-sourced language, "bsb"-flagged or not, uses
+        // helloaoTranslationId above instead, since that data IS just as
+        // rich as English/BSB's. The book/chapter catalog is synthesized
+        // from the static 66-book table (buildStaticCatalog) rather than
+        // fetched, since no live per-translation catalog exists for DBT.
+        flatFilesets?: { nt?: string | null; ot?: string | null } | null;
     };
     let {
         iso,
@@ -60,7 +77,8 @@
         figureUrls = {},
         captionMode = 'hide',
         media,
-        helloaoTranslationId = null
+        helloaoTranslationId = null,
+        flatFilesets = null
     }: Props = $props();
 
     let catalog = $state<Catalog | null>(null);
@@ -98,13 +116,17 @@
 
     onMount(async () => {
         saveLastIso(iso);
-        // Per-language app-config (attribution, text direction, default ref).
+        // Per-language app-config (attribution, text direction, default ref) —
+        // PKF-only (loadAppConfig gates on hasPkf internally), so this never
+        // resolves for flat-mode languages; their text direction instead
+        // falls back to languageNames.ts's own 'rtl' flag below.
         const appCfgPromise = loadAppConfig(iso).then((cfg) => {
             if (!cfg) return cfg;
             appCfg = cfg;
             if (cfg.collection?.textDirection) textDir = cfg.collection.textDirection;
             return cfg;
         });
+        if (flatFilesets && nameFor(iso)?.d === 'rtl') textDir = 'rtl';
         if (styleUrl) {
             // Swap in this language's CSS bundle. Any previously-injected link with
             // the same id gets removed first so only one language's styles are live.
@@ -121,16 +143,22 @@
         document.addEventListener('keydown', onGlobalKey);
         loadBookmarks();
         try {
-            catalog = helloaoTranslationId
-                ? await fetchHelloaoCatalog(helloaoTranslationId)
-                : await fetchCatalog(catalogUrl ?? '');
+            if (flatFilesets) {
+                const bookList = await loadBookList(iso);
+                const vernacular = bookList ? new Map(bookList.map((b) => [b.code, b.name])) : undefined;
+                catalog = buildStaticCatalog(iso, vernacular);
+            } else if (helloaoTranslationId) {
+                catalog = await fetchHelloaoCatalog(helloaoTranslationId);
+            } else {
+                catalog = await fetchCatalog(catalogUrl ?? '');
+            }
         } catch (e) {
             loadError = e instanceof Error ? e.message : String(e);
             return;
         }
         // Eagerly load the PKF binary in the background so the first chapter
         // open is instant instead of waiting for fetch + parse.
-        if (!helloaoTranslationId) ensurePkf();
+        if (!helloaoTranslationId && !flatFilesets) ensurePkf();
 
         // Initial visibility from the current pane — the default can be
         // overridden by a ?pane= signal (e.g. arriving on the study pane), which
@@ -227,6 +255,16 @@
         try {
             if (helloaoTranslationId) {
                 rendered = await fetchAndRenderHelloaoChapter(helloaoTranslationId, book.bookCode, ch);
+            } else if (flatFilesets) {
+                // DBT can fileset NT and OT separately — pick the one matching
+                // this book's testament, falling back to the other if unset
+                // (matches DbtChapterReader.tsx's prior selection exactly).
+                const testament = getTestament(book.bookCode);
+                const fsId = testament === 'ot'
+                    ? (flatFilesets.ot || flatFilesets.nt)
+                    : (flatFilesets.nt || flatFilesets.ot);
+                const verses = fsId ? await loadFlatChapter(book.bookCode, ch, fsId, iso) : null;
+                rendered = { html: renderFlatChapter(verses ?? []), footnotes: [], xrefs: [] };
             } else {
                 await ensurePkf();
                 const sofria = fetchSofria(docSetId, book.bookCode, ch);
@@ -491,6 +529,20 @@
         currentBook ? (currentBook.toc2 ?? currentBook.toc ?? currentBook.bookCode) : iso
     );
     let chapterLabel = $derived(String(currentChapter));
+    // ParallelView's target-language panel also goes through
+    // chapter-store.loadChapter directly (not this component's own render
+    // path), so it needs its own id: the same per-testament DBT fileset for
+    // flat-mode languages, or the "helloao:<tid>" form chapter-store already
+    // recognises (its eng/BSB special case doesn't cover other helloAO
+    // languages, e.g. luo/kik) for the rich-helloAO branch.
+    let currentFlatFilesetId = $derived.by(() => {
+        if (helloaoTranslationId) return `helloao:${helloaoTranslationId}`;
+        if (!flatFilesets || !currentBook) return '';
+        const testament = getTestament(currentBook.bookCode);
+        return (testament === 'ot'
+            ? (flatFilesets.ot || flatFilesets.nt)
+            : (flatFilesets.nt || flatFilesets.ot)) ?? '';
+    });
     function onGlobalClick(e: MouseEvent) {
         if (!popover) return;
         const target = e.target as Node | null;
@@ -860,7 +912,12 @@
 
             {#if mode === 'text' && $parallelViewStore && currentBook}
                 <div class="reader-body reader-body-parallel">
-                    <ParallelView bookCode={currentBook.bookCode} chapter={currentChapter} {iso} />
+                    <ParallelView
+                        bookCode={currentBook.bookCode}
+                        chapter={currentChapter}
+                        {iso}
+                        filesetId={currentFlatFilesetId}
+                    />
                 </div>
             {:else if mode === 'text'}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
