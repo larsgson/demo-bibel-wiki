@@ -1,0 +1,146 @@
+# Kenya — regional entry point.   Subdomain: ke.demo.bibel.wiki   ·   Path: /r/ke
+#
+# Single source of truth for the region (mirrors config/regions/mx.toml and
+# config/regions/id.toml). Drives the region landing page, the picker, and
+# any sub-region subdomains.
+#
+# Scope note: this is NOT "every language of Kenya" (there are 60-70+,
+# depending on how dialect clusters are counted). It's the intersection of
+# Kenya-tagged ISO 639-3 codes (Wikidata P17=Kenya, 73 candidates) against
+# the three content sources this app actually draws from — PKF
+# (cdn.bibel.wiki), DBT/Bible Brain (cdn.bibel.wiki/dbt/_catalog.json), and
+# helloAO (bible.helloao.org/api/available_translations.json) — so every
+# language listed here has at least one real fileset behind it (audio and/or
+# text; DBT audio-only languages still get a real reading experience via the
+# DbtChapterReader fallback, see src/components/ReaderLoader.tsx).
+#
+# cdn.bibel.wiki/dbt/_app/catalog-overlap.json was checked too but under-
+# counted badly here (22 of 73 vs. 42 found by checking PKF/DBT/helloAO
+# directly) — same false-negative pattern already seen for mx.toml's
+# tcf/tpl/tpx, worth remembering next time a region gets built from that
+# catalog alone.
+#
+# Excluded from the 42 "covered" candidates: Punjabi (pan) and Tamil (tam) —
+# real content exists (helloAO), but they're South Asian diaspora languages
+# in Nairobi, not indigenous Kenyan languages, so out of scope the same way
+# a hypothetical Chinese-diaspora language would be for mx.toml/id.toml.
+# Kenyan Sign Language (xki) has no fileset in any of the three sources and
+# isn't representable through this app's text-based content model anyway.
+#
+# Grouped by Kenya's eight historical provinces (Central, Coast, Eastern,
+# Nairobi, North Eastern, Nyanza, Rift Valley, Western) — replaced
+# administratively by 47 counties in 2013, but still the standard,
+# widely-understood ethnolinguistic reference frame (the same role Mexico's
+# states / Indonesia's islands play for their own pickers). A ~3-way
+# language-family split (Bantu/Nilotic/Cushitic) is kept as commented
+# reference data, same treatment as mx.toml's "by family" and id.toml's "by
+# island" alternates.
+
+code = "ke"
+name = { en = "Kenya", sw = "Kenya" }
+title = { en = "Your Kenyan Bible", sw = "Biblia Yako ya Kenya" }  # header title; hidden if unset
+defaultLanguage = "swh"   # primary language when entering with none chosen
+uiLanguage = "sw"         # entering this region DEFAULTS the UI to Swahili
+                          # (src/locales/sw.ts)
+
+# Bridge/trade languages — surfaced first; natural audio/study fallback.
+# Kiswahili is Kenya's national lingua franca; English is the other official
+# language and already has full reader support (see helloAO/BSB).
+tradeLanguages = ["swh", "eng"]
+
+# Every language in this region (ISO 639-3). 38 languages — see the scope
+# note above for why this isn't exhaustive.
+languages = [
+  "bxk", "coh", "cuh", "dav", "dig", "dsh", "dug", "ebu", "enb", "gax",
+  "guz", "ida", "kam", "kik", "kln", "ksb", "kuj", "lsm", "luo", "luy",
+  "mas", "mer", "mlk", "nle", "nyd", "nyf", "orc", "pkb", "pko", "rel",
+  "saq", "som", "spy", "ssn", "teo", "thk", "tuv", "tuy",
+]
+
+# ── Groupings ────────────────────────────────────────────────────────────────
+# Two kinds, by the `navigable` flag:
+#   navigable = false → a picker FILTER for language selection (no URL).
+#                       Auto-generated and ACTIVE.
+#   navigable = true  → a sub-region SUBDOMAIN  ke.<slug>.bibel.wiki  (hierarchical).
+#                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
+#                       its subdomain valid. Never auto-enabled.
+#
+# Only ONE grouping is ever rendered (whichever `[picker].filterBy` names) —
+# see src/pages/r/[region]/index.astro. The other grouping below is
+# reference data, ready to promote later.
+
+# --- By province (picker filter; active) ---
+[[grouping]]
+id = "province"
+navigable = false
+name = { en = "By province", sw = "Kwa mkoa" }
+
+  [[grouping.group]]
+  slug = "central"
+  name = { en = "Central", sw = "Kati" }
+  languages = ["cuh", "ebu", "kik", "mer", "thk"]
+  [[grouping.group]]
+  slug = "coast"
+  name = { en = "Coast", sw = "Pwani" }
+  languages = ["coh", "dav", "dig", "dug", "ksb", "nyf", "pkb", "ssn"]
+  [[grouping.group]]
+  slug = "eastern"
+  name = { en = "Eastern", sw = "Mashariki" }
+  languages = ["dsh", "gax", "kam", "mlk", "orc", "rel"]
+  [[grouping.group]]
+  slug = "north-eastern"
+  name = { en = "North Eastern", sw = "Kaskazini Mashariki" }
+  languages = ["som"]
+  [[grouping.group]]
+  slug = "nyanza"
+  name = { en = "Nyanza", sw = "Nyanza" }
+  languages = ["guz", "kuj", "luo"]
+  [[grouping.group]]
+  slug = "western"
+  name = { en = "Western", sw = "Magharibi" }
+  languages = ["bxk", "ida", "lsm", "luy", "nle", "nyd", "teo"]
+  [[grouping.group]]
+  slug = "rift-valley"
+  name = { en = "Rift Valley", sw = "Bonde la Ufa" }
+  languages = ["enb", "kln", "mas", "pko", "saq", "spy", "tuv", "tuy"]
+
+# --- By language family (COMMENTED OUT — reference data / future filter tab) ---
+#
+# [[grouping]]
+# id = "family"
+# navigable = false
+# name = { en = "By language family" }
+#
+#   [[grouping.group]]
+#   slug = "bantu"
+#   name = { en = "Bantu" }
+#   languages = ["bxk", "coh", "cuh", "dav", "dig", "dug", "ebu", "guz", "ida", "kam", "kik", "ksb", "kuj", "luy", "lsm", "mer", "mlk", "nle", "nyd", "nyf", "pkb", "ssn", "thk"]
+#   [[grouping.group]]
+#   slug = "nilotic"
+#   name = { en = "Nilotic" }
+#   languages = ["enb", "kln", "luo", "mas", "pko", "saq", "spy", "teo", "tuv", "tuy"]
+#   [[grouping.group]]
+#   slug = "cushitic"
+#   name = { en = "Cushitic" }
+#   languages = ["dsh", "gax", "orc", "rel", "som"]
+
+# ── Region landing page (/r/ke) ──────────────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+
+[landing]
+accentColor = "#006600"
+headline = { en = "The Bible in the languages of Kenya", sw = "Biblia katika lugha za Kenya" }
+subhead  = { en = "Read and listen to Scripture in Kenya's regional languages.", sw = "Soma na usikilize Maandiko katika lugha za mikoa ya Kenya." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Kenya", sw = "Lugha za Kenya" }
+filterBy = "province"   # which grouping powers the picker filter chips
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+
+[study]
+defaultStudyLanguage = "swh"

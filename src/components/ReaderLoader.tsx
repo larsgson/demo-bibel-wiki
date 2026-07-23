@@ -54,7 +54,7 @@ export function ReaderLoader({ iso: isoProp }: Props) {
   }
   if (error?.startsWith("NO_CHAPTER_READER:")) {
     // Non-.pkf language → full-chapter reader backed by DBT/helloao.
-    return <DbtChapterReader iso={iso} lang={iso === "eng" ? "en" : "es"} />
+    return <DbtChapterReader iso={iso} lang={uiLang} />
   }
   if (error) {
     return <div style={{ padding: "2rem", color: "rgb(180,80,20)" }}>{translate(uiLang, "reader.error")}: {error}</div>

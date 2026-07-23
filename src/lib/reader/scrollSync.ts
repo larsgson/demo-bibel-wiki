@@ -97,10 +97,23 @@ export function syncScrollPanels(
  * This re-derives alignment fresh on every scroll event instead: find the
  * verse element (`[data-verse="<n>"]`) currently at/just above the top of
  * the panel being scrolled, then scroll the other panel so the SAME verse
- * number sits at that same offset — falling back to the nearest verse
- * number actually present there if that exact one is missing. Self-
- * correcting rather than cumulative: a mismatch only ever throws off the
- * instant it happens, not everything after it.
+ * sits at the same *fractional* progress through its own height — falling
+ * back to the nearest verse number actually present there if that exact one
+ * is missing. Self-correcting rather than cumulative: a mismatch only ever
+ * throws off the instant it happens, not everything after it.
+ *
+ * Deliberately a *fraction* of the anchor verse's own height, not a raw
+ * pixel offset copied straight across: the two panels can render the same
+ * verse at wildly different heights (Hebrew word-by-word vs. compact
+ * prose). A raw pixel offset only works well when the source is the
+ * *taller* renderer — scrolling through one tall verse there gradually
+ * nudges the shorter target through several of its own verses, pixel by
+ * pixel. In reverse, a short source verse only ever produces a small pixel
+ * offset, so the moment the source crosses into its next verse, the taller
+ * target has to snap forward by a whole verse's height in a single jump
+ * instead of getting there gradually. Scaling by the anchor verse's own
+ * height on each side keeps the mapping proportional (and thus the motion
+ * smooth) regardless of which panel happens to be taller.
  */
 export function syncScrollPanelsByVerse(panelA: HTMLElement, panelB: HTMLElement): () => void {
     let ignoreA = false;
@@ -123,7 +136,15 @@ export function syncScrollPanelsByVerse(panelA: HTMLElement, panelB: HTMLElement
         return best;
     }
 
-    function topAnchor(panel: HTMLElement): { verse: number; offset: number } | null {
+    /** How far the panel's top edge sits into `el`, as a fraction of `el`'s
+     *  own rendered height (0 at `el`'s top, 1 at its bottom). */
+    function progressInto(panelTop: number, el: HTMLElement): number {
+        const rect = el.getBoundingClientRect();
+        if (rect.height <= 0) return 0;
+        return (panelTop - rect.top) / rect.height;
+    }
+
+    function topAnchor(panel: HTMLElement): { verse: number; progress: number } | null {
         const panelTop = panel.getBoundingClientRect().top;
         let anchor: HTMLElement | null = null;
         for (const item of panel.querySelectorAll<HTMLElement>('[data-verse]')) {
@@ -134,7 +155,7 @@ export function syncScrollPanelsByVerse(panelA: HTMLElement, panelB: HTMLElement
         if (!anchor) return null;
         const verse = Number(anchor.dataset.verse);
         if (!Number.isFinite(verse)) return null;
-        return { verse, offset: anchor.getBoundingClientRect().top - panelTop };
+        return { verse, progress: progressInto(panelTop, anchor) };
     }
 
     function mirror(source: HTMLElement, target: HTMLElement, clearIgnore: () => boolean) {
@@ -144,7 +165,8 @@ export function syncScrollPanelsByVerse(panelA: HTMLElement, panelB: HTMLElement
         const targetEl = findVerseElement(target, anchor.verse);
         if (!targetEl) return;
         const targetPanelTop = target.getBoundingClientRect().top;
-        const delta = targetEl.getBoundingClientRect().top - targetPanelTop - anchor.offset;
+        const targetRect = targetEl.getBoundingClientRect();
+        const delta = targetRect.top - targetPanelTop + anchor.progress * targetRect.height;
         if (Math.abs(delta) < MIN_MEANINGFUL_DELTA_PX) return;
         if (target === panelA) ignoreA = true;
         else ignoreB = true;

@@ -39,219 +39,221 @@ languages = [
 #                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
 #                       its subdomain valid. Never auto-enabled.
 
-# --- By language family (picker filter; active) ---
+# --- By state (picker filter; active) ---
+# "By language family" (below, commented out) had 32 groups, 14 of them
+# singletons — an unusably long trail of one-language chips as the DEFAULT
+# picker view (same problem id.toml hit and solved the same way — see its
+# own "By island" comment). "By state" groups more evenly.
 [[grouping]]
-id = "family"
+id = "state"
 navigable = false
-name = { en = "By language family", es = "Por familia lingüística" }
+name = { en = "By state", es = "Por estado" }
 
   [[grouping.group]]
-  slug = "zapotec"
-  name = { en = "Zapotec", es = "Zapoteco" }
-  languages = ["zaa", "zab", "zac", "zad", "zai", "zam", "zao", "zaq", "zar", "zas", "zat", "zav", "zaw", "zca", "zpc", "zpg", "zpi", "zpl", "zpm", "zpo", "zpq", "zpt", "zpu", "zpv", "zpz", "zsr", "ztl", "ztp", "ztq", "zts", "zty"]
+  slug = "oaxaca"
+  name = { en = "Oaxaca", es = "Oaxaca" }
+  languages = ["azg", "cco", "chd", "chq", "chz", "cle", "cnl", "cnt", "cpa", "cso", "cta", "ctp", "cuc", "cut", "cux", "huv", "jmx", "maj", "maq", "mau", "mbz", "mco", "mdv", "meh", "mie", "mig", "mih", "mil", "mio", "mir", "mix", "miy", "miz", "mjc", "mks", "mpm", "mto", "mxb", "mxq", "mxt", "mza", "nhy", "pls", "trc", "trq", "trs", "vmj", "vmy", "vmz", "xtd", "xtj", "xtn", "zaa", "zab", "zac", "zad", "zai", "zam", "zao", "zaq", "zar", "zas", "zat", "zav", "zaw", "zca", "zpc", "zpg", "zpi", "zpl", "zpm", "zpo", "zpq", "zpt", "zpu", "zpv", "zpz", "zsr", "ztl", "ztp", "ztq", "zts", "zty"]
   [[grouping.group]]
-  slug = "mixtec"
-  name = { en = "Mixtec", es = "Mixteco" }
-  languages = ["jmx", "mbz", "mdv", "meh", "mie", "mig", "mih", "mil", "mim", "mio", "mit", "mix", "miy", "miz", "mjc", "mks", "mpm", "mxb", "mxt", "mxv", "mza", "vmj", "xta", "xtd", "xtj", "xtn"]
+  slug = "puebla"
+  name = { en = "Puebla", es = "Puebla" }
+  languages = ["azz", "mit", "ncj", "nhi", "nsu", "poe", "tku", "too", "tos", "tqt"]
   [[grouping.group]]
-  slug = "nahuatl"
-  name = { en = "Nahuatl", es = "Náhuatl" }
-  languages = ["azd", "azz", "nch", "ncj", "ncl", "ngu", "nhe", "nhg", "nhi", "nhw", "nhy", "npl", "nsu", "nuz"]
+  slug = "guerrero"
+  name = { en = "Guerrero", es = "Guerrero" }
+  languages = ["amu", "mim", "mxv", "ngu", "nuz", "tcf", "tpl", "tpx", "xta"]
   [[grouping.group]]
-  slug = "chinantec"
-  name = { en = "Chinantec", es = "Chinanteco" }
-  languages = ["cco", "chq", "chz", "cle", "cnl", "cnt", "cpa", "cso", "cuc"]
+  slug = "veracruz"
+  name = { en = "Veracruz", es = "Veracruz" }
+  languages = ["nhe", "npl", "poi", "toc", "tpp", "tpt"]
   [[grouping.group]]
-  slug = "mazatec"
-  name = { en = "Mazatec", es = "Mazateco" }
-  languages = ["maj", "maq", "mau", "vmy", "vmz"]
+  slug = "chiapas"
+  name = { en = "Chiapas", es = "Chiapas" }
+  languages = ["ctu", "knj", "lac", "toj", "zos"]
   [[grouping.group]]
-  slug = "totonac"
-  name = { en = "Totonac", es = "Totonaco" }
-  languages = ["tku", "toc", "too", "tos", "tqt"]
+  slug = "hidalgo"
+  name = { en = "Hidalgo", es = "Hidalgo" }
+  languages = ["nch", "otm", "otn", "tee"]
   [[grouping.group]]
-  slug = "mixe"
-  name = { en = "Mixe", es = "Mixe" }
-  languages = ["mco", "mir", "mto", "mxq"]
+  slug = "chihuahua"
+  name = { en = "Chihuahua", es = "Chihuahua" }
+  languages = ["ntp", "tac", "var"]
   [[grouping.group]]
-  slug = "otomi"
-  name = { en = "Otomi", es = "Otomí" }
-  languages = ["otm", "otn", "otq", "ots"]
+  slug = "mexico"
+  name = { en = "México", es = "México" }
+  languages = ["maz", "ots", "pps"]
   [[grouping.group]]
-  slug = "popoloca"
-  name = { en = "Popoloca", es = "Popoloca" }
-  languages = ["pls", "poe", "pps"]
+  slug = "sonora"
+  name = { en = "Sonora", es = "Sonora" }
+  languages = ["mfy", "ood", "yaq"]
   [[grouping.group]]
-  slug = "tepehua"
-  name = { en = "Tepehua", es = "Tepehua" }
-  languages = ["tee", "tpp", "tpt"]
+  slug = "durango"
+  name = { en = "Durango", es = "Durango" }
+  languages = ["azd", "stp"]
   [[grouping.group]]
-  slug = "tlapanec"
-  name = { en = "Tlapanec", es = "Tlapaneco" }
-  languages = ["tcf", "tpl", "tpx"]
+  slug = "san-luis-potosi"
+  name = { en = "San Luis Potosí", es = "San Luis Potosí" }
+  languages = ["nhw", "pmq"]
   [[grouping.group]]
-  slug = "triqui"
-  name = { en = "Triqui", es = "Triqui" }
-  languages = ["trc", "trq", "trs"]
-  [[grouping.group]]
-  slug = "amuzgo"
-  name = { en = "Amuzgo", es = "Amuzgo" }
-  languages = ["amu", "azg"]
-  [[grouping.group]]
-  slug = "chatino"
-  name = { en = "Chatino", es = "Chatino" }
-  languages = ["cta", "ctp"]
-  [[grouping.group]]
-  slug = "chol"
-  name = { en = "Chol", es = "Chol" }
-  languages = ["chf", "ctu"]
-  [[grouping.group]]
-  slug = "cuicatec"
-  name = { en = "Cuicatec", es = "Cuicateco" }
-  languages = ["cut", "cux"]
-  [[grouping.group]]
-  slug = "tarahumara"
-  name = { en = "Tarahumara", es = "Tarahumara" }
-  languages = ["tac", "var"]
-  [[grouping.group]]
-  slug = "tepehuan"
-  name = { en = "Tepehuan", es = "Tepehuano" }
-  languages = ["ntp", "stp"]
-  [[grouping.group]]
-  slug = "akateko"
-  name = { en = "Akateko", es = "Akateko" }
-  languages = ["knj"]
-  [[grouping.group]]
-  slug = "chontal"
-  name = { en = "Chontal", es = "Chontal" }
-  languages = ["chd"]
-  [[grouping.group]]
-  slug = "cora"
-  name = { en = "Cora", es = "Cora" }
-  languages = ["cok"]
-  [[grouping.group]]
-  slug = "huave"
-  name = { en = "Huave", es = "Huave" }
-  languages = ["huv"]
-  [[grouping.group]]
-  slug = "huichol"
-  name = { en = "Huichol", es = "Huichol" }
+  slug = "jalisco"
+  name = { en = "Jalisco", es = "Jalisco" }
   languages = ["hch"]
   [[grouping.group]]
-  slug = "lacandon"
-  name = { en = "Lacandon", es = "Lacandón" }
-  languages = ["lac"]
+  slug = "michoacan"
+  name = { en = "Michoacán", es = "Michoacán" }
+  languages = ["ncl"]
   [[grouping.group]]
-  slug = "mayo"
-  name = { en = "Mayo", es = "Mayo" }
-  languages = ["mfy"]
+  slug = "morelos"
+  name = { en = "Morelos", es = "Morelos" }
+  languages = ["nhg"]
   [[grouping.group]]
-  slug = "mazahua"
-  name = { en = "Mazahua", es = "Mazahua" }
-  languages = ["maz"]
+  slug = "nayarit"
+  name = { en = "Nayarit", es = "Nayarit" }
+  languages = ["cok"]
   [[grouping.group]]
-  slug = "oodham"
-  name = { en = "O'odham", es = "O'odham" }
-  languages = ["ood"]
+  slug = "queretaro"
+  name = { en = "Querétaro", es = "Querétaro" }
+  languages = ["otq"]
   [[grouping.group]]
-  slug = "pame"
-  name = { en = "Pame", es = "Pame" }
-  languages = ["pmq"]
-  [[grouping.group]]
-  slug = "popoluca"
-  name = { en = "Popoluca", es = "Popoluca" }
-  languages = ["poi"]
-  [[grouping.group]]
-  slug = "tojolabal"
-  name = { en = "Tojolabal", es = "Tojolabal" }
-  languages = ["toj"]
-  [[grouping.group]]
-  slug = "yaqui"
-  name = { en = "Yaqui", es = "Yaqui" }
-  languages = ["yaq"]
-  [[grouping.group]]
-  slug = "zoque"
-  name = { en = "Zoque", es = "Zoque" }
-  languages = ["zos"]
+  slug = "tabasco"
+  name = { en = "Tabasco", es = "Tabasco" }
+  languages = ["chf"]
 
-# --- By state (sub-region subdomains; COMMENTED OUT — uncomment to enable) ---
-# Uncommenting a group below makes mx.<slug>.bibel.wiki a valid entry, e.g.
-# mx.oaxaca.bibel.wiki. Leave commented to keep only the country subdomain.
+# --- By language family (COMMENTED OUT — reference data / future filter tab) ---
 #
 # [[grouping]]
-# id = "state"
-# navigable = true
-# name = { en = "By state", es = "Por estado" }
+# id = "family"
+# navigable = false
+# name = { en = "By language family", es = "Por familia lingüística" }
 #
 #   [[grouping.group]]
-#   slug = "oaxaca"
-#   name = { en = "Oaxaca", es = "Oaxaca" }
-#   languages = ["azg", "cco", "chd", "chq", "chz", "cle", "cnl", "cnt", "cpa", "cso", "cta", "ctp", "cuc", "cut", "cux", "huv", "jmx", "maj", "maq", "mau", "mbz", "mco", "mdv", "meh", "mie", "mig", "mih", "mil", "mio", "mir", "mix", "miy", "miz", "mjc", "mks", "mpm", "mto", "mxb", "mxq", "mxt", "mza", "nhy", "pls", "trc", "trq", "trs", "vmj", "vmy", "vmz", "xtd", "xtj", "xtn", "zaa", "zab", "zac", "zad", "zai", "zam", "zao", "zaq", "zar", "zas", "zat", "zav", "zaw", "zca", "zpc", "zpg", "zpi", "zpl", "zpm", "zpo", "zpq", "zpt", "zpu", "zpv", "zpz", "zsr", "ztl", "ztp", "ztq", "zts", "zty"]
+#   slug = "zapotec"
+#   name = { en = "Zapotec", es = "Zapoteco" }
+#   languages = ["zaa", "zab", "zac", "zad", "zai", "zam", "zao", "zaq", "zar", "zas", "zat", "zav", "zaw", "zca", "zpc", "zpg", "zpi", "zpl", "zpm", "zpo", "zpq", "zpt", "zpu", "zpv", "zpz", "zsr", "ztl", "ztp", "ztq", "zts", "zty"]
 #   [[grouping.group]]
-#   slug = "puebla"
-#   name = { en = "Puebla", es = "Puebla" }
-#   languages = ["azz", "mit", "ncj", "nhi", "nsu", "poe", "tku", "too", "tos", "tqt"]
+#   slug = "mixtec"
+#   name = { en = "Mixtec", es = "Mixteco" }
+#   languages = ["jmx", "mbz", "mdv", "meh", "mie", "mig", "mih", "mil", "mim", "mio", "mit", "mix", "miy", "miz", "mjc", "mks", "mpm", "mxb", "mxt", "mxv", "mza", "vmj", "xta", "xtd", "xtj", "xtn"]
 #   [[grouping.group]]
-#   slug = "guerrero"
-#   name = { en = "Guerrero", es = "Guerrero" }
-#   languages = ["amu", "mim", "mxv", "ngu", "nuz", "tcf", "tpl", "tpx", "xta"]
+#   slug = "nahuatl"
+#   name = { en = "Nahuatl", es = "Náhuatl" }
+#   languages = ["azd", "azz", "nch", "ncj", "ncl", "ngu", "nhe", "nhg", "nhi", "nhw", "nhy", "npl", "nsu", "nuz"]
 #   [[grouping.group]]
-#   slug = "veracruz"
-#   name = { en = "Veracruz", es = "Veracruz" }
-#   languages = ["nhe", "npl", "poi", "toc", "tpp", "tpt"]
+#   slug = "chinantec"
+#   name = { en = "Chinantec", es = "Chinanteco" }
+#   languages = ["cco", "chq", "chz", "cle", "cnl", "cnt", "cpa", "cso", "cuc"]
 #   [[grouping.group]]
-#   slug = "chiapas"
-#   name = { en = "Chiapas", es = "Chiapas" }
-#   languages = ["ctu", "knj", "lac", "toj", "zos"]
+#   slug = "mazatec"
+#   name = { en = "Mazatec", es = "Mazateco" }
+#   languages = ["maj", "maq", "mau", "vmy", "vmz"]
 #   [[grouping.group]]
-#   slug = "hidalgo"
-#   name = { en = "Hidalgo", es = "Hidalgo" }
-#   languages = ["nch", "otm", "otn", "tee"]
+#   slug = "totonac"
+#   name = { en = "Totonac", es = "Totonaco" }
+#   languages = ["tku", "toc", "too", "tos", "tqt"]
 #   [[grouping.group]]
-#   slug = "chihuahua"
-#   name = { en = "Chihuahua", es = "Chihuahua" }
-#   languages = ["ntp", "tac", "var"]
+#   slug = "mixe"
+#   name = { en = "Mixe", es = "Mixe" }
+#   languages = ["mco", "mir", "mto", "mxq"]
 #   [[grouping.group]]
-#   slug = "mexico"
-#   name = { en = "México", es = "México" }
-#   languages = ["maz", "ots", "pps"]
+#   slug = "otomi"
+#   name = { en = "Otomi", es = "Otomí" }
+#   languages = ["otm", "otn", "otq", "ots"]
 #   [[grouping.group]]
-#   slug = "sonora"
-#   name = { en = "Sonora", es = "Sonora" }
-#   languages = ["mfy", "ood", "yaq"]
+#   slug = "popoloca"
+#   name = { en = "Popoloca", es = "Popoloca" }
+#   languages = ["pls", "poe", "pps"]
 #   [[grouping.group]]
-#   slug = "durango"
-#   name = { en = "Durango", es = "Durango" }
-#   languages = ["azd", "stp"]
+#   slug = "tepehua"
+#   name = { en = "Tepehua", es = "Tepehua" }
+#   languages = ["tee", "tpp", "tpt"]
 #   [[grouping.group]]
-#   slug = "san-luis-potosi"
-#   name = { en = "San Luis Potosí", es = "San Luis Potosí" }
-#   languages = ["nhw", "pmq"]
+#   slug = "tlapanec"
+#   name = { en = "Tlapanec", es = "Tlapaneco" }
+#   languages = ["tcf", "tpl", "tpx"]
 #   [[grouping.group]]
-#   slug = "jalisco"
-#   name = { en = "Jalisco", es = "Jalisco" }
-#   languages = ["hch"]
+#   slug = "triqui"
+#   name = { en = "Triqui", es = "Triqui" }
+#   languages = ["trc", "trq", "trs"]
 #   [[grouping.group]]
-#   slug = "michoacan"
-#   name = { en = "Michoacán", es = "Michoacán" }
-#   languages = ["ncl"]
+#   slug = "amuzgo"
+#   name = { en = "Amuzgo", es = "Amuzgo" }
+#   languages = ["amu", "azg"]
 #   [[grouping.group]]
-#   slug = "morelos"
-#   name = { en = "Morelos", es = "Morelos" }
-#   languages = ["nhg"]
+#   slug = "chatino"
+#   name = { en = "Chatino", es = "Chatino" }
+#   languages = ["cta", "ctp"]
 #   [[grouping.group]]
-#   slug = "nayarit"
-#   name = { en = "Nayarit", es = "Nayarit" }
+#   slug = "chol"
+#   name = { en = "Chol", es = "Chol" }
+#   languages = ["chf", "ctu"]
+#   [[grouping.group]]
+#   slug = "cuicatec"
+#   name = { en = "Cuicatec", es = "Cuicateco" }
+#   languages = ["cut", "cux"]
+#   [[grouping.group]]
+#   slug = "tarahumara"
+#   name = { en = "Tarahumara", es = "Tarahumara" }
+#   languages = ["tac", "var"]
+#   [[grouping.group]]
+#   slug = "tepehuan"
+#   name = { en = "Tepehuan", es = "Tepehuano" }
+#   languages = ["ntp", "stp"]
+#   [[grouping.group]]
+#   slug = "akateko"
+#   name = { en = "Akateko", es = "Akateko" }
+#   languages = ["knj"]
+#   [[grouping.group]]
+#   slug = "chontal"
+#   name = { en = "Chontal", es = "Chontal" }
+#   languages = ["chd"]
+#   [[grouping.group]]
+#   slug = "cora"
+#   name = { en = "Cora", es = "Cora" }
 #   languages = ["cok"]
 #   [[grouping.group]]
-#   slug = "queretaro"
-#   name = { en = "Querétaro", es = "Querétaro" }
-#   languages = ["otq"]
+#   slug = "huave"
+#   name = { en = "Huave", es = "Huave" }
+#   languages = ["huv"]
 #   [[grouping.group]]
-#   slug = "tabasco"
-#   name = { en = "Tabasco", es = "Tabasco" }
-#   languages = ["chf"]
-
+#   slug = "huichol"
+#   name = { en = "Huichol", es = "Huichol" }
+#   languages = ["hch"]
+#   [[grouping.group]]
+#   slug = "lacandon"
+#   name = { en = "Lacandon", es = "Lacandón" }
+#   languages = ["lac"]
+#   [[grouping.group]]
+#   slug = "mayo"
+#   name = { en = "Mayo", es = "Mayo" }
+#   languages = ["mfy"]
+#   [[grouping.group]]
+#   slug = "mazahua"
+#   name = { en = "Mazahua", es = "Mazahua" }
+#   languages = ["maz"]
+#   [[grouping.group]]
+#   slug = "oodham"
+#   name = { en = "O'odham", es = "O'odham" }
+#   languages = ["ood"]
+#   [[grouping.group]]
+#   slug = "pame"
+#   name = { en = "Pame", es = "Pame" }
+#   languages = ["pmq"]
+#   [[grouping.group]]
+#   slug = "popoluca"
+#   name = { en = "Popoluca", es = "Popoluca" }
+#   languages = ["poi"]
+#   [[grouping.group]]
+#   slug = "tojolabal"
+#   name = { en = "Tojolabal", es = "Tojolabal" }
+#   languages = ["toj"]
+#   [[grouping.group]]
+#   slug = "yaqui"
+#   name = { en = "Yaqui", es = "Yaqui" }
+#   languages = ["yaq"]
+#   [[grouping.group]]
+#   slug = "zoque"
+#   name = { en = "Zoque", es = "Zoque" }
+#   languages = ["zos"]
+#
 # ── Region landing page (/r/mx) ──────────────────────────────────────────────
 
 [landing]
@@ -267,7 +269,7 @@ subhead  = { en = "Read and listen to Scripture in Mexican indigenous languages.
 
 [picker]
 tierLabel = { en = "Languages of Mexico", es = "Lenguas de México" }
-filterBy = "family"   # which grouping powers the picker filter chips
+filterBy = "state"   # which grouping powers the picker filter chips
 
 # ── Study + SEO ──────────────────────────────────────────────────────────────
 

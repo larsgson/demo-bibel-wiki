@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
-import { loadLanguageData } from "../stores/language-store"
 import { loadChapter } from "../stores/chapter-store"
-import { parseTextFilesetId } from "../lib/bw/fileset-utils"
+import { resolveTextSource } from "../lib/bw/source-catalog"
 import { getTestament } from "../lib/bw/bible-utils"
 import { loadBookList } from "../lib/bw/book-list"
 import { t } from "../lib/bw/ui-locales"
@@ -16,6 +15,16 @@ interface Verse { num: number; text: string }
  * languages). Reuses chapter-store.loadChapter (contrib → helloao → DBT), the
  * same path the story reader already uses for verse text — so anything that
  * works in stories works here, with simple book + chapter navigation.
+ *
+ * Text fileset resolution goes through source-catalog.ts (the build-time-
+ * baked cdn.bibel.wiki text-provider catalog) — NOT loadLanguageData()
+ * (stores/language-store.ts), which reads the STORY-content manifest
+ * (public/ALL-langs-data/manifest.json, from bible-story-builder). That
+ * manifest only covers languages with OBS/TGS/John story content, a
+ * different and much narrower set than "has real Bible text" — gating this
+ * reader on it meant languages with real DBT/helloAO text but no story
+ * content (most of config/regions/ke.toml's, for one) showed "no data" even
+ * though chapter-store.loadChapter could actually fetch their text fine.
  */
 const POS_KEY = "bw-last-position"
 
@@ -28,7 +37,7 @@ function savedPosition(): { book: string; chapter: number } | null {
   }
 }
 
-export function DbtChapterReader({ iso, lang = "es" }: { iso: string; lang?: "en" | "es" }) {
+export function DbtChapterReader({ iso, lang = "en" }: { iso: string; lang?: string }) {
   const [filesets, setFilesets] = useState<{ nt: string; ot: string } | null>(null)
   const [canon, setCanon] = useState<"nt" | "ot" | "full">("full")
   const [bookCode, setBookCode] = useState(() => savedPosition()?.book || "JHN")
@@ -56,17 +65,25 @@ export function DbtChapterReader({ iso, lang = "es" }: { iso: string; lang?: "en
     }
   }, [])
 
-  // Resolve the text fileset(s) for the language once.
+  // Resolve the text fileset(s) for the language once, via the build-time
+  // text-source catalog (see the file header for why not loadLanguageData()).
   useEffect(() => {
     let alive = true
-    loadLanguageData(iso).then((ld: any) => {
+    Promise.all([resolveTextSource(iso, "nt"), resolveTextSource(iso, "ot")]).then(([nt, ot]) => {
       if (!alive) return
-      if (!ld) { setStatus("nodata"); return }
-      const cd = ld.canonData
-      const nt = parseTextFilesetId(cd?.nt?.data?.t ?? ld.data?.t, cd?.nt?.distinctId ?? ld.distinctId)
-      const ot = parseTextFilesetId(cd?.ot?.data?.t ?? ld.data?.t, cd?.ot?.distinctId ?? ld.distinctId)
-      setFilesets({ nt, ot })
-      setCanon((ld.canon as "nt" | "ot" | "full") || "nt")
+      // chapter-store.loadChapter's filesetId convention: "helloao:<id>" for
+      // helloAO, the raw DBT abbreviation for dbt. pkf never reaches this
+      // component (ReaderLoader routes pkf languages to Reader.svelte
+      // instead), and has no fileset id to give here anyway.
+      const fsId = (r: typeof nt) => {
+        if (!r || !r.id) return null
+        return r.provider === "helloao" ? `helloao:${r.id}` : r.id
+      }
+      const ntId = fsId(nt)
+      const otId = fsId(ot)
+      if (!ntId && !otId) { setStatus("nodata"); return }
+      setFilesets({ nt: ntId ?? "", ot: otId ?? "" })
+      setCanon(ntId && otId ? "full" : ntId ? "nt" : "ot")
     })
     loadBookList(iso).then((list) => {
       if (alive && list) setVernacular(new Map(list.map((b) => [b.code, b.name])))

@@ -9,8 +9,9 @@ import { ar } from "../../locales/ar"
 import { ro } from "../../locales/ro"
 import { zh } from "../../locales/zh"
 import { id } from "../../locales/id"
+import { sw } from "../../locales/sw"
 
-const locales: Record<string, any> = { en, fr, de, es, pt, ru, hi, ar, ro, zh, id }
+const locales: Record<string, any> = { en, fr, de, es, pt, ru, hi, ar, ro, zh, id, sw }
 const defaultLocale = "en"
 
 const localeMap: Record<string, string> = {
@@ -26,6 +27,8 @@ const localeMap: Record<string, string> = {
   cmn: "zh",
   zho: "zh",
   ind: "id",
+  swh: "sw",
+  swa: "sw",
   en: "en",
   fr: "fr",
   de: "de",
@@ -37,6 +40,7 @@ const localeMap: Record<string, string> = {
   ro: "ro",
   zh: "zh",
   id: "id",
+  sw: "sw",
 }
 
 function hasLocale(langCode: string): boolean {

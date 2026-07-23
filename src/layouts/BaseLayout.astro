@@ -246,12 +246,23 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       import { t } from "../lib/bw/ui-locales"
 
       import { $selectedIso } from "../stores/iso-store"
-      import { $activeRegion } from "../stores/region-store"
+      import { $activeRegion, setRegion, resolveRegionCode } from "../stores/region-store"
+      import { regionForIso } from "../lib/data/regions"
       import { regionConfigByCode, uiLangForRegion } from "../lib/data/region-config"
 
       initIsoFromUrl()
       initApiConfig()
       initSearchMode()
+
+      // $activeRegion previously had no initializer anywhere in the app —
+      // every uiLangForRegion() read (header title, ReaderLoader, Reader.svelte,
+      // StandardBottomBar, ...) was silently seeing null and falling back to
+      // "en"/"Bibel Wiki" regardless of which region's language a visitor was
+      // actually reading. Explicit URL/subdomain signal wins (region landing
+      // pages, mx.demo.bibel.wiki); otherwise infer it from the ISO being read
+      // (regionForIso), which covers bare /<iso>/ reader URLs — the common
+      // case once a visitor has clicked through from a region's picker.
+      setRegion(resolveRegionCode() ?? regionForIso($selectedIso.get())?.id ?? null)
 
       // UI level gear + popover
       const levelBtn = document.getElementById("ui-level-btn")!

@@ -243,19 +243,30 @@ if (existsSync(join(PUBLIC_DIR, "ALL-langs-data", "manifest.json"))) {
 
 // ── 3. Source catalog (per-language text-provider resolution) ──
 //
-// cdn.bibel.wiki/dbt/_app/catalog-overlap.json already computes, build-side,
-// which provider (pkf/helloao/dbt) is the right default per language+canon,
-// with priority pkf > helloao > dbt and dedup/overlap probing behind it. That
-// changes rarely (only when the CDN's own catalog is regenerated), so we bake
-// a small derived lookup here rather than re-deriving it — via live probes
-// (info.json presence checks, the old helloao-crosswalk fetch, filtering
-// helloAO's full 4000+-translation list client-side) — on every chapter load.
+// cdn.bibel.wiki/dbt/_app/catalog-overlap.json computes, build-side, which
+// translations exist per language+canon and how they relate (near-duplicate
+// clustering via text-similarity probing). That changes rarely (only when
+// the CDN's own catalog is regenerated), so we bake a small derived lookup
+// here rather than re-deriving a provider/id per chapter load at runtime.
 //
-// The DERIVED file only resolves the PROVIDER, plus a translation id when the
-// catalog has exactly one candidate for that provider. When several exist
-// (e.g. English has 34 helloAO translations), `id` is left out — the app's
-// own config/bible-sources.json curated override (or a hardcoded default,
-// e.g. "BSB" for English) still wins in that case. See src/lib/bw/version-config.ts.
+// Schema (as of 2026-07): `entries` is `[iso, canon, info]`, ONE ROW PER
+// DISTINCT-TRANSLATION CLUSTER (not per provider) — a language+canon can
+// have many rows, each `info.ids` a same-content group across providers
+// (e.g. `["dbt:ENGKJV", "helloao:eng_kjv"]`) with `info.default` naming the
+// preferred id WITHIN that one cluster. There's no single "the" default for
+// the whole iso+canon anymore (earlier schema versions had one at the top
+// level as `defaults["iso:canon"]` — that key is gone). So: collect every
+// id across every cluster for this iso+canon (preferring each cluster's own
+// `default` first), then pick by provider priority (`overlap.priority`,
+// currently pkf > helloao > dbt) — first id found for the top-priority
+// provider present wins.
+//
+// The DERIVED file only resolves the PROVIDER, plus a translation id when
+// resolvable (see above). When a language has many same-priority-provider
+// clusters with no clear single winner, this just takes the first one
+// encountered — arbitrary, but deterministic; app-level curated overrides
+// (config/bible-sources.json) still win over this for any language that
+// actually needs a specific pick. See src/lib/bw/version-config.ts.
 
 if (existsSync(SOURCE_CATALOG_PATH)) {
   console.log(`Source catalog already present at ${SOURCE_CATALOG_PATH} — skipping.`)
@@ -266,19 +277,38 @@ if (existsSync(SOURCE_CATALOG_PATH)) {
     const res = await fetch("https://cdn.bibel.wiki/dbt/_app/catalog-overlap.json")
     if (!res.ok) throw new Error(`fetch catalog-overlap.json: ${res.status}`)
     const overlap = await res.json()
+    const priority = overlap.priority ?? ["pkf", "helloao", "dbt"]
 
-    // First candidate id per iso+canon+provider (order as published).
-    const idByGroup = new Map()
-    for (const [iso, canon, provider, id] of overlap.entries ?? []) {
-      const key = `${iso}:${canon}:${provider}`
-      if (!idByGroup.has(key)) idByGroup.set(key, id)
+    // Group every cluster row by iso+canon first.
+    const byIsoCanon = new Map()
+    for (const [iso, canon, info] of overlap.entries ?? []) {
+      const key = `${iso}:${canon}`
+      if (!byIsoCanon.has(key)) byIsoCanon.set(key, [])
+      byIsoCanon.get(key).push(info)
     }
 
-    for (const [key, provider] of Object.entries(overlap.defaults ?? {})) {
+    for (const [key, rows] of byIsoCanon) {
       const [iso, canon] = key.split(":")
-      const id = provider === "pkf" ? undefined : idByGroup.get(`${iso}:${canon}:${provider}`)
+      // Each cluster's own preferred id goes first, then its other ids.
+      const allIds = []
+      for (const info of rows) {
+        const preferred = info.default
+        if (preferred) allIds.push(preferred)
+        for (const id of info.ids ?? []) {
+          if (id !== preferred) allIds.push(id)
+        }
+      }
+      let resolved = null
+      for (const provider of priority) {
+        const match = allIds.find((x) => x.startsWith(provider + ":"))
+        if (match) {
+          resolved = { provider, id: match.slice(provider.length + 1) }
+          break
+        }
+      }
+      if (!resolved) continue
       catalog[iso] ??= {}
-      catalog[iso][canon] = id ? { provider, id } : { provider }
+      catalog[iso][canon] = resolved.provider === "pkf" ? { provider: "pkf" } : resolved
     }
 
     mkdirSync("data", { recursive: true })
