@@ -1,5 +1,6 @@
 import manifest from '../../../data/pkf/manifest.json';
 import licenses from '../../../config/licenses.json';
+import sourceCatalog from '../../../data/source-catalog.json';
 import { regionConfigs } from './region-config';
 
 // ISOs explicitly excluded from the public data release (non-CC content).
@@ -62,6 +63,15 @@ export const languages: Language[] = normalizeManifestLanguages(manifest.languag
 
 export const languagesByIso = new Map<string, Language>(languages.map((l) => [l.iso, l]));
 
+// ISOs with a build-time-resolved text source (data/source-catalog.json —
+// see scripts/fetch-data.mjs and src/lib/bw/source-catalog.ts) that ISN'T
+// PKF: helloAO or DBT. "available" below used to mean "has PKF data" only,
+// which was accurate back when PKF was the only reader source — regions
+// built entirely from non-PKF content (e.g. config/regions/ke.toml, whose
+// languages are deliberately PKF+helloAO+DBT) showed 0 available languages
+// on the landing page despite Reader.svelte being able to read most of them.
+const catalogedIsos = new Set(Object.keys(sourceCatalog));
+
 // Build the region list from the per-region TOML configs (config/regions/*.toml).
 // Each config is a top-level region (country). License-excluded ISOs are dropped
 // from the displayed membership so they don't appear in the UI grid.
@@ -69,7 +79,7 @@ const builtRegions: Region[] = regionConfigs.map((rc) => {
     const isos = Array.from(new Set(rc.languages))
         .filter((iso) => !excludedIsos.has(iso))
         .sort();
-    const available = isos.filter((iso) => languagesByIso.has(iso));
+    const available = isos.filter((iso) => languagesByIso.has(iso) || catalogedIsos.has(iso));
     return {
         id: rc.code,
         displayName: rc.name.es ?? rc.name.en ?? rc.code,
