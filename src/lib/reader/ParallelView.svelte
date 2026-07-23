@@ -17,7 +17,7 @@
     import { fetchShoreshChapter, groupWordsByVerse, type ShoreshWord } from './shoresh';
     import { loadChapter } from '../../stores/chapter-store';
     import { getTestament } from '../bw/bible-utils';
-    import { syncScrollPanels, resetScrollPanels } from './scrollSync';
+    import { syncScrollPanelsByVerse, resetScrollPanels } from './scrollSync';
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
@@ -114,7 +114,7 @@
 
     $effect(() => {
         if (!originalEl || !targetEl) return;
-        return syncScrollPanels(originalEl, targetEl);
+        return syncScrollPanelsByVerse(originalEl, targetEl);
     });
 
     $effect(() => {
@@ -141,7 +141,7 @@
             <div class="alert alert-error text-sm">{tr('noContent')}</div>
         {:else}
             {#each originalGroups as group (group.verse)}
-                <p class="parallel-verse">
+                <p class="parallel-verse" data-verse={group.verse}>
                     <span class="v">{group.verse}</span>
                     {#each group.words as word (word.id)}<span
                             class="parallel-word"
@@ -159,7 +159,7 @@
             <div class="alert alert-error text-sm">{tr('noContent')}</div>
         {:else}
             {#each targetVerses as v (v.num)}
-                <p class="parallel-verse"><span class="v">{v.num}</span> {v.text}</p>
+                <p class="parallel-verse" data-verse={v.num}><span class="v">{v.num}</span> {v.text}</p>
             {/each}
         {/if}
     </section>
@@ -185,6 +185,15 @@
         overflow-y: auto;
         overflow-wrap: break-word;
         padding: 0.75em 0.9em;
+        /* Scroll stays fully functional (scrollSync needs a real scrollTop
+         * to sync against) — only the visible track is hidden, so there's
+         * one scroll affordance (the page's own) instead of a scrollbar per
+         * panel plus the page's. */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .parallel-panel::-webkit-scrollbar {
+        display: none;
     }
     .parallel-panel-original {
         border-bottom: 1px solid rgba(0, 11, 99, 0.12);
@@ -198,7 +207,7 @@
     }
     .parallel-panel-greek {
         font-family: 'SBL Greek', 'Gentium Plus', system-ui, sans-serif;
-        font-size: 0.95em;
+        font-size: 0.85em;
     }
     .parallel-verse {
         margin: 0 0 0.6em;
