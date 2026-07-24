@@ -63,6 +63,11 @@ const title = rc.name[lang] ?? rc.code
     >
       <h1>{rc.landing?.headline?.[lang] ?? title}</h1>
       {rc.landing?.subhead?.[lang] && <p>{rc.landing.subhead[lang]}</p>}
+      <div class="region-hero-actions">
+        <button type="button" class="region-all-btn" id="region-all-btn">
+          🌐 {tr("searchAll")}
+        </button>
+      </div>
     </section>
 
     {tradeLangs.length > 0 && (
@@ -111,6 +116,14 @@ const title = rc.name[lang] ?? rc.code
       )}
     </section>
   </div>
+
+  <script is:inline>
+    // Region landing: the "search all languages" button opens the header picker
+    // (full 2000+ list, global search) — Option 2's escape hatch.
+    document.getElementById("region-all-btn")?.addEventListener("click", () => {
+      window.dispatchEvent(new CustomEvent("open-language-picker"))
+    })
+  </script>
 
   <script>
     // Start a PKF language's full-Bible binary downloading as soon as the
