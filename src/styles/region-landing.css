@@ -42,30 +42,6 @@
 }
 .region-hero.has-image h1 { color: #fff; }
 .region-hero.has-image p { color: rgba(255, 255, 255, 0.92); }
-.region-hero.has-image .region-all-btn {
-  background: #fff;
-  color: var(--accent);
-}
-
-.region-hero-actions {
-  margin-top: 1.25rem;
-}
-
-.region-all-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  padding: 0.55rem 1.1rem;
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.region-all-btn:hover { opacity: 0.92; }
 
 /* Trade/bridge language callout — deliberately separate from .region-groups
    so it never reads as "one of the region's languages"; it's the fallback
