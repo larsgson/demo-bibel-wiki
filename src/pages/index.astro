@@ -7,10 +7,16 @@ import { displayName, altName } from "../lib/data/languageNames"
 import { en as t } from "../locales/en"
 import "../styles/home-landing.css"
 
-// Cards: one per configured region (config/regions/*.toml), plus a fixed
-// "English (BSB)" entry — this page is a router into those, not a second
-// copy of what /r/<code>/ already does with proper island/family grouping.
-const regionCards = regions.map((r) => {
+// Cards: one per configured region (config/regions/*.toml) NOT marked
+// unlisted (see RegionConfig.landing.unlisted), plus a fixed "English (BSB)"
+// entry — this page is a router into those, not a second copy of what
+// /r/<code>/ already does with proper island/family grouping. A region
+// marked unlisted (e.g. config/regions/za.toml, still thin on content) stays
+// fully reachable at /r/<code>/ and its subdomain redirect — it's just not
+// promoted from here yet.
+const listedRegions = regions.filter((r) => !regionConfigByCode.get(r.id)?.landing?.unlisted)
+
+const regionCards = listedRegions.map((r) => {
   const cfg = regionConfigByCode.get(r.id)
   return {
     id: r.id,
@@ -23,7 +29,8 @@ const regionCards = regions.map((r) => {
 })
 
 // Search still needs the flat iso list (region cards only link out to /r/<code>/,
-// they don't enumerate languages here).
+// they don't enumerate languages here). Only from listed regions — an
+// unlisted region's languages shouldn't surface here either.
 const seen = new Set<string>()
 const allLanguages: Array<{
   iso: string
@@ -32,7 +39,7 @@ const allLanguages: Array<{
   regionId: string
   regionName: string
 }> = []
-for (const r of regions) {
+for (const r of listedRegions) {
   for (const iso of r.available) {
     if (seen.has(iso)) continue
     seen.add(iso)

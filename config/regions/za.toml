@@ -1,0 +1,195 @@
+# South Africa — regional entry point.   Subdomain: za.demo.bibel.wiki   ·   Path: /r/za
+#
+# Single source of truth for the region (mirrors config/regions/mx.toml,
+# config/regions/id.toml, config/regions/ke.toml). Drives the region landing
+# page, the picker, and any sub-region subdomains.
+#
+# Scope note — READ BEFORE ADDING LANGUAGES: unlike mx/id/ke, coverage here is
+# thin. Built the same way ke.toml was (South Africa-tagged ISO 639-3 codes
+# via Wikidata P17=South Africa (Q258), 31 candidates), but with an extra
+# wrinkle ke.toml's languages didn't hit: this app's ACTUAL text-source
+# resolution (src/lib/bw/source-catalog.ts, data/source-catalog.json) is
+# derived at build time from cdn.bibel.wiki/dbt/_app/catalog-overlap.json —
+# NOT from DBT's raw cdn.bibel.wiki/dbt/_catalog.json directly. Checking the
+# raw DBT catalog directly (same technique ke.toml used to correct for
+# catalog-overlap.json's under-counting) finds nso and tso — but
+# catalog-overlap.json itself has ZERO entries for either (confirmed live,
+# not a staleness issue), so the app cannot currently resolve them no matter
+# how fresh a local rebuild is. Only 1 of the 12 languages below is actually
+# reachable in the running app today: tsn (helloAO, NT+OT). nso and tso are
+# listed anyway so they light up automatically once cdn.bibel.wiki's own
+# catalog-overlap derivation adds them (or this app's fetch-data.mjs is
+# extended to also scan the raw DBT catalog — out of scope here).
+#
+# Separately: PKF, DBT, and helloAO all have ZERO entries — raw catalog or
+# derived — for Zulu, Xhosa, Afrikaans, Sesotho, Swazi, Venda, Southern
+# Ndebele, or Khoekhoe/Nǁng, despite these being major, well-established
+# languages. Likely cause: PKF (Scripture Earth) is scoped to
+# minority/unreached languages, so it deliberately excludes South Africa's
+# already-well-served official languages; those established Bible Society
+# translations then just aren't in DBT's or helloAO's free/open-license
+# catalogs either (a licensing gap, not a translation-availability gap — the
+# actual translations exist, just not through these three pipelines).
+# Revisit if a new source is added.
+#
+# Excluded entirely from the 12: diaspora languages (Punjabi pan, Tamil tam,
+# Yiddish yid, Slovene slv — same treatment as mx/ke excluding non-indigenous
+# communities), South African Sign Language (sfs — no text-based fileset
+# model, same as ke.toml's xki exclusion), urban creoles/argots/pidgins
+# (Tsotsitaal fly, Camtho cmt, Gayle gic, Oorlams oor, Fanagalo fng — informal
+# registers, not real Bible-translation targets), and Khoisan languages
+# Wikidata itself marks functionally extinct with no living speaker
+# community (ǀXam xam, ǁXegwi xeg, Korana kqz, Seroa kqu, ǂUngkue gku) —
+# unlike Nǁng (ngh), which is critically endangered but still has a
+# documented living-speaker community.
+#
+# Grouped by language family (Nguni / Sotho-Tswana / Tsonga / Venda /
+# Khoisan / Germanic) rather than province — with only 12 languages, province
+# groupings would be sparser and less meaningful than they are for mx/ke; an
+# approximate by-province mapping is kept as commented reference data, same
+# treatment as ke.toml's "by family" alternate.
+
+code = "za"
+name = { en = "South Africa", es = "Sudáfrica" }
+title = { en = "Your South African Bible" }  # header title; hidden if unset
+defaultLanguage = "eng"   # primary language when entering with none chosen —
+                          # the only language below with full reader support
+uiLanguage = "en"         # entering this region DEFAULTS the UI to English —
+                          # no other South African language here has both an
+                          # existing UI locale and real scripture content
+
+# Bridge/trade language — English is South Africa's common lingua franca and
+# already has full reader support (see helloAO/BSB). No other language listed
+# below currently qualifies (see scope note above).
+tradeLanguages = ["eng"]
+
+# Every (non-diaspora, non-sign, living) indigenous language in this region
+# (ISO 639-3). Only 3 of 12 currently resolve to real content — see the scope
+# note above.
+languages = [
+  "afr", "naq", "nbl", "ngh", "nso", "sot", "ssw", "tsn", "tso", "ven", "xho", "zul",
+]
+
+# ── Groupings ────────────────────────────────────────────────────────────────
+# Two kinds, by the `navigable` flag:
+#   navigable = false → a picker FILTER for language selection (no URL).
+#                       Auto-generated and ACTIVE.
+#   navigable = true  → a sub-region SUBDOMAIN  za.<slug>.bibel.wiki  (hierarchical).
+#                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
+#                       its subdomain valid. Never auto-enabled.
+#
+# Only ONE grouping is ever rendered (whichever `[picker].filterBy` names) —
+# see src/pages/r/[region]/index.astro. The other grouping below is
+# reference data, ready to promote later.
+
+# --- By language family (picker filter; active) ---
+[[grouping]]
+id = "family"
+navigable = false
+name = { en = "By language family" }
+
+  [[grouping.group]]
+  slug = "nguni"
+  name = { en = "Nguni" }
+  languages = ["zul", "xho", "nbl", "ssw"]
+  [[grouping.group]]
+  slug = "sotho-tswana"
+  name = { en = "Sotho-Tswana" }
+  languages = ["nso", "sot", "tsn"]
+  [[grouping.group]]
+  slug = "tsonga"
+  name = { en = "Tsonga" }
+  languages = ["tso"]
+  [[grouping.group]]
+  slug = "venda"
+  name = { en = "Venda" }
+  languages = ["ven"]
+  [[grouping.group]]
+  slug = "khoisan"
+  name = { en = "Khoisan" }
+  languages = ["naq", "ngh"]
+  [[grouping.group]]
+  slug = "germanic"
+  name = { en = "Germanic" }
+  languages = ["afr"]
+
+# --- By province (COMMENTED OUT — approximate reference data / future filter tab) ---
+# Approximate historical/primary association only — most provinces are
+# multilingual and this is not an official designation for all 9.
+#
+# [[grouping]]
+# id = "province"
+# navigable = false
+# name = { en = "By province" }
+#
+#   [[grouping.group]]
+#   slug = "eastern-cape"
+#   name = { en = "Eastern Cape" }
+#   languages = ["xho"]
+#   [[grouping.group]]
+#   slug = "free-state"
+#   name = { en = "Free State" }
+#   languages = ["sot"]
+#   [[grouping.group]]
+#   slug = "gauteng"
+#   name = { en = "Gauteng" }
+#   languages = ["zul", "afr", "nso"]
+#   [[grouping.group]]
+#   slug = "kwazulu-natal"
+#   name = { en = "KwaZulu-Natal" }
+#   languages = ["zul"]
+#   [[grouping.group]]
+#   slug = "limpopo"
+#   name = { en = "Limpopo" }
+#   languages = ["nso", "ven", "tso"]
+#   [[grouping.group]]
+#   slug = "mpumalanga"
+#   name = { en = "Mpumalanga" }
+#   languages = ["ssw", "nbl"]
+#   [[grouping.group]]
+#   slug = "north-west"
+#   name = { en = "North West" }
+#   languages = ["tsn"]
+#   [[grouping.group]]
+#   slug = "northern-cape"
+#   name = { en = "Northern Cape" }
+#   languages = ["afr", "naq"]
+#   [[grouping.group]]
+#   slug = "western-cape"
+#   name = { en = "Western Cape" }
+#   languages = ["afr", "xho"]
+
+# ── Region landing page (/r/za) ──────────────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# unlisted = true: hidden from the "/" homepage grid + search until content
+# coverage improves (see the scope note at the top of this file — only 1 of
+# 12 languages currently resolves to real text). Still fully reachable at
+# /r/za/ and via the za.demo.bibel.wiki redirect. Remove once nso/tso (or
+# more) become resolvable, or whenever this is otherwise ready to promote.
+
+[landing]
+unlisted = true
+accentColor = "#007749"
+headline = { en = "The Bible in the languages of South Africa" }
+subhead  = { en = "Read and listen to Scripture in South Africa's regional languages." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of South Africa" }
+filterBy = "family"   # which grouping powers the picker filter chips
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultStudyLanguage is "eng", not a South African language — none of the
+# 12 listed above are in the fixed study-mode gate list (arb asm ben eng fra
+# hau hin por rus spa; see src/lib/bw/study-languages.ts), so any of them
+# would fail to satisfy study mode's "≥1 selected language" requirement.
+
+[study]
+defaultStudyLanguage = "eng"
+
+[seo]
+host = "za.demo.bibel.wiki"

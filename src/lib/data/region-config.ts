@@ -47,6 +47,14 @@ export interface RegionConfig {
     accentColor?: string
     headline?: Localized
     subhead?: Localized
+    /** true → hide this region's card (and its languages from the flat
+     *  search list) on the main "/" landing page. The region itself stays
+     *  fully live at /r/<code>/ and its subdomain redirect still works —
+     *  this only controls public promotion from the homepage. For a region
+     *  with thin content coverage (see e.g. config/regions/za.toml) that's
+     *  reachable directly but not ready to advertise as a first-class entry
+     *  point yet. */
+    unlisted?: boolean
   }
   picker?: { tierLabel?: Localized; filterBy?: string }
   study?: { defaultStudyLanguage?: string }
