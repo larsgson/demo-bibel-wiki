@@ -6,20 +6,20 @@
 #
 # Scope note — READ BEFORE ADDING LANGUAGES: unlike mx/id/ke, coverage here is
 # thin. Built the same way ke.toml was (South Africa-tagged ISO 639-3 codes
-# via Wikidata P17=South Africa (Q258), 31 candidates), but with an extra
-# wrinkle ke.toml's languages didn't hit: this app's ACTUAL text-source
-# resolution (src/lib/bw/source-catalog.ts, data/source-catalog.json) is
-# derived at build time from cdn.bibel.wiki/dbt/_app/catalog-overlap.json —
-# NOT from DBT's raw cdn.bibel.wiki/dbt/_catalog.json directly. Checking the
-# raw DBT catalog directly (same technique ke.toml used to correct for
-# catalog-overlap.json's under-counting) finds nso and tso — but
-# catalog-overlap.json itself has ZERO entries for either (confirmed live,
-# not a staleness issue), so the app cannot currently resolve them no matter
-# how fresh a local rebuild is. Only 1 of the 12 languages below is actually
-# reachable in the running app today: tsn (helloAO, NT+OT). nso and tso are
-# listed anyway so they light up automatically once cdn.bibel.wiki's own
-# catalog-overlap derivation adds them (or this app's fetch-data.mjs is
-# extended to also scan the raw DBT catalog — out of scope here).
+# via Wikidata P17=South Africa (Q258), 31 candidates). Only 1 of the 12
+# languages below is actually reachable in the running app today: tsn
+# (helloAO, NT+OT).
+#
+# nso and tso DO have rows in DBT's raw catalog (cdn.bibel.wiki/dbt/_catalog.
+# json), which first looked like a catalog-overlap.json under-counting bug —
+# it wasn't. Checked against cdn.bibel.wiki/dbt/_app/catalog-text.json (the
+# repo's own DBT-text-fileset index — see bcv-commons/bibles's doc/README.md:
+# catalog-overlap.json is for deduping overlapping sources, NOT a full
+# discovery catalog; catalog-index.json + catalog-text.json are), both rows
+# are audio-only (an "a:"/"A:" fileset field, no "t:"/"T:" text field at
+# all) — DBT genuinely has no independently fetchable text for either
+# language, so excluding them is correct, not a gap. Listed anyway in case a
+# text fileset is ever added upstream.
 #
 # Separately: PKF, DBT, and helloAO all have ZERO entries — raw catalog or
 # derived — for Zulu, Xhosa, Afrikaans, Sesotho, Swazi, Venda, Southern

@@ -14,11 +14,18 @@
 # text; DBT-sourced languages still get a real reading experience via
 # Reader.svelte's flat-text mode, see src/components/ReaderLoader.tsx).
 #
-# cdn.bibel.wiki/dbt/_app/catalog-overlap.json was checked too but under-
-# counted badly here (22 of 73 vs. 42 found by checking PKF/DBT/helloAO
-# directly) — same false-negative pattern already seen for mx.toml's
-# tcf/tpl/tpx, worth remembering next time a region gets built from that
-# catalog alone.
+# CORRECTION (2026-07-31): this note originally claimed
+# cdn.bibel.wiki/dbt/_app/catalog-overlap.json under-counted badly here (22
+# of 73 vs. 42 found by checking PKF/DBT/helloAO "directly"). That "directly"
+# check counted any ISO appearing anywhere in DBT's raw catalog, including
+# audio-only rows with no fetchable text — the same methodology bug later
+# repeated (and then caught and fixed) in za.toml/cas.toml. Re-checked
+# against cdn.bibel.wiki/dbt/_app/catalog-text.json (the actual DBT-text-
+# fileset index) plus data/source-catalog.json: no real resolution gap was
+# found among these 38 languages. See bcv-commons/bibles's doc/README.md —
+# catalog-overlap.json is for deduping overlapping sources, not a full
+# discovery catalog (catalog-index.json + catalog-text.json are), but that
+# distinction wasn't actually the cause of the discrepancy claimed here.
 #
 # Excluded from the 42 "covered" candidates: Punjabi (pan) and Tamil (tam) —
 # real content exists (helloAO), but they're South Asian diaspora languages
