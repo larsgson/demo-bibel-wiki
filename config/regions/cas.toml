@@ -1,0 +1,188 @@
+# Central Asia — regional entry point.   Subdomain: cas.demo.bibel.wiki   ·   Path: /r/cas
+#
+# Single source of truth for the region (mirrors config/regions/mx.toml,
+# config/regions/id.toml, config/regions/ke.toml, config/regions/za.toml).
+# Drives the region landing page, the picker, and any sub-region subdomains.
+#
+# Multi-country region, not a single ISO 3166 country — there's no "ca" code
+# to use here anyway (would read as Canada), so this uses "cas" (Central
+# ASia) instead of a real country code, unlike every other file in this
+# directory. Covers the five post-Soviet Central Asian republics: Kazakhstan,
+# Kyrgyzstan, Tajikistan, Turkmenistan, Uzbekistan. Afghanistan is
+# deliberately excluded — usually classed as South/West Asia in this context,
+# and outside the three content sources' coverage for the languages that
+# would matter there (Pashto, Dari) anyway.
+#
+# Scoped the same way as ke.toml/za.toml: Wikidata P17 for each of the 5
+# countries (Q232 Kazakhstan, Q813 Kyrgyzstan, Q863 Tajikistan, Q874
+# Turkmenistan, Q265 Uzbekistan) gives 36 unique candidate ISO 639-3 codes
+# (notably missing Russian and English entirely — Wikidata's P17 tagging
+# under-counts here just like catalog-overlap.json does elsewhere; both are
+# added by hand below since they're obviously real and have real content).
+# Cross-checked directly against live PKF/DBT/helloAO catalogs, NOT
+# catalog-overlap.json (which under-counts — see ke.toml/za.toml).
+#
+# Of the 36 raw candidates, excluded entirely: languages whose community is
+# a diaspora FROM outside Central Asia rather than indigenous TO it
+# (Azerbaijani aze, Kurdish kur, Pashto pus/pbt, Brahui brh, Bashkir bak,
+# Chechen che, Chuvash chv, Crimean Tatar crh, Pontic Greek pnt, Ukrainian
+# ukr — real communities, real content in several cases, but not
+# Central-Asia-indigenous, same treatment as ke.toml excluding Punjabi/Tamil
+# and za.toml excluding Punjabi/Tamil/Yiddish/Slovene), languages Wikidata/
+# historical record marks as extinct or a historical/liturgical form with no
+# living vernacular community (Avestan ave, Chagatai chg, Old Turkic otk,
+# Bactrian xbc, Khwarezmian xco, Judeo-Persian jpr, Bukharian bhh — the
+# Bukharan Jewish community that once spoke Bukharian/Judeo-Tajik has
+# overwhelmingly emigrated), and standalone Persian (fas) as a duplicate of
+# Tajik (tgk) — the language of Tajikistan's Persian-speaking minority IS
+# Tajik, not a separate "Persian" community.
+#
+# That leaves 16 languages: the 5 national languages (using uzn "Northern
+# Uzbek", the code that actually has content, instead of the bare uzb
+# macrolanguage code, which has none), plus 11 indigenous minorities —
+# mostly small Pamir languages of Tajikistan's Gorno-Badakhshan region
+# (Shughni sgh, Wakhi wbl, Ishkashimi isk, Yazgulyam yah, Yaghnobi yai,
+# Parya paq), Karakalpak (kaa, Uzbekistan), Uyghur (uig, historic diaspora
+# across the region, largest community in Kazakhstan), Dungan (dng, Hui
+# Chinese Muslim community, Kyrgyzstan/Kazakhstan), and the two indigenous
+# Arabic-speaking minorities descended from medieval Arab settlers (Tajiki
+# Arabic abh, Uzbeki Arabic auz).
+#
+# Of these 16, only 7 currently resolve to real content: kaz, tgk, tuk, uzn,
+# kaa, sgh, uig. NOTABLY: Kyrgyz itself (kir) — the language of the country
+# this request started from — is NOT currently resolvable, despite having a
+# row in DBT's raw catalog (cdn.bibel.wiki/dbt/_catalog.json). This first
+# looked like a catalog-overlap.json under-counting bug (see za.toml's
+# earlier version of this same mistake) — it isn't. Checked against
+# cdn.bibel.wiki/dbt/_app/catalog-text.json (the repo's own DBT-text-fileset
+# index — see bcv-commons/bibles's doc/README.md: catalog-overlap.json is
+# for deduping overlapping sources, NOT a full discovery catalog;
+# catalog-index.json + catalog-text.json are), kir's DBT row is audio-only
+# (an "A:" fileset field, no "t:"/"T:" text field at all) — DBT genuinely has
+# no independently fetchable text for Kyrgyz. Dungan (dng) has the identical
+# problem. Both are correctly excluded, not a gap; listed anyway in case a
+# text fileset is ever added upstream. The remaining listed minorities (wbl,
+# isk, yah, yai, paq, abh, auz) have no entry in any of the three sources at
+# all, raw or derived.
+#
+# Grouped by country (Kazakhstan / Kyrgyzstan / Tajikistan / Turkmenistan /
+# Uzbekistan) — the natural reference frame here, same role as mx.toml's
+# states or ke.toml's provinces. Assignments for languages spoken across
+# multiple countries (Uyghur, Dungan) use each language's largest community.
+
+code = "cas"
+name = { en = "Central Asia", ru = "Центральная Азия" }
+title = { en = "Your Central Asian Bible", ru = "Ваша Библия для Центральной Азии" }  # header title; hidden if unset
+defaultLanguage = "rus"   # primary language when entering with none chosen —
+                          # the actual shared regional language (Soviet-era
+                          # lingua franca, still widely spoken/understood
+                          # across all 5 countries) and has full reader
+                          # support (helloAO)
+uiLanguage = "ru"         # entering this region DEFAULTS the UI to Russian
+                          # (src/locales/ru.ts)
+
+# Bridge/trade languages — Russian is the region's real lingua franca;
+# English is the universal fallback already used by every other region here.
+tradeLanguages = ["rus", "eng"]
+
+# Every (non-diaspora, non-extinct, indigenous) language in this region
+# (ISO 639-3). Only 7 of 16 currently resolve to real content — see the
+# scope note above, especially re: kir (Kyrgyz itself).
+languages = [
+  "abh", "auz", "dng", "isk", "kaa", "kaz", "kir", "paq",
+  "sgh", "tgk", "tuk", "uig", "uzn", "wbl", "yah", "yai",
+]
+
+# ── Groupings ────────────────────────────────────────────────────────────────
+# Two kinds, by the `navigable` flag:
+#   navigable = false → a picker FILTER for language selection (no URL).
+#                       Auto-generated and ACTIVE.
+#   navigable = true  → a sub-region SUBDOMAIN  cas.<slug>.bibel.wiki  (hierarchical).
+#                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
+#                       its subdomain valid. Never auto-enabled.
+#
+# Only ONE grouping is ever rendered (whichever `[picker].filterBy` names) —
+# see src/pages/r/[region]/index.astro. The other grouping below is
+# reference data, ready to promote later.
+
+# --- By country (picker filter; active) ---
+[[grouping]]
+id = "country"
+navigable = false
+name = { en = "By country", ru = "По стране" }
+
+  [[grouping.group]]
+  slug = "kazakhstan"
+  name = { en = "Kazakhstan", ru = "Казахстан" }
+  languages = ["kaz", "uig"]
+  [[grouping.group]]
+  slug = "kyrgyzstan"
+  name = { en = "Kyrgyzstan", ru = "Киргизия" }
+  languages = ["kir", "dng"]
+  [[grouping.group]]
+  slug = "tajikistan"
+  name = { en = "Tajikistan", ru = "Таджикистан" }
+  languages = ["tgk", "sgh", "wbl", "isk", "yah", "yai", "paq", "abh"]
+  [[grouping.group]]
+  slug = "turkmenistan"
+  name = { en = "Turkmenistan", ru = "Туркменистан" }
+  languages = ["tuk"]
+  [[grouping.group]]
+  slug = "uzbekistan"
+  name = { en = "Uzbekistan", ru = "Узбекистан" }
+  languages = ["uzn", "kaa", "auz"]
+
+# --- By language family (COMMENTED OUT — reference data / future filter tab) ---
+#
+# [[grouping]]
+# id = "family"
+# navigable = false
+# name = { en = "By language family" }
+#
+#   [[grouping.group]]
+#   slug = "turkic"
+#   name = { en = "Turkic" }
+#   languages = ["kaz", "kir", "tuk", "uzn", "kaa", "uig"]
+#   [[grouping.group]]
+#   slug = "iranian"
+#   name = { en = "Iranian (incl. Pamir)" }
+#   languages = ["tgk", "sgh", "wbl", "isk", "yah", "yai"]
+#   [[grouping.group]]
+#   slug = "sinitic"
+#   name = { en = "Sinitic" }
+#   languages = ["dng"]
+#   [[grouping.group]]
+#   slug = "indo-aryan"
+#   name = { en = "Indo-Aryan" }
+#   languages = ["paq"]
+#   [[grouping.group]]
+#   slug = "semitic"
+#   name = { en = "Semitic" }
+#   languages = ["abh", "auz"]
+
+# ── Region landing page (/r/cas) ─────────────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+
+[landing]
+accentColor = "#0099CC"
+headline = { en = "The Bible in the languages of Central Asia", ru = "Библия на языках Центральной Азии" }
+subhead  = { en = "Read and listen to Scripture in Central Asia's regional languages.", ru = "Читайте и слушайте Писание на языках народов Центральной Азии." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Central Asia", ru = "Языки Центральной Азии" }
+filterBy = "country"   # which grouping powers the picker filter chips
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# Unlike za.toml, rus IS in the fixed study-mode gate list (arb asm ben eng
+# fra hau hin por rus spa; see src/lib/bw/study-languages.ts), so the actual
+# regional default language also works for study mode.
+
+[study]
+defaultStudyLanguage = "rus"
+
+[seo]
+host = "cas.demo.bibel.wiki"
