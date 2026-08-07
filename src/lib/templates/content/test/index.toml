@@ -1,0 +1,10 @@
+level = "collection"
+
+categories = [
+  "01",
+]
+
+[images]
+base_url = "/templates/test/images"
+# Filenames already carry their chapter prefix (e.g. "01/01.jpg"), so no
+# path_pattern is needed — resolveImageUrl falls back to base_url + filename.

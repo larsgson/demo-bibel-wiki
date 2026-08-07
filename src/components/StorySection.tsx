@@ -8,6 +8,10 @@ interface Props {
   sectionsMap: Record<string, Section[]>
   onSectionClick: (index: number) => void
   imageConfig?: ImageConfig | null
+  /** Video-driven templates (see the "test" template) have no Bible-verse
+   *  reference to gate clickability on — this reports playable section
+   *  indices instead. When absent, clickability is unchanged (reference-only). */
+  isVideoSection?: (index: number) => boolean
 }
 
 const RTL_LANGUAGES = ["heb", "arb", "ara"]
@@ -19,12 +23,13 @@ export default function StorySection({
   sectionsMap,
   onSectionClick,
   imageConfig = null,
+  isVideoSection,
 }: Props) {
   const primaryLang = selectedLanguages[0]
   const primarySection = sectionsMap[primaryLang]?.[sectionIndex]
   if (!primarySection) return null
 
-  const hasReference = !!primarySection.reference
+  const hasReference = !!primarySection.reference || !!isVideoSection?.(sectionIndex)
   return (
     <div
       id={`verse-${sectionIndex}`}

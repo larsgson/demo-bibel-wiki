@@ -1,0 +1,89 @@
+level = "chapter"
+id = "06"
+title = "[[t:06.title]]"
+video_file = "import/test/video/06 - 06 The Messiah has come： Hope fulfilled.mp4"
+
+[[stories]]
+id = "01"
+image = "06/02.jpg"
+title = "[[t:06.01.title]]"
+
+[[stories]]
+id = "02"
+image = "06/03.jpg"
+title = "[[t:06.02.title]]"
+
+[[stories]]
+id = "03"
+image = "06/05.jpg"
+title = "[[t:06.03.title]]"
+
+[[stories]]
+id = "04"
+image = "06/07.jpg"
+title = "[[t:06.04.title]]"
+
+[[stories]]
+id = "05"
+image = "06/08.jpg"
+title = "[[t:06.05.title]]"
+
+[[stories]]
+id = "06"
+image = "06/09.jpg"
+title = "[[t:06.06.title]]"
+
+[[stories]]
+id = "07"
+image = "06/10.jpg"
+title = "[[t:06.07.title]]"
+
+[[stories]]
+id = "08"
+image = "06/12.jpg"
+title = "[[t:06.08.title]]"
+
+[[stories]]
+id = "09"
+image = "06/14.jpg"
+title = "[[t:06.09.title]]"
+
+[[stories]]
+id = "10"
+image = "06/15.jpg"
+title = "[[t:06.10.title]]"
+
+[[stories]]
+id = "11"
+image = "06/17.jpg"
+title = "[[t:06.11.title]]"
+
+[[stories]]
+id = "12"
+image = "06/12.jpg"
+title = "[[t:06.12.title]]"
+
+[[stories]]
+id = "13"
+image = "06/13.jpg"
+title = "[[t:06.13.title]]"
+
+[[stories]]
+id = "14"
+image = "06/14.jpg"
+title = "[[t:06.14.title]]"
+
+[[stories]]
+id = "15"
+image = "06/15.jpg"
+title = "[[t:06.15.title]]"
+
+[[stories]]
+id = "16"
+image = "06/16.jpg"
+title = "[[t:06.16.title]]"
+
+[[stories]]
+id = "17"
+image = "06/17.jpg"
+title = "[[t:06.17.title]]"

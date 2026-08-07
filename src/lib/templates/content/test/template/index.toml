@@ -1,0 +1,41 @@
+level = "collection"
+
+[[chapters]]
+id = "01"
+title = "[[t:01.title]]"
+
+[[chapters]]
+id = "02"
+title = "[[t:02.title]]"
+
+[[chapters]]
+id = "03"
+title = "[[t:03.title]]"
+
+[[chapters]]
+id = "04"
+title = "[[t:04.title]]"
+
+[[chapters]]
+id = "05"
+title = "[[t:05.title]]"
+
+[[chapters]]
+id = "06"
+title = "[[t:06.title]]"
+
+[[chapters]]
+id = "07"
+title = "[[t:07.title]]"
+
+[[chapters]]
+id = "08"
+title = "[[t:08.title]]"
+
+[[chapters]]
+id = "09"
+title = "[[t:09.title]]"
+
+[[chapters]]
+id = "10"
+title = "[[t:10.title]]"

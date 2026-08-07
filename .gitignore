@@ -22,11 +22,19 @@ public/templates/
 public/pkf
 public/source-catalog.json
 
+# Test-template videos (2GB+, staying local until external hosting is set up)
+public/video/
+
 # Example projects
 example/
 
 # Previous SvelteKit implementation snapshot
 prev/
+
+# Confirmed-dead code, moved out of src/ so it's obviously unused rather
+# than looking like a live parallel implementation (mirrors original paths
+# under bak/ — e.g. bak/src/lib/components/StoryReader.svelte).
+bak/
 
 # Claude Code
 .claude/

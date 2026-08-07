@@ -30,7 +30,11 @@ const resolveLocaleKey = (
   if (!localeData) return null
   const parts = keyPath.split(".")
 
-  if (parts.length === 4 && parts[3] === "p_hd") {
+  if (parts.length === 4) {
+    // Trailing field name (parts[3]) is cosmetic/self-documenting only —
+    // sections stores one string per catId.storyNum.subKey slot regardless
+    // of what it's called ("p_hd" for John's headings, "title" for scene
+    // titles elsewhere — see loadLocaleData's matching write side).
     const storyKey = `${parts[0]}.${parts[1]}`
     const verseKey = parts[2]
     return localeData.sections?.[storyKey]?.[verseKey] || null
@@ -71,6 +75,12 @@ export const parseMarkdownIntoSections = (
   chapterText: Record<string, any> = {},
   localeData: Record<string, any> | null = null,
   fallbackLocale?: Record<string, any> | null,
+  /** [[body:storyId.sceneId]] resolution — for templates whose scene prose
+   *  lives in its own per-language .md file (see the "test" template and
+   *  loadSceneBodyText) rather than baked into the shared markdown or a
+   *  locale.toml token. Keyed exactly as it appears in the marker, e.g.
+   *  "01.01" for chapter 1 scene 1. Empty/omitted for every other template. */
+  sceneBodies: Record<string, string> = {},
 ): ParsedMarkdown => {
   if (!markdown) {
     return { title: "", sections: [] }
@@ -95,6 +105,15 @@ export const parseMarkdownIntoSections = (
     }
 
     if (line.startsWith("[[story:") || line.startsWith("[[chapter:")) continue
+
+    if (line.startsWith("[[body:")) {
+      const bodyMatch = line.match(/\[\[body:\s*(.+?)\]\]/)
+      const text = bodyMatch ? sceneBodies[bodyMatch[1].trim()] : null
+      if (currentSection && text) {
+        currentSection.text += (currentSection.text ? "\n" : "") + text
+      }
+      continue
+    }
 
     if (line.includes("[[t:")) {
       const resolved = replaceLocaleMarkers(line, localeData, fallbackLocale)

@@ -1,10 +1,11 @@
 /** Top-level templates the app surfaces. */
-export type TemplateName = 'OBS' | 'John' | 'TGS';
+export type TemplateName = 'OBS' | 'John' | 'TGS' | 'test';
 
 export const TEMPLATES: Array<{ name: TemplateName; label: string; description: string }> = [
     { name: 'OBS', label: 'Open Bible Stories', description: '50 stories from creation to revelation' },
     { name: 'John', label: 'Visual Bible — John', description: 'Illustrated Gospel of John' },
-    { name: 'TGS', label: 'The Glory Story', description: 'Sweet Publishing storyboards' }
+    { name: 'TGS', label: 'The Glory Story', description: 'Sweet Publishing storyboards' },
+    { name: 'test', label: 'Test series', description: 'Central Asia pilot video series (eng/kir/prs)' }
 ];
 
 export interface ImageConfig {

@@ -1,0 +1,84 @@
+level = "chapter"
+id = "10"
+title = "[[t:10.title]]"
+video_file = "import/test/video/10 - 10 The Holy Spirit： Living in God's love.mp4"
+
+[[stories]]
+id = "01"
+image = "10/02.jpg"
+title = "[[t:10.01.title]]"
+
+[[stories]]
+id = "02"
+image = "10/03.jpg"
+title = "[[t:10.02.title]]"
+
+[[stories]]
+id = "03"
+image = "10/04.jpg"
+title = "[[t:10.03.title]]"
+
+[[stories]]
+id = "04"
+image = "10/05.jpg"
+title = "[[t:10.04.title]]"
+
+[[stories]]
+id = "05"
+image = "10/06.jpg"
+title = "[[t:10.05.title]]"
+
+[[stories]]
+id = "06"
+image = "10/07.jpg"
+title = "[[t:10.06.title]]"
+
+[[stories]]
+id = "07"
+image = "10/08.jpg"
+title = "[[t:10.07.title]]"
+
+[[stories]]
+id = "08"
+image = "10/09.jpg"
+title = "[[t:10.08.title]]"
+
+[[stories]]
+id = "09"
+image = "10/10.jpg"
+title = "[[t:10.09.title]]"
+
+[[stories]]
+id = "10"
+image = "10/13.jpg"
+title = "[[t:10.10.title]]"
+
+[[stories]]
+id = "11"
+image = "10/14.jpg"
+title = "[[t:10.11.title]]"
+
+[[stories]]
+id = "12"
+image = "10/12.jpg"
+title = "[[t:10.12.title]]"
+
+[[stories]]
+id = "13"
+image = "10/16.jpg"
+title = "[[t:10.13.title]]"
+
+[[stories]]
+id = "14"
+image = "10/14.jpg"
+title = "[[t:10.14.title]]"
+
+[[stories]]
+id = "15"
+image = "10/15.jpg"
+title = "[[t:10.15.title]]"
+
+[[stories]]
+id = "16"
+image = "10/16.jpg"
+title = "[[t:10.16.title]]"

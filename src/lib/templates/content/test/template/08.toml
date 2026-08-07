@@ -1,0 +1,119 @@
+level = "chapter"
+id = "08"
+title = "[[t:08.title]]"
+video_file = "import/test/video/08 - 08 Life of Jesus (Part 2).mp4"
+
+[[stories]]
+id = "01"
+image = "08/02.jpg"
+title = "[[t:08.01.title]]"
+
+[[stories]]
+id = "02"
+image = "08/03.jpg"
+title = "[[t:08.02.title]]"
+
+[[stories]]
+id = "03"
+image = "08/04.jpg"
+title = "[[t:08.03.title]]"
+
+[[stories]]
+id = "04"
+image = "08/05.jpg"
+title = "[[t:08.04.title]]"
+
+[[stories]]
+id = "05"
+image = "08/05.jpg"
+title = "[[t:08.05.title]]"
+
+[[stories]]
+id = "06"
+image = "08/06.jpg"
+title = "[[t:08.06.title]]"
+
+[[stories]]
+id = "07"
+image = "08/07.jpg"
+title = "[[t:08.07.title]]"
+
+[[stories]]
+id = "08"
+image = "08/08.jpg"
+title = "[[t:08.08.title]]"
+
+[[stories]]
+id = "09"
+image = "08/10.jpg"
+title = "[[t:08.09.title]]"
+
+[[stories]]
+id = "10"
+image = "08/11.jpg"
+title = "[[t:08.10.title]]"
+
+[[stories]]
+id = "11"
+image = "08/13.jpg"
+title = "[[t:08.11.title]]"
+
+[[stories]]
+id = "12"
+image = "08/14.jpg"
+title = "[[t:08.12.title]]"
+
+[[stories]]
+id = "13"
+image = "08/13.jpg"
+title = "[[t:08.13.title]]"
+
+[[stories]]
+id = "14"
+image = "08/16.jpg"
+title = "[[t:08.14.title]]"
+
+[[stories]]
+id = "15"
+image = "08/17.jpg"
+title = "[[t:08.15.title]]"
+
+[[stories]]
+id = "16"
+image = "08/18.jpg"
+title = "[[t:08.16.title]]"
+
+[[stories]]
+id = "17"
+image = "08/20.jpg"
+title = "[[t:08.17.title]]"
+
+[[stories]]
+id = "18"
+image = "08/21.jpg"
+title = "[[t:08.18.title]]"
+
+[[stories]]
+id = "19"
+image = "08/23.jpg"
+title = "[[t:08.19.title]]"
+
+[[stories]]
+id = "20"
+image = "08/20.jpg"
+title = "[[t:08.20.title]]"
+
+[[stories]]
+id = "21"
+image = "08/21.jpg"
+title = "[[t:08.21.title]]"
+
+[[stories]]
+id = "22"
+image = "08/22.jpg"
+title = "[[t:08.22.title]]"
+
+[[stories]]
+id = "23"
+image = "08/23.jpg"
+title = "[[t:08.23.title]]"

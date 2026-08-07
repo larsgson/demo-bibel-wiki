@@ -1,0 +1,64 @@
+level = "chapter"
+id = "05"
+title = "[[t:05.title]]"
+video_file = "import/test/video/05 - 05 The Prophets.mp4"
+
+[[stories]]
+id = "01"
+image = "05/01.jpg"
+title = "[[t:05.01.title]]"
+
+[[stories]]
+id = "02"
+image = "05/02.jpg"
+title = "[[t:05.02.title]]"
+
+[[stories]]
+id = "03"
+image = "05/03.jpg"
+title = "[[t:05.03.title]]"
+
+[[stories]]
+id = "04"
+image = "05/05.jpg"
+title = "[[t:05.04.title]]"
+
+[[stories]]
+id = "05"
+image = "05/09.jpg"
+title = "[[t:05.05.title]]"
+
+[[stories]]
+id = "06"
+image = "05/11.jpg"
+title = "[[t:05.06.title]]"
+
+[[stories]]
+id = "07"
+image = "05/07.jpg"
+title = "[[t:05.07.title]]"
+
+[[stories]]
+id = "08"
+image = "05/08.jpg"
+title = "[[t:05.08.title]]"
+
+[[stories]]
+id = "09"
+image = "05/09.jpg"
+title = "[[t:05.09.title]]"
+
+[[stories]]
+id = "10"
+image = "05/10.jpg"
+title = "[[t:05.10.title]]"
+
+[[stories]]
+id = "11"
+image = "05/11.jpg"
+title = "[[t:05.11.title]]"
+
+[[stories]]
+id = "12"
+image = "05/12.jpg"
+title = "[[t:05.12.title]]"

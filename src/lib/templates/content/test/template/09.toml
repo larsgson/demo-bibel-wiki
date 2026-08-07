@@ -1,0 +1,139 @@
+level = "chapter"
+id = "09"
+title = "[[t:09.title]]"
+video_file = "import/test/video/09 - 09 The Cross and the Empty Tomb.mp4"
+
+[[stories]]
+id = "01"
+image = "09/02.jpg"
+title = "[[t:09.01.title]]"
+
+[[stories]]
+id = "02"
+image = "09/03.jpg"
+title = "[[t:09.02.title]]"
+
+[[stories]]
+id = "03"
+image = "09/04.jpg"
+title = "[[t:09.03.title]]"
+
+[[stories]]
+id = "04"
+image = "09/05.jpg"
+title = "[[t:09.04.title]]"
+
+[[stories]]
+id = "05"
+image = "09/07.jpg"
+title = "[[t:09.05.title]]"
+
+[[stories]]
+id = "06"
+image = "09/06.jpg"
+title = "[[t:09.06.title]]"
+
+[[stories]]
+id = "07"
+image = "09/08.jpg"
+title = "[[t:09.07.title]]"
+
+[[stories]]
+id = "08"
+image = "09/09.jpg"
+title = "[[t:09.08.title]]"
+
+[[stories]]
+id = "09"
+image = "09/10.jpg"
+title = "[[t:09.09.title]]"
+
+[[stories]]
+id = "10"
+image = "09/11.jpg"
+title = "[[t:09.10.title]]"
+
+[[stories]]
+id = "11"
+image = "09/12.jpg"
+title = "[[t:09.11.title]]"
+
+[[stories]]
+id = "12"
+image = "09/13.jpg"
+title = "[[t:09.12.title]]"
+
+[[stories]]
+id = "13"
+image = "09/14.jpg"
+title = "[[t:09.13.title]]"
+
+[[stories]]
+id = "14"
+image = "09/15.jpg"
+title = "[[t:09.14.title]]"
+
+[[stories]]
+id = "15"
+image = "09/16.jpg"
+title = "[[t:09.15.title]]"
+
+[[stories]]
+id = "16"
+image = "09/17.jpg"
+title = "[[t:09.16.title]]"
+
+[[stories]]
+id = "17"
+image = "09/17.jpg"
+title = "[[t:09.17.title]]"
+
+[[stories]]
+id = "18"
+image = "09/19.jpg"
+title = "[[t:09.18.title]]"
+
+[[stories]]
+id = "19"
+image = "09/20.jpg"
+title = "[[t:09.19.title]]"
+
+[[stories]]
+id = "20"
+image = "09/21.jpg"
+title = "[[t:09.20.title]]"
+
+[[stories]]
+id = "21"
+image = "09/23.jpg"
+title = "[[t:09.21.title]]"
+
+[[stories]]
+id = "22"
+image = "09/24.jpg"
+title = "[[t:09.22.title]]"
+
+[[stories]]
+id = "23"
+image = "09/25.jpg"
+title = "[[t:09.23.title]]"
+
+[[stories]]
+id = "24"
+image = "09/27.jpg"
+title = "[[t:09.24.title]]"
+
+[[stories]]
+id = "25"
+image = "09/25.jpg"
+title = "[[t:09.25.title]]"
+
+[[stories]]
+id = "26"
+image = "09/26.jpg"
+title = "[[t:09.26.title]]"
+
+[[stories]]
+id = "27"
+image = "09/27.jpg"
+title = "[[t:09.27.title]]"

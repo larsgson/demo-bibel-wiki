@@ -1,0 +1,99 @@
+level = "chapter"
+id = "04"
+title = "[[t:04.title]]"
+video_file = "import/test/video/04 - 04 Shepherd to King.mp4"
+
+[[stories]]
+id = "01"
+image = "04/02.jpg"
+title = "[[t:04.01.title]]"
+
+[[stories]]
+id = "02"
+image = "04/04.jpg"
+title = "[[t:04.02.title]]"
+
+[[stories]]
+id = "03"
+image = "04/05.jpg"
+title = "[[t:04.03.title]]"
+
+[[stories]]
+id = "04"
+image = "04/07.jpg"
+title = "[[t:04.04.title]]"
+
+[[stories]]
+id = "05"
+image = "04/08.jpg"
+title = "[[t:04.05.title]]"
+
+[[stories]]
+id = "06"
+image = "04/10.jpg"
+title = "[[t:04.06.title]]"
+
+[[stories]]
+id = "07"
+image = "04/07.jpg"
+title = "[[t:04.07.title]]"
+
+[[stories]]
+id = "08"
+image = "04/12.jpg"
+title = "[[t:04.08.title]]"
+
+[[stories]]
+id = "09"
+image = "04/13.jpg"
+title = "[[t:04.09.title]]"
+
+[[stories]]
+id = "10"
+image = "04/15.jpg"
+title = "[[t:04.10.title]]"
+
+[[stories]]
+id = "11"
+image = "04/16.jpg"
+title = "[[t:04.11.title]]"
+
+[[stories]]
+id = "12"
+image = "04/18.jpg"
+title = "[[t:04.12.title]]"
+
+[[stories]]
+id = "13"
+image = "04/19.jpg"
+title = "[[t:04.13.title]]"
+
+[[stories]]
+id = "14"
+image = "04/14.jpg"
+title = "[[t:04.14.title]]"
+
+[[stories]]
+id = "15"
+image = "04/15.jpg"
+title = "[[t:04.15.title]]"
+
+[[stories]]
+id = "16"
+image = "04/16.jpg"
+title = "[[t:04.16.title]]"
+
+[[stories]]
+id = "17"
+image = "04/17.jpg"
+title = "[[t:04.17.title]]"
+
+[[stories]]
+id = "18"
+image = "04/18.jpg"
+title = "[[t:04.18.title]]"
+
+[[stories]]
+id = "19"
+image = "04/19.jpg"
+title = "[[t:04.19.title]]"

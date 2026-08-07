@@ -70,12 +70,18 @@ export function loadLocaleData(
         description: pendingValues.description || "",
       }
     } else if (parts.length === 3) {
-      // Use compound key "catId.storyNum" for the story, keep verse key as-is
+      // Use compound key "catId.storyNum" for the story, keep verse/scene
+      // key as-is. "p_hd" is John's field name (a section heading); "title"
+      // is the "test" template's (a scene title) — both are just "the
+      // display text for this sub-story marker", so either populates the
+      // same map. See resolveLocaleKey in markdown-parser.ts for the
+      // matching 4-part token-path read side.
       const storyKey = `${parts[0]}.${parts[1]}`
       const verseKey = parts[2]
-      if (pendingValues.p_hd) {
+      const text = pendingValues.p_hd || pendingValues.title
+      if (text) {
         if (!sections[storyKey]) sections[storyKey] = {}
-        sections[storyKey][verseKey] = pendingValues.p_hd
+        sections[storyKey][verseKey] = text
       }
     }
   }
@@ -303,6 +309,57 @@ export function loadMarkdownContent(
   return fs.readFileSync(mdPath, "utf-8")
 }
 
+/**
+ * Per-language scene prose for one story (chapter), for templates whose
+ * story text isn't scripture and so has no existing live per-language
+ * source to substitute in via [[ref:...]] (see the "test" template). The
+ * shared, language-invariant story .md references this text via
+ * [[body:storyId.sceneId]] markers (see parseMarkdownIntoSections) — the
+ * source file itself is untouched from however it was delivered, split
+ * into scenes wherever it has a "## <storyId>.<sceneId> <title>" heading
+ * (matching the same convention the OBS/John/TGS story .md files never
+ * needed, because their body text was scripture the app could already
+ * resolve live). Returns {} (not an error) when the file doesn't exist —
+ * every other template's stories simply have none.
+ */
+export function loadSceneBodyText(
+  templateName: string,
+  iso3: string,
+  storyId: string,
+): Record<string, string> {
+  const filePath = path.join(SRC_TEMPLATES_DIR, templateName, "locales", iso3, `${storyId}.md`)
+  if (!fs.existsSync(filePath)) return {}
+
+  const lines = fs.readFileSync(filePath, "utf-8").split("\n")
+  const scenes: Record<string, string> = {}
+  let currentScene: string | null = null
+  let buffer: string[] = []
+
+  function flush() {
+    if (currentScene) scenes[`${storyId}.${currentScene}`] = buffer.join("\n").trim()
+    buffer = []
+  }
+
+  for (const line of lines) {
+    const sceneMatch = line.match(/^##\s+\d\d\.(\d\d)\s+.*$/)
+    if (sceneMatch) {
+      flush()
+      currentScene = sceneMatch[1]
+      continue
+    }
+    if (line.startsWith("# ") && !currentScene) continue // book/chapter title line
+    if (!currentScene) continue
+    // The italic *caption* convention has no distinct rendering downstream
+    // (no markdown-emphasis pass — see StorySection.tsx), so it's folded
+    // into the body as plain text rather than shown with literal asterisks.
+    const capMatch = line.trim().match(/^\*(.+)\*$/)
+    buffer.push(capMatch ? capMatch[1] : line)
+  }
+  flush()
+
+  return scenes
+}
+
 // --- All Locale Data (for a template) ---
 
 export function loadAllLocaleData(
@@ -324,7 +381,10 @@ export function loadAllLocaleData(
 
 /**
  * Returns a set of story IDs (within a template) that have no markdown content.
- * Used to dim/badge missing stories in the navigation grid.
+ * Used to dim/badge missing stories in the navigation grid. A story with only
+ * per-language content (see loadMarkdownContentByLang — the "test" template)
+ * has no plain <categoryId>/<storyId>.md, so that path is also checked before
+ * calling it missing.
  */
 export function findMissingStoryIds(templateName: string): string[] {
   const structure = loadTemplateStructure(templateName)
@@ -408,6 +468,36 @@ export function loadTimingData(
     }
   }
   return null
+}
+
+// --- Per-language Chapter Video ---
+
+/**
+ * Which languages have a real chapter video for this category, and its
+ * (video, scene-timing) URLs — for templates like "test" whose story is
+ * driven by one video per chapter rather than Bible-verse audio. Only one
+ * language may have video today (see public/templates/<template>/video/) —
+ * the client picks the selected reading language's video when present,
+ * else falls back to whichever language IS available (see video-store.ts).
+ * Public, not src/, because these are large binaries served by URL, same
+ * as images/srt — see public/templates/test/{video,timing}/<iso>/<NN>.*.
+ */
+export function loadVideoManifest(
+  templateName: string,
+  categoryId: string,
+  isos: string[],
+): Record<string, { videoUrl: string; timingUrl: string }> {
+  const result: Record<string, { videoUrl: string; timingUrl: string }> = {}
+  for (const iso of isos) {
+    const videoPath = path.join(PUBLIC_TEMPLATES_DIR, templateName, "video", iso, `${categoryId}.mp4`)
+    const timingPath = path.join(PUBLIC_TEMPLATES_DIR, templateName, "timing", iso, `${categoryId}.json`)
+    if (!fs.existsSync(videoPath) || !fs.existsSync(timingPath)) continue
+    result[iso] = {
+      videoUrl: `/templates/${templateName}/video/${iso}/${categoryId}.mp4`,
+      timingUrl: `/templates/${templateName}/timing/${iso}/${categoryId}.json`,
+    }
+  }
+  return result
 }
 
 export function getTemplateThemeCSS(templateName: string): string {

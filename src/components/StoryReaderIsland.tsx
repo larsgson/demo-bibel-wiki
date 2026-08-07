@@ -18,7 +18,9 @@ import {
   playVerse,
   setAudioForChapter,
   unlockAudio,
+  type VerseEntry,
 } from "../stores/audio-store"
+import { playScene, setVideoForChapter } from "../stores/video-store"
 import { parseMarkdownIntoSections } from "../lib/bw/markdown-parser"
 import { parseReference, splitReference, getTestament } from "../lib/bw/bible-utils"
 import { parseTextFilesetId, parseAudioFilesetId } from "../lib/bw/fileset-utils"
@@ -39,6 +41,20 @@ interface Props {
   storyId: string
   engLocale: LocaleData | null
   markdownContent: string
+  /** Per-language scene prose, resolved via [[body:storyId.sceneId]]
+   *  markers in markdownContent — set only for templates whose story text
+   *  isn't scripture and so has no existing live per-language source (see
+   *  the "test" template and loadSceneBodyText). Falls back to its own
+   *  "eng" entry for any other selected language. markdownContent itself
+   *  stays shared/language-invariant either way, same as every other
+   *  template — only the resolved body text varies per language. */
+  sceneBodies?: Record<string, Record<string, string>> | null
+  /** Chapter-video availability per language (see the "test" template) —
+   *  {videoUrl, timingUrl} for every ISO that has a real video + matching
+   *  scene-timing file. The selected reading language's video is preferred;
+   *  when it has none (today, only "kir" does), falls back to whichever
+   *  language IS available — see resolveVideoInfo below. */
+  videoByLang?: Record<string, { videoUrl: string; timingUrl: string }> | null
   allLocales: Record<string, LocaleData>
   imageConfig?: ImageConfig | null
 }
@@ -49,6 +65,8 @@ export default function StoryReaderIsland({
   storyId,
   engLocale,
   markdownContent,
+  sceneBodies = null,
+  videoByLang = null,
   allLocales,
   imageConfig = null,
 }: Props) {
@@ -62,17 +80,84 @@ export default function StoryReaderIsland({
   const thisPageStory = `${templateName}/${categoryId}/${storyId}`
   const isOnAudioPage = audioPageStory === thisPageStory
 
+  // Resolve scene-body text for a given language: sceneBodies[lang] when
+  // this template has per-language prose, falling back to its own "eng"
+  // entry, else {} (harmless — [[body:...]] markers just resolve to
+  // nothing for every other template, which never contain that marker).
+  const sceneBodiesForLang = useCallback(
+    (lang: string): Record<string, string> => sceneBodies?.[lang] ?? sceneBodies?.eng ?? {},
+    [sceneBodies],
+  )
+
   const [hydrated, setHydrated] = useState(false)
-  const [markdown] = useState<string>(markdownContent)
+  const markdown = markdownContent
   const [localeData, setLocaleData] = useState<Record<string, any> | null>(null)
   const [loading] = useState(false)
   const [error] = useState<string | null>(markdownContent ? null : "Story not found")
   const [audioWarning, setAudioWarning] = useState<string | null>(null)
   const [textWarning, setTextWarning] = useState<string | null>(null)
   const [audioLang, setAudioLang] = useState<string | null>(null)
+  const [videoSceneEntries, setVideoSceneEntries] = useState<VerseEntry[] | null>(null)
+
+  // Prefer the selected reading language's video; fall back to whichever
+  // language actually has one (today, only "kir" does — more will be added
+  // over time, and this needs no code change when they are).
+  const videoInfo = videoByLang
+    ? videoByLang[selectedLang] ?? videoByLang[Object.keys(videoByLang)[0]] ?? null
+    : null
   const audioSetupPromise = useRef<Promise<void> | null>(null)
 
   useEffect(() => setHydrated(true), [])
+
+  // Fetch this chapter's per-scene [start, end] timing and hand it to
+  // video-store, once — this is entirely independent of the Bible-verse
+  // audio setup below (no [[ref:...]] markers in this content, so that
+  // effect naturally no-ops for video-driven templates).
+  useEffect(() => {
+    if (!videoInfo) { setVideoSceneEntries(null); return }
+    let cancelled = false
+    fetch(videoInfo.timingUrl)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((timing: Record<string, [number, number]> | null) => {
+        if (cancelled || !timing) return
+        const sceneIds = Object.keys(timing).sort()
+        const entries: VerseEntry[] = sceneIds.map((sceneId, i) => {
+          const [start, end] = timing[sceneId]
+          return { verseStart: i + 1, verseEnd: i + 1, startTime: start, endTime: end, sectionIndex: i }
+        })
+        setVideoSceneEntries(entries)
+        const title = parseMarkdownIntoSections(markdown, {}, localeData, engLocale).title
+        setVideoForChapter({ storyKey: thisPageStory, title, videoUrl: videoInfo.videoUrl, sceneEntries: entries })
+      })
+      .catch(() => setVideoSceneEntries(null))
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoInfo?.videoUrl, videoInfo?.timingUrl, thisPageStory])
+
+  const handleVideoSectionClick = (sectionIndex: number) => {
+    if (!videoSceneEntries) return
+    unlockAudio()
+    const idx = videoSceneEntries.findIndex((e) => e.sectionIndex === sectionIndex)
+    if (idx < 0) return
+    // playScene() FIRST — it sets $playerMediaKind to "video" synchronously,
+    // and $focusMode.set(true) below fires populateFocusPanel synchronously
+    // too (nanostores subscribers run immediately, not on a microtask), so
+    // the order here matters: flipping media-kind after focus mode was
+    // already activated meant the very first click always rendered the
+    // Ken-Burns image branch instead of the video.
+    playScene(idx)
+    // Same "already in focus mode" workaround as handleSectionClick: setting
+    // an atom to its current value doesn't fire subscribers, so clicking a
+    // different section while already focused needs an explicit nudge.
+    if ($focusMode.get()) {
+      window.dispatchEvent(new CustomEvent("focus-panel-refresh", { detail: { idx: sectionIndex } }))
+    } else {
+      $focusMode.set(true)
+    }
+  }
+
+  const isVideoSection = (sectionIndex: number) =>
+    !!videoSceneEntries?.some((e) => e.sectionIndex === sectionIndex)
 
   // Apply per-language font and gap scaling
   useEffect(() => {
@@ -557,11 +642,11 @@ export default function StoryReaderIsland({
         langChapterText[key.replace(`${lang}-`, "")] = value
       }
     }
-    const parsed = parseMarkdownIntoSections(markdown, langChapterText, localeData, engLocale)
+    const parsed = parseMarkdownIntoSections(markdown, langChapterText, localeData, engLocale, sceneBodiesForLang(lang))
     sectionsMap[lang] = parsed.sections
   }
 
-  const primaryParsed = parseMarkdownIntoSections(markdown, {}, localeData, engLocale)
+  const primaryParsed = parseMarkdownIntoSections(markdown, {}, localeData, engLocale, sceneBodiesForLang(selectedLang))
   const storyTitle = primaryParsed.title || ""
 
   const handleSectionClick = (sectionIndex: number) => {
@@ -642,7 +727,7 @@ export default function StoryReaderIsland({
         <h1 className="text-xl font-bold">{storyTitle}</h1>
       </div>
 
-      {audioWarning && (
+      {audioWarning && !videoInfo && (
         <div className="mb-4 px-3 py-2 rounded-md bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 text-sm">
           {audioWarning}
         </div>
@@ -662,8 +747,9 @@ export default function StoryReaderIsland({
             sectionIndex={index}
             selectedLanguages={langsToRender}
             sectionsMap={sectionsMap}
-            onSectionClick={handleSectionClick}
+            onSectionClick={videoInfo ? handleVideoSectionClick : handleSectionClick}
             imageConfig={imageConfig}
+            isVideoSection={videoInfo ? isVideoSection : undefined}
           />
         ))}
       </div>

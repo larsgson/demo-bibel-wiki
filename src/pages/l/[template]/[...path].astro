@@ -6,6 +6,8 @@ import {
   loadAllTemplates,
   loadLocaleData,
   loadMarkdownContent,
+  loadSceneBodyText,
+  loadVideoManifest,
   loadAllLocaleData,
   findMissingStoryIds,
   extractStoryTestaments,
@@ -64,6 +66,18 @@ export function getStaticPaths() {
             storyId: story.id,
             engLocale,
             markdownContent: loadMarkdownContent(name, cat.id, story.id) || "",
+            sceneBodies: (() => {
+              const byLang: Record<string, Record<string, string>> = {}
+              for (const iso of Object.keys(allLocales)) {
+                const bodies = loadSceneBodyText(name, iso, story.id)
+                if (Object.keys(bodies).length > 0) byLang[iso] = bodies
+              }
+              return Object.keys(byLang).length > 0 ? byLang : null
+            })(),
+            videoByLang: (() => {
+              const byLang = loadVideoManifest(name, cat.id, Object.keys(allLocales))
+              return Object.keys(byLang).length > 0 ? byLang : null
+            })(),
             allLocales,
             layoutTheme: structure.layoutTheme,
             imageConfig: structure.imageConfig,
@@ -104,6 +118,8 @@ const pageTitle = props.engLocale?.bookTitle || props.templateName
         storyId={props.storyId}
         engLocale={props.engLocale}
         markdownContent={props.markdownContent}
+        sceneBodies={props.sceneBodies}
+        videoByLang={props.videoByLang}
         allLocales={props.allLocales}
         imageConfig={props.imageConfig}
       />

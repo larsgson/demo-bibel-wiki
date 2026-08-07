@@ -243,6 +243,14 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
         unlockAudio,
         $audioToast,
       } from "../stores/audio-store"
+      import {
+        $playerMediaKind,
+        getVideoElement,
+        playScene,
+        pauseVideoPlayback,
+        resumeVideoPlayback,
+        stopVideo,
+      } from "../stores/video-store"
       import { t } from "../lib/bw/ui-locales"
 
       import { $selectedIso } from "../stores/iso-store"
@@ -384,6 +392,36 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
         const playerIconPlay = document.getElementById("player-icon-play")!
         const playerIconPause = document.getElementById("player-icon-pause")!
 
+        // Chapter-video templates (see video-store.ts): the same clone-based
+        // approach works for the surrounding text/layout, but the cloned
+        // <img> can't carry over a live, playing video — swap it for the
+        // ONE persistent <video> element (re-parented, not cloned, so
+        // playback continues uninterrupted) instead of Ken-Burns-animating
+        // a static image, which only exists to simulate motion real video
+        // already has.
+        function placeVideoInto(wrap: Element) {
+          wrap.innerHTML = ""
+          const video = getVideoElement()
+          video.className = "chapter-video w-full aspect-video object-cover"
+          wrap.appendChild(video)
+        }
+
+        function syncMiniPlayerVideo() {
+          // Only the mini-player's job — while focus mode is active the
+          // video belongs in focusPanelContent (see populateFocusPanel).
+          // $playerCardInfo changes on every playScene() call (including
+          // ones that happen while focused, e.g. auto-advancing to the next
+          // scene), so without this guard this would yank the video out of
+          // the focus panel and into the (hidden) mini-player every time.
+          if ($playerMediaKind.get() !== "video" || $focusMode.get()) return
+          const video = getVideoElement()
+          video.className = "chapter-video"
+          if (video.parentElement !== playerImage) {
+            playerImage.innerHTML = ""
+            playerImage.appendChild(video)
+          }
+        }
+
         function populateFocusPanel(idx: number) {
           const el = document.getElementById(`verse-${idx}`)
           focusPanelContent.innerHTML = ""
@@ -395,7 +433,12 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
             clone.style.cursor = "default"
             clone.classList.remove("verse-focus-active")
             focusPanelContent.appendChild(clone)
-            applyKenBurnsToImages()
+            if ($playerMediaKind.get() === "video") {
+              const imagesWrap = clone.querySelector(".listen-verse-images")
+              if (imagesWrap) placeVideoInto(imagesWrap)
+            } else {
+              applyKenBurnsToImages()
+            }
           }
           focusPanel.scrollTop = 0
         }
@@ -474,6 +517,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
             document.body.classList.remove("focus-mode")
             hideFocusPanel()
             if ($playerVisible.get()) playerEl.style.display = ""
+            syncMiniPlayerVideo()
           }
           syncHighlight()
         })
@@ -509,7 +553,11 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
         })
 
         $playerCardInfo.subscribe(({ title, imageUrl }) => {
-          if (imageUrl) playerImage.innerHTML = `<img src="${imageUrl}" alt="${title}">`
+          if ($playerMediaKind.get() === "video") {
+            syncMiniPlayerVideo()
+          } else if (imageUrl) {
+            playerImage.innerHTML = `<img src="${imageUrl}" alt="${title}">`
+          }
         })
 
         const toastEl = document.getElementById("audio-toast")!
@@ -524,22 +572,29 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
         })
 
         function togglePlayPause() {
+          const isVideo = $playerMediaKind.get() === "video"
           if ($audioPlayState.get() === "idle") {
-            if ($pausedState.get()) resumePlayback()
+            if ($pausedState.get()) (isVideo ? resumeVideoPlayback : resumePlayback)()
+            else if (isVideo) playScene($currentVerseIdx.get())
             else playVerse($currentVerseIdx.get())
           } else {
-            pausePlayback()
+            (isVideo ? pauseVideoPlayback : pausePlayback)()
           }
           unlockAudio()
         }
 
+        function stopPlayback() {
+          if ($playerMediaKind.get() === "video") stopVideo()
+          else stopAll()
+        }
+
         focusPlayBtn.addEventListener("click", (e) => { e.stopPropagation(); togglePlayPause() })
-        focusStopBtn.addEventListener("click", (e) => { e.stopPropagation(); stopAll() })
+        focusStopBtn.addEventListener("click", (e) => { e.stopPropagation(); stopPlayback() })
         focusBackdrop.addEventListener("click", () => $focusMode.set(false))
 
         playerEl.addEventListener("click", () => $focusMode.set(true))
         playerBtn.addEventListener("click", (e) => { e.stopPropagation(); togglePlayPause() })
-        playerClose.addEventListener("click", (e) => { e.stopPropagation(); stopAll() })
+        playerClose.addEventListener("click", (e) => { e.stopPropagation(); stopPlayback() })
 
         window.addEventListener("wheel", () => { if ($focusMode.get()) $focusMode.set(false) })
         window.addEventListener("touchmove", () => { if ($focusMode.get()) $focusMode.set(false) })

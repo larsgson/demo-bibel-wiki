@@ -1,0 +1,144 @@
+level = "chapter"
+id = "03"
+title = "[[t:03.title]]"
+video_file = "import/test/video/03 - 03 Moses leads nomads through the desert.mp4"
+
+[[stories]]
+id = "01"
+image = "03/02.jpg"
+title = "[[t:03.01.title]]"
+
+[[stories]]
+id = "02"
+image = "03/03.jpg"
+title = "[[t:03.02.title]]"
+
+[[stories]]
+id = "03"
+image = "03/04.jpg"
+title = "[[t:03.03.title]]"
+
+[[stories]]
+id = "04"
+image = "03/05.jpg"
+title = "[[t:03.04.title]]"
+
+[[stories]]
+id = "05"
+image = "03/06.jpg"
+title = "[[t:03.05.title]]"
+
+[[stories]]
+id = "06"
+image = "03/07.jpg"
+title = "[[t:03.06.title]]"
+
+[[stories]]
+id = "07"
+image = "03/08.jpg"
+title = "[[t:03.07.title]]"
+
+[[stories]]
+id = "08"
+image = "03/09.jpg"
+title = "[[t:03.08.title]]"
+
+[[stories]]
+id = "09"
+image = "03/10.jpg"
+title = "[[t:03.09.title]]"
+
+[[stories]]
+id = "10"
+image = "03/10.jpg"
+title = "[[t:03.10.title]]"
+
+[[stories]]
+id = "11"
+image = "03/12.jpg"
+title = "[[t:03.11.title]]"
+
+[[stories]]
+id = "12"
+image = "03/14.jpg"
+title = "[[t:03.12.title]]"
+
+[[stories]]
+id = "13"
+image = "03/15.jpg"
+title = "[[t:03.13.title]]"
+
+[[stories]]
+id = "14"
+image = "03/17.jpg"
+title = "[[t:03.14.title]]"
+
+[[stories]]
+id = "15"
+image = "03/18.jpg"
+title = "[[t:03.15.title]]"
+
+[[stories]]
+id = "16"
+image = "03/20.jpg"
+title = "[[t:03.16.title]]"
+
+[[stories]]
+id = "17"
+image = "03/21.jpg"
+title = "[[t:03.17.title]]"
+
+[[stories]]
+id = "18"
+image = "03/22.jpg"
+title = "[[t:03.18.title]]"
+
+[[stories]]
+id = "19"
+image = "03/24.jpg"
+title = "[[t:03.19.title]]"
+
+[[stories]]
+id = "20"
+image = "03/26.jpg"
+title = "[[t:03.20.title]]"
+
+[[stories]]
+id = "21"
+image = "03/27.jpg"
+title = "[[t:03.21.title]]"
+
+[[stories]]
+id = "22"
+image = "03/22.jpg"
+title = "[[t:03.22.title]]"
+
+[[stories]]
+id = "23"
+image = "03/23.jpg"
+title = "[[t:03.23.title]]"
+
+[[stories]]
+id = "24"
+image = "03/24.jpg"
+title = "[[t:03.24.title]]"
+
+[[stories]]
+id = "25"
+image = "03/25.jpg"
+title = "[[t:03.25.title]]"
+
+[[stories]]
+id = "26"
+image = "03/26.jpg"
+title = "[[t:03.26.title]]"
+
+[[stories]]
+id = "27"
+image = "03/27.jpg"
+title = "[[t:03.27.title]]"
+
+[[stories]]
+id = "28"
+image = "03/28.jpg"
+title = "[[t:03.28.title]]"

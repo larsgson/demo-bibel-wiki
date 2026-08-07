@@ -1,0 +1,45 @@
+level = "chapter"
+id = "01"
+
+[image]
+filename = "01/01.jpg"
+
+[[stories]]
+id = "01"
+image = "01/01.jpg"
+
+[[stories]]
+id = "02"
+image = "02/01.jpg"
+
+[[stories]]
+id = "03"
+image = "03/02.jpg"
+
+[[stories]]
+id = "04"
+image = "04/02.jpg"
+
+[[stories]]
+id = "05"
+image = "05/01.jpg"
+
+[[stories]]
+id = "06"
+image = "06/02.jpg"
+
+[[stories]]
+id = "07"
+image = "07/02.jpg"
+
+[[stories]]
+id = "08"
+image = "08/02.jpg"
+
+[[stories]]
+id = "09"
+image = "09/02.jpg"
+
+[[stories]]
+id = "10"
+image = "10/02.jpg"
