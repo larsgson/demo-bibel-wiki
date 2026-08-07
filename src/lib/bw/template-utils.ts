@@ -333,29 +333,44 @@ export function loadSceneBodyText(
   const lines = fs.readFileSync(filePath, "utf-8").split("\n")
   const scenes: Record<string, string> = {}
   let currentScene: string | null = null
-  let buffer: string[] = []
+  // Paragraphs, each collected from consecutive non-blank source lines and
+  // joined with a space — the source delivers one sentence/clause per line
+  // (probably authored as subtitle/caption timing beats), which read fine
+  // as an SRT file but render as a choppy run of single-line paragraphs if
+  // preserved as-is (StorySection.tsx wraps each "\n"-separated chunk in
+  // its own <p>). A blank line is treated as a real paragraph break —
+  // e.g. the one already separating the *caption* line from the body.
+  let paragraphs: string[] = []
+  let currentParagraph: string[] = []
 
-  function flush() {
-    if (currentScene) scenes[`${storyId}.${currentScene}`] = buffer.join("\n").trim()
-    buffer = []
+  function flushParagraph() {
+    if (currentParagraph.length > 0) paragraphs.push(currentParagraph.join(" "))
+    currentParagraph = []
+  }
+
+  function flushScene() {
+    flushParagraph()
+    if (currentScene) scenes[`${storyId}.${currentScene}`] = paragraphs.join("\n").trim()
+    paragraphs = []
   }
 
   for (const line of lines) {
     const sceneMatch = line.match(/^##\s+\d\d\.(\d\d)\s+.*$/)
     if (sceneMatch) {
-      flush()
+      flushScene()
       currentScene = sceneMatch[1]
       continue
     }
     if (line.startsWith("# ") && !currentScene) continue // book/chapter title line
     if (!currentScene) continue
+    if (!line.trim()) { flushParagraph(); continue }
     // The italic *caption* convention has no distinct rendering downstream
     // (no markdown-emphasis pass — see StorySection.tsx), so it's folded
     // into the body as plain text rather than shown with literal asterisks.
     const capMatch = line.trim().match(/^\*(.+)\*$/)
-    buffer.push(capMatch ? capMatch[1] : line)
+    currentParagraph.push((capMatch ? capMatch[1] : line).trim())
   }
-  flush()
+  flushScene()
 
   return scenes
 }

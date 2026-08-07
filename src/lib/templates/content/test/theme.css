@@ -1,30 +1,30 @@
-/* John — dark media theme */
+/* test ("God Is For You") — dark cinematic theme, fitting a video series */
 :root {
     /* Page shell (body) — see global.css's --page-bg/--page-text for why
      * these are separate from --bg/--text below. */
-    --page-bg: #1a1a2e;
-    --page-text: #e0e0e0;
+    --page-bg: #16161f;
+    --page-text: #e5e2da;
 
     /* Page */
-    --bg: #1a1a2e;
+    --bg: #16161f;
     --bg-surface: rgba(255, 255, 255, 0.06);
     --bg-surface-hover: rgba(255, 255, 255, 0.08);
-    --bg-panel: #252545;
+    --bg-panel: #221f2c;
     /* Text */
-    --text: #e0e0e0;
+    --text: #e5e2da;
     --text-secondary: rgba(255, 255, 255, 0.8);
     --text-muted: rgba(255, 255, 255, 0.35);
-    --text-on-accent: #fff;
-    /* Accent */
-    --accent: #5b9bd5;
-    --accent-hover: #4a8bc4;
-    --accent-light: rgba(91, 155, 213, 0.15);
-    --header-bg: #007bff;
+    --text-on-accent: #1a1408;
+    /* Accent — warm amber, distinct from John's blue */
+    --accent: #d9a441;
+    --accent-hover: #c9932e;
+    --accent-light: rgba(217, 164, 65, 0.15);
+    --header-bg: #221f2c;
     /* Borders */
     --border: rgba(255, 255, 255, 0.1);
     --border-strong: rgba(255, 255, 255, 0.2);
     /* Overlays & shadows */
-    --overlay: rgba(0, 0, 0, 0.5);
+    --overlay: rgba(0, 0, 0, 0.6);
     --shadow: rgba(0, 0, 0, 0.3);
     --shadow-strong: rgba(0, 0, 0, 0.4);
     /* Feedback */
@@ -35,8 +35,8 @@
     /* Controls */
     --input-bg: rgba(255, 255, 255, 0.08);
     --input-border: rgba(255, 255, 255, 0.2);
-    --fab-bg: #252545;
-    --chevron: #777;
+    --fab-bg: #221f2c;
+    --chevron: #999;
     /* Image overlay text */
     --img-text: rgba(255, 255, 255, 0.95);
     --img-text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);

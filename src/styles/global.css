@@ -6,15 +6,26 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: system-ui, -apple-system, sans-serif;
-  color: rgb(0, 11, 99);
-  background:
-    radial-gradient(1200px 500px at 50% -200px, rgba(0, 11, 99, 0.09), transparent 60%),
-    linear-gradient(180deg, #fbfaf6 0%, #f3f1e9 100%);
+  color: var(--page-text);
+  background: var(--page-bg);
   min-height: 100vh;
 }
 
 @layer base {
   :root {
+    /* Page shell (body) — deliberately separate from --bg/--text below:
+     * this can hold a gradient (as the site's own default does), while
+     * --bg is consumed elsewhere (e.g. LanguageSelectorIsland.tsx) as a
+     * flat background-color, which can't render a gradient value. A
+     * template's own theme.css (see John's) overrides both pairs
+     * together, since a themed page needs its whole shell — including
+     * hierarchically-higher components like the header — to match, not
+     * just the template content area. */
+    --page-bg:
+      radial-gradient(1200px 500px at 50% -200px, rgba(0, 11, 99, 0.09), transparent 60%),
+      linear-gradient(180deg, #fbfaf6 0%, #f3f1e9 100%);
+    --page-text: rgb(0, 11, 99);
+
     --bg: #ffffff;
     --text: #1a1a1a;
     --bg-surface: #f5f5f5;
@@ -24,6 +35,8 @@ body {
   }
 
   .dark {
+    --page-bg: #1a1a2e;
+    --page-text: #e0e0e0;
     --bg: #1a1a2e;
     --text: #e0e0e0;
     --bg-surface: #16213e;
@@ -33,8 +46,6 @@ body {
   }
 
   body {
-    background-color: var(--bg);
-    color: var(--text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

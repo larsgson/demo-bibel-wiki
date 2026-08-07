@@ -1,4 +1,5 @@
 level = "collection"
+layout_theme = "theme.css"
 
 categories = [
   "01",

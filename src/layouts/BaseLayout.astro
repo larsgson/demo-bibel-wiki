@@ -26,9 +26,24 @@ interface Props {
    *  navigation (back out to the category grid) is a full page load, so it
    *  reappears on its own, no client-side state to reset. */
   pageType?: "story" | "category"
+  /** Raw CSS from a template's own theme.css (see getTemplateThemeCSS,
+   *  config'd per-template via index.toml's layout_theme — e.g. John's
+   *  dark theme). It just redeclares the same :root custom properties
+   *  (--bg, --text, --accent, ...) global.css already defines, and wins
+   *  the cascade purely by coming LATER in document order (same
+   *  specificity) — no class/attribute toggling needed. That's also why
+   *  this is injected right before </body>, not in <head>: Astro/Vite's
+   *  own bundled CSS is linked in <head>, so an override placed there can
+   *  just as easily lose the ordering race depending on build vs dev-server
+   *  output — end-of-body is the one position guaranteed to come after all
+   *  of it. Any themed element reading color via var(--x) — including ones
+   *  hierarchically above the template content, like the header — picks up
+   *  the override through ordinary CSS inheritance, unaffected by island
+   *  hydration boundaries. */
+  themeCSS?: string
 }
 
-const { title = "Bibel Wiki", landing = false, heroCredit, pageType } = Astro.props
+const { title = "Bibel Wiki", landing = false, heroCredit, pageType, themeCSS } = Astro.props
 
 // Build story tree for the sidebar (Templates → Categories → Stories)
 const templates = loadAllTemplates()
@@ -102,7 +117,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       } catch (e) { document.documentElement.dataset.uiLevel = "1"; }
     </script>
   </head>
-  <body class="min-h-screen bg-[#fbfaf6] text-brand">
+  <body class="min-h-screen">
     {!landing && <MenuButton />}
     {!landing && <AppSidebar client:only="react" storyTree={storyTree} bibleBooks={bibleBooks} />}
     {!landing && <StandardSidebar client:only="react" />}
@@ -112,7 +127,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
     <div class={`app-main min-h-screen flex flex-col${landing ? " app-main--landing" : ""}`}>
     <header
       class="site-header sticky top-0 z-10 border-b"
-      style="background:rgb(0,11,99);border-color:rgba(0,11,99,0.4)"
+      style="background:var(--header-bg, rgb(0,11,99));border-color:var(--border-strong, rgba(0,11,99,0.4))"
     >
       <div id="header-bar" class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
         <a href="/" id="header-title" class="text-white font-semibold tracking-tight text-lg" style="display:none"></a>
@@ -614,6 +629,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
         initAudioUI()
       }
     </script>
+    {themeCSS && <style set:html={themeCSS} />}
   </body>
 </html>
 
