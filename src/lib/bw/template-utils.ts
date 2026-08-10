@@ -186,6 +186,16 @@ export function loadTemplateStructure(
     }
   }
 
+  // Parse [video] config (base_url) — CDN-hosted chapter videos, e.g. test template
+  let videoConfig: import("./types").VideoConfig | null = null
+  const videoBlock = rootContent.match(
+    /\[video\]\s*\n((?:\s*(?:\w+\s*=\s*"[^"]*"|#[^\n]*)\s*\n?)*)/,
+  )
+  if (videoBlock) {
+    const videoBaseUrlMatch = videoBlock[1].match(/base_url\s*=\s*"([^"]+)"/)
+    if (videoBaseUrlMatch) videoConfig = { base_url: videoBaseUrlMatch[1] }
+  }
+
   let coverImage = ""
   const imgFilenameMatch = rootContent.match(
     /\[image\]\s*\n\s*filename\s*=\s*"([^"]+)"/,
@@ -285,7 +295,7 @@ export function loadTemplateStructure(
     coverImage = categories[0].stories[0].image
   }
 
-  return { name: templateName, image: coverImage, layoutTheme, imageConfig, categories }
+  return { name: templateName, image: coverImage, layoutTheme, imageConfig, videoConfig, categories }
 }
 
 export function loadAllTemplates(): Record<string, TemplateStructure> {
@@ -499,17 +509,24 @@ export function loadTimingData(
  */
 export function loadVideoManifest(
   templateName: string,
-  categoryId: string,
+  storyId: string,
   isos: string[],
+  videoConfig: import("./types").VideoConfig | null = null,
 ): Record<string, { videoUrl: string; timingUrl: string }> {
   const result: Record<string, { videoUrl: string; timingUrl: string }> = {}
   for (const iso of isos) {
-    const videoPath = path.join(PUBLIC_TEMPLATES_DIR, templateName, "video", iso, `${categoryId}.mp4`)
-    const timingPath = path.join(PUBLIC_TEMPLATES_DIR, templateName, "timing", iso, `${categoryId}.json`)
-    if (!fs.existsSync(videoPath) || !fs.existsSync(timingPath)) continue
+    const timingPath = path.join(PUBLIC_TEMPLATES_DIR, templateName, "timing", iso, `${storyId}.json`)
+    if (!fs.existsSync(timingPath)) continue
+    // With a CDN videoConfig, video is remote (existence isn't checked at build
+    // time — the local timing file's presence is the source of truth for which
+    // isos have a video). Without one, fall back to the old local-file layout.
+    const videoPath = path.join(PUBLIC_TEMPLATES_DIR, templateName, "video", iso, `${storyId}.mp4`)
+    if (!videoConfig && !fs.existsSync(videoPath)) continue
     result[iso] = {
-      videoUrl: `/templates/${templateName}/video/${iso}/${categoryId}.mp4`,
-      timingUrl: `/templates/${templateName}/timing/${iso}/${categoryId}.json`,
+      videoUrl: videoConfig
+        ? `${videoConfig.base_url}/${storyId}.mp4`
+        : `/templates/${templateName}/video/${iso}/${storyId}.mp4`,
+      timingUrl: `/templates/${templateName}/timing/${iso}/${storyId}.json`,
     }
   }
   return result

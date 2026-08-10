@@ -6,6 +6,11 @@ categories = [
 ]
 
 [images]
-base_url = "/templates/test/images"
+base_url = "https://cdn.bibel.wiki/img/gify"
 # Filenames already carry their chapter prefix (e.g. "01/01.jpg"), so no
 # path_pattern is needed — resolveImageUrl falls back to base_url + filename.
+
+[video]
+base_url = "https://cdn.bibel.wiki/video/gify"
+# Chapter videos are named "<storyId>.mp4" (e.g. "01.mp4"), no per-language
+# subpath — loadVideoManifest appends storyId + ".mp4" directly.

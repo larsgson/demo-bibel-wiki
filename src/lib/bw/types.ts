@@ -19,11 +19,16 @@ export interface ImageConfig {
   medium_pattern?: string
 }
 
+export interface VideoConfig {
+  base_url: string
+}
+
 export interface TemplateStructure {
   name: string
   image: string
   layoutTheme: string | null
   imageConfig: ImageConfig | null
+  videoConfig: VideoConfig | null
   categories: TemplateCategory[]
 }
 

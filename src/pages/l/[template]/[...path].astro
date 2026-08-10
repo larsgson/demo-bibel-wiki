@@ -78,7 +78,7 @@ export function getStaticPaths() {
               return Object.keys(byLang).length > 0 ? byLang : null
             })(),
             videoByLang: (() => {
-              const byLang = loadVideoManifest(name, cat.id, Object.keys(allLocales))
+              const byLang = loadVideoManifest(name, story.id, Object.keys(allLocales), structure.videoConfig)
               return Object.keys(byLang).length > 0 ? byLang : null
             })(),
             allLocales,

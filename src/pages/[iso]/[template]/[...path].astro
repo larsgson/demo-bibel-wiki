@@ -75,7 +75,7 @@ export function getStaticPaths() {
           if (Object.keys(bodies).length > 0) bodiesByLang[iso] = bodies
         }
         const sceneBodies = Object.keys(bodiesByLang).length > 0 ? bodiesByLang : null
-        const videoLangs = loadVideoManifest(name, cat.id, Object.keys(allLocales))
+        const videoLangs = loadVideoManifest(name, story.id, Object.keys(allLocales), structure.videoConfig)
         const videoByLang = Object.keys(videoLangs).length > 0 ? videoLangs : null
         for (const iso of isos) {
           paths.push({
