@@ -357,10 +357,24 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
 
       // Story landing pane (Simple mode): a plain div that can't self-hide like
       // the React/Svelte islands, so toggle it from here on pane changes.
+      // Also drives `data-page-type` reactively while on the bible pane —
+      // reusing the SAME "Hide Simple-mode header" CSS rule the story/
+      // category template pages set statically (see the Props type/CSS
+      // block above) — but here it can't be a static Astro prop, since this
+      // single page shows both the story-landing pane AND the reader,
+      // toggled client-side; a static attribute would hide the header
+      // during story-landing too. The reader has its own ReaderTopBar, so
+      // the outer site-header (with its own LanguageButton etc.) is
+      // redundant exactly while — and only while — the bible pane is showing.
       const storyLanding = document.getElementById("pane-story-landing")
       if (storyLanding) {
         const syncStoryLanding = (pane: string) => {
           storyLanding.style.display = pane === "story" ? "" : "none"
+          if (pane === "story") {
+            document.documentElement.removeAttribute("data-page-type")
+          } else {
+            document.documentElement.setAttribute("data-page-type", "reader")
+          }
         }
         const initialPane = $uiLevel.get() === 1 ? "story" : "bible"
         syncStoryLanding(initialPane)

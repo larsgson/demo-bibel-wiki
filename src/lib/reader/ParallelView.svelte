@@ -32,10 +32,12 @@
         alignVerseTokens,
         tokensForVerse,
         tokenize,
-        verseOfSourceKey,
+        compactHasOrdinal,
+        sourceKey,
         decodeSourceKey,
         getVerseLexemes,
         matchOriginalWordAtOrdinal,
+        buildWordOrdinalMap,
         type VerseAlignment,
         type DisplayToken
     } from './wordAlignment';
@@ -66,24 +68,24 @@
     let targetVerses = $state<Array<{ num: number; text: string }> | null>(null);
     let loading = $state(true);
 
-    // Which aligned source key (see wordAlignment.ts's sourceKey()) the
-    // pointer is currently over, when hovering a TRANSLATION token in
-    // either panel — the two panels' alignments are independently fetched,
-    // so this is only ever set from a token's own wordIds, never from the
-    // Hebrew/Greek panel (see hoveredOriginalId below for that — a fully
-    // separate, simpler concept now that alignment doesn't depend on
-    // shoresh at all).
-    let hoveredKey = $state<number | null>(null);
+    // The full set of aligned source keys belonging to whichever token the
+    // pointer is currently over (see wordAlignment.ts's sourceKey()) — a
+    // token can carry more than one (a many-to-one word, aligned to several
+    // original words at once). Every rendered token is then judged
+    // independently against this set — see tokenColor below.
+    let hoveredKeys = $state<number[] | null>(null);
 
-    // The Hebrew/Greek "Original" panel's own hover state — plain self-tint
-    // only, deliberately NOT wired into the compact-alignments matching
-    // system: shoresh's role here is showing the original text (and, once
-    // shoresh grows a per-word lexicon endpoint, providing detail on CLICK
-    // of an aligned word — not built yet, see shoresh.ts) rather than
-    // acting as a required backbone for translation-to-translation
-    // highlighting, which now works entirely off compact-alignments' own
-    // shared lexeme-ordinal keys (see wordAlignment.ts's module doc).
-    let hoveredOriginalId = $state<number | null>(null);
+    // wordId -> ordinal for the currently-loaded chapter's original-language
+    // words, built via wordAlignment.ts's buildWordOrdinalMap — only when
+    // the left panel actually shows original text (see load()). This is
+    // what lets hovering a Hebrew/Greek word participate in the SAME
+    // hoveredKeys/tokenColor mechanism translation panels use, rather than
+    // being a disconnected self-tint: the original panel IS the ground
+    // truth, so linking it in is a direct lookup (does the OTHER side's
+    // compact string have this word's ordinal), not a two-sided
+    // confirmation — see tokenColor's isOriginal branch below for why that
+    // means "always yellow, never blue" here specifically.
+    let originalOrdinalMap = $state<Map<number, number> | null>(null);
 
     // Best-effort per-panel word alignment (null when unavailable — most
     // languages/translations still have no published edition). See
@@ -114,23 +116,62 @@
     let leftTokenVerses = $derived(isOriginal ? null : tokenizedVerses(leftVerses, leftAlignment));
     let targetTokenVerses = $derived(tokenizedVerses(targetVerses, rightAlignment));
 
-    function verseHasKey(tokenVerses: Array<{ num: number; tokens: DisplayToken[] }> | null, key: number): boolean {
-        const verse = tokenVerses?.find((v) => v.num === verseOfSourceKey(key));
-        return !!verse?.tokens.some((t) => t.wordIds?.includes(key));
+    // Whether a given panel's alignment has an entry at this exact ordinal
+    // — purely mechanical, straight off the raw `compact` string, precisely
+    // what the debug log's own {side}PosMatch is derived from. No rebuilt
+    // or rescanned token structures involved.
+    function ordinalConfirmed(alignment: Map<number, VerseAlignment> | null, key: number): boolean {
+        const ref = decodeSourceKey(key);
+        const compact = alignment?.get(ref.verse)?.compact;
+        return !!compact && compactHasOrdinal(compact, ref.ordinal);
     }
 
-    // Whether BOTH translation panels independently align to the hovered
-    // source key — vs. only the panel under the pointer (its own alignment
-    // trivially "matches itself", which isn't real corroboration by
-    // itself). Each panel's alignment is independently fetched and possibly
-    // fallible (missing coverage, wrong edition guess), so only show full
-    // confidence (yellow) when they agree; a single-sided match shows the
-    // lower-confidence blue instead of implying an agreement that was never
-    // checked. Meaningless (and unused) while the left panel shows the
-    // original text, since that panel's hover doesn't set hoveredKey at all.
-    let bothSidesConfirm = $derived(
-        hoveredKey !== null && verseHasKey(leftTokenVerses, hoveredKey) && verseHasKey(targetTokenVerses, hoveredKey)
-    );
+    // The color (if any) a given rendered TRANSLATION token should show for
+    // the current hover — every token judged the SAME way, no special-
+    // casing for whichever one is literally under the pointer.
+    //
+    // Two entirely different situations, both handled here:
+    //   - Left panel is a TRANSLATION (isOriginal false): two independently
+    //     fallible alignments being cross-checked against each other. A
+    //     many-to-one token is validated the moment ANY ONE of its ordinals
+    //     is confirmed on BOTH sides — yellow; only when NONE bridge does it
+    //     show blue. (Lets a word that's only PART of a larger token's
+    //     alignment, e.g. English "spoken" matching just one of the two
+    //     original words an Indonesian word covers, earn its own yellow
+    //     independent of whatever else that token does or doesn't cover.)
+    //   - Left panel is the ORIGINAL text (isOriginal true): there is no
+    //     second, independently-fallible side to confirm against — the
+    //     original IS the ground truth. A match here is a direct lookup
+    //     (does the hovered original word's ordinal appear in the
+    //     translation's own compact string), already guaranteed true by
+    //     construction the moment `tok.wordIds` contains it (that's exactly
+    //     how alignVerseTokens populated it, from that side's OWN compact
+    //     string) — so any match is simply confirmed. Always yellow, never
+    //     blue: there's no "only one side agrees" state when one side isn't
+    //     a claim to begin with.
+    function tokenColor(tok: DisplayToken): 'yellow' | 'blue' | null {
+        if (!tok.wordIds || !hoveredKeys) return null;
+        const matched = tok.wordIds.filter((id) => hoveredKeys!.includes(id));
+        if (matched.length === 0) return null;
+        if (isOriginal) return 'yellow';
+        const anyConfirmed = matched.some(
+            (key) => ordinalConfirmed(leftAlignment, key) && ordinalConfirmed(rightAlignment, key)
+        );
+        return anyConfirmed ? 'yellow' : 'blue';
+    }
+
+    // Whether hovering a Hebrew/Greek original-language word should
+    // highlight (its ordinal, looked up via originalOrdinalMap, is part of
+    // the current hover). Always yellow when matched, for the same reason
+    // tokenColor's isOriginal branch is: the original panel IS the ground
+    // truth, not a second claim to cross-check.
+    function originalWordColor(word: ShoreshWord): 'yellow' | null {
+        if (!hoveredKeys || !originalOrdinalMap || bookId === null) return null;
+        const ordinal = originalOrdinalMap.get(word.id);
+        if (ordinal === undefined) return null;
+        const key = sourceKey(bookId, chapter, verseOfWordId(word.id), ordinal);
+        return hoveredKeys.includes(key) ? 'yellow' : null;
+    }
 
     // Popover shown when clicking an aligned token — just the matched
     // original-language word itself (text only, no shoresh lexicon/grammar
@@ -287,13 +328,14 @@
 
         // Best-effort alignment fetch, after the panels already have their
         // text — this only ever ADDS hover-highlight on top of what's
-        // already showing, never blocks the initial render. Not attempted
-        // at all for the original-text panel — nothing to align against
-        // there, see hoveredOriginalId above. Reads getChapterSource() only
-        // now, AFTER loadChapter has resolved for both panels above — that's
-        // what actually reports which edition each panel's text came from
-        // (chapter-store.ts's own tier resolution, not a guess derived
-        // separately — see wordAlignment.ts's module doc).
+        // already showing, never blocks the initial render. Reads
+        // getChapterSource() only now, AFTER loadChapter has resolved for
+        // both panels above — that's what actually reports which edition
+        // each panel's text came from (chapter-store.ts's own tier
+        // resolution, not a guess derived separately — see
+        // wordAlignment.ts's module doc). Not attempted for the left side
+        // when it's the original-text panel — see originalOrdinalMap below
+        // for what links THAT into the hover system instead.
         const currentBookId = getBookByCode(book)?.id ?? null;
         if (currentBookId !== null) {
             const leftTid =
@@ -311,6 +353,27 @@
                 leftAlignment = leftAl;
                 rightAlignment = rightAl;
             }
+        }
+
+        // Best-effort word-id -> ordinal map for the original-text panel —
+        // same staleness guard, same "never blocks the text that's already
+        // showing" principle. One getVerseLexemes call per verse (cheap:
+        // they all share one cached whole-book fetch after the first).
+        if (leftLang === 'original' && words) {
+            const groups = groupWordsByVerse(words);
+            const perVerseMaps = await Promise.all(
+                groups.map((g) => getVerseLexemes(book, ch, g.verse).then((lexemes) => (lexemes ? buildWordOrdinalMap(g.words, lexemes) : null)))
+            );
+            const combined = new Map<number, number>();
+            for (const m of perVerseMaps) {
+                if (!m) continue;
+                for (const [wordId, ordinal] of m) combined.set(wordId, ordinal);
+            }
+            if (book === bookCode && ch === chapter && langCode === iso && leftLang === $parallelLeftLangStore) {
+                originalOrdinalMap = combined;
+            }
+        } else {
+            originalOrdinalMap = null;
         }
     }
 
@@ -351,11 +414,17 @@
                     <span class="v">{group.verse}</span>
                     {#each group.words as word (word.id)}<span
                             class="parallel-word"
-                            class:parallel-word-hover={hoveredOriginalId === word.id}
+                            class:parallel-word-hover={originalWordColor(word) === 'yellow'}
                             data-word-id={word.id}
                             data-strongs={word.strongsCode ?? ''}
-                            onmouseenter={() => (hoveredOriginalId = word.id)}
-                            onmouseleave={() => (hoveredOriginalId = null)}>{word.text}</span
+                            onmouseenter={() => {
+                                const ordinal = originalOrdinalMap?.get(word.id);
+                                hoveredKeys =
+                                    ordinal !== undefined && bookId !== null
+                                        ? [sourceKey(bookId, chapter, verseOfWordId(word.id), ordinal)]
+                                        : null;
+                            }}
+                            onmouseleave={() => (hoveredKeys = null)}>{word.text}</span
                         >{' '}{/each}
                 </p>
             {/each}
@@ -365,14 +434,10 @@
                     <span class="v">{v.num}</span>
                     {#each v.tokens as tok, i (i)}{#if tok.wordIds}<span
                                 class="parallel-token"
-                                class:parallel-word-hover={hoveredKey !== null &&
-                                    tok.wordIds.includes(hoveredKey) &&
-                                    bothSidesConfirm}
-                                class:parallel-word-hover-blue={hoveredKey !== null &&
-                                    tok.wordIds.includes(hoveredKey) &&
-                                    !bothSidesConfirm}
-                                onmouseenter={() => (hoveredKey = tok.wordIds![0])}
-                                onmouseleave={() => (hoveredKey = null)}
+                                class:parallel-word-hover={tokenColor(tok) === 'yellow'}
+                                class:parallel-word-hover-blue={tokenColor(tok) === 'blue'}
+                                onmouseenter={() => (hoveredKeys = tok.wordIds)}
+                                onmouseleave={() => (hoveredKeys = null)}
                                 onclick={(e) => handleTokenClick(tok.wordIds![0], e)}>{tok.text}</span
                             >{:else}{tok.text}{/if}{/each}
                 </p>
@@ -394,14 +459,10 @@
                     <span class="v">{v.num}</span>
                     {#each v.tokens as tok, i (i)}{#if tok.wordIds}<span
                                 class="parallel-token"
-                                class:parallel-word-hover={hoveredKey !== null &&
-                                    tok.wordIds.includes(hoveredKey) &&
-                                    bothSidesConfirm}
-                                class:parallel-word-hover-blue={hoveredKey !== null &&
-                                    tok.wordIds.includes(hoveredKey) &&
-                                    !bothSidesConfirm}
-                                onmouseenter={() => (hoveredKey = tok.wordIds![0])}
-                                onmouseleave={() => (hoveredKey = null)}
+                                class:parallel-word-hover={tokenColor(tok) === 'yellow'}
+                                class:parallel-word-hover-blue={tokenColor(tok) === 'blue'}
+                                onmouseenter={() => (hoveredKeys = tok.wordIds)}
+                                onmouseleave={() => (hoveredKeys = null)}
                                 onclick={(e) => handleTokenClick(tok.wordIds![0], e)}>{tok.text}</span
                             >{:else}{tok.text}{/if}{/each}
                 </p>

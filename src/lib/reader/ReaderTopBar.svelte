@@ -41,8 +41,10 @@
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
     import { $parallelLeftLang as parallelLeftLangStore } from '../../stores/parallel-left-lang-store';
+    import { $selectedLanguage as selectedLanguageStore } from '../../stores/language-store';
     import { displayName } from '../data/languageNames';
     import ParallelLeftLangSelector from './ParallelLeftLangSelector.svelte';
+    import PrimaryLangSelector from './PrimaryLangSelector.svelte';
     const uiLang = uiLangForRegion(activeRegionStore.get());
     const tr = (k: string) => t(uiLang, 'reader.' + k);
 
@@ -50,6 +52,12 @@
     let leftLangLabel = $derived(
         $parallelLeftLangStore === 'original' ? tr('parallelOriginal') : displayName($parallelLeftLangStore)
     );
+
+    // Primary-language button — needed here because the app's own outer
+    // header (with its own LanguageButton) is hidden while the reader is
+    // showing (see BaseLayout.astro's data-page-type toggle), so this is
+    // now the only way to see/change it on that page.
+    let primaryLangSelectorOpen = $state(false);
 </script>
 
 <header class="reader-topbar">
@@ -97,13 +105,29 @@
                 >
                     <div class="lang-icon-wrap">
                         <span class="lang-icon">&#127760;</span>
-                        <span class="lang-code">{$parallelLeftLangStore === 'original' ? '—' : $parallelLeftLangStore}</span>
+                        <span class="lang-code">{$parallelLeftLangStore === 'original' ? 'heb/grc' : $parallelLeftLangStore}</span>
                     </div>
                     <span class="lang-name">{leftLangLabel}</span>
                 </button>
                 {#if leftLangSelectorOpen}
                     <ParallelLeftLangSelector onClose={() => (leftLangSelectorOpen = false)} />
                 {/if}
+            {/if}
+            <button
+                type="button"
+                class="lang-btn reader-topbar-lang-btn"
+                onclick={() => (primaryLangSelectorOpen = true)}
+                aria-label={t(uiLang, 'languageSelector.title')}
+                title={t(uiLang, 'languageSelector.title')}
+            >
+                <div class="lang-icon-wrap">
+                    <span class="lang-icon">&#127760;</span>
+                    <span class="lang-code">{$selectedLanguageStore}</span>
+                </div>
+                <span class="lang-name">{displayName($selectedLanguageStore)}</span>
+            </button>
+            {#if primaryLangSelectorOpen}
+                <PrimaryLangSelector onClose={() => (primaryLangSelectorOpen = false)} />
             {/if}
             <button
                 type="button"

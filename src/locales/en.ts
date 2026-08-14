@@ -141,6 +141,11 @@ export const en = {
     noLanguageData: "No data for this language.",
     loading: "Loading…",
     error: "Error",
+    parallelLeftLangButton: "Change language",
+    parallelOriginal: "⁦עברית / Ελληνικά⁩",
+    parallelSearchLangs: "Search languages…",
+    parallelNoLangsFound: "No languages found for",
+    parallelOriginalNotFound: "Original word not found",
   },
 
   picker: {
@@ -229,11 +234,6 @@ export const en = {
     textAppearance: "Text Appearance",
     about: "About",
     parallelView: "Parallel view",
-    parallelLeftLangButton: "Change language",
-    parallelOriginal: "Original (Hebrew/Greek)",
-    parallelSearchLangs: "Search languages…",
-    parallelNoLangsFound: "No languages found for",
-    parallelOriginalNotFound: "Original word not found",
   },
 
   branches: {

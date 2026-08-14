@@ -22,17 +22,22 @@
  * confident-looking but WRONG matches (different word order, different word
  * count per verse), not just missing ones — worse than no highlight at all.
  * So this only ever attempts alignment when the edition is actually known
- * to match, via two paths:
- *   1. `translationIdForSource()` — chapter-store.ts's own
+ * to match, via three paths, in priority order:
+ *   1. `manualEditionForLang()` — ../data/alignment-editions.json, a small
+ *      hand-curated `{iso: editionId}` map for cases nothing below can
+ *      figure out automatically (chiefly PKF, whose bundles carry no
+ *      edition id at all) but a human happens to know for certain — e.g.
+ *      knowing this app's Indonesian PKF content is the "INDTSI" printing.
+ *      Take the same care adding an entry here as picking a wrong one
+ *      produces confidently WRONG word matches, not just missing ones.
+ *   2. `translationIdForSource()` — chapter-store.ts's own
  *      `getChapterSource()` reports which tier resolved the CURRENTLY
  *      DISPLAYED text; helloAO and DBT both carry a real, externally-
  *      published edition id (a helloAO translation id / DBT distinct-id)
  *      that lines up 1:1 with compact-alignments' own edition-folder
- *      naming, so those are trusted outright. PKF (its bundles have no
- *      corresponding id in any external alignment dataset) and contrib
- *      (this app's own local files) report null — genuinely unknown, not
- *      a guess.
- *   2. `discoverEditionForLang()` — for whatever's left unknown, ONLY when
+ *      naming, so those are trusted outright. PKF and contrib (this app's
+ *      own local files) report null — genuinely unknown, not a guess.
+ *   3. `discoverEditionForLang()` — for whatever's left unknown, ONLY when
  *      that language has EXACTLY ONE published compact-alignments edition
  *      at all. With a single candidate there's no "which of several editions
  *      matches" guess to get wrong; with two or more, this deliberately
@@ -63,6 +68,7 @@
  */
 
 import { getBookById, type Book } from '../bw/bible-books';
+import manualEditions from '../../data/alignment-editions.json';
 
 const HF_BASE_URL = 'https://huggingface.co/datasets/bcv-commons/compact-alignments/resolve/main';
 const HF_TREE_BASE_URL = 'https://huggingface.co/api/datasets/bcv-commons/compact-alignments/tree/main';
@@ -94,6 +100,18 @@ export function decodeSourceKey(key: number): SourceKeyRef {
         verse: Math.floor(key / 100) % 1000,
         ordinal: key % 100
     };
+}
+
+/**
+ * A hand-curated override for a language whose edition can't be determined
+ * any other way (typically PKF, which carries no edition id at all) — see
+ * ../data/alignment-editions.json and the module doc comment. Checked
+ * FIRST, ahead of both the automatic source-based lookup and discovery, so
+ * an entry here always wins even if e.g. discoverEditionForLang would
+ * otherwise refuse due to multiple published editions.
+ */
+export function manualEditionForLang(iso: string): string | null {
+    return (manualEditions as Record<string, string>)[iso] ?? null;
 }
 
 /**
@@ -264,16 +282,18 @@ export interface VerseAlignment {
  * Fetches one chapter's compact alignment strings for (iso, translationId),
  * keyed by verse number. `translationId` should come from
  * `translationIdForSource` — pass `null` when it returned null (no KNOWN
- * edition for this language); this still attempts `discoverEditionForLang`
- * as a second path, which only succeeds when the language has exactly one
- * published edition (see the module doc comment for why an ambiguous case
- * gets no alignment rather than a guess).
+ * edition for this language). Tries, in order: `manualEditionForLang(iso)`
+ * (a human-confirmed override, see ../data/alignment-editions.json),
+ * `translationId` if given, then `discoverEditionForLang` — which only
+ * succeeds when the language has exactly one published edition (see the
+ * module doc comment for why an ambiguous case gets no alignment rather
+ * than a guess).
  *
  * `_index/{book}_lexemes.json` is fetched only to learn the ORDER of verse
  * refs (the position that lines each verse up with its entry in the
  * edition's own compact-array file) — its lexeme content itself is no
- * longer consumed, see the module doc comment. Returns `null` if neither
- * path resolves an edition, or it doesn't cover this book — callers should
+ * longer consumed, see the module doc comment. Returns `null` if no path
+ * resolves an edition, or it doesn't cover this book — callers should
  * render plain, unaligned text in that case, not treat it as an error.
  */
 export async function getChapterAlignment(
@@ -287,7 +307,13 @@ export async function getChapterAlignment(
     const bookCode = book.code;
 
     let edition: string | null = null;
-    if (translationId) {
+
+    const manual = manualEditionForLang(iso);
+    if (manual) {
+        const manualExists = await getEditionFileIndex(iso, manual);
+        if (manualExists) edition = manual;
+    }
+    if (!edition && translationId) {
         const known = deriveEditionFolder(iso, translationId);
         const knownExists = await getEditionFileIndex(iso, known);
         if (knownExists) edition = known;
@@ -354,7 +380,7 @@ function decodeSpan(span: string): number[] {
     return [Number(span)];
 }
 
-function parseCompactString(compact: string): Map<number, string> {
+export function parseCompactString(compact: string): Map<number, string> {
     const pairs = new Map<number, string>();
     if (!compact) return pairs;
     for (const part of compact.split(' ')) {
@@ -362,6 +388,20 @@ function parseCompactString(compact: string): Map<number, string> {
         pairs.set(Number(ordinal), span);
     }
     return pairs;
+}
+
+/**
+ * Whether a verse's own `compact` string has an entry for `ordinal` — i.e.
+ * whether THIS edition aligns that particular original-language word to
+ * anything at all. Both sides of a comparison reference the exact same
+ * per-verse ordinal sequence (the shared lexemes.json), so this single
+ * membership check is the whole cross-panel confirmation: given the ordinal
+ * a hovered token aligns to on one side, checking the OTHER side's compact
+ * string for that same ordinal is both necessary and sufficient — no need
+ * to rebuild or scan the other side's rendered tokens at all.
+ */
+export function compactHasOrdinal(compact: string, ordinal: number): boolean {
+    return parseCompactString(compact).has(ordinal);
 }
 
 /**
@@ -463,4 +503,42 @@ export function matchOriginalWordAtOrdinal<T extends OriginalWordLike>(
         if (!found) return null;
     }
     return found;
+}
+
+/**
+ * The reverse of `matchOriginalWordAtOrdinal`, and for a different purpose:
+ * given one verse's original-language words and its published lexeme
+ * sequence, builds the full word-id -> ordinal mapping in a single lockstep
+ * pass. Used to answer "does hovering THIS original word have a published
+ * ordinal at all, and if so which one" — needed because the original-
+ * language panel is the one true "ground truth" side: unlike two
+ * translations (each independently, possibly-wrongly aligned), a link from
+ * the original text to a translation's compact string isn't a confirmation
+ * between two fallible sources, it's a direct lookup. Stops (rather than
+ * discarding everything found so far) at the first Strong's-number mismatch
+ * — content words before the mismatch keep their real ordinal; words at or
+ * after it simply don't appear in the returned map, so they just don't
+ * highlight, no wider failure.
+ */
+export function buildWordOrdinalMap<T extends OriginalWordLike>(
+    verseWords: T[],
+    verseLexemes: string[]
+): Map<number, number> {
+    const map = new Map<number, number>();
+    let pointer = 0;
+    for (let ordinal = 0; ordinal < verseLexemes.length; ordinal++) {
+        const targetLexeme = normalizeLexemeNumber(verseLexemes[ordinal]);
+        let found = false;
+        while (pointer < verseWords.length) {
+            const word = verseWords[pointer];
+            pointer++;
+            if (word.strongsCode && normalizeLexemeNumber(word.strongsCode) === targetLexeme) {
+                map.set(word.id, ordinal);
+                found = true;
+                break;
+            }
+        }
+        if (!found) break;
+    }
+    return map;
 }
