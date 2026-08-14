@@ -40,7 +40,16 @@
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
+    import { $parallelLeftLang as parallelLeftLangStore } from '../../stores/parallel-left-lang-store';
+    import { displayName } from '../data/languageNames';
+    import ParallelLeftLangSelector from './ParallelLeftLangSelector.svelte';
     const uiLang = uiLangForRegion(activeRegionStore.get());
+    const tr = (k: string) => t(uiLang, 'reader.' + k);
+
+    let leftLangSelectorOpen = $state(false);
+    let leftLangLabel = $derived(
+        $parallelLeftLangStore === 'original' ? tr('parallelOriginal') : displayName($parallelLeftLangStore)
+    );
 </script>
 
 <header class="reader-topbar">
@@ -78,6 +87,24 @@
         <div class="reader-topbar-center"></div>
 
         <div class="reader-topbar-end">
+            {#if parallelViewActive}
+                <button
+                    type="button"
+                    class="lang-btn reader-topbar-lang-btn"
+                    onclick={() => (leftLangSelectorOpen = true)}
+                    aria-label={tr('parallelLeftLangButton')}
+                    title={tr('parallelLeftLangButton')}
+                >
+                    <div class="lang-icon-wrap">
+                        <span class="lang-icon">&#127760;</span>
+                        <span class="lang-code">{$parallelLeftLangStore === 'original' ? '—' : $parallelLeftLangStore}</span>
+                    </div>
+                    <span class="lang-name">{leftLangLabel}</span>
+                </button>
+                {#if leftLangSelectorOpen}
+                    <ParallelLeftLangSelector onClose={() => (leftLangSelectorOpen = false)} />
+                {/if}
+            {/if}
             <button
                 type="button"
                 class="tb-icon reader-topbar-parallel-btn"

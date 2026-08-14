@@ -396,6 +396,16 @@
     outline-offset: 1px;
 }
 
+/* Parallel-view-only control: switches the left panel between the original
+ * language and any modern translation. Reuses the app's global .lang-btn
+ * styling (same button the primary-language picker uses) — only shrunk to
+ * fit the reader top bar's compact height. Lives in the top bar only while
+ * parallel view is active. */
+.reader-topbar-lang-btn {
+    padding: 0.2em 0.5em;
+    max-width: 30vw;
+}
+
 /* Floating chapter-nav arrows — fixed to the viewport sides, vertically
  * centred. Hidden on narrow screens; on mobile the user swipes the body. */
 .reader-side-nav {

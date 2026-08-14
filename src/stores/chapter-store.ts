@@ -12,6 +12,22 @@ import { pkfUrl as pkfUrlOf } from "../lib/bw/pkf-url"
 // Cache key: "langCode-BOOK.chapter" e.g. "spa-JHN.1"
 export const $chapterText = atom<Record<string, any>>({})
 
+/**
+ * Which tier resolved a chapter's text, and — for the two tiers with a
+ * real, externally-known edition identifier — what that identifier is.
+ * Populated alongside $chapterText, same cache key. Exists so callers that
+ * need to know precisely which PUBLISHED EDITION of a language's text is on
+ * screen (e.g. ParallelView.svelte's word-alignment feature, which needs to
+ * fetch alignment data for that exact edition or not attempt it at all —
+ * see wordAlignment.ts) can look it up without re-deriving the resolution
+ * chapter-store.ts already did. "helloao" and "dbt" carry a real edition id
+ * (the helloAO translation id / DBT distinct-id respectively — both are
+ * externally-published identifiers, not internal to this app). "pkf" and
+ * "contrib" don't: PKF bundles have no corresponding edition id in any
+ * external alignment dataset, and contrib is this app's own local files.
+ */
+export const $chapterSource = atom<Record<string, { provider: string; id?: string } | null>>({})
+
 // Contrib registry: lang → contribId (e.g. "nor" → "NBS")
 const contribRegistry: Record<string, string> = {
   nor: "NBS",
@@ -50,6 +66,7 @@ export async function loadChapter(
   if (existing[cacheKey]) return existing[cacheKey]
 
   let verses: any = null
+  let source: { provider: string; id?: string } | null = null
 
   // 1. Try PKF data (Proskomma) for languages with PKF files
   if (!verses && langCode !== "eng") {
@@ -75,7 +92,7 @@ export async function loadChapter(
             }
           }
           const pkfVerses = await chapterVerses(pkfAsset.base, pkfUrl, book, chapter, catalog)
-          if (pkfVerses.length > 0) verses = pkfVerses
+          if (pkfVerses.length > 0) { verses = pkfVerses; source = { provider: "pkf" } }
         } catch { /* fall through */ }
       }
     }
@@ -84,6 +101,7 @@ export async function loadChapter(
   // 2. Try BSB for English (helloAO's hosted copy of the same translation)
   if (!verses && langCode === "eng") {
     verses = await fetchHelloaoText("BSB", book, chapter)
+    if (verses) source = { provider: "helloao", id: "BSB" }
   }
 
   // 3. Try contrib (local files)
@@ -91,18 +109,22 @@ export async function loadChapter(
     const contribId = contribRegistry[langCode]
     if (contribId) {
       verses = loadContribText(langCode, contribId, book, chapter)
+      if (verses) source = { provider: "contrib", id: contribId }
     }
   }
 
   // 4. Try helloao (free API, no key needed)
   if (!verses) {
     if (filesetId.startsWith("helloao:")) {
-      verses = await fetchHelloaoText(filesetId.slice(8), book, chapter)
+      const tid = filesetId.slice(8)
+      verses = await fetchHelloaoText(tid, book, chapter)
+      if (verses) source = { provider: "helloao", id: tid }
     } else {
       const distinctId = filesetId.replace(/(N[12]DA|[A-Z]{2}16|O[12]DA|S[12]DA)$/, "")
       const tid = await getHelloaoTid(distinctId)
       if (tid) {
         verses = await fetchHelloaoText(tid, book, chapter)
+        if (verses) source = { provider: "helloao", id: tid }
       }
     }
   }
@@ -112,14 +134,28 @@ export async function loadChapter(
     const pkfCat = pkfCatalogCache.get(langCode)
     if (!pkfCat?.checked || pkfCat.books.has(book)) {
       verses = await fetchDbtText(filesetId, book, chapter)
+      if (verses) source = { provider: "dbt", id: filesetId }
     }
   }
 
   if (verses) {
     $chapterText.set({ ...existing, [cacheKey]: verses })
+    $chapterSource.set({ ...$chapterSource.get(), [cacheKey]: source })
   }
 
   return verses
+}
+
+/** The provider/edition-id that resolved a chapter's text, if known — see
+ *  $chapterSource's doc comment. Only meaningful after loadChapter has
+ *  resolved (or attempted to resolve) this exact (book, chapter, langCode). */
+export function getChapterSource(
+  book: string,
+  chapter: number,
+  langCode: string,
+): { provider: string; id?: string } | null {
+  const cacheKey = `${langCode}-${book}.${chapter}`
+  return $chapterSource.get()[cacheKey] ?? null
 }
 
 export function getChapterData(
