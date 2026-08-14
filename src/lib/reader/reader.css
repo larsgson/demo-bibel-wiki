@@ -236,13 +236,18 @@
 .reader-body .ord  { vertical-align: super; font-size: 75%; }
 
 /* Links */
+/* .reflink = xref target text (\xt), styled like a link but inert — the
+ * source PKF gives us free text in the language's own book abbreviations,
+ * not a resolved book/chapter/verse target, so it isn't safe to make
+ * clickable (see sofria.ts's xt handling). .ref-link is reserved for an
+ * actual navigable reference once/if a resolved target is available. */
 .reader-body .reflink,
 .reader-body .ref-link {
     color: var(--LinkColor);
     text-decoration: none;
     border-bottom: 1px dotted var(--LinkColor);
-    cursor: pointer;
 }
+.reader-body .ref-link { cursor: pointer; }
 
 /* Footnote and cross-ref callers — rendered as <button> so popover clicks
  * are easy to wire and keyboard navigation works by default. */

@@ -276,6 +276,18 @@ function renderInlineContent(items: SofriaContent[] | undefined, ctx: RenderCtx)
                 out += `<button type="button" class="${esc(marker)} glossary-term" data-term="${esc(
                     plain.toLowerCase()
                 )}">${inner}</button>`;
+            } else if (marker === 'xt') {
+                // \xt = cross-reference target text (e.g. "Yes 40:3 LXX").
+                // This source's PKFs carry it as plain free text in the
+                // language's own book abbreviations — unlike SAB-built PKFs
+                // (see example/sab-pwa), there is no structured \zreflink
+                // milestone with a resolved book/chapter/verse target, and
+                // building a reliable per-language abbreviation table for
+                // all ~589 PKF languages is out of scope. So this is styled
+                // like a link (reader.css `.reflink`) but stays inert — no
+                // click handler — to avoid ever showing a reference that
+                // might resolve to the wrong passage.
+                out += `<span class="${esc(marker)} reflink">${inner}</span>`;
             } else {
                 out += `<span class="${esc(marker)}">${inner}</span>`;
             }
