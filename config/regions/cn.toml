@@ -1,0 +1,351 @@
+# China — regional entry point.   Subdomain: cn.demo.bibel.wiki   ·   Path: /r/cn
+#
+# Single source of truth for the region (mirrors config/regions/mx.toml,
+# config/regions/id.toml, config/regions/ke.toml, config/regions/za.toml,
+# config/regions/cas.toml). Drives the region landing page, the picker, and
+# any sub-region subdomains.
+#
+# Scope warning — READ BEFORE ADDING LANGUAGES: China is linguistically far
+# bigger than any region configured so far (~130 living languages, by most
+# counts). This file is NOT exhaustive and isn't trying to be — see method
+# below.
+#
+# Method: WebFetch of the standard Wikidata SPARQL query (P17=Q148 "China
+# (PRC)" ∧ has P220 ISO 639-3) returned 250+ rows before the fetch tool
+# itself truncated the response as "very large" — plainly unworkable as a
+# per-code manual review, unlike mx/id/ke/za/cas's 30-75-candidate lists.
+# Rather than hand-vet a list that size, ~320 candidate codes were pulled
+# from that raw dump (deduplicated, extinct/sign/pidgin/macrolanguage
+# entries kept in for completeness) and checked programmatically against the
+# same three authoritative sources ke.toml/za.toml/cas.toml use:
+#   - config/pkf-langs.json (`.isos`, 589 PKF/Scripture Earth codes): 0 hits.
+#     PKF appears to have NO China-tagged content at all, for any candidate —
+#     unlike za.toml's theory of "PKF deliberately skips well-served
+#     official languages," here it looks more like Scripture Earth (a
+#     Wycliffe-affiliated catalog skewed toward in-progress minority-language
+#     work) simply hasn't onboarded any China text, full stop. Worth
+#     revisiting if PKF's China coverage ever changes.
+#   - data/source-catalog.json (helloAO/DBT-derived, build-time resolved —
+#     the actual "can Reader.svelte render this today" signal): 46 hits.
+#   - config/licenses.json `.excluded` (cya/nlv/top): 0 overlap.
+# A full per-candidate DBT raw-catalog/catalog-text.json pass (as za.toml/
+# cas.toml/arw.toml did for their much smaller candidate lists) isn't
+# practical at ~320 candidates, but it WAS run for the full resolved set (all
+# 46 source-catalog.json hits, see below) as a spot-check. 45 of 46 confirm
+# cleanly against cdn.bibel.wiki/dbt/_app/catalog-text.json (DBT's own
+# derived text-fileset index). One genuine anomaly: khg (Khams Tibetan) has
+# a dbt entry in source-catalog.json (KHGNTV, NT+OT) but NO entry at all —
+# audio or text — in catalog-text.json. Not the same shape as za.toml's nso/
+# tso or cas.toml's kir/dng (those are confirmed audio-only: an "a:"/"A:"
+# field with no "t:"/"T:" field anywhere), nor arw.toml's ayl (confirmed
+# real text in catalog-text.json that source-catalog.json is simply missing)
+# — khg's raw _catalog.json row for KHGNTV DOES carry a "t:" text-field
+# marker (just an empty one) and still isn't picked up in the derived index.
+# Kept in the list per source-catalog.json — the actual "does the app
+# resolve this today" signal this file otherwise follows throughout — but
+# flagged here as a possible stale/false-positive text fileset worth
+# rechecking if khg's reader page ever comes up empty in practice.
+#
+# Four codes were checked and added/rejected by hand rather than coming from
+# the raw P17 pull at all — same move cas.toml made for Russian/English:
+# Wikidata ties each language item to a single "home" country, so a real
+# minority community whose language item is tagged elsewhere never surfaces
+# under a country-scoped P17 query no matter how large that community is
+# inside China. Japanese (jpn, item tagged Japan) and Russian (rus, item
+# tagged Russia) both resolve (helloAO) but are excluded below — see the
+# diaspora/marginal-population notes further down. Tatar (tat, item tagged
+# Russia) and Northern Uzbek (uzn, item tagged Uzbekistan/Tajikistan/
+# Turkmenistan) also both resolve and — unlike jpn/rus — ARE kept, since
+# both are among China's 55 officially recognized ethnic minorities
+# (Xinjiang; 2010 census ~3,556 Tatars, ~10,569 Uzbeks — small, but
+# genuinely indigenous, unlike jpn/rus's diaspora/marginal cases). That
+# brings the resolved universe to 46 (42 from the raw P17 pull + these 4
+# hand-checked codes), of which 35 are kept — see the exclusion notes below
+# for where the other 11 went.
+#
+# Macrolanguage handling (mirrors cas.toml's uzn-vs-uzb, tgk-vs-fas logic —
+# use the code that actually carries content, not the umbrella code):
+#   - zho (Chinese, macro) itself: no content. Its members cmn/yue/nan/hak
+#     DO resolve and are listed; wuu/gan/hsn/cjy do NOT (see gaps below).
+#   - zha (Zhuang, macro): no content. Of ~15 individual Zhuang codes
+#     checked, only zyb (Yongbei Zhuang — the Wuming-dialect basis of
+#     "Standard Zhuang") resolves, so it stands in for China's largest
+#     minority nationality (~18M) here.
+#   - hmn (Hmong, macro): no content, and neither does any individual
+#     Chinese Miao/Hmong variety checked (a dozen-plus hm* codes). Whole
+#     family excluded — see gaps below.
+#   - mon (Mongolian, macro) AND mvf (Southern Mongolian, the PRC-specific
+#     individual code): neither resolves. xal (Kalmyk-Oirat) does resolve
+#     and is listed, but it's a different Mongolic branch (Xinjiang's Oirat/
+#     Kalmyk-related Mongols), not a substitute for mainstream Inner
+#     Mongolian coverage — see gaps below.
+#   - bod (Tibetan) is itself a macrolanguage, but unusually ALSO resolves
+#     directly (helloAO bod_ntb, full NT+OT) alongside two of its members,
+#     adx (Amdo Tibetan) and khg (Khams Tibetan) — all three kept, since all
+#     three are independently real, unlike the zho/zha/hmn/mon cases above.
+#   - hni (Hani, the nationality's main/umbrella code, ~1.6M): no content,
+#     yet two smaller Hani-branch varieties, ahk (Akha) and aeu (Akeu), do
+#     resolve — same "umbrella empty, branch real" shape as Zhuang/Yi below.
+#   - iii (Nuosu, the standard literary Yi with its own script, ~2M
+#     speakers): no content, though a different Yi/Loloish variety, ycl
+#     (Lolopo), does resolve.
+#
+# Cross-region duplicates — NOT silently dropped or silently duplicated:
+# Uyghur (uig), Kazakh (kaz), and Northern Uzbek (uzn — hand-added, see
+# above) all resolve here AND already appear in config/regions/cas.toml
+# (Central Asia) for their Kazakhstan/Uzbekistan communities. All three
+# genuinely have large, distinct communities in Xinjiang too, so all three
+# are kept in this file's `languages` list as well.
+# src/lib/data/regions.ts's `regionForIso()`
+# returns the FIRST region containing an ISO, and region-config.ts sorts
+# regionConfigs by `code` — "cas" < "cn" alphabetically — so cas.toml wins
+# `regionForIso()` for these three. That's an accepted, known tradeoff (same
+# one cas.toml already lives with re: any future region), not a bug: each
+# region's own `languages`/`available` list (what actually drives its own
+# picker and landing page) is independent of `regionForIso()`, so cn's
+# picker still shows Uyghur/Kazakh/Uzbek correctly regardless of who "wins"
+# the global lookup.
+#
+# Excluded — diaspora / not indigenous to China: Punjabi (pan), Japanese
+# (jpn), Vietnamese (vie) — all three resolve to real content, but pan/jpn
+# are unrelated-country diaspora languages (same treatment as ke.toml/
+# za.toml excluding Punjabi/Tamil/Yiddish/Slovene). Vietnamese is a genuine
+# edge case — it's the heritage language of the Jing (Gin) minority,
+# officially one of China's 55 recognized ethnic groups, in coastal
+# Guangxi — but that community is tiny (~28,000) and the resolvable content
+# is indistinguishable from mainstream Vietnamese-for-Vietnam text, so it's
+# treated the same as pan/jpn rather than the same as Korean below.
+#
+# Excluded — extinct / historical, no living vernacular community: Manchu
+# (mnc, no content anyway — ethnic population ~10M, but the SPOKEN language
+# is critically/near-extinct, down to a handful of elderly speakers in
+# Sanjiazi village, Heilongjiang; nearly all ethnic Manchu are Mandarin-
+# speaking today), Old Chinese (och), Sogdian (sog), Khwarezmian (xco),
+# Bactrian (xbc), Tocharian A (xto), Classical Mongolian (cmg), Chinese
+# Pidgin English (cpi) — all long-dead, no content. Also Macanese/Patuá
+# (mzs), a nearly-extinct Portuguese-Cantonese creole with a handful of
+# speakers in Macau — living Portuguese (por, see below) already covers
+# Macau's actual living official/vernacular language.
+#
+# Excluded — sign languages (no text-fileset model in this app, same
+# treatment as ke.toml's xki / za.toml's sfs): Chinese Sign Language (csl),
+# Hong Kong Sign Language (hks), Tibetan Sign Language (lsn).
+#
+# Excluded — real content, but the primary population and translation
+# context is a NEIGHBORING country, with only a marginal or disputed-
+# territory presence on the Chinese side of the border (mostly Tibet
+# Autonomous Region's Medog/Zayü/Tingri counties, or Aksai Chin/"South
+# Tibet"): Adi (adi), Tinani (lbf), Digaro Mishmi (mhu), and Sherpa (xsr) —
+# primary population India (Arunachal Pradesh/Himachal Pradesh) or Nepal —
+# and Ladakhi (lbj) — primary population India (Ladakh). Also excluded on
+# similar grounds though further southeast: Khmu (kjg, primarily Laos/
+# Vietnam/Thailand, a small unrecognized population in Yunnan's Jinping
+# County) and Tai Dam (blt, primarily Vietnam/Laos/Thailand/US diaspora).
+#
+# Excluded — Russian (rus): resolves, and China does recognize a "Russian"
+# ethnic minority (~15,000, Inner Mongolia/Xinjiang, descended from earlier
+# settlers), but the population is marginal and the content is the same
+# generic Russian text already primarily associated with Russia — mirrors
+# cas.toml's OWN choice not to list rus in its `languages` array either
+# (it's cas.toml's `defaultLanguage` but never appears in the 16-language
+# list), so the same reasoning applies transitively here.
+#
+# Included despite being a single-country-adjacent language, on the same
+# "genuinely local now" logic za.toml used for Afrikaans: Korean (kor) —
+# Yanbian Korean Autonomous Prefecture, Jilin, ~1.7-2M people, one of the
+# 55 officially recognized minority nationalities, multi-generational with
+# its own Korean-medium education system — and Portuguese (por) — co-
+# official language of Macau SAR with a living Macanese-Portuguese
+# community (distinct from the mnc-style extinct-creole case above).
+#
+# Notable major gaps despite huge or well-known communities (same kind of
+# callout za.toml gives Zulu/Xhosa/Afrikaans) — PKF, DBT, and helloAO all
+# have ZERO entries for: Wu Chinese (wuu, ~80M speakers incl. Shanghainese),
+# Gan (gan, ~20M), Xiang (hsn, ~40M), and Jin (cjy, ~60M) — of the major
+# Sinitic varieties, only Mandarin/Cantonese/Southern Min/Hakka resolve.
+# Also zero coverage: the ENTIRE Miao/Hmong family (~9M-strong nationality,
+# a dozen-plus individual varieties checked, none resolve), Mongolian in
+# any form (~6M ethnic Mongols, mostly Inner Mongolia — see macrolanguage
+# note above), standard/literary Yi (iii, ~2M, has its own script), and
+# Hani's own umbrella code (hni, ~1.6M) — see macrolanguage note above for
+# both of the last two. Revisit all of these if PKF/DBT/helloAO ever add
+# China-region text.
+#
+# That leaves 35 languages actually resolving and in scope, grouped by
+# language family (Sinitic / Tibetic / Turkic / Mongolic / Tungusic /
+# Tai-Kadai / Austroasiatic / Tibeto-Burman / Koreanic / Indo-European) —
+# a province/administrative-region grouping was considered and rejected the
+# same way za.toml rejected it at only 12 languages: China has 34
+# provincial-level divisions, which would produce a far sparser, less
+# meaningful picker than 10 family buckets do for 35 languages. An
+# approximate by-region mapping (broad geographic zones, not provinces) is
+# kept as commented reference data, same treatment as the other files' "by
+# family"/"by province" alternates.
+
+code = "cn"
+name = { en = "China", zh = "中国" }
+title = { en = "Your Bible for China", zh = "您的中国圣经" }  # header title; hidden if unset
+defaultLanguage = "cmn"   # Standard Mandarin — China's national lingua
+                          # franca, full NT+OT (helloAO)
+uiLanguage = "zh"         # entering this region DEFAULTS the UI to Chinese
+                          # (src/locales/zh.ts)
+
+# Bridge/trade languages — Mandarin is the actual national lingua franca;
+# English is the universal secondary fallback already used by every other
+# region here. Neither needs to appear in `languages` below to be used here
+# (cmn also happens to be genuinely indigenous, so it's listed there too;
+# eng, like za.toml's and cas.toml's eng, is not).
+tradeLanguages = ["cmn", "eng"]
+
+# Every (non-diaspora, non-extinct, non-sign, in-scope) language in this
+# region (ISO 639-3) that resolves to real content — see the scope note
+# above. All 35 currently resolve; there is no non-resolving "kept for
+# documentation" entry here (unlike za.toml's nso/tso or cas.toml's
+# kir/dng) — see the method note above for why.
+languages = [
+  "acn", "adx", "aeu", "ahk", "atb", "bfs", "blr", "bod", "cmn", "evn",
+  "gld", "hak", "kac", "kaz", "khg", "kor", "lhu", "lis", "nan", "nuf",
+  "nxq", "onb", "pcc", "por", "prk", "rbb", "sce", "tat", "tyv", "uig",
+  "uzn", "xal", "ycl", "yue", "zyb",
+]
+
+# ── Groupings ────────────────────────────────────────────────────────────────
+# Two kinds, by the `navigable` flag:
+#   navigable = false → a picker FILTER for language selection (no URL).
+#                       Auto-generated and ACTIVE.
+#   navigable = true  → a sub-region SUBDOMAIN  cn.<slug>.bibel.wiki  (hierarchical).
+#                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
+#                       its subdomain valid. Never auto-enabled.
+#
+# Only ONE grouping is ever rendered (whichever `[picker].filterBy` names) —
+# see src/pages/r/[region]/index.astro. The other grouping below is
+# reference data, ready to promote later.
+
+# --- By language family (picker filter; active) ---
+[[grouping]]
+id = "family"
+navigable = false
+name = { en = "By language family", zh = "按语系分类" }
+
+  [[grouping.group]]
+  slug = "sinitic"
+  name = { en = "Sinitic (Chinese)", zh = "汉语" }
+  languages = ["cmn", "yue", "nan", "hak"]
+  [[grouping.group]]
+  slug = "tibetic"
+  name = { en = "Tibetic", zh = "藏语" }
+  languages = ["bod", "adx", "khg"]
+  [[grouping.group]]
+  slug = "turkic"
+  name = { en = "Turkic", zh = "突厥语族" }
+  languages = ["uig", "kaz", "tat", "uzn", "tyv"]
+  [[grouping.group]]
+  slug = "mongolic"
+  name = { en = "Mongolic", zh = "蒙古语族" }
+  languages = ["xal", "sce"]
+  [[grouping.group]]
+  slug = "tungusic"
+  name = { en = "Tungusic", zh = "通古斯语族" }
+  languages = ["evn", "gld"]
+  [[grouping.group]]
+  slug = "tai-kadai"
+  name = { en = "Tai-Kadai", zh = "壮侗语族" }
+  languages = ["zyb", "pcc", "onb"]
+  [[grouping.group]]
+  slug = "austroasiatic"
+  name = { en = "Austroasiatic", zh = "南亚语系" }
+  languages = ["prk", "rbb", "blr"]
+  [[grouping.group]]
+  slug = "tibeto-burman"
+  name = { en = "Tibeto-Burman (other)", zh = "藏缅语族（其他）" }
+  languages = ["ycl", "nxq", "bfs", "lis", "ahk", "aeu", "lhu", "acn", "atb", "kac", "nuf"]
+  [[grouping.group]]
+  slug = "koreanic"
+  name = { en = "Koreanic", zh = "朝鲜语" }
+  languages = ["kor"]
+  [[grouping.group]]
+  slug = "indo-european"
+  name = { en = "Indo-European", zh = "印欧语系" }
+  languages = ["por"]
+
+# --- By region (COMMENTED OUT — approximate reference data / future filter tab) ---
+# Broad geographic zones, not the 34 provincial-level divisions (see scope
+# note above for why province-level would be too granular). Approximate
+# primary-community association only; several languages (esp. cmn) are
+# spoken far beyond the zone listed.
+#
+# [[grouping]]
+# id = "region"
+# navigable = false
+# name = { en = "By region" }
+#
+#   [[grouping.group]]
+#   slug = "north"
+#   name = { en = "North (Beijing / Inner Mongolia core)" }
+#   languages = ["cmn"]
+#   [[grouping.group]]
+#   slug = "northeast"
+#   name = { en = "Northeast (Manchuria)" }
+#   languages = ["kor", "gld", "evn"]
+#   [[grouping.group]]
+#   slug = "northwest"
+#   name = { en = "Northwest (Xinjiang / Gansu / Ningxia)" }
+#   languages = ["uig", "kaz", "tat", "uzn", "tyv", "xal", "sce"]
+#   [[grouping.group]]
+#   slug = "tibet-qinghai"
+#   name = { en = "Tibet-Qinghai Plateau" }
+#   languages = ["bod", "adx", "khg"]
+#   [[grouping.group]]
+#   slug = "southwest"
+#   name = { en = "Southwest (Yunnan / Guizhou / Sichuan)" }
+#   languages = ["nxq", "bfs", "lis", "ahk", "aeu", "lhu", "acn", "atb", "kac", "nuf", "prk", "rbb", "blr", "ycl", "pcc"]
+#   [[grouping.group]]
+#   slug = "south"
+#   name = { en = "South (Guangxi / Hainan / Guangdong)" }
+#   languages = ["yue", "zyb", "onb"]
+#   [[grouping.group]]
+#   slug = "southeast"
+#   name = { en = "Southeast (Fujian / Hakka belt)" }
+#   languages = ["nan", "hak"]
+#   [[grouping.group]]
+#   slug = "macau"
+#   name = { en = "Macau SAR" }
+#   languages = ["por"]
+
+# ── Region landing page (/r/cn) ──────────────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# Not marked unlisted: all 35 listed languages resolve to real content
+# (100% — better coverage than za.toml's 1/12 or cas.toml's 7/16), and the
+# default language (cmn) has full NT+OT, so this is ready to promote on the
+# homepage like mx/id/ke/cas.
+
+[landing]
+accentColor = "#DE2910"
+headline = { en = "The Bible in the languages of China", zh = "中国各民族语言的圣经" }
+subhead  = { en = "Read and listen to Scripture in China's regional and minority languages.", zh = "阅读并聆听中国各地区和少数民族语言的圣经。" }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of China", zh = "中国的语言" }
+filterBy = "family"   # which grouping powers the picker filter chips
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultStudyLanguage is "eng", not a Chinese/PRC-indigenous language — none
+# of cmn/yue/nan/hak/etc. above are in the fixed study-mode gate list (arb
+# asm ben eng fra hau hin por rus spa; see src/lib/bw/study-languages.ts),
+# same gap za.toml documents for South Africa. NOTE, unlike za.toml's total
+# gap: Portuguese (por) IS both in this file's `languages` list (Macau) AND
+# in the study-mode gate list — technically available, just not used as the
+# default given how marginal Macau's population is relative to the whole
+# region. Worth reconsidering if this region ever gets a more representative
+# study-capable language.
+
+[study]
+defaultStudyLanguage = "eng"
+
+[seo]
+host = "cn.demo.bibel.wiki"

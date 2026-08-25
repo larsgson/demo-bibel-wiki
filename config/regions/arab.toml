@@ -1,0 +1,260 @@
+# Arab World — regional entry point.   Subdomain: arab.demo.bibel.wiki   ·   Path: /r/arab
+#
+# Single source of truth for the region (mirrors config/regions/mx.toml,
+# config/regions/id.toml, config/regions/ke.toml, config/regions/za.toml,
+# config/regions/cas.toml). Drives the region landing page, the picker, and
+# any sub-region subdomains.
+#
+# Multi-country, non-ISO-3166 region — closest precedent is cas.toml (Central
+# Asia), not any single-country file. There's no ISO 3166 country code for
+# "the Arab world" (it's ~20 Arab League states plus Arabic-speaking
+# minorities well outside them), so this uses "arab" as an invented code,
+# same role "cas" plays for Central Asia — but deliberately 4 letters, not 3,
+# unlike "cas": every real ISO 639-3 code is exactly 3 letters, and a 3-letter
+# choice here would have collided with one — either "arb" itself (Standard
+# Arabic, one of THIS file's own listed languages) or "arw" (Arawak/Lokono, a
+# real, active, unrelated living language of Suriname/Guyana/Venezuela — the
+# first candidate considered here, rejected once that collision was found).
+# "arab" is long enough to be unambiguous at a glance and short enough to
+# read as an obvious label, not a code.
+#
+# UNLIKE every other region file here (all scoped by country, via Wikidata
+# P17), this one is scoped LINGUISTICALLY: every individual ISO 639-3
+# language nested under the Arabic macrolanguage "ara" (authoritative list
+# confirmed directly against iso639-3.sil.org/code/ara, cross-checked with
+# Wikipedia's "Varieties of Arabic"). That's 30 codes, 2 of which are
+# ISO-retired: ajp "South Levantine Arabic" (change request 2022-006,
+# effective 2023-01-20, merged into apc "Levantine Arabic" — already listed
+# below, so no coverage is lost) and bbz "Babalia Creole Arabic" (change
+# request 2019-013, effective 2020-01-23, retired with no successor code).
+# Both excluded as retired/non-current codes (bbz also has zero presence in
+# any source below, so nothing is lost either way). That leaves 28 active
+# codes. Hassaniya Arabic (mey) is added by hand on top of those 28: SIL
+# classifies it as its own fully independent ISO 639-3 language, NOT nested
+# under macrolanguage "ara" — but Wikipedia's own "Varieties of Arabic"
+# taxonomy places it squarely in the Maghrebi Arabic dialect group, its
+# speakers self-identify as Arabic speakers, and Mauritania (its main home)
+# is an Arab League member — included for the same "obviously real, has real
+# content" reason cas.toml hand-added rus/eng outside its own Wikidata P17
+# candidate set. 29 languages total.
+#
+# None of the 29 appear in config/pkf-langs.json (589 PKF/Scripture-Earth
+# codes) — PKF has zero Arabic-variety coverage; Scripture Earth's catalog is
+# scoped to minority/unreached languages and every established Arabic
+# Bible-society translation apparently falls outside its open-license net,
+# same conclusion za.toml drew for South Africa's official languages.
+# Checked directly against data/source-catalog.json (build-time-resolved
+# text — see scripts/fetch-data.mjs), cdn.bibel.wiki/dbt/_catalog.json (DBT's
+# raw catalog; rows carry "a:"/"A:" audio-fileset and "t:"/"T:" text-fileset
+# markers) and cdn.bibel.wiki/dbt/_app/catalog-text.json (DBT's derived
+# text-fileset index — see bcv-commons/bibles's doc/README.md on why
+# catalog-overlap.json under-counts and shouldn't be used alone, per
+# ke.toml/za.toml/cas.toml's prior corrections), plus
+# bible.helloao.org/api/available_translations.json.
+#
+# ── KEY FINDING: Egyptian Arabic (arz) ──────────────────────────────────────
+# arz — by far the largest single Arabic variety after the Standard
+# (~100M speakers) — has ZERO resolvable content and ZERO raw-catalog
+# presence anywhere: absent from source-catalog.json, absent from every row
+# of DBT's raw _catalog.json (no row has iso="arz", audio or text), and
+# absent from helloAO's available_translations.json. Not "unresolved" —
+# genuinely absent from all three pipelines.
+# The only "Egyptian" trace found anywhere is a red herring, not real
+# content: two fileset IDs in DBT's raw catalog for the Van Dyck Arabic Bible
+# edition (ARBVDV / ARBVDVS — its underlying text/audio track IDs read
+# "ARZVDV...") carry an "ARZ"-prefixed internal fileset name, but the row
+# itself is catalogued under ISO "arb" (Standard Arabic), not as an
+# independent "arz"-tagged language row. Reads as a historical DBT
+# fileset-naming leftover (the Van Dyck edition is a Standard Arabic text
+# used across the whole Arab world, Egypt included — nothing dialect-specific
+# about it), not a genuine Egyptian-Arabic Bible text or recording. Egyptian
+# Arabic Scripture may well exist in the real world (Bible Society of Egypt,
+# etc.) — it's just not present in any of this app's three open pipelines.
+#
+# ── What resolves today ──────────────────────────────────────────────────
+# Of the 29, 8 currently resolve to real TEXT: arb (helloAO ARBNAV, NT+OT —
+# also the region's defaultLanguage), acm "Mesopotamian/Iraqi" (dbt ACMAAV,
+# NT+OT), shu "Chadian" (dbt SHUABA nt / SHUDPI ot, NT+OT), pga "Sudanese
+# Creole (Juba) Arabic" (helloAO pga_pbt, NT+OT), mey "Hassaniya" (helloAO
+# mey_pbt, NT+OT), aeb "Tunisian" (dbt AEBWBT, NT only), apd "Sudanese" (dbt
+# APDASV, NT only), ayp "North Mesopotamian" (dbt AYPABT, NT only).
+#
+# 3 more show an audio field ("a:"/"A:") in DBT's raw _catalog.json with no
+# independently fetchable text at all (no "t:"/"T:" key there, and no entry
+# in _app/catalog-text.json either) — but the raw catalog dump is NOT the
+# same thing as a live, playable stream. Cross-checked directly against
+# cdn.bibel.wiki/dbt/<iso>/media.json — the actual per-language endpoint
+# src/lib/bw/dbt-media.ts reads at runtime (resolveChapterAudioUrl) — and the
+# three split two ways:
+#   - afb "Gulf" DOES resolve live: /dbt/afb/media.json returns a real
+#     fileset (AFBGNV, `"media":"a"`). Real audio, but note it's UNTIMED
+#     (the flag is "a" only, never "at") — no verse-level sync, unlike
+#     acm/aeb/shu below.
+#   - aec "Saidi/Upper Egyptian" (AECEBS) and apc "Levantine" (APCAIB,
+#     APCSMV) do NOT: /dbt/aec/media.json and /dbt/apc/media.json both 404 —
+#     no per-language media detail exists at all today, despite the raw
+#     catalog's audio-field rows. Genuinely nothing resolvable, text or
+#     audio, for either — not the nso/tso (za.toml) / kir/dng (cas.toml)
+#     "confirmed audio-only" pattern, a step further behind. Listed anyway
+#     for the same future-proofing reason.
+#
+# Also worth surfacing for the audio-specific question this file exists to
+# answer: of the languages that DO resolve, shu "Chadian" has by far the
+# richest audio — /dbt/shu/media.json shows real, verse-TIMED audio for
+# BOTH NT (4 filesets, 8 timed books) and OT (SHUDPL, 18 timed books), the
+# only dialect here with any OT audio at all. acm and aeb each have real,
+# verse-timed NT audio only (8 timed books apiece, no OT audio). arb itself
+# has verse-timed audio for both NT and OT.
+#
+# ayl "Libyan" (AYLELA) is a DIFFERENT, more specific case, not the same as
+# the 3 above: its _catalog.json row shows only "a:P1DA" (looks audio-only at
+# a glance), but _app/catalog-text.json DOES carry a real text-fileset entry
+# for it (`t:P_ET-usx`, USX-format only — no plaintext/JSON format exists for
+# it). So DBT genuinely has fetchable text for Libyan Arabic; it's just not
+# wired into this repo's own data/source-catalog.json yet (scripts/
+# fetch-data.mjs doesn't currently pick up USX-only filesets) — a live gap in
+# this repo's build output, not an upstream content gap. Listed as
+# not-yet-resolved rather than lumped in with the genuinely audio-only three.
+#
+# The remaining 17 — aao, abh, abv, acq, acw, acx, acy, adf, ars, arq, ary,
+# arz, auz, avl, ayh, ayn, ssh — have no entry, raw or derived, in any of the
+# three sources at all. Several of these are among the most widely spoken
+# languages in the world despite that (ary "Moroccan" ~40M, ars "Najdi/Saudi"
+# ~20M+, arz "Egyptian" ~100M) — strong evidence this is a genuine
+# content/licensing gap in these three specific open pipelines, not a real
+# translation-availability gap (established national Bible Societies exist
+# for nearly all of them) — the same conclusion za.toml drew for Zulu, Xhosa,
+# Afrikaans, etc.
+#
+# ── Notes on specific inclusion/exclusion calls ─────────────────────────────
+# pga ("Sudanese Creole Arabic" / Juba Arabic): the "Creole" label pattern-
+# matches za.toml's excluded urban creoles/argots (Tsotsitaal, Camtho, …), but
+# the underlying reality is different — this is South Sudan's real,
+# named, substantial lingua franca (hundreds of thousands to millions of
+# speakers), with a real, dedicated Bible Society translation ("Kitab al
+# Mukadas ma Arabi Juba", published via ebible.org) resolving with full
+# NT+OT text today. Included, not excluded — the real-translation-program
+# evidence za.toml's excluded registers all lacked.
+#
+# abh "Tajiki Arabic" and auz "Uzbeki Arabic" already appear in
+# config/regions/cas.toml (Central Asia) — deliberate overlap, not a bug.
+# Unlike every other region here, this file's scope is linguistic rather than
+# geographic, so a language can legitimately belong to both a geographic
+# region (cas.toml: Central-Asia-indigenous) and this linguistic one
+# (Arabic-speaking-world). Nothing in region-config.ts/regions.ts enforces
+# exclusive region membership.
+#
+# ── Groupings ────────────────────────────────────────────────────────────────
+# Two kinds, by the `navigable` flag:
+#   navigable = false → a picker FILTER for language selection (no URL).
+#                       Auto-generated and ACTIVE.
+#   navigable = true  → a sub-region SUBDOMAIN  arab.<slug>.bibel.wiki  (hierarchical).
+#                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
+#                       its subdomain valid. Never auto-enabled.
+#
+# Only ONE grouping is ever rendered (whichever `[picker].filterBy` names) —
+# see src/pages/r/[region]/index.astro.
+#
+# Grouped by dialect macro-region (Maghreb / Egypt & Sudan / Levant / Gulf &
+# Peninsula / Mesopotamia / Central Asia / Standard) — the natural reference
+# frame here, playing the same role mx.toml's states or ke.toml's provinces
+# play for a country-scoped region. No "by language family" alternate is
+# offered (unlike za.toml/ke.toml/cas.toml) — every language here is already
+# the same family (Semitic/Arabic), so a family split wouldn't distinguish
+# anything.
+
+code = "arab"
+name = { en = "Arab World", ar = "العالم العربي" }
+title = { en = "Your Arabic Bible", ar = "كتابك المقدس بالعربية" }  # header title; hidden if unset
+defaultLanguage = "arb"   # primary language when entering with none chosen —
+                          # the shared literary/liturgical/media standard
+                          # across the whole Arab world, and has full reader
+                          # support (helloAO, NT+OT)
+uiLanguage = "ar"         # entering this region DEFAULTS the UI to Arabic
+                          # (src/locales/ar.ts)
+
+# Bridge/trade languages — Standard Arabic is the real shared language across
+# every dialect community below (understood via media/education/religion even
+# where colloquial speech differs sharply); English is the universal fallback
+# already used by every other region here.
+tradeLanguages = ["arb", "eng"]
+
+# Every individual language under the Arabic macrolanguage (ISO 639-3 "ara"),
+# minus 2 ISO-retired codes, plus Hassaniya (mey) — see the scope note above.
+# Only 8 of 29 currently resolve to real text (12 counting the 4 audio-only
+# entries as "real content, just not independently readable yet") — see the
+# findings above, especially re: arz (Egyptian), which is a genuine gap, not
+# a resolution bug.
+languages = [
+  "aao", "abh", "abv", "acm", "acq", "acw", "acx", "acy", "adf", "aeb",
+  "aec", "afb", "apc", "apd", "arb", "arq", "ars", "ary", "arz", "auz",
+  "avl", "ayh", "ayl", "ayn", "ayp", "mey", "pga", "shu", "ssh",
+]
+
+# --- By dialect macro-region (picker filter; active) ---
+[[grouping]]
+id = "region"
+navigable = false
+name = { en = "By region", ar = "حسب المنطقة" }
+
+  [[grouping.group]]
+  slug = "maghreb"
+  name = { en = "Maghreb", ar = "المغرب العربي" }
+  languages = ["ary", "arq", "aeb", "ayl", "aao", "mey"]
+  [[grouping.group]]
+  slug = "egypt-sudan"
+  name = { en = "Egypt & Sudan", ar = "مصر والسودان" }
+  languages = ["arz", "aec", "apd", "shu", "avl", "pga"]
+  [[grouping.group]]
+  slug = "levant"
+  name = { en = "Levant", ar = "بلاد الشام" }
+  languages = ["apc", "acy"]
+  [[grouping.group]]
+  slug = "gulf-peninsula"
+  name = { en = "Gulf & Arabian Peninsula", ar = "الخليج وشبه الجزيرة العربية" }
+  languages = ["afb", "ars", "acx", "ayn", "acq", "ayh", "adf", "abv", "ssh", "acw"]
+  [[grouping.group]]
+  slug = "mesopotamia"
+  name = { en = "Mesopotamia (Iraq)", ar = "بلاد الرافدين (العراق)" }
+  languages = ["acm", "ayp"]
+  [[grouping.group]]
+  slug = "central-asia"
+  name = { en = "Central Asia", ar = "آسيا الوسطى" }
+  languages = ["abh", "auz"]
+  [[grouping.group]]
+  slug = "standard"
+  name = { en = "Modern Standard Arabic", ar = "العربية الفصحى" }
+  languages = ["arb"]
+
+# ── Region landing page (/r/arab) ────────────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# Listed (not unlisted): unlike za.toml (only English resolves — not even a
+# regional language), this region's own defaultLanguage (arb) resolves with
+# full NT+OT text today, plus 7 more resolving dialect/creole varieties —
+# comparable in strength to cas.toml (also listed, 7/16 resolving).
+
+[landing]
+accentColor = "#046A38"
+headline = { en = "The Bible in the languages of the Arabic-speaking world", ar = "الكتاب المقدس بلغات العالم الناطق بالعربية" }
+subhead  = { en = "Read and listen to Scripture in Arabic and its regional dialects.", ar = "اقرأ واستمع إلى الكتاب المقدس باللغة العربية ولهجاتها الإقليمية." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of the Arab World", ar = "لغات العالم العربي" }
+filterBy = "region"   # which grouping powers the picker filter chips
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# arb IS in the fixed study-mode gate list (arb asm ben eng fra hau hin por
+# rus spa; see src/lib/bw/study-languages.ts), so the actual regional default
+# language also works for study mode — no gap to document here (unlike
+# za.toml's case).
+
+[study]
+defaultStudyLanguage = "arb"
+
+[seo]
+host = "arab.demo.bibel.wiki"

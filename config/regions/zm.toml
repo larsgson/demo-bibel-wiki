@@ -1,0 +1,229 @@
+# Zambia — regional entry point.   Subdomain: zm.demo.bibel.wiki   ·   Path: /r/zm
+#
+# Single source of truth for the region (mirrors config/regions/mx.toml,
+# config/regions/id.toml, config/regions/ke.toml, config/regions/za.toml,
+# config/regions/cas.toml, config/regions/ml.toml, config/regions/cn.toml,
+# config/regions/arab.toml). Drives the region landing page, the picker, and
+# any sub-region subdomains.
+#
+# Scoped the same way as ke.toml/za.toml/ml.toml: Wikidata P17=Zambia (Q953)
+# gives 40 unique candidate ISO 639-3 codes. Cross-checked directly against
+# config/pkf-langs.json (589 PKF/Scripture-Earth codes — ZERO hits for any of
+# the 40, same "PKF has no coverage here at all" pattern ml.toml found for
+# Mali), data/source-catalog.json (1870 ISOs, the build's real "has fetchable
+# text today" signal — see src/lib/data/regions.ts's catalogedIsos), and
+# config/licenses.json's excluded set (cya/nlv/top — no overlap with any
+# Zambia candidate).
+#
+# Of the 40 raw candidates, excluded entirely:
+#   - Shona (sna) — resolves to real content (helloAO, NT+OT), and Wikidata
+#     tags it P17=Zambia (a small border community in Southern Province near
+#     Zimbabwe), but its actual homeland and ~80%+ of its ~10M+ speakers are
+#     in Zimbabwe — same "real border presence, not an indigenous homeland
+#     population" treatment ml.toml gave Mossi (tagged P17=Mali, homeland
+#     Burkina Faso).
+#   - Afrikaans (afr) — Wikidata tags it P17=Zambia, reflecting a small,
+#     historically emigrating community of South African-descended commercial
+#     farmers, not a population remotely comparable to South Africa's own
+#     "genuinely local now" case (see za.toml, which keeps afr precisely
+#     because IT is the homeland). Treated as diaspora here, same as ke.toml
+#     excluding Punjabi/Tamil.
+#   - Settler Swahili (sta) and Congo Swahili (swc) — both reflect East
+#     African / DRC immigrant trading communities, not populations indigenous
+#     to Zambia — same diaspora treatment as sna/afr above. Neither resolves
+#     to content anyway.
+#   - Fanagalo (fng) — a Bantu-based mine/trade pidgin, not a real
+#     Bible-translation target — same treatment as za.toml's own excluded
+#     Fanagalo entry (fng appears in BOTH files' exclusion lists, for the
+#     identical reason).
+#   - Zambian Sign Language (zsl) — no text-fileset model in this app, same
+#     treatment as ke.toml's xki / za.toml's sfs.
+#   - English (eng) and Nyanja/Chewa (nya) — both resolve to real, full
+#     (NT+OT) content and are both genuinely used in Zambia, but pulled out
+#     of the "indigenous minority languages" list into tradeLanguages below —
+#     see the judgment-call note further down.
+#
+# That leaves 32 indigenous languages. Of these, 6 currently resolve to real
+# content (4 full NT+OT: lyn, sbs, tap, sby; 2 NT-only: nih, kdn) — plus the
+# two bridge languages, both full NT+OT (nya, eng, both via helloAO/DBT-free
+# helloAO sources). The other 26 listed languages have no fileset in any of
+# the three sources yet; listed anyway, same as za.toml's/ml.toml's
+# unresolved entries, in case a source adds them later.
+#
+# NOTABLE GAP (same kind of callout za.toml gives Zulu/Xhosa/Afrikaans):
+# Bemba (bem) — Zambia's single most widely spoken language (~30%+ as
+# L1, understood far more broadly as a lingua franca) — and four of Zambia's
+# other six other officially recognized regional languages (Tonga toi, Lozi
+# loz, Lunda lun, Luvale lue; only Nyanja nya and, arguably, Bemba's own
+# trade role are covered) have ZERO entries, raw or derived, in PKF, DBT, or
+# helloAO. Strong evidence of a genuine content/licensing gap in these three
+# open pipelines rather than a real translation-availability gap — Zambia's
+# seven official regional languages all have long-established Bible Society
+# translations in the real world. Revisit if any of PKF/DBT/helloAO's
+# catalogs ever grow into this region.
+#
+# DEFAULT-LANGUAGE / TRADE-LANGUAGE JUDGMENT CALL: Nyanja (nya) is pulled out
+# into tradeLanguages alongside English rather than left in the indigenous
+# list, the same way ke.toml pulls Swahili out and ml.toml pulls Bambara
+# out — despite being a Bantu language indigenous to Zambia (not a colonial
+# import like English/French), Nyanja functions as Zambia's other real
+# national lingua franca (official in Lusaka and Eastern Provinces, widely
+# understood as an L2 well beyond them), and — unlike Bemba, the single
+# largest L1 language — it's the one of Zambia's major languages that
+# actually resolves to full NT+OT content today. defaultLanguage is set to
+# "nya", not "eng" — same reasoning ke.toml applied choosing swh over eng
+# despite English being the app's usual safe fallback.
+#
+# Grouped by province — Zambia's ethnolinguistic geography maps reasonably
+# cleanly onto its provinces (same reference frame ke.toml's provinces and
+# mx.toml's states play), unlike ml.toml's Dogon-fragmented case which had to
+# fall back to language family. An approximate by-family mapping (Bantu
+# Botatwe / Bemba-Bisa / Nyanja-Sena / Lunda-Luvale / Tumbuka-Nyika / Barotse
+# Western cluster) is kept as commented reference data, same treatment as the
+# other files' alternates. Several languages span more than one province
+# (assignments below use each language's largest or best-documented Zambian
+# community); Copperbelt and Lusaka Provinces are omitted from the grouping
+# entirely — both are majority-urban with no distinct minority language of
+# their own (Bemba and Nyanja dominate respectively, and neither is in the
+# indigenous list — see above).
+
+code = "zm"
+name = { en = "Zambia" }
+title = { en = "Your Zambian Bible" }  # header title; hidden if unset
+defaultLanguage = "nya"   # primary language when entering with none chosen —
+                          # see the judgment-call note above: a real national
+                          # lingua franca with full NT+OT support, not just
+                          # the colonial-language fallback
+uiLanguage = "en"         # entering this region DEFAULTS the UI to English —
+                          # Zambia's official language, and no Nyanja/Bemba
+                          # UI locale exists
+
+# Bridge/trade languages — Nyanja is a genuine second national lingua franca
+# with full (NT+OT) reader support (helloAO); English is the official
+# language and universal fallback, also full NT+OT (helloAO).
+tradeLanguages = ["nya", "eng"]
+
+# Every (non-diaspora, non-sign, non-pidgin) indigenous language in this
+# region (ISO 639-3). Only 6 of 32 currently resolve to real content — see
+# the scope note above.
+languages = [
+  "auh", "bwc", "ilb", "kdn", "kqn", "lai", "lam", "leb", "leh", "loz",
+  "lue", "lun", "lyn", "mck", "mgr", "mho", "mhw", "mwn", "mxo", "nih",
+  "nka", "nkv", "nse", "sbs", "sby", "shq", "sie", "tap", "toi", "ttl",
+  "tum", "yax",
+]
+
+# ── Groupings ────────────────────────────────────────────────────────────────
+# Two kinds, by the `navigable` flag:
+#   navigable = false → a picker FILTER for language selection (no URL).
+#                       Auto-generated and ACTIVE.
+#   navigable = true  → a sub-region SUBDOMAIN  zm.<slug>.bibel.wiki  (hierarchical).
+#                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
+#                       its subdomain valid. Never auto-enabled.
+#
+# Only ONE grouping is ever rendered (whichever `[picker].filterBy` names) —
+# see src/pages/r/[region]/index.astro. The other grouping below is
+# reference data, ready to promote later.
+
+# --- By province (picker filter; active) ---
+[[grouping]]
+id = "province"
+navigable = false
+name = { en = "By province" }
+
+  [[grouping.group]]
+  slug = "northern"
+  name = { en = "Northern" }
+  languages = ["mgr", "nih", "lai", "nkv", "tap"]
+  [[grouping.group]]
+  slug = "muchinga"
+  name = { en = "Muchinga" }
+  languages = ["mwn", "tum"]
+  [[grouping.group]]
+  slug = "luapula"
+  name = { en = "Luapula" }
+  languages = ["auh", "bwc", "leb"]
+  [[grouping.group]]
+  slug = "central"
+  name = { en = "Central" }
+  languages = ["leh", "sby"]
+  [[grouping.group]]
+  slug = "eastern"
+  name = { en = "Eastern" }
+  languages = ["nse", "kdn"]
+  [[grouping.group]]
+  slug = "southern"
+  name = { en = "Southern" }
+  languages = ["toi", "ilb", "shq"]
+  [[grouping.group]]
+  slug = "western"
+  name = { en = "Western" }
+  languages = ["loz", "lyn", "sbs", "mxo", "sie", "nka", "ttl", "mho", "yax", "mhw"]
+  [[grouping.group]]
+  slug = "north-western"
+  name = { en = "North-Western" }
+  languages = ["kqn", "lue", "lun", "mck"]
+
+# --- By language family (COMMENTED OUT — reference data / future filter tab) ---
+#
+# [[grouping]]
+# id = "family"
+# navigable = false
+# name = { en = "By language family" }
+#
+#   [[grouping.group]]
+#   slug = "bemba-bisa"
+#   name = { en = "Bemba-Bisa" }
+#   languages = ["leb", "auh", "bwc", "mgr", "mwn"]
+#   [[grouping.group]]
+#   slug = "botatwe"
+#   name = { en = "Bantu Botatwe" }
+#   languages = ["toi", "ilb", "leh", "sby", "shq"]
+#   [[grouping.group]]
+#   slug = "nyanja-tumbuka"
+#   name = { en = "Nyanja-Tumbuka" }
+#   languages = ["nse", "tum", "kdn", "nih", "lai", "nkv"]
+#   [[grouping.group]]
+#   slug = "lunda-luvale"
+#   name = { en = "Lunda-Luvale" }
+#   languages = ["lue", "lun", "kqn", "mck"]
+#   [[grouping.group]]
+#   slug = "barotse-western"
+#   name = { en = "Barotse / Western" }
+#   languages = ["loz", "lyn", "sbs", "mxo", "sie", "nka", "ttl", "mho", "yax", "mhw", "tap"]
+
+# ── Region landing page (/r/zm) ──────────────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# Not marked unlisted: unlike za.toml (the ONLY resolved language was the
+# colonial trade language, zero indigenous resolution), 6 genuine indigenous
+# Zambian languages resolve here, plus Nyanja (a real, non-colonial national
+# lingua franca) has full NT+OT — a meaningfully stronger base than za.toml's
+# disqualifying case, even though the raw percentage (6/32) is similar.
+
+[landing]
+accentColor = "#198A00"   # Zambia flag green
+headline = { en = "The Bible in the languages of Zambia" }
+subhead  = { en = "Read and listen to Scripture in Zambia's regional languages." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Zambia" }
+filterBy = "province"   # which grouping powers the picker filter chips
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultLanguage (nya) is not in the fixed study-mode gate list (arb asm ben
+# eng fra hau hin por rus spa; see src/lib/bw/study-languages.ts), so Zambia
+# hits the same kind of gap za.toml documents — UNLIKE za.toml, though, eng
+# IS on that list and is already surfaced here as the other trade language,
+# so selecting it unlocks Study mode. defaultStudyLanguage is set to eng, not
+# nya.
+
+[study]
+defaultStudyLanguage = "eng"
+
+[seo]
+host = "zm.demo.bibel.wiki"

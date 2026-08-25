@@ -68,6 +68,30 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "https://ml.demo.bibel.wiki/"
+  to = "/r/ml/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://arab.demo.bibel.wiki/"
+  to = "/r/arab/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://cn.demo.bibel.wiki/"
+  to = "/r/cn/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://zm.demo.bibel.wiki/"
+  to = "/r/zm/"
+  status = 200
+  force = true
+
 # Non-prerendered ISOs fall through to the generic /l/ pages.
 # Netlify serves static files first, so prerendered pages take priority.
 [[redirects]]

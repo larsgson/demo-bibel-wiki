@@ -1,0 +1,266 @@
+# Mali — regional entry point.   Subdomain: ml.demo.bibel.wiki   ·   Path: /r/ml
+#
+# Single source of truth for the region (mirrors config/regions/mx.toml,
+# config/regions/id.toml, config/regions/ke.toml, config/regions/za.toml,
+# config/regions/cas.toml). Drives the region landing page, the picker, and
+# any sub-region subdomains.
+#
+# Scoped the same way as ke.toml/za.toml/cas.toml: Wikidata P17=Mali (Q912)
+# gives 70 unique candidate ISO 639-3 codes. Also tried P2341 ("indigenous
+# to") = Mali — only 4 results (N'Ko nqo, Bambara bam, Tamasheq taq, Maasina
+# Fulfulde ffm), all already inside the P17 set, so P17 alone is the
+# effective candidate list here. Cross-checked directly against
+# config/pkf-langs.json (589 ISOs), data/source-catalog.json (1870 ISOs,
+# the build's real "has fetchable text today" signal — see
+# src/lib/data/regions.ts's catalogedIsos) and config/licenses.json's
+# excluded set (cya/nlv/top — no overlap with any Mali candidate).
+#
+# NOTABLE: unlike every other region file here, PKF (Scripture Earth) has
+# ZERO entries — raw manifest or derived — for ANY of the 70 Mali-tagged
+# codes, not even the ones with a real fileset elsewhere. All real content
+# below comes from helloAO or DBT. This is the mirror image of za.toml's
+# note (there, PKF had zero coverage of South Africa's ALREADY-established
+# languages because PKF deliberately skips well-served languages) — here
+# PKF appears to have no West African Sahel coverage at all, established or
+# minority. Revisit if PKF's catalog ever grows into this region.
+#
+# Of the 70 raw candidates, excluded entirely:
+#   - Macrolanguage codes superseded by specific codes that actually
+#     resolve: "man" (Manding — covered by bam/mnk/mwk/dyu below), "ara"
+#     (Arabic — covered by mey/Hassaniya), "tmh" (Tuareg — covered by
+#     taq/ttq/Tamasheq) — same treatment as cas.toml preferring "uzn" over
+#     the bare "uzb" macrolanguage code.
+#   - "nqo" (N'Ko) — not a distinct spoken language; it's the Solomana
+#     Kanté writing system/orthography FOR the Manding cluster (bam/mnk/
+#     mwk/dyu), already represented by those codes.
+#   - Sign languages: "bog" (Bamako Sign Language), "tsy" (Tebul Sign
+#     Language, a village sign language of Dogon country) — no text-fileset
+#     model in this app, same treatment as ke.toml's xki / za.toml's sfs.
+#   - "mos" (Mooré/Mossi) — real content exists (DBT) and Wikidata tags it
+#     P17=Mali, but the Mossi homeland is Burkina Faso; its Mali presence is
+#     a migrant-worker community near the border, not an indigenous
+#     homeland population — same diaspora treatment as ke.toml excluding
+#     Punjabi/Tamil and za.toml excluding Punjabi/Tamil/Yiddish/Slovene.
+#   - French (fra) and Bambara (bam) — both resolve to real, full (NT+OT)
+#     content and are genuinely spoken in Mali, but pulled out of the
+#     "indigenous minority languages" list into tradeLanguages below, same
+#     treatment as ke.toml pulling swh/eng out of its 38-language list.
+#
+# That leaves 61 indigenous languages. Of these, 18 currently resolve to
+# real content (8 full NT+OT: dyu, ffm, fuf, mey, myk, ses, spp, yal; 10
+# NT-only: bbo, bmq, dts, kao, khq, mnk, mwk, sep, taq, ttq) — plus the two
+# bridge languages, both full NT+OT (bam via DBT, fra via helloAO). The
+# other 43 listed languages (mostly the extremely fragmented Dogon-plateau
+# and Bozo-riverine clusters) have no fileset in any of the three sources
+# yet; listed anyway, same as cas.toml's unresolved Pamir minorities and
+# za.toml's unresolved Nguni/Sotho languages, in case a source adds them
+# later. Languages with no resolved content also have no display-name entry
+# in public/ALL-langs-compact.json (the two gaps track each other exactly
+# here — see src/lib/data/languageNames.ts) and so will show by raw ISO
+# code in the picker until content is added; this is the same accepted
+# state za.toml/cas.toml already ship with for their own unresolved
+# languages, not something new here.
+#
+# Tamasheq (taq, ttq) and Hassaniya Arabic (mey) are genuinely indigenous to
+# northern Mali (Tuareg confederations of Kidal/Gao/Tombouctou; Bidhan/Moor
+# communities of Tombouctou/Kayes) — kept in the list on that basis, NOT
+# excluded the way diaspora languages elsewhere are. Both resolve to real
+# content (taq/ttq NT-only via DBT, mey full NT+OT via helloAO).
+#
+# Bambara (bam) is Mali's dominant national vehicular language (spoken as
+# L1 or L2 by a large majority of the population) with full NT+OT support
+# (DBT). French (fra) is the official, colonial-era language and Mali's
+# actual literate lingua franca, also with full NT+OT support (helloAO).
+# Both are listed as tradeLanguages, bam first — same treatment as ke.toml
+# putting Swahili before English.
+#
+# DEFAULT-LANGUAGE JUDGMENT CALL: every other file in this directory sets
+# defaultLanguage to a language whose ISO underlies uiLanguage exactly
+# (spa/es, rus/ru, arb/ar, ind/id, eng/en, swh/sw) — no exceptions before
+# this file. Mali breaks that pattern deliberately: there is no src/locales/
+# bm.ts, so uiLanguage must be "fr" (the only available UI locale that fits
+# this region), but defaultLanguage is set to "bam" anyway — Bambara is a
+# stronger fit for "the language most Malians actually read Scripture in"
+# than French, the same reasoning ke.toml already applied when it chose
+# swh over eng despite English being the app's usual safe fallback. First
+# load in this region therefore shows a French interface defaulting to
+# Bambara scripture text. Worth double-checking against real user feedback;
+# flip defaultLanguage back to "fra" (matching uiLanguage, zero risk, the
+# path every other file here takes) if that combination proves confusing.
+#
+# Grouped by language family — Mali's indigenous languages fragment far
+# more than Kenya's or South Africa's (61 codes, ~20 of them mutually
+# unintelligible Dogon-plateau lects alone), so a country-region mapping
+# would mostly just reproduce "everything in Mopti" for a third of the
+# list. Family is also linguistically well-established here (Mande /
+# Dogon / Songhay / Gur-Senufo / Atlantic / Berber / Semitic) even where
+# exact village-level administrative-region attribution is uncertain for
+# individual lects — same reasoning za.toml used to prefer family over its
+# thinner province option. An approximate by-region mapping (Mali's 8
+# regions + Bamako) is kept as commented reference data, same treatment as
+# za.toml's "by province" alternate — genuinely approximate, since most of
+# these languages' precise cercle-level distribution isn't reliably
+# sourced at this density.
+
+code = "ml"
+name = { en = "Mali", fr = "Mali" }
+title = { en = "Your Malian Bible", fr = "Votre Bible malienne" }  # header title; hidden if unset
+defaultLanguage = "bam"   # primary language when entering with none chosen —
+                          # see the judgment-call note above: Mali's real
+                          # national vehicular language, not the one
+                          # matching uiLanguage
+uiLanguage = "fr"         # entering this region DEFAULTS the UI to French
+                          # (src/locales/fr.ts) — no Bambara UI locale exists
+
+# Bridge/trade languages — Bambara is Mali's national vehicular language and
+# already has full (NT+OT) reader support (DBT); French is the official
+# language and Mali's literate lingua franca, also full NT+OT (helloAO).
+tradeLanguages = ["bam", "fra"]
+
+# Every (non-diaspora, non-sign, non-macrolanguage-duplicate) indigenous
+# language in this region (ISO 639-3). Only 18 of 61 currently resolve to
+# real content — see the scope note above.
+languages = [
+  "aqd", "bbo", "bmq", "bof", "boo", "boz", "bxw", "bze", "bzx", "dba",
+  "dbg", "dbt", "dbu", "dbw", "dgb", "dje", "djm", "dmb", "dsq", "dti",
+  "dtk", "dtm", "dto", "dts", "dtt", "dtu", "dux", "dym", "dyu", "emk",
+  "ffm", "fuc", "fuf", "hmb", "jow", "kao", "kfz", "khq", "knz", "mey",
+  "mlq", "mnk", "mwk", "myk", "myq", "nzz", "pnq", "rkm", "seb", "sep",
+  "ses", "shz", "snk", "spp", "stj", "taq", "tde", "tst", "ttq", "xkg",
+  "yal",
+]
+
+# ── Groupings ────────────────────────────────────────────────────────────────
+# Two kinds, by the `navigable` flag:
+#   navigable = false → a picker FILTER for language selection (no URL).
+#                       Auto-generated and ACTIVE.
+#   navigable = true  → a sub-region SUBDOMAIN  ml.<slug>.bibel.wiki  (hierarchical).
+#                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
+#                       its subdomain valid. Never auto-enabled.
+#
+# Only ONE grouping is ever rendered (whichever `[picker].filterBy` names) —
+# see src/pages/r/[region]/index.astro. The other grouping below is
+# reference data, ready to promote later.
+
+# --- By language family (picker filter; active) ---
+[[grouping]]
+id = "family"
+navigable = false
+name = { en = "By language family", fr = "Par famille de langues" }
+
+  [[grouping.group]]
+  slug = "mande"
+  name = { en = "Mande", fr = "Mandé" }
+  languages = ["bbo", "bmq", "bof", "boo", "boz", "bxw", "bze", "bzx", "dyu", "emk", "jow", "kao", "knz", "mlq", "mnk", "mwk", "myq", "rkm", "snk", "stj", "yal"]
+  [[grouping.group]]
+  slug = "dogon"
+  name = { en = "Dogon", fr = "Dogon" }
+  languages = ["aqd", "dba", "dbg", "dbt", "dbu", "dbw", "dgb", "djm", "dmb", "dti", "dtk", "dtm", "dto", "dts", "dtt", "dtu", "dux", "dym", "nzz", "tde"]
+  [[grouping.group]]
+  slug = "songhay"
+  name = { en = "Songhay", fr = "Songhaï" }
+  languages = ["dje", "dsq", "hmb", "khq", "ses", "tst"]
+  [[grouping.group]]
+  slug = "gur-senufo"
+  name = { en = "Gur / Senufo", fr = "Gour / Sénoufo" }
+  languages = ["kfz", "myk", "pnq", "seb", "sep", "shz", "spp", "xkg"]
+  [[grouping.group]]
+  slug = "atlantic"
+  name = { en = "Atlantic (Fula)", fr = "Atlantique (peul)" }
+  languages = ["ffm", "fuc", "fuf"]
+  [[grouping.group]]
+  slug = "berber"
+  name = { en = "Berber (Tamasheq)", fr = "Berbère (tamacheq)" }
+  languages = ["taq", "ttq"]
+  [[grouping.group]]
+  slug = "semitic"
+  name = { en = "Semitic (Arabic)", fr = "Sémitique (arabe)" }
+  languages = ["mey"]
+
+# --- By region (COMMENTED OUT — approximate reference data / future filter tab) ---
+# Approximate primary-association only, same caveat as za.toml's "by
+# province" alternate — most of these languages' precise cercle-level
+# distribution isn't reliably sourced at this density, and several span
+# more than one region (assignments below use each language's largest or
+# best-documented Mali community). Mali's 8 administrative regions
+# (pre-2016 count, before Ménaka/Taoudénit split off) plus the Bamako
+# capital district.
+#
+# [[grouping]]
+# id = "region"
+# navigable = false
+# name = { en = "By region", fr = "Par région" }
+#
+#   [[grouping.group]]
+#   slug = "kayes"
+#   name = { en = "Kayes", fr = "Kayes" }
+#   languages = ["snk", "kao", "mnk", "yal", "fuc", "fuf"]
+#   [[grouping.group]]
+#   slug = "koulikoro"
+#   name = { en = "Koulikoro", fr = "Koulikoro" }
+#   languages = ["mwk", "mlq"]
+#   [[grouping.group]]
+#   slug = "sikasso"
+#   name = { en = "Sikasso", fr = "Sikasso" }
+#   languages = ["dyu", "emk", "myk", "spp", "shz", "sep", "pnq", "jow", "myq", "stj"]
+#   [[grouping.group]]
+#   slug = "segou"
+#   name = { en = "Ségou", fr = "Ségou" }
+#   languages = ["rkm", "bof", "bmq", "bbo", "knz", "seb"]
+#   [[grouping.group]]
+#   slug = "mopti"
+#   name = { en = "Mopti", fr = "Mopti" }
+#   languages = ["ffm", "aqd", "dba", "dbg", "dbt", "dbu", "dbw", "dgb", "dmb", "dti", "dtk", "dtm", "dto", "dts", "dtt", "dtu", "dux", "dym", "nzz", "tde", "hmb", "boo", "boz", "bze", "bxw", "bzx", "kfz"]
+#   [[grouping.group]]
+#   slug = "tombouctou"
+#   name = { en = "Tombouctou", fr = "Tombouctou" }
+#   languages = ["khq", "mey", "tst"]
+#   [[grouping.group]]
+#   slug = "gao"
+#   name = { en = "Gao", fr = "Gao" }
+#   languages = ["dje", "ses", "dsq", "ttq"]
+#   [[grouping.group]]
+#   slug = "kidal"
+#   name = { en = "Kidal", fr = "Kidal" }
+#   languages = ["taq"]
+#   [[grouping.group]]
+#   slug = "bamako"
+#   name = { en = "Bamako", fr = "Bamako" }
+#   languages = []
+
+# ── Region landing page (/r/ml) ──────────────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# Not marked unlisted: 18 of 61 indigenous languages resolve to real content
+# (29.5%), plus both bridge languages (bam, fra) have full NT+OT — a
+# meaningfully more substantial base than za.toml's 1-of-12 (where the ONLY
+# resolved language was a bridge language and zero indigenous South African
+# languages had real content). Closer to cas.toml's 7-of-16 (44%, also not
+# unlisted) than to za.toml's case. Revisit if this judgment looks wrong.
+
+[landing]
+accentColor = "#14B53A"   # Mali flag green (flag is green/gold/red)
+headline = { en = "The Bible in the languages of Mali", fr = "La Bible dans les langues du Mali" }
+subhead  = { en = "Read and listen to Scripture in Mali's regional languages.", fr = "Lisez et écoutez les Écritures dans les langues régionales du Mali." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Mali", fr = "Langues du Mali" }
+filterBy = "family"   # which grouping powers the picker filter chips
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultLanguage (bam) is NOT in the fixed study-mode gate list (arb asm
+# ben eng fra hau hin por rus spa; see src/lib/bw/study-languages.ts), so
+# Mali does hit a smaller version of za.toml's gap — UNLIKE za.toml, though,
+# fra IS on that list and is already surfaced here as the other trade
+# language, so selecting it (instead of, or alongside, bam) unlocks Study
+# mode. defaultStudyLanguage is set to fra, not bam.
+
+[study]
+defaultStudyLanguage = "fra"
+
+[seo]
+host = "ml.demo.bibel.wiki"
