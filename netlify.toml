@@ -92,6 +92,188 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "https://in.demo.bibel.wiki/"
+  to = "/r/in/"
+  status = 200
+  force = true
+
+# India's individual states/union territories (see config/regions/in-*.toml —
+# in-up/in-br/in-jh/in-cg/in-mp/in-rj/in-gj/in-mh/in-hp/in-uk/in-pb/in-la/
+# in-sk/in-wb/in-od/in-ap/in-ts/in-ka/in-kl/in-tn/in-py/in-as/in-mz/in-mn/
+# in-nl/in-ar/in-tr/in-an), each a standalone region file whose code is
+# prefixed "in-" purely for naming/organization — sibling to (not nested
+# under) in.toml above, not a routing hierarchy. Each corresponds to an
+# official ISO 3166-2:IN subdivision code (e.g. in-tn ~ IN-TN, Tamil Nadu).
+
+[[redirects]]
+  from = "https://in-up.demo.bibel.wiki/"
+  to = "/r/in-up/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-br.demo.bibel.wiki/"
+  to = "/r/in-br/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-jh.demo.bibel.wiki/"
+  to = "/r/in-jh/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-cg.demo.bibel.wiki/"
+  to = "/r/in-cg/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-mp.demo.bibel.wiki/"
+  to = "/r/in-mp/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-rj.demo.bibel.wiki/"
+  to = "/r/in-rj/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-gj.demo.bibel.wiki/"
+  to = "/r/in-gj/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-mh.demo.bibel.wiki/"
+  to = "/r/in-mh/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-hp.demo.bibel.wiki/"
+  to = "/r/in-hp/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-uk.demo.bibel.wiki/"
+  to = "/r/in-uk/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-pb.demo.bibel.wiki/"
+  to = "/r/in-pb/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-la.demo.bibel.wiki/"
+  to = "/r/in-la/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-sk.demo.bibel.wiki/"
+  to = "/r/in-sk/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-wb.demo.bibel.wiki/"
+  to = "/r/in-wb/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-od.demo.bibel.wiki/"
+  to = "/r/in-od/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-ap.demo.bibel.wiki/"
+  to = "/r/in-ap/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-ts.demo.bibel.wiki/"
+  to = "/r/in-ts/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-ka.demo.bibel.wiki/"
+  to = "/r/in-ka/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-kl.demo.bibel.wiki/"
+  to = "/r/in-kl/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-tn.demo.bibel.wiki/"
+  to = "/r/in-tn/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-py.demo.bibel.wiki/"
+  to = "/r/in-py/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-as.demo.bibel.wiki/"
+  to = "/r/in-as/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-mz.demo.bibel.wiki/"
+  to = "/r/in-mz/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-mn.demo.bibel.wiki/"
+  to = "/r/in-mn/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-nl.demo.bibel.wiki/"
+  to = "/r/in-nl/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-ar.demo.bibel.wiki/"
+  to = "/r/in-ar/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-tr.demo.bibel.wiki/"
+  to = "/r/in-tr/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://in-an.demo.bibel.wiki/"
+  to = "/r/in-an/"
+  status = 200
+  force = true
+
 # Non-prerendered ISOs fall through to the generic /l/ pages.
 # Netlify serves static files first, so prerendered pages take priority.
 [[redirects]]
