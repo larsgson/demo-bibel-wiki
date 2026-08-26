@@ -268,7 +268,24 @@ if (existsSync(join(PUBLIC_DIR, "ALL-langs-data", "manifest.json"))) {
 // (config/bible-sources.json) still win over this for any language that
 // actually needs a specific pick. See src/lib/bw/version-config.ts.
 
-if (existsSync(SOURCE_CATALOG_PATH)) {
+// Only trust a cached file that actually has content — a prior failed fetch
+// falls back to writing "{}" (see the catch block below) so the build still
+// has a valid JSON module to import, but that fallback must NOT be mistaken
+// for "already fetched successfully" on a later build. Without this check, a
+// single transient CDN failure gets cached (e.g. by Netlify's build cache
+// persisting data/ between builds) and silently zeroes out every region's
+// "available language" count forever, since existsSync() alone can't tell
+// a real catalog from the empty-object failure placeholder.
+const hasCachedSourceCatalog = (() => {
+  if (!existsSync(SOURCE_CATALOG_PATH)) return false
+  try {
+    return Object.keys(JSON.parse(readFileSync(SOURCE_CATALOG_PATH, "utf8"))).length > 0
+  } catch {
+    return false
+  }
+})()
+
+if (hasCachedSourceCatalog) {
   console.log(`Source catalog already present at ${SOURCE_CATALOG_PATH} — skipping.`)
 } else {
   console.log(`\n── Building source catalog from cdn.bibel.wiki ──\n`)
