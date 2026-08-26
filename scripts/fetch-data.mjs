@@ -304,11 +304,36 @@ if (hasCachedSourceCatalog) {
   console.log(`Source catalog already present at ${SOURCE_CATALOG_PATH} — skipping.`)
 } else {
   console.log(`\n── Building source catalog from cdn.bibel.wiki ──\n`)
+
+  // bcv-commons/bibles added a `schema_version` field (int, bumped only on
+  // breaking shape changes) to catalog-overlap.json/catalog-index.json/
+  // catalog-audio-index.json after this exact script silently broke on
+  // catalog-overlap.json's 2026-07-28 reshape (see the schema note further
+  // down) — this script's own destructuring assumed one shape with no way
+  // to detect a newer one had shipped. EXPECTED_SCHEMA_VERSIONS below is
+  // "the version this script's parsing logic was last verified against";
+  // bump it (and update the parsing code) whenever the upstream field
+  // increments. A field that's newer than expected doesn't stop the build —
+  // the existing try/catch already keeps a parse failure from taking down
+  // the whole site — but it turns a silent, hours-later "why is everything
+  // 0" investigation into an immediate, specific build-log warning.
+  const EXPECTED_SCHEMA_VERSIONS = { "catalog-overlap.json": 2, "catalog/index.json": 1 }
+  function checkSchemaVersion(name, obj) {
+    const expected = EXPECTED_SCHEMA_VERSIONS[name]
+    const actual = obj?.schema_version
+    if (actual == null) {
+      console.warn(`  ⚠ ${name} has no schema_version field yet (expected ${expected}) — cached/propagating, or the field hasn't shipped for this file. Parsing as the last-known shape.`)
+    } else if (actual > expected) {
+      console.warn(`  ⚠ ${name} schema_version is ${actual}, but this script's parser was last verified against ${expected}. It may have silently broken again — check the build output below for a suspiciously low/zero result and update EXPECTED_SCHEMA_VERSIONS + the parsing logic once confirmed.`)
+    }
+  }
+
   let catalog = {}
   try {
     const res = await fetch("https://cdn.bibel.wiki/dbt/_app/catalog-overlap.json")
     if (!res.ok) throw new Error(`fetch catalog-overlap.json: ${res.status}`)
     const overlap = await res.json()
+    checkSchemaVersion("catalog-overlap.json", overlap)
     const priority = overlap.priority ?? ["pkf", "helloao", "dbt"]
     const PROVIDER_BY_PREFIX = { d: "dbt", h: "helloao", p: "pkf" }
 
@@ -357,48 +382,92 @@ if (hasCachedSourceCatalog) {
       catalog[iso][canon] = resolved.provider === "pkf" ? { provider: "pkf" } : resolved
     }
 
-    // ── Supplementary pass: cross-check helloAO's own live catalog ──
+    // ── Supplementary pass: single-candidate pairs via catalog-index.json ──
     //
-    // catalog-overlap.json above is itself a periodic aggregation and can
-    // genuinely lag behind helloAO's real live catalog — config/regions/
-    // ke.toml, za.toml, and cas.toml's own commentary already documents this
-    // exact under-counting failure mode from manual, ad-hoc checks made
-    // while authoring those files. Rather than leave the gap unaddressed in
-    // the actual build, cross-check directly against helloAO's own
-    // available_translations.json and fill in anything the overlap catalog
-    // above missed.
+    // catalog-overlap.json is NOT a full existence catalog — per its own
+    // maintainers (bcv-commons/bibles), it deliberately EXCLUDES any
+    // (iso,canon) with exactly one known candidate across DBT+PKF+helloAO
+    // combined: with nothing to compare it against, compare_all.py never
+    // even fetches it, so it gets no row at all. That's by design, not a
+    // gap in overlap.json — but it means source-catalog.json above, built
+    // from overlap.json alone, was silently missing every genuinely
+    // single-source language (~1,577 of ~2,572 (iso,canon) pairs live, per a
+    // spot check). The actual "does X exist at all" signal is
+    // cdn.bibel.wiki/catalog/index.json — `entries` is `[iso, canon,
+    // providerLetter, count?]`, one row per (iso, canon, provider) that has
+    // ANY candidate; canon values are `nt`/`ot`/`ntp`/`otp` (the `p` suffix
+    // = partial — treated the same as full here, matching this app's
+    // existing tolerance for incomplete-but-real translations, e.g. an
+    // NT-only language is already treated as fully "available").
     //
-    // helloAO gives a book COUNT, not an explicit canon split, so canon
-    // coverage is inferred from numberOfBooks: 60+ books → both NT+OT
-    // (covers the common 66-book case and near-variants); 20-34 books → NT
-    // only (covers the dominant 27-book NT case and its minor variants,
-    // e.g. an OT-less deuterocanon difference). Anything outside those
-    // ranges (a single book, a handful of books, an unusual partial) is too
-    // ambiguous to guess a canon for and is skipped rather than risk a wrong
-    // assignment. Never overrides an iso+canon the overlap catalog above
-    // already resolved — this only fills what that catalog is missing, on
-    // the assumption its own resolution, when present, reflects more
-    // deliberate curation (e.g. a specific preferred translation).
+    // Only fill (iso,canon) pairs with EXACTLY ONE provider row here — a
+    // pair with 2+ providers should already be in catalog-overlap.json's
+    // dedup/preference logic above; if it's somehow still unresolved this
+    // pass intentionally leaves it alone rather than guessing which
+    // candidate to prefer (that comparison is overlap.json's job, not
+    // ours). Never overrides anything the overlap pass above already set.
     try {
-      const res = await fetch("https://bible.helloao.org/api/available_translations.json")
-      if (!res.ok) throw new Error(`fetch available_translations.json: ${res.status}`)
-      const { translations } = await res.json()
-      let filled = 0
-      for (const t of translations ?? []) {
-        const iso = t.language
-        const nb = t.numberOfBooks ?? 0
-        const canons = nb >= 60 ? ["nt", "ot"] : nb >= 20 && nb <= 34 ? ["nt"] : []
-        for (const canon of canons) {
-          catalog[iso] ??= {}
-          if (!catalog[iso][canon]) {
-            catalog[iso][canon] = { provider: "helloao", id: t.id }
-            filled++
-          }
+      const [indexRes, helloaoRes, dbtRes] = await Promise.all([
+        fetch("https://cdn.bibel.wiki/catalog/index.json"),
+        fetch("https://bible.helloao.org/api/available_translations.json"),
+        fetch("https://cdn.bibel.wiki/dbt/_catalog.json"),
+      ])
+      if (!indexRes.ok) throw new Error(`fetch catalog/index.json: ${indexRes.status}`)
+      const index = await indexRes.json()
+      checkSchemaVersion("catalog/index.json", index)
+      const helloaoByIso = new Map()
+      if (helloaoRes.ok) {
+        const { translations } = await helloaoRes.json()
+        for (const t of translations ?? []) {
+          if (!helloaoByIso.has(t.language)) helloaoByIso.set(t.language, [])
+          helloaoByIso.get(t.language).push(t)
         }
       }
-      if (filled > 0) console.log(`  ✓ helloAO cross-check filled ${filled} additional iso+canon entr${filled === 1 ? "y" : "ies"}`)
+      // DBT raw rows: [iso, dbtId, canon, ...fields], a "t:"/"T:" field
+      // means real fetchable text exists (vs. "a:"/"A:" audio-only) — see
+      // config/regions/za.toml's/cas.toml's own notes on this exact
+      // raw-catalog audio-vs-text distinction.
+      const dbtTextByIsoCanon = new Map()
+      if (dbtRes.ok) {
+        const { versions } = await dbtRes.json()
+        for (const [iso, id, rawCanon, ...fields] of versions ?? []) {
+          const canon = rawCanon.startsWith("nt") ? "nt" : rawCanon.startsWith("ot") ? "ot" : rawCanon
+          const hasText = fields.some((f) => f[0] === "t" || f[0] === "T")
+          if (!hasText) continue
+          const key = `${iso}:${canon}`
+          if (!dbtTextByIsoCanon.has(key)) dbtTextByIsoCanon.set(key, id)
+        }
+      }
+
+      const byIsoCanonProviders = new Map()
+      for (const [iso, rawCanon, provider] of index.entries ?? []) {
+        const canon = rawCanon.startsWith("nt") ? "nt" : rawCanon.startsWith("ot") ? "ot" : rawCanon
+        const key = `${iso}:${canon}`
+        if (!byIsoCanonProviders.has(key)) byIsoCanonProviders.set(key, new Set())
+        byIsoCanonProviders.get(key).add(provider)
+      }
+
+      let filled = 0
+      for (const [key, providers] of byIsoCanonProviders) {
+        if (providers.size !== 1) continue
+        const [iso, canon] = key.split(":")
+        catalog[iso] ??= {}
+        if (catalog[iso][canon]) continue
+        const provider = [...providers][0]
+        if (provider === "h") {
+          const t = helloaoByIso.get(iso)?.[0]
+          if (t) catalog[iso][canon] = { provider: "helloao", id: t.id }
+        } else if (provider === "p") {
+          catalog[iso][canon] = { provider: "pkf" }
+        } else if (provider === "d") {
+          const id = dbtTextByIsoCanon.get(key)
+          if (id) catalog[iso][canon] = { provider: "dbt", id }
+        }
+        if (catalog[iso][canon]) filled++
+      }
+      if (filled > 0) console.log(`  ✓ catalog-index.json single-candidate pass filled ${filled} additional iso+canon entr${filled === 1 ? "y" : "ies"}`)
     } catch (err) {
-      console.warn(`  ⚠ Could not cross-check helloAO's live catalog: ${err.message}`)
+      console.warn(`  ⚠ Could not cross-check catalog-index.json: ${err.message}`)
       console.warn(`    Proceeding with catalog-overlap.json's resolution alone.`)
     }
 
