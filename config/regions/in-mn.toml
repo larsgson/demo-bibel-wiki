@@ -1,0 +1,79 @@
+# Manipur — one of India's states/union territories, its own standalone
+# regional entry point.   Subdomain: in-mn.demo.bibel.wiki   ·   Path: /r/in-mn
+#
+# Sibling file to config/regions/in.toml (the general India file, covering
+# all 99 resolved India-wide languages) — see that file for the full
+# methodology (Wikidata P17=India cross-checked against config/pkf-langs.json,
+# data/source-catalog.json, config/licenses.json) and the broader exclusion
+# reasoning (diaspora, sign languages, macrolanguage-vs-specific-variety,
+# etc.) that also applies here. This file exists as a genuinely independent,
+# standalone region — same schema, same treatment as config/regions/mx.toml
+# — using "in-mn" as its own file code — the "in-" prefix is
+# purely a naming/organizational convention (groups India's files
+# together, and avoids any future ambiguity with an unrelated 2-letter
+# country code), NOT a routing hierarchy: this is still a flat,
+# independent region code, with no parent/child relationship to
+# in.toml and no nested subdomain. Manipur's own official ISO 3166-2
+# subdivision code is IN-MN (a different, unrelated ID from
+# this file's own "in-mn" code).
+#
+# Resolved languages in Manipur (6 of Manipur's share of the
+# 99 India-wide languages):
+#   - mni (Meitei/Manipuri): NT via helloao, OT via helloao
+#   - pub (Purum): NT via helloao
+#   - lmk (Lamkang): NT via dbt
+#   - cdf (Chiru): NT via dbt
+#   - kfw (Kharam Naga): NT via helloao
+#   - nkf (Inpui Naga): NT via dbt
+
+code = "in-mn"
+name = { en = "Manipur" }
+defaultLanguage = "mni"   # primary language when entering with none chosen
+uiLanguage = "en"         # no Meitei/Manipuri UI locale exists (only
+                          # src/locales/hi.ts does, and it's a stub) — English
+                          # is used for the interface, same as every other
+                          # India file until a local-script locale is built
+
+# No separate trade language distinct from the state's own default here —
+# unlike the multi-state in.toml, a single-state file doesn't need a
+# separate "bridge" language pulled out of the list. English still covers
+# that role implicitly (every reader has the global language picker).
+tradeLanguages = ["eng"]
+
+languages = [
+  "mni", "pub", "lmk", "cdf", "kfw", "nkf",
+]
+
+# ── Region landing page (/r/in-mn) ───────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# unlisted = true: kept off the main "/" homepage grid so India's 28 state
+# files don't crowd out every other region there — still fully reachable at
+# /r/in-mn/ and via the in-mn.demo.bibel.wiki redirect, same treatment
+# za.toml uses for a different reason (thin content there; here it's
+# homepage real estate). config/regions/in.toml remains the one India card
+# shown on the homepage.
+
+[landing]
+unlisted = true
+accentColor = "#7B1FA2"
+headline = { en = "The Bible in the languages of Manipur" }
+subhead  = { en = "Read and listen to Scripture in Manipur's regional languages." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Manipur" }
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultLanguage (mni) is NOT in the fixed study-mode gate list (see
+# src/lib/bw/study-languages.ts), so this state falls back to eng for
+# defaultStudyLanguage, same gap za.toml documents for South Africa.
+
+[study]
+defaultStudyLanguage = "eng"
+
+[seo]
+host = "in-mn.demo.bibel.wiki"

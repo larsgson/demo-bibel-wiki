@@ -1,0 +1,85 @@
+# Himachal Pradesh — one of India's states/union territories, its own standalone
+# regional entry point.   Subdomain: in-hp.demo.bibel.wiki   ·   Path: /r/in-hp
+#
+# Sibling file to config/regions/in.toml (the general India file, covering
+# all 99 resolved India-wide languages) — see that file for the full
+# methodology (Wikidata P17=India cross-checked against config/pkf-langs.json,
+# data/source-catalog.json, config/licenses.json) and the broader exclusion
+# reasoning (diaspora, sign languages, macrolanguage-vs-specific-variety,
+# etc.) that also applies here. This file exists as a genuinely independent,
+# standalone region — same schema, same treatment as config/regions/mx.toml
+# — using "in-hp" as its own file code — the "in-" prefix is
+# purely a naming/organizational convention (groups India's files
+# together, and avoids any future ambiguity with an unrelated 2-letter
+# country code), NOT a routing hierarchy: this is still a flat,
+# independent region code, with no parent/child relationship to
+# in.toml and no nested subdomain. Himachal Pradesh's own official ISO 3166-2
+# subdivision code is IN-HP (a different, unrelated ID from
+# this file's own "in-hp" code).
+#
+# Resolved languages in Himachal Pradesh (10 of Himachal Pradesh's share of the
+# 99 India-wide languages):
+#   - cdh (Chambeali): NT via dbt
+#   - cdj (Churahi): NT via dbt
+#   - gbk (Gaddi): NT via dbt
+#   - kfs (Bilaspuri): NT via dbt
+#   - lbf (Tinani): NT via dbt
+#   - mjl (Mandeali): NT via dbt
+#   - srx (Sirmauri): NT via dbt
+#   - xnr (Kangri): NT via dbt
+#   - bfz (Mahasu Pahari): NT via helloao
+#   - bht (Bhateali): NT via helloao
+#
+# The most linguistically fragmented state file here — 10 distinct Pahari varieties, all NT-only, none with a clearly dominant speaker count over the others; `cdh` was picked as defaultLanguage arbitrarily (alphabetically first), not for any linguistic reason.
+
+code = "in-hp"
+name = { en = "Himachal Pradesh", hi = "हिमाचल प्रदेश" }
+defaultLanguage = "cdh"   # primary language when entering with none chosen
+uiLanguage = "en"         # no Chambeali UI locale exists (only
+                          # src/locales/hi.ts does, and it's a stub) — English
+                          # is used for the interface, same as every other
+                          # India file until a local-script locale is built
+
+# No separate trade language distinct from the state's own default here —
+# unlike the multi-state in.toml, a single-state file doesn't need a
+# separate "bridge" language pulled out of the list. English still covers
+# that role implicitly (every reader has the global language picker).
+tradeLanguages = ["eng"]
+
+languages = [
+  "cdh", "cdj", "gbk", "kfs", "lbf", "mjl", "srx", "xnr", "bfz", "bht",
+]
+
+# ── Region landing page (/r/in-hp) ───────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# unlisted = true: kept off the main "/" homepage grid so India's 28 state
+# files don't crowd out every other region there — still fully reachable at
+# /r/in-hp/ and via the in-hp.demo.bibel.wiki redirect, same treatment
+# za.toml uses for a different reason (thin content there; here it's
+# homepage real estate). config/regions/in.toml remains the one India card
+# shown on the homepage.
+
+[landing]
+unlisted = true
+accentColor = "#4682B4"
+headline = { en = "The Bible in the languages of Himachal Pradesh" }
+subhead  = { en = "Read and listen to Scripture in Himachal Pradesh's regional languages." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Himachal Pradesh" }
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultLanguage (cdh) is NOT in the fixed study-mode gate list (see
+# src/lib/bw/study-languages.ts), so this state falls back to eng for
+# defaultStudyLanguage, same gap za.toml documents for South Africa.
+
+[study]
+defaultStudyLanguage = "eng"
+
+[seo]
+host = "in-hp.demo.bibel.wiki"

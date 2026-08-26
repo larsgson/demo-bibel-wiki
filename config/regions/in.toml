@@ -1,0 +1,366 @@
+# India — regional entry point.   Subdomain: in.demo.bibel.wiki   ·   Path: /r/in
+#
+# Single source of truth for the region (mirrors config/regions/mx.toml,
+# config/regions/id.toml, config/regions/ke.toml, config/regions/za.toml,
+# config/regions/cas.toml, config/regions/ml.toml, config/regions/cn.toml,
+# config/regions/arab.toml, config/regions/zm.toml). Drives the region
+# landing page and the picker's "by state" filter. Deliberately NOT using
+# sub-region subdomains (see the trade-language note below for why) — the
+# `grouping` "by state" filter chips are still used, same mechanism every
+# other region file uses; only the navigable-subdomain half of that feature
+# is being skipped here, by choice, not by limitation.
+#
+# Scoped the same way as ke.toml/za.toml/ml.toml/zm.toml: Wikidata P17=India
+# (Q668) gives 319 unique candidate ISO 639-3 codes — by far the largest raw
+# candidate set of any region here (bigger than cn.toml's screened ~320, and
+# unlike China this one WASN'T pre-filtered before cross-checking, since
+# India's per-code content-resolution rate turned out low enough — ~32% — to
+# make full manual review tractable). Cross-checked directly against
+# config/pkf-langs.json (589 PKF/Scripture-Earth codes — ZERO hits, same
+# "PKF has no South Asia coverage at all" pattern ml.toml/zm.toml found for
+# Mali/Zambia), data/source-catalog.json (1,869 ISOs, the build's real "has
+# fetchable text today" signal — see src/lib/data/regions.ts's
+# catalogedIsos), and config/licenses.json's excluded set (cya/nlv/top — no
+# overlap with any India candidate).
+#
+# Of the 319 raw candidates, 101 resolve to real content — 100% via helloAO
+# or DBT, none via PKF. Wikidata's P17 tagging under-counted 4 codes that
+# obviously belong here and do resolve — Gujarati (guj), Odia (ory), Dogri
+# (doi, though it turns out NOT to resolve either way), and Nepali as its
+# specific code (npi, NOT the bare "nep" macrolanguage, which doesn't
+# resolve) — added by hand, same move cas.toml made for rus/eng and cn.toml
+# made for jpn/rus/tat/uzn. That brings the resolved total to 104.
+#
+# ── The 22 scheduled languages (Eighth Schedule of the Constitution) ──
+# 16 of 22 resolve: Hindi, Bengali, Marathi, Telugu, Tamil, Kannada,
+# Malayalam, Punjabi, Odia, Gujarati, Assamese, Urdu, Sanskrit, Nepali,
+# Meitei/Manipuri, Maithili (NT-only). 6 do NOT resolve anywhere: Bodo,
+# Dogri, Kashmiri, Konkani (neither "gom" Goan Konkani nor the bare "kok"
+# macrolanguage), Sindhi, Santali — despite all six being official-status,
+# constitutionally recognized languages with real, long-established Bible
+# Society translations in the real world. Same conclusion za.toml/cn.toml
+# draw for their own major-language gaps: a genuine content/licensing gap in
+# these three specific open pipelines, not a translation-availability gap.
+#
+# NOTABLE GAP OUTSIDE THE 22: Bhojpuri (bho, ~50M speakers, one of India's
+# largest languages by any measure) has zero content anywhere. Conversely,
+# several Hindi-belt regional languages/dialects NOT on the official list —
+# distinct enough to carry their own ISO codes and their own real
+# translations — DO resolve: Chhattisgarhi (hne, full NT+OT, ~18M speakers),
+# Awadhi, Magahi, Bagheli, Kumaoni, Garhwali, Nagpuri/Sadri, and more (all
+# listed below).
+#
+# ── Excluded from the 104 ──
+#   - English (eng) — see the trade-language note below.
+#   - Portuguese (por) — resolves (helloAO, NT+OT), reflecting Goa's colonial
+#     history, but Goa's OWN official language is Konkani; Portuguese lost
+#     official status decades ago and today's community is small and
+#     elderly. Different situation from config/regions/cn.toml's Macau
+#     Portuguese, which IS still officially current there — this is treated
+#     as historical, not living-official, and excluded on that basis.
+#   - Dzongkha (dzo), Newar (new), Kulung (kle) — all resolve, but each is
+#     primarily the language of a NEIGHBORING country (Bhutan's own official
+#     language; Nepal's Kathmandu Valley; Nepal's Kiranti hills,
+#     respectively) without strong evidence of a distinctly documented,
+#     settled Indian community the way e.g. Chakma/Rakhine/Tibetan (kept,
+#     see below) have — same "real border presence, not an indigenous
+#     homeland population" treatment ml.toml gave Mossi and za.toml gave
+#     Shona.
+#
+# ── Kept despite also existing outside India (genuinely settled Indian
+# communities, not just border spillover) ──
+# Tibetan (bod — Ladakh/Sikkim/Arunachal Bhoti speakers plus long-settled
+# refugee communities), Chakma (ccp — Tripura/Mizoram/Arunachal, an
+# officially recognized Scheduled Tribe since colonial-era resettlement),
+# Rakhine (rki — Andaman & Nicobar's Karen/Rakhine settler community, there
+# since the 1800s), Marma (rmz — Tripura's Chittagong-Hill-Tracts-descended
+# community), Matu Chin/Paite/Sukte/Thadou/Simte (hlt/pck/ctd/tcz/smt —
+# Mizoram's Kuki-Chin-family communities, ethnically and administratively
+# distinct from their Myanmar-side relatives), Rawang (raw — a settled
+# Arunachal border community), and the two Tharu varieties (thl/thr —
+# Uttar Pradesh/Uttarakhand's own recognized Tharu Scheduled Tribe, distinct
+# from Nepal's Terai Tharu population). Sylheti (syl) is kept on the same
+# basis — Assam's Barak Valley has a large settled Sylheti-speaking
+# population, not merely a Bangladesh border spillover.
+#
+# ── Nagamese (nag) — deliberately included, not excluded as a "creole" ──
+# Labeled a creole, which pattern-matches za.toml's excluded urban
+# creoles/argots (Tsotsitaal, Fanagalo, …) — but the underlying reality
+# matches config/regions/arab.toml's pga (Sudanese/Juba Creole Arabic), not
+# those: Nagamese is Nagaland's actual, substantial inter-tribal lingua
+# franca (dozens of mutually unintelligible Naga languages coexist there),
+# with a real, dedicated Bible translation resolving with real NT text
+# today. Included on that same "real bridging need, real translation
+# program" basis.
+#
+# Also excluded entirely, regardless of resolution status (none of these
+# resolve, but noted for completeness): Indian Sign Language (ins) and West
+# Bengal Sign Language (wbs) — no text-fileset model in this app, same
+# treatment as ke.toml's xki/za.toml's sfs. The Andaman Islands' Great
+# Andamanese cluster (gac and its constituent varieties) and Sentinelese
+# (std) and Shompen (sii) — the Sentinelese in particular are a legally and
+# ethically protected uncontacted people; none of the three have any
+# fileset in any source and none ever should. Pashto (pus) — Afghanistan/
+# Pakistan diaspora (Rohilla Pathan communities), not indigenous to India,
+# same diaspora treatment as ke.toml excluding Punjabi/Tamil.
+#
+# Macrolanguage handling (same principle as cas.toml's uzn-over-uzb):
+# Nepali uses "npi" (resolves), not bare "nep" (doesn't). Gondi uses "wsg"
+# (Adilabad Gondi, the one variety that resolves), not bare "gon" (doesn't,
+# and neither do any of the other individual Gondi codes checked). Odia
+# uses current "ory", not the retired "ori" code (not even a live ISO 639-3
+# entry any more).
+#
+# That leaves 99 languages actually resolving and in scope.
+#
+# ── Trade language: English ONLY — a deliberate design choice, not a gap ──
+# Every other region file here pulls its country's colonial/national lingua
+# franca(s) OUT of the indigenous list into tradeLanguages (mx.toml: spa;
+# ke.toml: swh+eng; ml.toml: bam+fra). India doesn't have one equivalent
+# story: English genuinely IS accepted nationwide as a neutral link language
+# (government, higher education, judiciary, tech sector), but Hindi is NOT
+# — it's a mother tongue across the north (and is INCLUDED below as exactly
+# that, one indigenous language among 99, sitting in its own Hindi Belt
+# state groups) but is explicitly, sometimes contentiously, NOT the bridge
+# language in much of the south and northeast (Tamil Nadu's decades-long
+# two-language, Tamil+English-only policy being the clearest case). Rather
+# than promote Hindi as a country-wide "trade language" the way this app's
+# picker/landing page surfaces trade languages everywhere else — which would
+# read as inaccurate at best and as taking a side in a genuinely live
+# political debate at worst — this file lists ONLY English as
+# tradeLanguages, and leaves Hindi to appear exactly where it linguistically
+# belongs: as a regional language of the Hindi Belt states, no more
+# privileged in the picker than Tamil, Bengali, or Marathi are for their own
+# states. This was a deliberate decision point, not an oversight — see the
+# conversation history for the alternatives considered (a per-state
+# defaultLanguage/tradeLanguages override, and a fully separate
+# sub-region-subdomain architecture) before settling on this, the
+# zero-new-feature option.
+#
+# Grouped by state/union territory — India's states are linguistically
+# organized territories even more explicitly than Kenya's provinces or
+# Mexico's states (many were REDRAWN in 1956 specifically along linguistic
+# lines), so this is an unusually clean fit for the "by region" pattern
+# ke.toml/mx.toml/zm.toml already use. A few states/UTs have no resolved
+# language of their own (Goa: only Konkani/Portuguese, neither in scope;
+# Meghalaya: Khasi/Garo, neither resolves) and are simply absent from the
+# grouping below, same treatment za.toml gives provinces with nothing to
+# show. No "by language family" alternate is offered — with 99 languages
+# spanning Indo-Aryan, Dravidian, Sino-Tibetan, Munda, and Tai-Kadai
+# families all at once, a family split would be far LESS useful than state
+# grouping here, the opposite of ml.toml's Dogon-driven case for Mali.
+
+code = "in"
+name = { en = "India", hi = "भारत" }
+title = { en = "Your Bible for India", hi = "आपकी भारत के लिए बाइबिल" }  # header title; hidden if unset
+defaultLanguage = "eng"   # primary language when entering with none chosen —
+                          # the one genuinely neutral choice; see the
+                          # trade-language note above for why this file
+                          # deliberately doesn't privilege Hindi
+uiLanguage = "en"         # entering this region DEFAULTS the UI to English,
+                          # for the same neutrality reason — src/locales/
+                          # hi.ts exists but is currently a STUB (not
+                          # completed here, since uiLanguage stays "en")
+
+# Bridge/trade language — English only. See the extensive note above: this
+# is deliberate, not a gap. Hindi is listed below as one of the 99 regional
+# languages, not promoted here.
+tradeLanguages = ["eng"]
+
+# Every (non-diaspora, non-sign, non-uncontacted-people, non-neighboring-
+# country-primary) language in this region that resolves to real content —
+# see the scope note above. 99 languages, spanning all major Indian
+# language families.
+languages = [
+  "ahr", "asm", "awa", "ben", "bfb", "bfy", "bfz", "bgq", "bhi", "bht",
+  "bod", "ccp", "cdf", "cdh", "cdj", "cdz", "ctd", "dhn", "dso", "dub",
+  "fra", "gas", "gau", "gbk", "gbl", "gbm", "gok", "guj", "hin", "hlt",
+  "hne", "hoy", "hru", "jun", "kan", "key", "kff", "kfs", "kfw", "kfy",
+  "kht", "kru", "ksz", "lbf", "lbm", "lif", "lmk", "lus", "mag", "mai",
+  "mal", "mar", "mhu", "mjl", "mni", "mtr", "mup", "nag", "nit", "nkf",
+  "noi", "npi", "nst", "ory", "pan", "pcg", "pck", "peg", "pub", "pwr",
+  "raw", "rei", "rki", "rmz", "san", "sch", "sck", "sgj", "sle", "smt",
+  "srx", "suv", "syl", "tam", "tcy", "tcz", "tel", "thl", "thr", "tvt",
+  "udg", "urd", "vah", "wsg", "xnr", "xsr", "xua", "xuj", "yea",
+]
+
+# ── Groupings ────────────────────────────────────────────────────────────────
+# Two kinds, by the `navigable` flag:
+#   navigable = false → a picker FILTER for language selection (no URL).
+#                       Auto-generated and ACTIVE.
+#   navigable = true  → a sub-region SUBDOMAIN  in.<slug>.bibel.wiki  (hierarchical).
+#                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
+#                       its subdomain valid. Never auto-enabled.
+#
+# Grouping the config by state is fine and expected here — same mechanism
+# every other region file uses for its picker filter chips (ke.toml's
+# provinces, mx.toml's states, zm.toml's provinces). What's deliberately
+# NOT being done is turning any of these into `navigable = true` subdomains
+# — see the trade-language note above for why (no per-state
+# defaultLanguage/tradeLanguages override exists yet, so a Tamil Nadu
+# subdomain would currently just inherit this file's own English-only trade
+# language and Hindi-language-among-99 treatment anyway, same as the flat
+# /r/in/ page — there's nothing to gain from a subdomain today). This
+# grouping is ACTIVE (drives the picker filter) precisely like every other
+# region's; only the hierarchical-SUBDOMAIN half of the feature is skipped.
+
+# --- By state/UT (picker filter; active) ---
+[[grouping]]
+id = "state"
+navigable = false
+name = { en = "By state", hi = "राज्य अनुसार" }
+
+  [[grouping.group]]
+  slug = "uttar-pradesh"
+  name = { en = "Uttar Pradesh" }
+  languages = ["hin", "awa", "thl", "thr"]
+  [[grouping.group]]
+  slug = "bihar"
+  name = { en = "Bihar" }
+  languages = ["mag", "mai"]
+  [[grouping.group]]
+  slug = "jharkhand"
+  name = { en = "Jharkhand" }
+  languages = ["sck", "kru", "mai"]
+  [[grouping.group]]
+  slug = "chhattisgarh"
+  name = { en = "Chhattisgarh" }
+  languages = ["hne", "sgj"]
+  [[grouping.group]]
+  slug = "madhya-pradesh"
+  name = { en = "Madhya Pradesh" }
+  languages = ["bfy", "mup", "bhi"]
+  [[grouping.group]]
+  slug = "rajasthan"
+  name = { en = "Rajasthan" }
+  languages = ["mtr", "bgq"]
+  [[grouping.group]]
+  slug = "gujarat"
+  name = { en = "Gujarat" }
+  languages = ["guj", "gbl", "dub", "gas", "bfb"]
+  [[grouping.group]]
+  slug = "maharashtra"
+  name = { en = "Maharashtra" }
+  languages = ["mar", "ahr", "vah"]
+  [[grouping.group]]
+  slug = "himachal-pradesh"
+  name = { en = "Himachal Pradesh" }
+  languages = ["cdh", "cdj", "gbk", "kfs", "lbf", "mjl", "srx", "xnr", "bfz", "bht"]
+  [[grouping.group]]
+  slug = "uttarakhand"
+  name = { en = "Uttarakhand" }
+  languages = ["gbm", "kfy"]
+  [[grouping.group]]
+  slug = "punjab"
+  name = { en = "Punjab" }
+  languages = ["pan"]
+  [[grouping.group]]
+  slug = "jammu-kashmir-ladakh"
+  name = { en = "Jammu & Kashmir / Ladakh" }
+  languages = ["bod"]
+  [[grouping.group]]
+  slug = "sikkim"
+  name = { en = "Sikkim" }
+  languages = ["npi", "lif", "xsr"]
+  [[grouping.group]]
+  slug = "west-bengal"
+  name = { en = "West Bengal" }
+  languages = ["ben", "cdz"]
+  [[grouping.group]]
+  slug = "odisha"
+  name = { en = "Odisha" }
+  languages = ["ory", "dso", "jun", "peg", "rei"]
+  [[grouping.group]]
+  slug = "andhra-telangana"
+  name = { en = "Andhra Pradesh / Telangana" }
+  languages = ["tel", "key"]
+  [[grouping.group]]
+  slug = "karnataka"
+  name = { en = "Karnataka" }
+  languages = ["kan", "tcy", "sle", "xua", "xuj"]
+  [[grouping.group]]
+  slug = "kerala"
+  name = { en = "Kerala" }
+  languages = ["mal", "pcg", "udg", "yea"]
+  [[grouping.group]]
+  slug = "tamil-nadu"
+  name = { en = "Tamil Nadu" }
+  languages = ["tam"]
+  [[grouping.group]]
+  slug = "puducherry"
+  name = { en = "Puducherry" }
+  languages = ["fra"]
+  [[grouping.group]]
+  slug = "assam"
+  name = { en = "Assam" }
+  languages = ["asm", "syl"]
+  [[grouping.group]]
+  slug = "mizoram"
+  name = { en = "Mizoram" }
+  languages = ["lus", "hlt", "pck", "ctd", "tcz", "smt"]
+  [[grouping.group]]
+  slug = "manipur"
+  name = { en = "Manipur" }
+  languages = ["mni", "pub", "lmk", "cdf", "kfw", "nkf"]
+  [[grouping.group]]
+  slug = "nagaland"
+  name = { en = "Nagaland" }
+  languages = ["nag", "nst", "tvt"]
+  [[grouping.group]]
+  slug = "arunachal-pradesh"
+  name = { en = "Arunachal Pradesh" }
+  languages = ["hru", "suv", "mhu", "kht", "raw"]
+  [[grouping.group]]
+  slug = "tripura"
+  name = { en = "Tripura" }
+  languages = ["ccp", "rmz"]
+  [[grouping.group]]
+  slug = "andaman-nicobar"
+  name = { en = "Andaman & Nicobar Islands" }
+  languages = ["rki", "nit"]
+  [[grouping.group]]
+  slug = "sanskrit-pan-indian"
+  name = { en = "Sanskrit (pan-Indian, classical)" }
+  languages = ["san"]
+  [[grouping.group]]
+  slug = "urdu-pan-indian"
+  name = { en = "Urdu (pan-Indian)" }
+  languages = ["urd"]
+  [[grouping.group]]
+  slug = "other"
+  name = { en = "Other" }
+  languages = ["dhn", "gau", "gok", "hoy", "kff", "ksz", "lbm", "noi", "pwr", "sch", "wsg"]
+
+# ── Region landing page (/r/in) ──────────────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# Not marked unlisted: 99 languages resolve, including 16 of the 22
+# constitutionally scheduled languages with full or near-full text coverage
+# — by far the strongest content base of any region file here, comparable
+# to mx.toml/id.toml rather than the thinner za.toml/zm.toml cases.
+#
+[landing]
+accentColor = "#FF9933"   # India flag saffron
+headline = { en = "The Bible in the languages of India", hi = "भारत की भाषाओं में बाइबिल" }
+subhead  = { en = "Read and listen to Scripture in India's regional languages.", hi = "भारत की क्षेत्रीय भाषाओं में पवित्रशास्त्र पढ़ें और सुनें।" }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of India", hi = "भारत की भाषाएँ" }
+filterBy = "state"   # which grouping powers the picker filter chips
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultLanguage (eng) IS in the fixed study-mode gate list (arb asm ben
+# eng fra hau hin por rus spa; see src/lib/bw/study-languages.ts) — no gap
+# to document here. Worth noting Hindi (hin) is ALSO on that list — a
+# visitor who selects it as a secondary language unlocks Study mode too,
+# same as everyone else, just not specially defaulted to it.
+
+[study]
+defaultStudyLanguage = "eng"
+
+[seo]
+host = "in.demo.bibel.wiki"

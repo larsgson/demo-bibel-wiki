@@ -1,0 +1,78 @@
+# Nagaland — one of India's states/union territories, its own standalone
+# regional entry point.   Subdomain: in-nl.demo.bibel.wiki   ·   Path: /r/in-nl
+#
+# Sibling file to config/regions/in.toml (the general India file, covering
+# all 99 resolved India-wide languages) — see that file for the full
+# methodology (Wikidata P17=India cross-checked against config/pkf-langs.json,
+# data/source-catalog.json, config/licenses.json) and the broader exclusion
+# reasoning (diaspora, sign languages, macrolanguage-vs-specific-variety,
+# etc.) that also applies here. This file exists as a genuinely independent,
+# standalone region — same schema, same treatment as config/regions/mx.toml
+# — using "in-nl" as its own file code — the "in-" prefix is
+# purely a naming/organizational convention (groups India's files
+# together, and avoids any future ambiguity with an unrelated 2-letter
+# country code), NOT a routing hierarchy: this is still a flat,
+# independent region code, with no parent/child relationship to
+# in.toml and no nested subdomain. Nagaland's own official ISO 3166-2
+# subdivision code is IN-NL (a different, unrelated ID from
+# this file's own "in-nl" code).
+#
+# Resolved languages in Nagaland (3 of Nagaland's share of the
+# 99 India-wide languages):
+#   - nag (Nagamese): NT via helloao
+#   - nst (Tangsa): NT via dbt
+#   - tvt (Tutsa): NT via helloao
+#
+# Nagamese, though a creole, is Nagaland's genuine inter-tribal lingua franca (dozens of mutually unintelligible Naga languages coexist here) — deliberately included, not excluded as an "urban pidgin" the way za.toml excludes Fanagalo. See config/regions/in.toml's note.
+
+code = "in-nl"
+name = { en = "Nagaland" }
+defaultLanguage = "nag"   # primary language when entering with none chosen
+uiLanguage = "en"         # no Nagamese UI locale exists (only
+                          # src/locales/hi.ts does, and it's a stub) — English
+                          # is used for the interface, same as every other
+                          # India file until a local-script locale is built
+
+# No separate trade language distinct from the state's own default here —
+# unlike the multi-state in.toml, a single-state file doesn't need a
+# separate "bridge" language pulled out of the list. English still covers
+# that role implicitly (every reader has the global language picker).
+tradeLanguages = ["eng"]
+
+languages = [
+  "nag", "nst", "tvt",
+]
+
+# ── Region landing page (/r/in-nl) ───────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# unlisted = true: kept off the main "/" homepage grid so India's 28 state
+# files don't crowd out every other region there — still fully reachable at
+# /r/in-nl/ and via the in-nl.demo.bibel.wiki redirect, same treatment
+# za.toml uses for a different reason (thin content there; here it's
+# homepage real estate). config/regions/in.toml remains the one India card
+# shown on the homepage.
+
+[landing]
+unlisted = true
+accentColor = "#D84315"
+headline = { en = "The Bible in the languages of Nagaland" }
+subhead  = { en = "Read and listen to Scripture in Nagaland's regional languages." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Nagaland" }
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultLanguage (nag) is NOT in the fixed study-mode gate list (see
+# src/lib/bw/study-languages.ts), so this state falls back to eng for
+# defaultStudyLanguage, same gap za.toml documents for South Africa.
+
+[study]
+defaultStudyLanguage = "eng"
+
+[seo]
+host = "in-nl.demo.bibel.wiki"

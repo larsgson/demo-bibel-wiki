@@ -1,0 +1,76 @@
+# Ladakh — one of India's states/union territories, its own standalone
+# regional entry point.   Subdomain: in-la.demo.bibel.wiki   ·   Path: /r/in-la
+#
+# Sibling file to config/regions/in.toml (the general India file, covering
+# all 99 resolved India-wide languages) — see that file for the full
+# methodology (Wikidata P17=India cross-checked against config/pkf-langs.json,
+# data/source-catalog.json, config/licenses.json) and the broader exclusion
+# reasoning (diaspora, sign languages, macrolanguage-vs-specific-variety,
+# etc.) that also applies here. This file exists as a genuinely independent,
+# standalone region — same schema, same treatment as config/regions/mx.toml
+# — using "in-la" as its own file code — the "in-" prefix is
+# purely a naming/organizational convention (groups India's files
+# together, and avoids any future ambiguity with an unrelated 2-letter
+# country code), NOT a routing hierarchy: this is still a flat,
+# independent region code, with no parent/child relationship to
+# in.toml and no nested subdomain. Ladakh's own official ISO 3166-2
+# subdivision code is IN-LA (a different, unrelated ID from
+# this file's own "in-la" code).
+#
+# Resolved languages in Ladakh (1 of Ladakh's share of the
+# 99 India-wide languages):
+#   - bod (Tibetan): NT via helloao, OT via helloao
+#
+# Split from Jammu & Kashmir as its own Union Territory in 2019 (ISO 3166-2 code IN-LA). Kashmiri (kas), the primary language of the Kashmir Valley half of the old combined state, has no content anywhere — so a standalone Jammu & Kashmir (IN-JK) file was skipped entirely per this batch's scope (states with zero resolved languages aren't included).
+
+code = "in-la"
+name = { en = "Ladakh" }
+defaultLanguage = "bod"   # primary language when entering with none chosen
+uiLanguage = "en"         # no Tibetan UI locale exists (only
+                          # src/locales/hi.ts does, and it's a stub) — English
+                          # is used for the interface, same as every other
+                          # India file until a local-script locale is built
+
+# No separate trade language distinct from the state's own default here —
+# unlike the multi-state in.toml, a single-state file doesn't need a
+# separate "bridge" language pulled out of the list. English still covers
+# that role implicitly (every reader has the global language picker).
+tradeLanguages = ["eng"]
+
+languages = [
+  "bod",
+]
+
+# ── Region landing page (/r/in-la) ───────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# unlisted = true: kept off the main "/" homepage grid so India's 28 state
+# files don't crowd out every other region there — still fully reachable at
+# /r/in-la/ and via the in-la.demo.bibel.wiki redirect, same treatment
+# za.toml uses for a different reason (thin content there; here it's
+# homepage real estate). config/regions/in.toml remains the one India card
+# shown on the homepage.
+
+[landing]
+unlisted = true
+accentColor = "#607D8B"
+headline = { en = "The Bible in the languages of Ladakh" }
+subhead  = { en = "Read and listen to Scripture in Ladakh's regional languages." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Ladakh" }
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultLanguage (bod) is NOT in the fixed study-mode gate list (see
+# src/lib/bw/study-languages.ts), so this state falls back to eng for
+# defaultStudyLanguage, same gap za.toml documents for South Africa.
+
+[study]
+defaultStudyLanguage = "eng"
+
+[seo]
+host = "in-la.demo.bibel.wiki"

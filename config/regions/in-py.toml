@@ -1,0 +1,77 @@
+# Puducherry — one of India's states/union territories, its own standalone
+# regional entry point.   Subdomain: in-py.demo.bibel.wiki   ·   Path: /r/in-py
+#
+# Sibling file to config/regions/in.toml (the general India file, covering
+# all 99 resolved India-wide languages) — see that file for the full
+# methodology (Wikidata P17=India cross-checked against config/pkf-langs.json,
+# data/source-catalog.json, config/licenses.json) and the broader exclusion
+# reasoning (diaspora, sign languages, macrolanguage-vs-specific-variety,
+# etc.) that also applies here. This file exists as a genuinely independent,
+# standalone region — same schema, same treatment as config/regions/mx.toml
+# — using "in-py" as its own file code — the "in-" prefix is
+# purely a naming/organizational convention (groups India's files
+# together, and avoids any future ambiguity with an unrelated 2-letter
+# country code), NOT a routing hierarchy: this is still a flat,
+# independent region code, with no parent/child relationship to
+# in.toml and no nested subdomain. Puducherry's own official ISO 3166-2
+# subdivision code is IN-PY (a different, unrelated ID from
+# this file's own "in-py" code).
+#
+# Resolved languages in Puducherry (2 of Puducherry's share of the
+# 99 India-wide languages):
+#   - fra (French): NT via helloao, OT via helloao
+#   - tam (Tamil): NT via helloao, OT via helloao
+#
+# French remains one of Puducherry's officially recognized languages (a living Franco-Pondicherrian community, French-medium schools) — unlike Goa's Portuguese, which lost official status decades ago and was excluded from config/regions/in.toml entirely.
+
+code = "in-py"
+name = { en = "Puducherry" }
+defaultLanguage = "tam"   # primary language when entering with none chosen
+uiLanguage = "en"         # no Tamil UI locale exists (only
+                          # src/locales/hi.ts does, and it's a stub) — English
+                          # is used for the interface, same as every other
+                          # India file until a local-script locale is built
+
+# No separate trade language distinct from the state's own default here —
+# unlike the multi-state in.toml, a single-state file doesn't need a
+# separate "bridge" language pulled out of the list. English still covers
+# that role implicitly (every reader has the global language picker).
+tradeLanguages = ["eng"]
+
+languages = [
+  "fra", "tam",
+]
+
+# ── Region landing page (/r/in-py) ───────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+#
+# unlisted = true: kept off the main "/" homepage grid so India's 28 state
+# files don't crowd out every other region there — still fully reachable at
+# /r/in-py/ and via the in-py.demo.bibel.wiki redirect, same treatment
+# za.toml uses for a different reason (thin content there; here it's
+# homepage real estate). config/regions/in.toml remains the one India card
+# shown on the homepage.
+
+[landing]
+unlisted = true
+accentColor = "#3949AB"
+headline = { en = "The Bible in the languages of Puducherry" }
+subhead  = { en = "Read and listen to Scripture in Puducherry's regional languages." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Puducherry" }
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+# defaultLanguage (tam) is NOT in the fixed study-mode gate list (see
+# src/lib/bw/study-languages.ts), so this state falls back to eng for
+# defaultStudyLanguage, same gap za.toml documents for South Africa.
+
+[study]
+defaultStudyLanguage = "eng"
+
+[seo]
+host = "in-py.demo.bibel.wiki"
