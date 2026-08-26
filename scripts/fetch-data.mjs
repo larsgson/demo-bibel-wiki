@@ -243,7 +243,7 @@ if (existsSync(join(PUBLIC_DIR, "ALL-langs-data", "manifest.json"))) {
 
 // ── 3. Source catalog (per-language text-provider resolution) ──
 //
-// cdn.bibel.wiki/dbt/_app/catalog-overlap.json computes, build-side, which
+// cdn.bibel.wiki/catalog/overlap.json computes, build-side, which
 // translations exist per language+canon and how they relate (near-duplicate
 // clustering via text-similarity probing). That changes rarely (only when
 // the CDN's own catalog is regenerated), so we bake a small derived lookup
@@ -317,7 +317,7 @@ if (hasCachedSourceCatalog) {
   // the existing try/catch already keeps a parse failure from taking down
   // the whole site — but it turns a silent, hours-later "why is everything
   // 0" investigation into an immediate, specific build-log warning.
-  const EXPECTED_SCHEMA_VERSIONS = { "catalog-overlap.json": 2, "catalog/index.json": 1 }
+  const EXPECTED_SCHEMA_VERSIONS = { "catalog/overlap.json": 2, "catalog/index.json": 1 }
   function checkSchemaVersion(name, obj) {
     const expected = EXPECTED_SCHEMA_VERSIONS[name]
     const actual = obj?.schema_version
@@ -330,10 +330,17 @@ if (hasCachedSourceCatalog) {
 
   let catalog = {}
   try {
-    const res = await fetch("https://cdn.bibel.wiki/dbt/_app/catalog-overlap.json")
-    if (!res.ok) throw new Error(`fetch catalog-overlap.json: ${res.status}`)
+    // NOTE: NOT dbt/_app/catalog-overlap.json — bcv-commons/bibles migrated
+    // every catalog-*.json to /catalog/*.json on 2026-08-11, and the old
+    // /dbt/_app/ paths are explicitly excluded from every publish since
+    // (`STALE_APP_CATALOG_FILES` in pipeline/core/cdn_dbt_delta.py) — that
+    // path is permanently frozen at its 2026-07-28 content and will never
+    // update again. Cost real debugging time to catch since the old path
+    // still returns 200 with a plausible-looking (just stale) body.
+    const res = await fetch("https://cdn.bibel.wiki/catalog/overlap.json")
+    if (!res.ok) throw new Error(`fetch catalog/overlap.json: ${res.status}`)
     const overlap = await res.json()
-    checkSchemaVersion("catalog-overlap.json", overlap)
+    checkSchemaVersion("catalog/overlap.json", overlap)
     const priority = overlap.priority ?? ["pkf", "helloao", "dbt"]
     const PROVIDER_BY_PREFIX = { d: "dbt", h: "helloao", p: "pkf" }
 
