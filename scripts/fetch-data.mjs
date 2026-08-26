@@ -357,6 +357,51 @@ if (hasCachedSourceCatalog) {
       catalog[iso][canon] = resolved.provider === "pkf" ? { provider: "pkf" } : resolved
     }
 
+    // ── Supplementary pass: cross-check helloAO's own live catalog ──
+    //
+    // catalog-overlap.json above is itself a periodic aggregation and can
+    // genuinely lag behind helloAO's real live catalog — config/regions/
+    // ke.toml, za.toml, and cas.toml's own commentary already documents this
+    // exact under-counting failure mode from manual, ad-hoc checks made
+    // while authoring those files. Rather than leave the gap unaddressed in
+    // the actual build, cross-check directly against helloAO's own
+    // available_translations.json and fill in anything the overlap catalog
+    // above missed.
+    //
+    // helloAO gives a book COUNT, not an explicit canon split, so canon
+    // coverage is inferred from numberOfBooks: 60+ books → both NT+OT
+    // (covers the common 66-book case and near-variants); 20-34 books → NT
+    // only (covers the dominant 27-book NT case and its minor variants,
+    // e.g. an OT-less deuterocanon difference). Anything outside those
+    // ranges (a single book, a handful of books, an unusual partial) is too
+    // ambiguous to guess a canon for and is skipped rather than risk a wrong
+    // assignment. Never overrides an iso+canon the overlap catalog above
+    // already resolved — this only fills what that catalog is missing, on
+    // the assumption its own resolution, when present, reflects more
+    // deliberate curation (e.g. a specific preferred translation).
+    try {
+      const res = await fetch("https://bible.helloao.org/api/available_translations.json")
+      if (!res.ok) throw new Error(`fetch available_translations.json: ${res.status}`)
+      const { translations } = await res.json()
+      let filled = 0
+      for (const t of translations ?? []) {
+        const iso = t.language
+        const nb = t.numberOfBooks ?? 0
+        const canons = nb >= 60 ? ["nt", "ot"] : nb >= 20 && nb <= 34 ? ["nt"] : []
+        for (const canon of canons) {
+          catalog[iso] ??= {}
+          if (!catalog[iso][canon]) {
+            catalog[iso][canon] = { provider: "helloao", id: t.id }
+            filled++
+          }
+        }
+      }
+      if (filled > 0) console.log(`  ✓ helloAO cross-check filled ${filled} additional iso+canon entr${filled === 1 ? "y" : "ies"}`)
+    } catch (err) {
+      console.warn(`  ⚠ Could not cross-check helloAO's live catalog: ${err.message}`)
+      console.warn(`    Proceeding with catalog-overlap.json's resolution alone.`)
+    }
+
     mkdirSync("data", { recursive: true })
     writeFileSync(SOURCE_CATALOG_PATH, JSON.stringify(catalog))
     console.log(`  ✓ source-catalog.json ready (${Object.keys(catalog).length} languages)`)
