@@ -249,17 +249,32 @@ if (existsSync(join(PUBLIC_DIR, "ALL-langs-data", "manifest.json"))) {
 // the CDN's own catalog is regenerated), so we bake a small derived lookup
 // here rather than re-deriving a provider/id per chapter load at runtime.
 //
-// Schema (as of 2026-07): `entries` is `[iso, canon, info]`, ONE ROW PER
-// DISTINCT-TRANSLATION CLUSTER (not per provider) — a language+canon can
-// have many rows, each `info.ids` a same-content group across providers
-// (e.g. `["dbt:ENGKJV", "helloao:eng_kjv"]`) with `info.default` naming the
-// preferred id WITHIN that one cluster. There's no single "the" default for
-// the whole iso+canon anymore (earlier schema versions had one at the top
-// level as `defaults["iso:canon"]` — that key is gone). So: collect every
-// id across every cluster for this iso+canon (preferring each cluster's own
-// `default` first), then pick by provider priority (`overlap.priority`,
+// Schema (as of 2026-08, second revision — see below): `entries` is an
+// OBJECT keyed by `"iso:canon"` (e.g. `"aai:nt"`), not an array of
+// `[iso, canon, info]` triples. Each value is a list of CLUSTER objects, one
+// per DISTINCT-TRANSLATION cluster for that iso+canon (a language+canon can
+// have several) — each cluster's `ids` is a same-content group across
+// providers, but now using single-LETTER prefixes (`d:`/`h:`/`p:` for
+// dbt/helloao/pkf, e.g. `["d:ENGKJV", "h:eng_kjv"]`), not the full provider
+// name the previous schema used (`"dbt:ENGKJV"`). There is no per-cluster
+// `default` field anymore either — every id in `ids` is treated as equally
+// preferred within its cluster. Collect every id across every cluster for
+// this iso+canon, then pick by provider priority (`overlap.priority`,
 // currently pkf > helloao > dbt) — first id found for the top-priority
 // provider present wins.
+//
+// PRIOR REVISION (2026-07, now defunct): `entries` was an array of
+// `[iso, canon, info]` triples with full-word provider prefixes and a
+// per-cluster `default` field. That shape silently broke this script on
+// every build once the CDN moved to the shape above — `for (const [iso,
+// canon, info] of overlap.entries)` throws "object is not iterable" against
+// a plain object, which the catch block below swallows into a `{}` fallback
+// with no build failure, so this went unnoticed until every region's
+// "available language" count (and any Reader pane sourced from DBT/helloAO)
+// silently zeroed out. Handle a future reshape by checking `Array.isArray`
+// up front and branching, the same defensive pattern src/lib/data/regions.ts
+// already uses for manifest.json's own past shape change — don't assume this
+// won't drift again.
 //
 // The DERIVED file only resolves the PROVIDER, plus a translation id when
 // resolvable (see above). When a language has many same-priority-provider
@@ -295,31 +310,45 @@ if (hasCachedSourceCatalog) {
     if (!res.ok) throw new Error(`fetch catalog-overlap.json: ${res.status}`)
     const overlap = await res.json()
     const priority = overlap.priority ?? ["pkf", "helloao", "dbt"]
+    const PROVIDER_BY_PREFIX = { d: "dbt", h: "helloao", p: "pkf" }
 
-    // Group every cluster row by iso+canon first.
+    // Normalize both known shapes into byIsoCanon: Map<"iso:canon", clusters[]>,
+    // each cluster `{ ids: string[] }` with ids using the CURRENT single-letter
+    // prefix scheme (d:/h:/p:) — see the schema note above for why this can't
+    // just assume one shape.
     const byIsoCanon = new Map()
-    for (const [iso, canon, info] of overlap.entries ?? []) {
-      const key = `${iso}:${canon}`
-      if (!byIsoCanon.has(key)) byIsoCanon.set(key, [])
-      byIsoCanon.get(key).push(info)
+    if (Array.isArray(overlap.entries)) {
+      // Prior (2026-07) shape: array of [iso, canon, info] triples, full-word
+      // prefixes, per-cluster `default`. Normalize into the current shape so
+      // the resolution loop below only has one format to handle.
+      for (const [iso, canon, info] of overlap.entries) {
+        const key = `${iso}:${canon}`
+        if (!byIsoCanon.has(key)) byIsoCanon.set(key, [])
+        const preferred = info.default
+        const ids = preferred ? [preferred, ...(info.ids ?? []).filter((id) => id !== preferred)] : (info.ids ?? [])
+        byIsoCanon.get(key).push({ ids })
+      }
+    } else {
+      // Current (2026-08) shape: object keyed by "iso:canon", each value a
+      // list of cluster objects already in the right shape.
+      for (const [key, clusters] of Object.entries(overlap.entries ?? {})) {
+        byIsoCanon.set(key, clusters)
+      }
     }
 
-    for (const [key, rows] of byIsoCanon) {
+    for (const [key, clusters] of byIsoCanon) {
       const [iso, canon] = key.split(":")
-      // Each cluster's own preferred id goes first, then its other ids.
-      const allIds = []
-      for (const info of rows) {
-        const preferred = info.default
-        if (preferred) allIds.push(preferred)
-        for (const id of info.ids ?? []) {
-          if (id !== preferred) allIds.push(id)
-        }
-      }
+      const allIds = clusters.flatMap((c) => c.ids ?? [])
       let resolved = null
       for (const provider of priority) {
-        const match = allIds.find((x) => x.startsWith(provider + ":"))
+        const match = allIds.find((x) => {
+          const prefix = x.split(":")[0]
+          return prefix === provider || PROVIDER_BY_PREFIX[prefix] === provider
+        })
         if (match) {
-          resolved = { provider, id: match.slice(provider.length + 1) }
+          const [prefix, ...rest] = match.split(":")
+          const id = rest.join(":")
+          resolved = { provider: PROVIDER_BY_PREFIX[prefix] ?? prefix, id }
           break
         }
       }
