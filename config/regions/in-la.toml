@@ -41,6 +41,23 @@ languages = [
   "bod",
 ]
 
+# ── Groupings ────────────────────────────────────────────────────────────────
+# A single flat group covering all of Ladakh's own languages — needed for
+# the region landing page to render any language tiles at all (the page only
+# ever shows languages that appear inside a grouping's group, never the flat
+# `languages` list directly — see src/pages/r/[region]/index.astro). Single-
+# state files don't need more than one bucket the way the multi-state
+# in.toml's by-state grouping does.
+[[grouping]]
+id = "all"
+navigable = false
+name = { en = "Languages of Ladakh" }
+
+  [[grouping.group]]
+  slug = "all"
+  name = { en = "Ladakh" }
+  languages = ["bod"]
+
 # ── Region landing page (/r/in-la) ───────────────────────────────────────
 # TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
 # the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
@@ -63,6 +80,7 @@ subhead  = { en = "Read and listen to Scripture in Ladakh's regional languages."
 
 [picker]
 tierLabel = { en = "Languages of Ladakh" }
+filterBy = "all"   # which grouping powers the picker filter chips
 
 # ── Study + SEO ──────────────────────────────────────────────────────────────
 # defaultLanguage (bod) is NOT in the fixed study-mode gate list (see

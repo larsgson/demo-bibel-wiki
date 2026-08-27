@@ -43,6 +43,23 @@ languages = [
   "hru", "suv", "mhu", "kht", "raw",
 ]
 
+# ── Groupings ────────────────────────────────────────────────────────────────
+# A single flat group covering all of Arunachal Pradesh's own languages — needed for
+# the region landing page to render any language tiles at all (the page only
+# ever shows languages that appear inside a grouping's group, never the flat
+# `languages` list directly — see src/pages/r/[region]/index.astro). Single-
+# state files don't need more than one bucket the way the multi-state
+# in.toml's by-state grouping does.
+[[grouping]]
+id = "all"
+navigable = false
+name = { en = "Languages of Arunachal Pradesh" }
+
+  [[grouping.group]]
+  slug = "all"
+  name = { en = "Arunachal Pradesh" }
+  languages = ["hru", "suv", "mhu", "kht", "raw"]
+
 # ── Region landing page (/r/in-ar) ───────────────────────────────────────
 # TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
 # the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
@@ -65,6 +82,7 @@ subhead  = { en = "Read and listen to Scripture in Arunachal Pradesh's regional 
 
 [picker]
 tierLabel = { en = "Languages of Arunachal Pradesh" }
+filterBy = "all"   # which grouping powers the picker filter chips
 
 # ── Study + SEO ──────────────────────────────────────────────────────────────
 # defaultLanguage (hru) is NOT in the fixed study-mode gate list (see

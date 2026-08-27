@@ -39,6 +39,23 @@ languages = [
   "pan",
 ]
 
+# ── Groupings ────────────────────────────────────────────────────────────────
+# A single flat group covering all of Punjab's own languages — needed for
+# the region landing page to render any language tiles at all (the page only
+# ever shows languages that appear inside a grouping's group, never the flat
+# `languages` list directly — see src/pages/r/[region]/index.astro). Single-
+# state files don't need more than one bucket the way the multi-state
+# in.toml's by-state grouping does.
+[[grouping]]
+id = "all"
+navigable = false
+name = { en = "Languages of Punjab" }
+
+  [[grouping.group]]
+  slug = "all"
+  name = { en = "Punjab" }
+  languages = ["pan"]
+
 # ── Region landing page (/r/in-pb) ───────────────────────────────────────
 # TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
 # the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
@@ -61,6 +78,7 @@ subhead  = { en = "Read and listen to Scripture in Punjab's regional languages."
 
 [picker]
 tierLabel = { en = "Languages of Punjab" }
+filterBy = "all"   # which grouping powers the picker filter chips
 
 # ── Study + SEO ──────────────────────────────────────────────────────────────
 # defaultLanguage (pan) is NOT in the fixed study-mode gate list (see
