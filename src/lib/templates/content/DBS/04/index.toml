@@ -1,0 +1,38 @@
+level = "chapter"
+id = "04"
+canon = "nt"
+
+[image]
+filename = "42_Lk_07_10_RG.jpg"
+
+[[stories]]
+id = "01"
+image = "42_Lk_07_10_RG.jpg"
+
+[[stories]]
+id = "02"
+image = "42_Lk_18_01_RG.jpg"
+
+[[stories]]
+id = "03"
+image = "42_Lk_19_01_RG.jpg"
+
+[[stories]]
+id = "04"
+image = "41_Mk_02_03_RG.jpg"
+
+[[stories]]
+id = "05"
+image = "40_Mt_18_01_RG.jpg"
+
+[[stories]]
+id = "06"
+image = "40_Mt_27_10_RG.jpg"
+
+[[stories]]
+id = "07"
+image = "40_Mt_28_01_RG.jpg"
+
+[[stories]]
+id = "08"
+image = "42_Lk_15_02_RG.jpg"

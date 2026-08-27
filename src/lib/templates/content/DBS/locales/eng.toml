@@ -1,0 +1,935 @@
+# Discover App: Scripture sets - English locale
+
+title = "Discover App: Scripture Sets"
+longTitle = "Discover App: Scripture Sets"
+description = ""
+
+[01]
+title = "Series 1: Creation to Christ"
+description = ""
+
+[01.01]
+title = "Creation: God creates the world"
+description = ""
+
+[01.01.1_1]
+p_hd = "Creation: God creates the world"
+
+[01.02]
+title = "Creation: God creates humanity"
+description = ""
+
+[01.02.2_4]
+p_hd = "Creation: God creates humanity"
+
+[01.03]
+title = "The Fall: The first sin and its punishment"
+description = ""
+
+[01.03.3_1]
+p_hd = "The Fall: The first sin and its punishment"
+
+[01.04]
+title = "The Fall: Noah's flood"
+description = ""
+
+[01.04.6_1]
+p_hd = "The Fall: Noah's flood"
+
+[01.05]
+title = "Redemption: God's promise to Abraham"
+description = ""
+
+[01.05.12_1]
+p_hd = "Redemption: God's promise to Abraham"
+
+[01.06]
+title = "Redemption: Abraham sacrifices his son"
+description = ""
+
+[01.06.22_1]
+p_hd = "Redemption: Abraham sacrifices his son"
+
+[01.07]
+title = "Redemption: The promise of Passover"
+description = ""
+
+[01.07.12_1]
+p_hd = "Redemption: The promise of Passover"
+
+[01.08]
+title = "Redemption: The Ten Commandments via Moses"
+description = ""
+
+[01.08.20_1]
+p_hd = "Redemption: The Ten Commandments via Moses"
+
+[01.09]
+title = "Redemption: The sacrificial law"
+description = ""
+
+[01.09.4_1]
+p_hd = "Redemption: The sacrificial law"
+
+[01.10]
+title = "Worship: Praise to God our shepherd"
+description = ""
+
+[01.10.23_1]
+p_hd = "Worship: Praise to God our shepherd"
+
+[01.11]
+title = "Redemption: Isaiah's prophecy of suffering servant"
+description = ""
+
+[01.11.53_1]
+p_hd = "Redemption: Isaiah's prophecy of suffering servant"
+
+[01.12]
+title = "Redemption: Miraculous birth of Jesus"
+description = ""
+
+[01.12.1_26]
+p_hd = "Redemption: Miraculous birth of Jesus"
+
+[01.13]
+title = "Redemption: Jesus' baptism"
+description = ""
+
+[01.13.3_1]
+p_hd = "Matthew"
+
+[01.13.1_29]
+p_hd = "John"
+
+[01.14]
+title = "Redemption: Jesus tempted by the devil"
+description = ""
+
+[01.14.4_1]
+p_hd = "Redemption: Jesus tempted by the devil"
+
+[01.15]
+title = "Redemption: Jesus calmed the storm"
+description = ""
+
+[01.15.4_35]
+p_hd = "Redemption: Jesus calmed the storm"
+
+[01.16]
+title = "Redemption: Jesus cast out demons"
+description = ""
+
+[01.16.5_1]
+p_hd = "Redemption: Jesus cast out demons"
+
+[01.17]
+title = "Redemption: Jesus feeds five thousand"
+description = ""
+
+[01.17.6_1]
+p_hd = "Redemption: Jesus feeds five thousand"
+
+[01.18]
+title = "Redemption: Jesus healed the sick and forgave sins"
+description = ""
+
+[01.18.5_17]
+p_hd = "Redemption: Jesus healed the sick and forgave sins"
+
+[01.19]
+title = "Redemption: Jesus met foreigners"
+description = ""
+
+[01.19.4_1]
+p_hd = "Redemption: Jesus met foreigners"
+
+[01.20]
+title = "Redemption: Jesus told about the Way of God"
+description = ""
+
+[01.20.10_25]
+p_hd = "Redemption: Jesus told about the Way of God"
+
+[01.21]
+title = "Redemption: Jesus taught how to pray"
+description = ""
+
+[01.21.18_9]
+p_hd = "Luke"
+
+[01.21.16_24]
+p_hd = "John"
+
+[01.22]
+title = "Redemption: Jesus taught re: alms, prayer and fasting"
+description = ""
+
+[01.22.6_1]
+p_hd = "Redemption: Jesus taught re: alms, prayer and fasting"
+
+[01.23]
+title = "Redemption: Jesus raised the dead"
+description = ""
+
+[01.23.11_1]
+p_hd = "Redemption: Jesus raised the dead"
+
+[01.24]
+title = "Redemption: Jesus taught how to be great"
+description = ""
+
+[01.24.20_20]
+p_hd = "Redemption: Jesus taught how to be great"
+
+[01.25]
+title = "Redemption: The Lord's Supper/prediction of death"
+description = ""
+
+[01.25.26_26]
+p_hd = "Redemption: The Lord's Supper/prediction of death"
+
+[01.26]
+title = "Redemption: Jesus was betrayed and sentenced"
+description = ""
+
+[01.26.18_1]
+p_hd = "Redemption: Jesus was betrayed and sentenced"
+
+[01.27]
+title = "Redemption: Jesus crucified"
+description = ""
+
+[01.27.23_32]
+p_hd = "Redemption: Jesus crucified"
+
+[01.28]
+title = "Redemption: Jesus conquered death"
+description = ""
+
+[01.28.24_1]
+p_hd = "Redemption: Jesus conquered death"
+
+[01.29]
+title = "Redemption: Jesus revealed self and goes to heaven"
+description = ""
+
+[01.29.24_36]
+p_hd = "Redemption: Jesus revealed self and goes to heaven"
+
+[01.30]
+title = "Summary: Do you want to follow the Way of God?"
+description = ""
+
+[01.30.3_1]
+p_hd = "John"
+
+[01.30.7_13]
+p_hd = "Matthew"
+
+[02]
+title = "Series 2: Becoming Disciples"
+description = ""
+
+[02.01]
+title = "The Great Commandment"
+description = ""
+
+[02.01.12_28]
+p_hd = "The Great Commandment"
+
+[02.02]
+title = "The Cost of Discipleship"
+description = ""
+
+[02.02.14_25]
+p_hd = "The Cost of Discipleship"
+
+[02.03]
+title = "Bearing Fruit"
+description = ""
+
+[02.03.12_24]
+p_hd = "Bearing Fruit"
+
+[02.04]
+title = "A New Commandment"
+description = ""
+
+[02.04.13_31]
+p_hd = "A New Commandment"
+
+[02.05]
+title = "Love, Obey and Receive the Holy Spirit"
+description = ""
+
+[02.05.14_15]
+p_hd = "Love, Obey and Receive the Holy Spirit"
+
+[02.06]
+title = "Abide in Christ"
+description = ""
+
+[02.06.15_1]
+p_hd = "Abide in Christ"
+
+[02.07]
+title = "Trust Jesus as Lord and God"
+description = ""
+
+[02.07.20_24]
+p_hd = "Trust Jesus as Lord and God"
+
+[02.08]
+title = "Go and Make Disciples"
+description = ""
+
+[02.08.28_18]
+p_hd = "Go and Make Disciples"
+
+[02.09]
+title = "The Fellowship of Believers"
+description = ""
+
+[02.09.2_42]
+p_hd = "The Fellowship of Believers"
+
+[03]
+title = "Series 3: Training Labourers"
+description = ""
+
+[03.01]
+title = "Starting with the end in mind"
+description = ""
+
+[03.01.7_9]
+p_hd = "Starting with the end in mind"
+
+[03.02]
+title = "The power of prayer"
+description = ""
+
+[03.02.11_20]
+p_hd = "The power of prayer"
+
+[03.03]
+title = "How do people come?"
+description = ""
+
+[03.03.6_35]
+p_hd = "How do people come?"
+
+[03.04]
+title = "God's Glory"
+description = ""
+
+[03.04.17_1]
+p_hd = "God's Glory"
+
+[03.05]
+title = "Called to the unreached"
+description = ""
+
+[03.05.15_14]
+p_hd = "Called to the unreached"
+
+[03.06]
+title = "The great commandment"
+description = ""
+
+[03.06.6_4]
+p_hd = "The great commandment"
+
+[03.07]
+title = "The great commission"
+description = ""
+
+[03.07.28_16]
+p_hd = "The great commission"
+
+[03.08]
+title = "Being like Jesus"
+description = ""
+
+[03.08.2_5]
+p_hd = "Being like Jesus"
+
+[03.09]
+title = "Reaching the lost"
+description = ""
+
+[03.09.10_1]
+p_hd = "Reaching the lost"
+
+[03.10]
+title = "Reaching the lost (part 2)"
+description = ""
+
+[03.10.9_35]
+p_hd = "Reaching the lost (part 2)"
+
+[04]
+title = "Series 4: Stories of Hope"
+description = ""
+
+[04.01]
+title = "Hope for the Rejected"
+description = ""
+
+[04.01.7_36]
+p_hd = "Hope for the Rejected"
+
+[04.02]
+title = "Hope for the Non-Religious"
+description = ""
+
+[04.02.18_9]
+p_hd = "Hope for the Non-Religious"
+
+[04.03]
+title = "Hope Changes Things"
+description = ""
+
+[04.03.19_1]
+p_hd = "Hope Changes Things"
+
+[04.04]
+title = "Hope Helps Others"
+description = ""
+
+[04.04.5_17]
+p_hd = "Hope Helps Others"
+
+[04.05]
+title = "Hope Forgives"
+description = ""
+
+[04.05.18_21]
+p_hd = "Hope Forgives"
+
+[04.06]
+title = "Hope Through Death"
+description = ""
+
+[04.06.23_32]
+p_hd = "Hope Through Death"
+
+[04.07]
+title = "Hope Rose from the Dead"
+description = ""
+
+[04.07.24_1]
+p_hd = "Hope Rose from the Dead"
+
+[04.08]
+title = "Hope is Waiting for You"
+description = ""
+
+[04.08.15_11]
+p_hd = "Hope is Waiting for You"
+
+[05]
+title = "Signs of John"
+description = ""
+
+[05.01]
+title = "Changing water into wine"
+description = ""
+
+[05.01.2_1]
+p_hd = "Changing water into wine"
+
+[05.02]
+title = "Healing the official's son"
+description = ""
+
+[05.02.4_46]
+p_hd = "Healing the official's son"
+
+[05.03]
+title = "Healing the paralytic"
+description = ""
+
+[05.03.5_1]
+p_hd = "Healing the paralytic"
+
+[05.04]
+title = "Feeding the 5000"
+description = ""
+
+[05.04.6_5]
+p_hd = "Feeding the 5000"
+
+[05.05]
+title = "Jesus walking on water"
+description = ""
+
+[05.05.6_16]
+p_hd = "Jesus walking on water"
+
+[05.06]
+title = "Healing the man born blind"
+description = ""
+
+[05.06.9_1]
+p_hd = "Healing the man born blind"
+
+[05.07]
+title = "The raising of Lazarus"
+description = ""
+
+[05.07.11_1]
+p_hd = "The raising of Lazarus"
+
+[05.08]
+title = "The Resurrection"
+description = ""
+
+[05.08.20_1]
+p_hd = "The Resurrection"
+
+[06]
+title = "For Such a Time"
+description = ""
+
+[06.01]
+title = "The Lure of Materialism"
+description = ""
+
+[06.01.1_1]
+p_hd = "The Lure of Materialism"
+
+[06.02]
+title = "Called from obscurity"
+description = ""
+
+[06.02.2_1]
+p_hd = "Called from obscurity"
+
+[06.03]
+title = "The Plot"
+description = ""
+
+[06.03.3_1]
+p_hd = "The Plot"
+
+[06.04]
+title = "For such a time"
+description = ""
+
+[06.04.4_1]
+p_hd = "For such a time"
+
+[06.05]
+title = "The tables are turned"
+description = ""
+
+[06.05.5_1]
+p_hd = "The tables are turned"
+
+[06.06]
+title = "The right place at the right time"
+description = ""
+
+[06.06.1_1]
+p_hd = "The right place at the right time"
+
+[06.07]
+title = "Rebuilding"
+description = ""
+
+[06.07.2_7]
+p_hd = "Rebuilding"
+
+[06.08]
+title = "Opposition"
+description = ""
+
+[06.08.4_1]
+p_hd = "Opposition"
+
+[06.09]
+title = "Thanksgiving and Repentance"
+description = ""
+
+[06.09.8_1]
+p_hd = "Thanksgiving and Repentance"
+
+[07]
+title = "Commands of Christ"
+description = ""
+
+[07.01]
+title = "Repent and believe"
+description = ""
+
+[07.01.4_17]
+p_hd = "Matthew"
+
+[07.01.7_36]
+p_hd = "Luke"
+
+[07.02]
+title = "Be baptised"
+description = ""
+
+[07.02.28_19]
+p_hd = "Matthew"
+
+[07.02.8_26]
+p_hd = "Acts"
+
+[07.03]
+title = "Pray"
+description = ""
+
+[07.03.6_5]
+p_hd = "Pray"
+
+[07.04]
+title = "Make Disciples"
+description = ""
+
+[07.04.28_19]
+p_hd = "Matthew"
+
+[07.04.4_4]
+p_hd = "John"
+
+[07.05]
+title = "Persevere"
+description = ""
+
+[07.05.10_22]
+p_hd = "Matthew"
+
+[07.05.5_27]
+p_hd = "Acts"
+
+[07.06]
+title = "Love"
+description = ""
+
+[07.06.22_37]
+p_hd = "Matthew"
+
+[07.06.10_25]
+p_hd = "Luke"
+
+[07.07]
+title = "Remember me"
+description = ""
+
+[07.07.26_26]
+p_hd = "Matthew"
+
+[07.07.22_7]
+p_hd = "Luke"
+
+[07.08]
+title = "Give"
+description = ""
+
+[07.08.6_1]
+p_hd = "Matthew"
+
+[07.08.12_41]
+p_hd = "Mark"
+
+[07.09]
+title = "Gather"
+description = ""
+
+[07.09.18_20]
+p_hd = "Matthew"
+
+[07.09.10_24]
+p_hd = "Hebrews"
+
+[07.09.2_36]
+p_hd = "Acts"
+
+[08]
+title = "Discover Christmas"
+description = ""
+
+[08.01]
+title = "The child foretold"
+description = ""
+
+[08.01.9_6]
+p_hd = "The child foretold"
+
+[08.02]
+title = "The child born"
+description = ""
+
+[08.02.2_4]
+p_hd = "The child born"
+
+[08.03]
+title = "The child proclaimed"
+description = ""
+
+[08.03.2_8]
+p_hd = "The child proclaimed"
+
+[08.04]
+title = "The child worshipped"
+description = ""
+
+[08.04.2_15]
+p_hd = "The child worshipped"
+
+[08.05]
+title = "The child rejected"
+description = ""
+
+[08.05.1_9]
+p_hd = "The child rejected"
+
+[08.06]
+title = "The child given"
+description = ""
+
+[08.06.3_16]
+p_hd = "The child given"
+
+[08.07]
+title = "The child redeemer"
+description = ""
+
+[08.07.4_4]
+p_hd = "The child redeemer"
+
+[09]
+title = "Leading others to believe"
+description = ""
+
+[09.01]
+title = "Jesus calls people to follow Him"
+description = ""
+
+[09.01.4_18]
+p_hd = "Jesus calls people to follow Him"
+
+[09.02]
+title = "Jesus teaches attitudes that God blesses"
+description = ""
+
+[09.02.5_1]
+p_hd = "Jesus teaches attitudes that God blesses"
+
+[09.03]
+title = "Jesus teaches disciples to live, pray, and fast in a way that pleases God"
+description = ""
+
+[09.03.6_1]
+p_hd = "Jesus teaches disciples to live, pray, and fast in a way that pleases God"
+
+[09.04]
+title = "Jesus teaches disciples to serve God only"
+description = ""
+
+[09.04.6_19]
+p_hd = "Jesus teaches disciples to serve God only"
+
+[09.05]
+title = "Jesus teaches his disciples how to judge righteously"
+description = ""
+
+[09.05.7_1]
+p_hd = "Jesus teaches his disciples how to judge righteously"
+
+[09.06]
+title = "Jesus teaches his disciples to seek God"
+description = ""
+
+[09.06.7_7]
+p_hd = "Jesus teaches his disciples to seek God"
+
+[09.07]
+title = "Jesus teaches disciples to obey God"
+description = ""
+
+[09.07.7_21]
+p_hd = "Jesus teaches disciples to obey God"
+
+[09.08]
+title = "Jesus teaches disciples to care for outcasts and sinners"
+description = ""
+
+[09.08.9_9]
+p_hd = "Jesus teaches disciples to care for outcasts and sinners"
+
+[09.09]
+title = "Jesus teaches, preaches the news of the Kingdom, heals the sick"
+description = ""
+
+[09.09.9_35]
+p_hd = "Jesus teaches, preaches the news of the Kingdom, heals the sick"
+
+[09.10]
+title = "Jesus sends out the disciples to preach about the Kingdom of Heaven"
+description = ""
+
+[09.10.10_1]
+p_hd = "Jesus sends out the disciples to preach about the Kingdom of Heaven"
+
+[09.11]
+title = "Jesus warned disciples of coming persecution"
+description = ""
+
+[09.11.10_16]
+p_hd = "Jesus warned disciples of coming persecution"
+
+[09.12]
+title = "Jesus teaches disciples that rest comes from working with Him"
+description = ""
+
+[09.12.11_25]
+p_hd = "Jesus teaches disciples that rest comes from working with Him"
+
+[09.13]
+title = "Jesus teaches the disciples about the different responses to the kingdom"
+description = ""
+
+[09.13.13_1]
+p_hd = "Jesus teaches the disciples about the different responses to the kingdom"
+
+[09.14]
+title = "Jesus meets the needs of people because of His compassion"
+description = ""
+
+[09.14.15_29]
+p_hd = "Jesus meets the needs of people because of His compassion"
+
+[09.15]
+title = "Jesus teaches his disciples that the cost of following Him is very high"
+description = ""
+
+[09.15.16_13]
+p_hd = "Jesus teaches his disciples that the cost of following Him is very high"
+
+[09.16]
+title = "The Father commands disciples to listen to His Son"
+description = ""
+
+[09.16.17_1]
+p_hd = "The Father commands disciples to listen to His Son"
+
+[09.17]
+title = "Jesus teaches about Faith"
+description = ""
+
+[09.17.17_14]
+p_hd = "Jesus teaches about Faith"
+
+[09.18]
+title = "Jesus teaches disciples how to deal with sin"
+description = ""
+
+[09.18.18_15]
+p_hd = "Jesus teaches disciples how to deal with sin"
+
+[09.19]
+title = "Jesus teaches disciples to honor God\\'s design for marriage"
+description = ""
+
+[09.19.19_3]
+p_hd = "Jesus teaches disciples to honor God\\'s design for marriage"
+
+[09.20]
+title = "Jesus teaches his disciples to be servants"
+description = ""
+
+[09.20.20_20]
+p_hd = "Jesus teaches his disciples to be servants"
+
+[09.21]
+title = "Jesus teaches disciples to faithfully invest what God gives them"
+description = ""
+
+[09.21.25_14]
+p_hd = "Jesus teaches disciples to faithfully invest what God gives them"
+
+[09.22]
+title = "Jesus teaches disciples to serve those in need"
+description = ""
+
+[09.22.25_31]
+p_hd = "Jesus teaches disciples to serve those in need"
+
+[09.23]
+title = "Jesus teaches disciples to go and teach others to obey all His commands"
+description = ""
+
+[09.23.28_16]
+p_hd = "Jesus teaches disciples to go and teach others to obey all His commands"
+
+[10]
+title = "Who is Jesus"
+description = ""
+
+[10.01]
+title = "Jesus, the Living Water"
+description = ""
+
+[10.01.4_4]
+p_hd = "Jesus, the Living Water"
+
+[10.02]
+title = "Jesus, the Bread of Life"
+description = ""
+
+[10.02.6_1]
+p_hd = "Jesus, the Bread of Life"
+
+[10.03]
+title = "Jesus, the Light of the World"
+description = ""
+
+[10.03.8_1]
+p_hd = "Jesus, the Light of the World"
+
+[10.04]
+title = "Jesus, the I AM"
+description = ""
+
+[10.04.8_51]
+p_hd = "Jesus, the I AM"
+
+[10.05]
+title = "Jesus, the Gate, the Good Shepherd"
+description = ""
+
+[10.05.10_1]
+p_hd = "Jesus, the Gate, the Good Shepherd"
+
+[10.06]
+title = "Jesus, the Saviour"
+description = ""
+
+[10.06.3_1]
+p_hd = "Jesus, the Saviour"
+
+[10.07]
+title = "Jesus, the Resurrection and the Life"
+description = ""
+
+[10.07.11_17]
+p_hd = "Jesus, the Resurrection and the Life"
+
+[10.08]
+title = "Jesus, the Way, the Truth, and the Life"
+description = ""
+
+[10.08.14_1]
+p_hd = "Jesus, the Way, the Truth, and the Life"
+
+[10.09]
+title = "Jesus, the true Vine"
+description = ""
+
+[10.09.15_1]
+p_hd = "Jesus, the true Vine"

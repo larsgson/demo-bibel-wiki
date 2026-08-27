@@ -29,7 +29,7 @@ import { buildLangHref } from "../lib/bw/url-utils"
 import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
 import { resolveImageUrl, resolveMediumUrl } from "../lib/bw/image-utils"
 import { shouldProbePkf } from "../lib/bw/language-list"
-import { loadLanguageMedia } from "../lib/bw/dbt-media"
+import { loadLanguageMedia, loadBookTiming, availabilityFor } from "../lib/bw/dbt-media"
 import { loadVernacularFontFace } from "../lib/bw/vernacular-font"
 import { pkfUrl } from "../lib/bw/pkf-url"
 import languageStyles from "../data/language-styles.json"
@@ -238,12 +238,13 @@ export default function StoryReaderIsland({
         && TIMING_CATS.includes(primaryLangData.category)
         && !(neededTestaments.has("ot") && primaryLangData.canon === "nt")
 
-      // Also check the template-specific timing manifest
+      // Also check the CDN's live per-language media index (audio/timing
+      // availability per canon) — see src/lib/bw/dbt-media.ts.
       if (!primaryHasTimedAudio) {
-        for (const canon of ["nt", "ot"]) {
+        const avail = await availabilityFor(selectedLangs[0])
+        for (const canon of ["nt", "ot"] as const) {
           if (!neededTestaments.has(canon)) continue
-          const info = await findTemplateTimingInfo(templateName, selectedLangs[0], canon)
-          if (info) {
+          if (avail?.[canon]?.timing) {
             primaryHasTimedAudio = true
             break
           }
@@ -270,10 +271,10 @@ export default function StoryReaderIsland({
           let hasAudio = langData && TIMING_CATS.includes(langData.category)
             && !(neededTestaments.has("ot") && langData.canon === "nt")
           if (!hasAudio) {
-            for (const canon of ["nt", "ot"]) {
+            const avail = await availabilityFor(lang)
+            for (const canon of ["nt", "ot"] as const) {
               if (!neededTestaments.has(canon)) continue
-              const info = await findTemplateTimingInfo(templateName, lang, canon)
-              if (info) { hasAudio = true; break }
+              if (avail?.[canon]?.timing) { hasAudio = true; break }
             }
           }
           if (!hasAudio) {
@@ -389,36 +390,15 @@ export default function StoryReaderIsland({
         }
       }
 
-      // Check template manifest for timing info per canon
-      const timingIds: Record<string, string> = {}
-      const timingBooks: Record<string, string[]> = {} // books with timing data per canon
-      let timingCategory = langData?.category || ""
+      // Does this language have any live-CDN timed audio at all, for the
+      // canon(s) this story actually needs? (src/lib/bw/dbt-media.ts's
+      // global media-index — one cheap, cached fetch, not a per-book probe.)
       let hasTemplateInfo = false
-      for (const canon of ["nt", "ot"]) {
-        const info = await findTemplateTimingInfo(templateName, audioLang, canon)
-        if (info) {
-          timingIds[canon] = info.distinctId
-          timingBooks[canon] = info.books
-          timingCategory = info.category
-          hasTemplateInfo = true
+      if (audioLang) {
+        const avail = await availabilityFor(audioLang)
+        for (const canon of neededTestaments) {
+          if (avail?.[canon as "nt" | "ot"]?.timing) hasTemplateInfo = true
         }
-      }
-      // Fallback to language data distinctId
-      const defaultDistinctId = langData?.distinctId || ""
-      if (!timingIds.nt) timingIds.nt = defaultDistinctId
-      if (!timingIds.ot) timingIds.ot = defaultDistinctId
-
-      // Cross-check against the CDN's live fileset registry (/dbt/<iso>/media.json):
-      // the local template timing is keyed by TEXT fileset id (timingIds.nt, e.g.
-      // "INDTSI"), but the language-data-derived audioFilesetIds.nt may point at a
-      // different translation's recording. When the CDN lists a fileset whose text
-      // id matches, prefer ITS audio fileset — this keeps the played audio aligned
-      // with the text the timing was authored against, for any language (not just
-      // a hand-maintained per-language list).
-      if (audioLang && timingIds.nt) {
-        const media = await loadLanguageMedia(audioLang)
-        const match = media?.canons?.nt?.filesets?.find((f) => f.t === timingIds.nt)
-        if (match?.a?.[0]) audioFilesetIds.nt = match.a[0]
       }
 
       // Need at least one audio fileset
@@ -426,32 +406,26 @@ export default function StoryReaderIsland({
         if (!hasTemplateInfo) return
       }
 
-      // Filter neededBooks to only those with timing data per the template manifest
-      const booksWithTiming = [...neededBooks].filter((book) => {
-        const canon = getTestament(book)
-        const available = timingBooks[canon]
-        return !available || available.length === 0 || available.includes(book)
-      })
-
       // Fetch timing data. PKF (Scripture Earth) languages carry their own
-      // timing, so prefer it and skip the template/DBT path entirely — avoids a
-      // spurious /templates/.../timing.json 404 for pkf languages.
+      // timing, so prefer it and skip the live-DBT path entirely — avoids a
+      // spurious timing fetch for pkf languages.
       let timingData = null
-      // `timingResult` (with DBT fileset IDs) only comes from the template path;
-      // null for pkf languages, whose audio uses info.json media items directly.
+      // `timingResult` (with DBT fileset IDs + which books resolved) only
+      // comes from the live-DBT path; null for pkf languages, whose audio
+      // uses info.json media items directly.
       let timingResult: Awaited<ReturnType<typeof fetchTimingData>> | null = null
       if (audioLang && (await shouldProbePkf(audioLang))) {
         const pkfTiming = await fetchPkfTimingData(audioLang, [...neededBooks])
         if (pkfTiming) timingData = pkfTiming
       }
 
-      // Fall back to template (DBT) timing for non-pkf languages (or pkf langs
-      // that turned out to have none).
-      if (!timingData) {
-        timingResult = await fetchTimingData(
-          templateName, audioLang, timingIds, timingCategory, booksWithTiming,
-        )
+      // Fall back to live DBT timing (cdn.bibel.wiki/dbt/<iso>/timing/<BOOK>.json)
+      // for non-pkf languages (or pkf langs that turned out to have none).
+      let booksWithTiming = new Set<string>()
+      if (!timingData && audioLang) {
+        timingResult = await fetchTimingData(audioLang, [...neededBooks], audioFilesetIds)
         timingData = timingResult?.data || null
+        booksWithTiming = timingResult?.books ?? new Set()
       }
 
       // Use fileset IDs from timing data for audio fetch (ensures timing/audio match)
@@ -469,18 +443,18 @@ export default function StoryReaderIsland({
         }
       }
 
-      // Fetch audio URLs for all chapters in parallel, using canon-appropriate fileset
-      // Only attempt books that have timing data (per manifest)
+      // Fetch audio URLs for all chapters in parallel, using canon-appropriate
+      // fileset. Only attempt books that actually resolved real timing (the
+      // PKF path leaves booksWithTiming empty, so it never filters there —
+      // same permissive behavior the old per-language manifest had for PKF).
       const audioUrlMap = new Map<string, string | null>()
       await Promise.all(
         [...chapterRefs.entries()].map(async ([key, { book, chapter }]) => {
-          const testament = getTestament(book)
-          // Skip books not in the timing manifest for this language
-          const availableBooks = timingBooks[testament]
-          if (availableBooks && availableBooks.length > 0 && !availableBooks.includes(book)) {
+          if (booksWithTiming.size > 0 && !booksWithTiming.has(book)) {
             audioUrlMap.set(key, null)
             return
           }
+          const testament = getTestament(book)
           const filesetId = audioFilesetIds[testament] || Object.values(audioFilesetIds)[0]
           if (!filesetId) { audioUrlMap.set(key, null); return }
           const url = await fetchAudioUrl(filesetId, book, chapter, audioLang || undefined)
@@ -614,7 +588,7 @@ export default function StoryReaderIsland({
       }
 
       setAudioForChapter({
-        distinctId: langData?.distinctId || defaultDistinctId || "",
+        distinctId: langData?.distinctId || "",
         bookCode: firstParsed?.book || "",
         chapter: firstParsed?.chapter || 0,
         bookName: templateName,
@@ -759,67 +733,6 @@ export default function StoryReaderIsland({
 
 // --- Helpers ---
 
-// Cache for template timing manifests
-const templateManifestCache: Record<string, any> = {}
-
-async function loadTemplateTimingManifest(templateName: string): Promise<any> {
-  if (templateManifestCache[templateName]) return templateManifestCache[templateName]
-  try {
-    const resp = await fetch(`/templates/${templateName}/ALL-timings/manifest.json`)
-    if (!resp.ok) return null
-    const data = await resp.json()
-    templateManifestCache[templateName] = data
-    return data
-  } catch {
-    return null
-  }
-}
-
-/**
- * Check the template-specific timing manifest for a language.
- * Returns { distinctId, category, books } if found, or null.
- *
- * Manifest format: files > canon > lang > [{id, books}]
- */
-async function findTemplateTimingInfo(
-  templateName: string,
-  langCode: string,
-  canon: string,
-): Promise<{ distinctId: string; category: string; books: string[] } | null> {
-  const manifest = await loadTemplateTimingManifest(templateName)
-  if (!manifest?.files?.[canon]) return null
-
-  const langEntry = manifest.files[canon]?.[langCode]
-  if (!langEntry) return null
-
-  // New format: array of {id, books}
-  if (Array.isArray(langEntry) && langEntry.length > 0) {
-    // Check language preferences for a preferred fileset (supports per-canon)
-    const prefRaw = (languagePreferences as Record<string, any>)[langCode]?.preferredFileset
-    const prefId = typeof prefRaw === "string" ? prefRaw : prefRaw?.[canon] || null
-    const preferred = prefId
-      ? langEntry.find((e: any) => (e.id || e) === prefId)
-      : null
-    const pick = preferred || langEntry[0]
-    return {
-      distinctId: pick.id || pick,
-      category: "with-timecode",
-      books: pick.books || [],
-    }
-  }
-
-  // Legacy format: object keyed by distinct ID
-  if (typeof langEntry === "object") {
-    const ids = Object.keys(langEntry)
-    if (ids.length > 0) {
-      const id = ids[0]
-      return { distinctId: id, category: "with-timecode", books: langEntry[id] || [] }
-    }
-  }
-
-  return null
-}
-
 async function fetchPkfTimingData(
   langCode: string,
   neededBooks: string[],
@@ -869,58 +782,57 @@ async function fetchPkfTimingData(
   return Object.keys(merged).length > 0 ? merged : null
 }
 
+/**
+ * Live verse-timing lookup for story mode, via cdn.bibel.wiki's own
+ * per-book DBT timing endpoint (src/lib/bw/dbt-media.ts's loadBookTiming) —
+ * the same source config/regions/*.toml's own research already established
+ * as authoritative, instead of a separate pre-baked snapshot bundled by
+ * bible-story-builder (which turned out to duplicate this exact data, see
+ * the investigation that led to this change: same fileset IDs, same verse
+ * timings modulo minor drift from the CDN's own timing being periodically
+ * re-generated after bible-story-builder's copy was taken).
+ */
 async function fetchTimingData(
-  templateName: string,
-  langCode: string,
-  timingIds: Record<string, string>,
-  category: string,
-  neededBooks: string[] = [],
-): Promise<{ data: Record<string, any>; filesetIds: Record<string, string> } | null> {
+  iso: string,
+  neededBooks: string[],
+  audioFilesetIds: Record<string, string>,
+): Promise<{ data: Record<string, any>; filesetIds: Record<string, string>; books: Set<string> } | null> {
   const merged: Record<string, any> = {}
   // Track the actual audio fileset IDs found in timing data, keyed by canon
   const filesetIds: Record<string, string> = {}
-  // Fetch per-book timing files and merge
-  // Path: {canon}/{lang}/{distinctId}/{BOOK}/timing.json
-  // Each file contains: fileset > story > chapter > verse > [start, end]
-  if (neededBooks.length > 0) {
-    for (const book of neededBooks) {
-      const canon = getTestament(book)
-      const distinctId = timingIds[canon] || ""
-      if (!distinctId) continue
-      const url = `/templates/${templateName}/ALL-timings/${canon}/${langCode}/${distinctId}/${book}/timing.json`
-      try {
-        const resp = await fetch(url)
-        if (!resp.ok) continue
-        const data = await resp.json()
-        // Deep-merge: fileset > story > chapter > verse
-        for (const [fileset, stories] of Object.entries(data)) {
-          if (fileset === "warnings") continue
-          // Record the fileset ID from the timing data for this canon
-          if (!filesetIds[canon]) filesetIds[canon] = fileset
-          if (!merged[fileset]) merged[fileset] = {}
-          for (const [story, chapters] of Object.entries(stories as Record<string, any>)) {
-            if (!merged[fileset][story]) merged[fileset][story] = {}
-            for (const [chapter, verses] of Object.entries(chapters as Record<string, any>)) {
-              // Key by book-chapter ("MAT-2") so books sharing a chapter number
-              // (MAT 2 vs LUK 2) don't collide when the lookup searches by chapter.
-              const ck = `${book}-${chapter}`
-              if (!merged[fileset][story][ck]) merged[fileset][story][ck] = {}
-              Object.assign(merged[fileset][story][ck], verses)
-            }
-          }
-        }
-      } catch {
-        continue
-      }
+  const books = new Set<string>()
+
+  for (const book of neededBooks) {
+    const canon = getTestament(book)
+    const bookTiming = await loadBookTiming(iso, book)
+    if (!bookTiming) continue
+
+    // Prefer whichever fileset the language's own resolved audio already
+    // uses (keeps timing aligned with the audio that will actually play);
+    // otherwise take the first fileset this book has — arbitrary but
+    // deterministic, same tie-break convention scripts/fetch-data.mjs's
+    // own source-catalog resolution uses.
+    const preferred = audioFilesetIds[canon]
+    const fileset = preferred && bookTiming[preferred] ? preferred : Object.keys(bookTiming)[0]
+    if (!fileset) continue
+
+    books.add(book)
+    if (!filesetIds[canon]) filesetIds[canon] = fileset
+    if (!merged[fileset]) merged[fileset] = {}
+    for (const [chapter, verses] of Object.entries(bookTiming[fileset])) {
+      // Key by book-chapter ("MAT-2") so books sharing a chapter number
+      // (MAT 2 vs LUK 2) don't collide when the lookup searches by chapter.
+      const ck = `${book}-${chapter}`
+      merged[fileset][ck] = { ...(merged[fileset][ck] ?? {}), ...verses }
     }
   }
 
-  return Object.keys(merged).length > 0 ? { data: merged, filesetIds } : null
+  return Object.keys(merged).length > 0 ? { data: merged, filesetIds, books } : null
 }
 
 /**
  * Search timing data for a matching Bible reference.
- * New format: fileset → story → chapter → verse → [start, end]
+ * Format: fileset → book-chapter (or bare chapter, for pkf) → verse → [start, end]
  */
 function findTimingForReference(
   timingData: Record<string, any> | null,
@@ -938,33 +850,33 @@ function findTimingForReference(
   if (!vs) return null
   const ve = parsed.verseEnd ?? vs
 
-  // Search through all fileset keys, then all story entries
+  // Search through all fileset keys — audioFilesetId is a hint, not a
+  // requirement; any fileset present can match, same tolerance the
+  // previous story-nested search had.
   for (const key of Object.keys(timingData)) {
     if (key === "warnings") continue
     const filesetData = timingData[key]
     if (!filesetData) continue
 
-    for (const storyData of Object.values(filesetData) as Record<string, Record<string, any>>[]) {
-      // Prefer the book-chapter key (pkf); fall back to chapter-only (DBT).
-      const chapterData = storyData[bookChapter] ?? storyData[chapter]
-      if (!chapterData) continue
+    // Prefer the book-chapter key (pkf); fall back to chapter-only (DBT).
+    const chapterData = filesetData[bookChapter] ?? filesetData[chapter]
+    if (!chapterData) continue
 
-      // Collect start/end across all verses in the range
-      let startTime = Infinity
-      let endTime = 0
-      let found = false
+    // Collect start/end across all verses in the range
+    let startTime = Infinity
+    let endTime = 0
+    let found = false
 
-      for (let v = vs; v <= ve; v++) {
-        const entry = chapterData[String(v)]
-        if (Array.isArray(entry)) {
-          startTime = Math.min(startTime, entry[0])
-          endTime = Math.max(endTime, entry[1])
-          found = true
-        }
+    for (let v = vs; v <= ve; v++) {
+      const entry = chapterData[String(v)]
+      if (Array.isArray(entry)) {
+        startTime = Math.min(startTime, entry[0])
+        endTime = Math.max(endTime, entry[1])
+        found = true
       }
-
-      if (found) return { startTime, endTime }
     }
+
+    if (found) return { startTime, endTime }
   }
   return null
 }

@@ -1,0 +1,126 @@
+level = "chapter"
+id = "01"
+canon = "mixed"
+
+[image]
+filename = "01_Ge_01_02_RG.jpg"
+
+[[stories]]
+id = "01"
+image = "01_Ge_01_02_RG.jpg"
+
+[[stories]]
+id = "02"
+image = "01_Ge_01_13_RG.jpg"
+
+[[stories]]
+id = "03"
+image = "01_Ge_03_01_RG.jpg"
+
+[[stories]]
+id = "04"
+image = "01_Ge_06_03_RG.jpg"
+
+[[stories]]
+id = "05"
+image = "01_Ge_12_05_RG.jpg"
+
+[[stories]]
+id = "06"
+image = "01_Ge_22_01_RG.jpg"
+
+[[stories]]
+id = "07"
+image = "02_Ex_12_03_RG.jpg"
+
+[[stories]]
+id = "08"
+image = "02_Ex_20_01_RG.jpg"
+
+[[stories]]
+id = "09"
+image = "01_Ge_01_02_RG.jpg"
+
+[[stories]]
+id = "10"
+image = "19_Ps_23_01_RG.jpg"
+
+[[stories]]
+id = "11"
+image = "01_Ge_01_02_RG.jpg"
+
+[[stories]]
+id = "12"
+image = "42_Lk_01_11_RG.jpg"
+
+[[stories]]
+id = "13"
+image = "40_Mt_03_01_RG.jpg"
+
+[[stories]]
+id = "14"
+image = "40_Mt_04_01_RG.jpg"
+
+[[stories]]
+id = "15"
+image = "40_Mt_08_10_RG.jpg"
+
+[[stories]]
+id = "16"
+image = "40_Mt_08_09_RG.jpg"
+
+[[stories]]
+id = "17"
+image = "40_Mt_14_11_RG.jpg"
+
+[[stories]]
+id = "18"
+image = "41_Mk_02_03_RG.jpg"
+
+[[stories]]
+id = "19"
+image = "43_Jn_04_01_RG.jpg"
+
+[[stories]]
+id = "20"
+image = "42_Lk_10_01_RG.jpg"
+
+[[stories]]
+id = "21"
+image = "42_Lk_18_01_RG.jpg"
+
+[[stories]]
+id = "22"
+image = "40_Mt_06_01_RG.jpg"
+
+[[stories]]
+id = "23"
+image = "43_Jn_11_01_RG.jpg"
+
+[[stories]]
+id = "24"
+image = "41_Mk_10_14_RG.jpg"
+
+[[stories]]
+id = "25"
+image = "40_Mt_26_14_RG.jpg"
+
+[[stories]]
+id = "26"
+image = "40_Mt_26_23_RG.jpg"
+
+[[stories]]
+id = "27"
+image = "40_Mt_27_10_RG.jpg"
+
+[[stories]]
+id = "28"
+image = "40_Mt_28_01_RG.jpg"
+
+[[stories]]
+id = "29"
+image = "42_Lk_24_19_RG.jpg"
+
+[[stories]]
+id = "30"
+image = "43_Jn_03_01_RG.jpg"

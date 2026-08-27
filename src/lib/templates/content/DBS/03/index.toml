@@ -1,0 +1,46 @@
+level = "chapter"
+id = "03"
+canon = "mixed"
+
+[image]
+filename = "05_De_06_01_RG.jpg"
+
+[[stories]]
+id = "01"
+image = "05_De_06_01_RG.jpg"
+
+[[stories]]
+id = "02"
+image = "05_De_06_01_RG.jpg"
+
+[[stories]]
+id = "03"
+image = "05_De_06_01_RG.jpg"
+
+[[stories]]
+id = "04"
+image = "05_De_06_01_RG.jpg"
+
+[[stories]]
+id = "05"
+image = "05_De_06_01_RG.jpg"
+
+[[stories]]
+id = "06"
+image = "05_De_06_01_RG.jpg"
+
+[[stories]]
+id = "07"
+image = "40_Mt_28_07_RG.jpg"
+
+[[stories]]
+id = "08"
+image = "05_De_06_01_RG.jpg"
+
+[[stories]]
+id = "09"
+image = "05_De_06_01_RG.jpg"
+
+[[stories]]
+id = "10"
+image = "05_De_06_01_RG.jpg"

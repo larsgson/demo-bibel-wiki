@@ -1,0 +1,38 @@
+level = "chapter"
+id = "05"
+canon = "nt"
+
+[image]
+filename = "43_Jn_02_01_RG.jpg"
+
+[[stories]]
+id = "01"
+image = "43_Jn_02_01_RG.jpg"
+
+[[stories]]
+id = "02"
+image = "43_Jn_02_01_RG.jpg"
+
+[[stories]]
+id = "03"
+image = "43_Jn_02_01_RG.jpg"
+
+[[stories]]
+id = "04"
+image = "40_Mt_14_13_RG.jpg"
+
+[[stories]]
+id = "05"
+image = "40_Mt_14_20_RG.jpg"
+
+[[stories]]
+id = "06"
+image = "43_Jn_09_01_RG.jpg"
+
+[[stories]]
+id = "07"
+image = "43_Jn_11_01_RG.jpg"
+
+[[stories]]
+id = "08"
+image = "40_Mt_28_01_RG.jpg"
