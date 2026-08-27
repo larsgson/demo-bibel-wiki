@@ -66,15 +66,13 @@ name = { en = "Languages of Mizoram" }
 # the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
 # back to a plain accent-color background until one is added.
 #
-# unlisted = true: kept off the main "/" homepage grid so India's 28 state
-# files don't crowd out every other region there — still fully reachable at
-# /r/in-mz/ and via the in-mz.demo.bibel.wiki redirect, same treatment
-# za.toml uses for a different reason (thin content there; here it's
-# homepage real estate). config/regions/in.toml remains the one India card
-# shown on the homepage.
+# NOT unlisted, unlike every other India state file (in-up.toml, in-tn.toml,
+# etc.) — Mizoram is deliberately the one state shown on the main "/"
+# homepage grid alongside config/regions/in.toml itself, by explicit choice.
+# The other 27 stay unlisted (kept off the homepage grid, still fully
+# reachable at their own /r/in-<code>/ paths and subdomains).
 
 [landing]
-unlisted = true
 accentColor = "#1565C0"
 headline = { en = "The Bible in the languages of Mizoram" }
 subhead  = { en = "Read and listen to Scripture in Mizoram's regional languages." }
