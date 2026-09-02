@@ -48,3 +48,4 @@ bak/
 .netlify/
 internal-docs/
 temp/
+config/example.conf

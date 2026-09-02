@@ -6,6 +6,9 @@ thumbs_url = "https://cdn.door43.org/obs/jpg/360px"
 # Full image: {base_url}/{filename}
 # Thumbnail:  {thumbs_url}/{filename}
 
+[audio]
+base_url = "https://cdn.bibel.wiki/audio"
+
 # List of category directories in order
 categories = [
   "01",
@@ -19,3 +22,46 @@ categories = [
   "09",
   "10"
 ]
+
+# ---------------------------------------------------------------------------
+# Produced content (merged from the former standalone OBS-UW template,
+# 2026-09-02 — see internal-docs/obs-narration-import-spec.md for history)
+# ---------------------------------------------------------------------------
+#
+# The [[ref:...]] stories in 01/..10/ are RECONSTRUCTED: assembled by
+# matching each OBS-TLF story's verse range against a DBT Bible
+# translation, so they work for any language with a DBT translation, but
+# the text/audio were never written or recorded for this story specifically.
+#
+# Real, purpose-made OBS content also exists for many languages — authored
+# text and/or recorded, edited narration audio, produced by OBS-TLF /
+# unfoldingWord teams. Prefer PRODUCED content over reconstructed content
+# wherever it exists.
+#
+# Text and audio are independent per language — a language may have
+# produced text with no recording yet, or (less commonly) the reverse.
+# Check and use each independently; do not require both to use either.
+# It is not important to know whether the other part also exists.
+[produced]
+# Resolved live, per language, by cdn.bibel.wiki — never staged locally
+# in this repo (see obs-narration-import-spec.md for why: the segment/
+# image layout is per-translator, not universal like the reconstruction
+# above, so there is nothing stable to bake into a shared template file).
+catalog_index_url = "https://cdn.bibel.wiki/catalog/obs-index.json"
+# Existence check: is <iso> listed at all? If not, no produced content of
+# either kind exists for that language — render the reconstruction below
+# for both text and audio.
+media_url_pattern = "https://cdn.bibel.wiki/obs/{iso}/media.json"
+# Per-language detail once <iso> is listed: resolved content_base_url,
+# resolved audio URLs, real per-story titles, license, and contentLayout
+# ("md" or the older "ts-desktop" — cdn.bibel.wiki handles both itself,
+# no local normalization needed). A language listed in the index can
+# still have only text or only audio — check media.json's own fields per
+# part, don't assume both.
+timing_base_url = "https://cdn.bibel.wiki/align/obs"
+# {timing_base_url}/{iso}/{story_id}_timing.json — audio-sync's per-segment
+# alignment for produced audio (flat array of {story, segment, timestamp,
+# score, source}; segment_count is the array length). Published
+# separately from the media.json catalog above (different repo) — a
+# language can appear in media.json with produced audio before its
+# timing has been aligned and published here yet.

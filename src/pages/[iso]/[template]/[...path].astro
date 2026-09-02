@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro"
 import StoryReaderIsland from "../../../components/StoryReaderIsland"
-import Door43StoryReaderIsland from "../../../components/Door43StoryReaderIsland"
 import NavigationGridIsland from "../../../components/NavigationGridIsland"
 import {
   loadAllTemplates,
@@ -69,30 +68,6 @@ export function getStaticPaths() {
       }
 
       for (const story of cat.stories) {
-        // door43-live templates (OBS-UW) have no local per-story content to
-        // load at build time — see the "/l/[template]/" route's identical
-        // comment for the full reasoning.
-        if (structure.door43) {
-          for (const iso of isos) {
-            paths.push({
-              params: { iso, template: name, path: `${cat.id}/${story.id}` },
-              props: {
-                pageType: "story" as const,
-                templateName: name,
-                categoryId: cat.id,
-                storyId: story.id,
-                engLocale,
-                door43: structure.door43,
-                allLocales,
-                layoutTheme: structure.layoutTheme,
-                imageConfig: structure.imageConfig,
-                themeCSS,
-              },
-            })
-          }
-          continue
-        }
-
         const markdownContent = loadMarkdownContent(name, cat.id, story.id) || ""
         const bodiesByLang: Record<string, Record<string, string>> = {}
         for (const iso of Object.keys(allLocales)) {
@@ -118,6 +93,7 @@ export function getStaticPaths() {
               layoutTheme: structure.layoutTheme,
               imageConfig: structure.imageConfig,
               themeCSS,
+              producedContent: structure.producedContent,
             },
           })
         }
@@ -148,15 +124,6 @@ const pageTitle = props.engLocale?.bookTitle || props.templateName
         imageConfig={props.structure.imageConfig}
       />
     </div>
-  ) : props.door43 ? (
-    <div class="max-w-3xl mx-auto p-4">
-      <Door43StoryReaderIsland
-        client:only="react"
-        templateName={props.templateName}
-        storyId={props.storyId}
-        engLocale={props.engLocale}
-      />
-    </div>
   ) : (
     <div class="max-w-3xl mx-auto p-4">
       <StoryReaderIsland
@@ -170,6 +137,7 @@ const pageTitle = props.engLocale?.bookTitle || props.templateName
         videoByLang={props.videoByLang}
         allLocales={props.allLocales}
         imageConfig={props.imageConfig}
+        producedContent={props.producedContent}
       />
     </div>
   )}

@@ -242,7 +242,7 @@
     },
     {
       "path": "index.toml",
-      "size": 345
+      "size": 2969
     },
     {
       "path": "locales/arb.toml",
@@ -286,5 +286,5 @@
     }
   ],
   "total_files": 71,
-  "total_size": 63923
+  "total_size": 66547
 }

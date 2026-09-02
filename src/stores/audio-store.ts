@@ -65,6 +65,13 @@ let primaryAudio: HTMLAudioElement | null = null
 let secondaryAudio: HTMLAudioElement | null = null
 let primaryAudioSrc = ""
 let secondaryAudioSrc = ""
+// Latest requested seek target + pending "canplay" handler, per element —
+// see seekAndPlay's comment for why these need to be tracked outside the
+// per-call closure.
+let primarySeekTarget = 0
+let secondarySeekTarget = 0
+let primaryCanPlayHandler: (() => void) | null = null
+let secondaryCanPlayHandler: (() => void) | null = null
 
 export function getAudioElements() {
   if (!primaryAudio) {
@@ -95,19 +102,64 @@ function seekAndPlay(
   url: string,
   startTime: number,
   setSrc: (s: string) => void,
+  isPrimary: boolean,
 ) {
-  if (currentSrc === url) {
-    audioEl.currentTime = startTime
+  // Always record the LATEST requested target first. A produced-audio story
+  // is one single, several-MB file shared by every section — clicking a
+  // second section before the first click's "canplay" has fired (a real
+  // possibility on a slow connection or a fast double-click) used to
+  // register a SECOND one-shot listener whose closure captured the FIRST
+  // click's startTime; whichever listener fired later would win, often
+  // snapping playback back to an earlier section. Tracking the target in
+  // a shared variable — read at fire-time, not closed over at call-time —
+  // and keeping at most one pending listener per element fixes that: the
+  // listener always seeks to whatever was most recently requested.
+  if (isPrimary) primarySeekTarget = startTime
+  else secondarySeekTarget = startTime
+
+  const debug = typeof window !== "undefined" && window.location.search.includes("audiodebug")
+
+  const applyPendingSeek = () => {
+    const target = isPrimary ? primarySeekTarget : secondarySeekTarget
+    audioEl.currentTime = target
+    if (debug) {
+      console.log(`[audiodebug/seek] applying target=${target.toFixed(2)} readyState=${audioEl.readyState} after=${audioEl.currentTime.toFixed(2)}`)
+    }
     audioEl.play().catch(() => {})
-  } else {
+  }
+
+  if (debug) {
+    console.log(`[audiodebug/seek] requested startTime=${startTime.toFixed(2)} currentSrc===url:${currentSrc === url} readyState=${audioEl.readyState}`)
+  }
+
+  // readyState >= 1 (HAVE_METADATA) means duration/seekable range are
+  // known, so an immediate seek on the current src is reliable — no need
+  // to wait for canplay.
+  if (currentSrc === url && audioEl.readyState >= 1) {
+    applyPendingSeek()
+    return
+  }
+
+  if (currentSrc !== url) {
     setSrc(url)
     audioEl.src = url
-    audioEl.addEventListener("canplay", function onCanPlay() {
-      audioEl.removeEventListener("canplay", onCanPlay)
-      audioEl.currentTime = startTime
-      audioEl.play().catch(() => {})
-    })
   }
+
+  const pending = isPrimary ? primaryCanPlayHandler : secondaryCanPlayHandler
+  if (pending) {
+    if (debug) console.log("[audiodebug/seek] canplay listener already pending — target updated, waiting")
+    return
+  }
+
+  const handler = () => {
+    audioEl.removeEventListener("canplay", handler)
+    if (isPrimary) primaryCanPlayHandler = null
+    else secondaryCanPlayHandler = null
+    applyPendingSeek()
+  }
+  if (isPrimary) primaryCanPlayHandler = handler
+  else secondaryCanPlayHandler = handler
+  audioEl.addEventListener("canplay", handler)
 }
 
 function updatePlayerCardInfo(idx: number) {
@@ -242,6 +294,9 @@ export function playVerse(idx: number) {
   const entries = $currentVerseEntries.get()
   const entry = entries[idx]
   const audioUrl = entry?.audioUrl || $cachedAudioUrl.get()
+  if (typeof window !== "undefined" && window.location.search.includes("audiodebug")) {
+    console.log(`[audiodebug/playVerse] idx=${idx} sectionIndex=${entry?.sectionIndex} startTime=${entry?.startTime} endTime=${entry?.endTime} audioUrl=${audioUrl}`)
+  }
   if (idx >= entries.length || !audioUrl) {
     stopAll()
     return
@@ -264,7 +319,7 @@ export function playVerse(idx: number) {
 
   seekAndPlay(pa, primaryAudioSrc, audioUrl, entry.startTime, (s) => {
     primaryAudioSrc = s
-  })
+  }, true)
 }
 
 export function playSecondaryForVerse(idx: number) {
@@ -279,7 +334,7 @@ export function playSecondaryForVerse(idx: number) {
   $audioPlayState.set("playing_secondary")
   seekAndPlay(sa, secondaryAudioSrc, secondaryUrl, entry.startTime, (s) => {
     secondaryAudioSrc = s
-  })
+  }, false)
 }
 
 export function advanceToNextVerse() {

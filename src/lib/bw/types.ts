@@ -30,12 +30,16 @@ export interface TemplateStructure {
   imageConfig: ImageConfig | null
   videoConfig: VideoConfig | null
   categories: TemplateCategory[]
-  /** True for a template whose story text/images/audio/timing are resolved
-   *  LIVE from cdn.bibel.wiki's OBS catalog + door43.org at read time (e.g.
-   *  OBS-UW), not baked in at build time from local .md files — see
-   *  src/lib/bw/door43-obs.ts. Per-language availability and resolved URLs
-   *  come entirely from that live catalog, not from anything local. */
-  door43: boolean
+  /** True for a template with a `[produced]` section in its index.toml
+   *  (currently only OBS) — real, purpose-made per-language text/audio
+   *  exists for some languages on top of the local, always-present
+   *  reconstructed content, resolved live from cdn.bibel.wiki + door43.org
+   *  at read time (see src/lib/bw/door43-obs.ts) and overlaid onto the
+   *  normal StoryReaderIsland rendering wherever it exists for the
+   *  selected language. Everything else about the template — routing,
+   *  local .md content, missing-story detection — behaves exactly like
+   *  any other template regardless of this flag. */
+  producedContent: boolean
 }
 
 export interface StoryMeta {

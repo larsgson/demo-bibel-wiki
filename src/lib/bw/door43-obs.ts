@@ -1,6 +1,14 @@
 /**
- * Live client-side fetch + parse for door43-hosted Open Bible Stories
- * content (the OBS-UW template) — via cdn.bibel.wiki's OBS catalog.
+ * Live client-side fetch + parse for door43/OBS-TLF's real, purpose-made
+ * ("produced") Open Bible Stories text and audio — resolved via
+ * cdn.bibel.wiki's OBS catalog and overlaid by StoryReaderIsland onto the
+ * OBS template's own local, always-present reconstructed content wherever
+ * produced content exists for the selected language (see the `[produced]`
+ * section of src/lib/templates/content/OBS/index.toml). Formerly the fetch
+ * layer for a standalone OBS-UW template — that template was retired
+ * 2026-09-02 and folded into OBS itself; this module's fetch/parse logic
+ * carried over unchanged since it's format-parsing logic independent of
+ * which template calls it.
  *
  * Three CDN documents (see doc/catalog-obs.md and doc/obs-media.md in
  * https://github.com/bcv-commons/bibles for the full, authoritative spec —
@@ -23,9 +31,13 @@
  *     (only present for the 17 ts-desktop languages — see doc/obs-media.md,
  *     the standard layout's manifest title is always the fixed English
  *     string "Open Bible Stories", never translated).
- *   - `/obs/<iso>/timing.json` — per-story `{segment: [start, end]}`,
- *     genuinely lagging (depends on audio-sync's live alignment work) —
- *     check media.json's own `timingStories` before assuming this exists.
+ *   - `align/obs/<iso>/<storyId>_timing.json` — audio-sync's per-story,
+ *     per-segment alignment, published separately from media.json (a
+ *     language can have produced audio before its timing is published
+ *     here) — flat array of `{story, segment, timestamp, score, source}`
+ *     points, one per segment boundary. Paired up into [start, end] ranges
+ *     by loadObsProducedTiming below; check media.json's own audio_url
+ *     before assuming this exists.
  *
  * media.json exists unconditionally for every catalog-obs-index.json
  * entry (both "t" and "at") — no staging-pipeline dependency, per the doc.
@@ -83,8 +95,10 @@ export interface ObsMedia {
   stories: Record<string, ObsStoryMedia>
 }
 
-/** `{ [storyId]: { [segment]: [startSeconds, endSeconds] } }` */
-export type ObsTiming = Record<string, Record<string, [number, number]>>
+/** `{ [segment]: [startSeconds, endSeconds] }`, 1-indexed to match a
+ *  produced story's own segment numbering (one per image+text section, in
+ *  the same order fetchDoor43Story emits them). */
+export type ObsProducedTiming = Record<string, [number, number]>
 
 let indexPromise: Promise<Map<string, ObsIndexEntry>> | null = null
 
@@ -120,24 +134,72 @@ export function loadObsMedia(iso: string): Promise<ObsMedia | null> {
   return p
 }
 
-const timingCache = new Map<string, Promise<ObsTiming | null>>()
+const producedAudioBlobCache = new Map<string, Promise<string | null>>()
 
-export function loadObsTiming(iso: string): Promise<ObsTiming | null> {
-  const cached = timingCache.get(iso)
+/**
+ * Fetch a produced-audio file as a Blob and hand back a local `blob:` URL,
+ * instead of using the remote URL directly. git.door43.org's
+ * release-download host (where OBS-TLF audio is hosted) does not support
+ * HTTP Range requests — confirmed via a manual test: a `Range` header is
+ * silently ignored, always a full 200 + full body — so a plain
+ * `<audio src="https://git.door43.org/...">` can never seek to a position
+ * beyond whatever has downloaded so far (no random access at all). Once
+ * the file is a local blob, though, seeking anywhere in it is instant,
+ * since the browser no longer needs the network to fetch a specific byte
+ * range for it. Cached per (iso, storyId) — kick this off as early as
+ * possible (see StoryReaderIsland's eager-preload effect) so the file is
+ * likely already downloaded by the time a section actually gets clicked.
+ */
+export function loadObsProducedAudioBlobUrl(iso: string, storyId: string, audioUrl: string): Promise<string | null> {
+  const key = `${iso}/${storyId}`
+  const cached = producedAudioBlobCache.get(key)
   if (cached) return cached
-  const p = fetch(pkfUrl(`/obs/${iso}/timing.json`))
-    .then((r) => (r.ok ? (r.json() as Promise<Record<string, unknown>>) : null))
-    .then((d) => {
-      if (!d) return null
-      const out: ObsTiming = {}
-      for (const [k, v] of Object.entries(d)) {
-        if (k === "iso") continue
-        out[k] = v as ObsTiming[string]
+  const p = fetch(audioUrl)
+    .then((r) => (r.ok ? r.blob() : null))
+    .then((blob) => (blob ? URL.createObjectURL(blob) : null))
+    .catch(() => null)
+  producedAudioBlobCache.set(key, p)
+  return p
+}
+
+interface ObsTimingPoint {
+  story: string
+  segment: number
+  timestamp: number
+  score?: number
+  source?: string
+}
+
+const producedTimingCache = new Map<string, Promise<ObsProducedTiming | null>>()
+
+/**
+ * Per-story produced-audio segment timing from `align/obs/<iso>/
+ * <storyId>_timing.json` — a flat array of segment-boundary timestamps
+ * (one point per segment start), paired here into [start, end] ranges.
+ * The last segment has no following point to bound it, so its range
+ * collapses to [start, start] — StoryReaderIsland's zero-duration handling
+ * (same fallback the reconstructed-audio path already uses) extends it
+ * from there rather than this module guessing a duration.
+ */
+export function loadObsProducedTiming(iso: string, storyId: string): Promise<ObsProducedTiming | null> {
+  const key = `${iso}/${storyId}`
+  const cached = producedTimingCache.get(key)
+  if (cached) return cached
+  const p = fetch(pkfUrl(`/align/obs/${iso}/${storyId}_timing.json`))
+    .then((r) => (r.ok ? (r.json() as Promise<ObsTimingPoint[]>) : null))
+    .then((points) => {
+      if (!points || points.length === 0) return null
+      const sorted = [...points].sort((a, b) => a.segment - b.segment)
+      const out: ObsProducedTiming = {}
+      for (let i = 0; i < sorted.length; i++) {
+        const start = sorted[i].timestamp
+        const end = i + 1 < sorted.length ? sorted[i + 1].timestamp : start
+        out[String(sorted[i].segment)] = [start, end]
       }
       return out
     })
     .catch(() => null)
-  timingCache.set(iso, p)
+  producedTimingCache.set(key, p)
   return p
 }
 

@@ -32,6 +32,7 @@ import { shouldProbePkf } from "../lib/bw/language-list"
 import { loadLanguageMedia, loadBookTiming, availabilityFor } from "../lib/bw/dbt-media"
 import { loadVernacularFontFace } from "../lib/bw/vernacular-font"
 import { pkfUrl } from "../lib/bw/pkf-url"
+import { loadObsMedia, fetchDoor43Story, loadObsProducedTiming, loadObsProducedAudioBlobUrl, type Door43Story } from "../lib/bw/door43-obs"
 import languageStyles from "../data/language-styles.json"
 import languagePreferences from "../data/language-preferences.json"
 
@@ -57,6 +58,12 @@ interface Props {
   videoByLang?: Record<string, { videoUrl: string; timingUrl: string }> | null
   allLocales: Record<string, LocaleData>
   imageConfig?: ImageConfig | null
+  /** True for templates with a `[produced]` section (currently only OBS) —
+   *  real, purpose-made per-language text/audio is checked live per
+   *  section and overlaid onto the normal markdownContent-driven sections
+   *  wherever it exists for a given language, without changing anything
+   *  else about how this component renders. See src/lib/bw/door43-obs.ts. */
+  producedContent?: boolean
 }
 
 export default function StoryReaderIsland({
@@ -69,6 +76,7 @@ export default function StoryReaderIsland({
   videoByLang = null,
   allLocales,
   imageConfig = null,
+  producedContent = false,
 }: Props) {
   const selectedLang = useStore($selectedLanguage)
   const secondaryLangs = useStore($secondaryLanguages)
@@ -98,6 +106,7 @@ export default function StoryReaderIsland({
   const [textWarning, setTextWarning] = useState<string | null>(null)
   const [audioLang, setAudioLang] = useState<string | null>(null)
   const [videoSceneEntries, setVideoSceneEntries] = useState<VerseEntry[] | null>(null)
+  const [producedStories, setProducedStories] = useState<Record<string, Door43Story | null>>({})
 
   // Prefer the selected reading language's video; fall back to whichever
   // language actually has one (today, only "kir" does — more will be added
@@ -133,6 +142,59 @@ export default function StoryReaderIsland({
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoInfo?.videoUrl, videoInfo?.timingUrl, thisPageStory])
+
+  // Produced (real, purpose-made door43/OBS-TLF) story text, per rendered
+  // language — checked live and overlaid section-by-section onto the local
+  // reconstructed sections below wherever it exists for that language.
+  // storyId doubles as door43's own OBS story id (both derived from the
+  // same "01".."50" numbering, global across categories).
+  useEffect(() => {
+    if (!producedContent) {
+      setProducedStories({})
+      return
+    }
+    let cancelled = false
+    Promise.all(
+      selectedLangs.map(async (lang) => {
+        const media = await loadObsMedia(lang)
+        if (!media) return [lang, null] as const
+        const story = await fetchDoor43Story(media, storyId)
+        return [lang, story] as const
+      }),
+    ).then((pairs) => {
+      if (cancelled) return
+      setProducedStories(Object.fromEntries(pairs))
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [producedContent, storyId, selectedLangs.join(",")])
+
+  // Eagerly start downloading produced audio, if any, as soon as the story
+  // loads — well before the user clicks a section. git.door43.org's
+  // release-download host (where OBS-TLF audio is hosted) doesn't support
+  // HTTP Range requests (confirmed: a Range header gets ignored, full 200
+  // + full body every time), so a browser <audio> element can't seek to an
+  // arbitrary position until the WHOLE file has downloaded — clicking a
+  // later section before that finishes silently fails to seek and keeps
+  // playing from wherever it already was. Warming the browser's HTTP cache
+  // here means that, by the time someone actually clicks around, the file
+  // (only a few MB) is very likely already fully buffered and seeking
+  // works normally, instead of only working after the first click has sat
+  // long enough for the whole file to finish loading on its own.
+  useEffect(() => {
+    if (!producedContent) return
+    let cancelled = false
+    ;(async () => {
+      const media = await loadObsMedia(selectedLangs[0])
+      const audioUrl = media?.stories[storyId]?.audio_url
+      if (audioUrl && !cancelled) loadObsProducedAudioBlobUrl(selectedLangs[0], storyId, audioUrl)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [producedContent, storyId, selectedLangs[0]])
 
   const handleVideoSectionClick = (sectionIndex: number) => {
     if (!videoSceneEntries) return
@@ -215,6 +277,12 @@ export default function StoryReaderIsland({
   useEffect(() => {
     if (!markdown) return
 
+    const hasProducedAudio = async (lang: string): Promise<boolean> => {
+      if (!producedContent) return false
+      const media = await loadObsMedia(lang)
+      return !!media?.stories[storyId]?.audio_url
+    }
+
     const loadAllLanguages = async () => {
       const tempSections = parseMarkdownIntoSections(markdown)
       const refs = new Set<string>()
@@ -237,6 +305,17 @@ export default function StoryReaderIsland({
       let primaryHasTimedAudio = primaryLangData
         && TIMING_CATS.includes(primaryLangData.category)
         && !(neededTestaments.has("ot") && primaryLangData.canon === "nt")
+
+      // Produced (real, purpose-made) narration audio counts as "timed
+      // audio" too — checked independently of testament, since it has
+      // nothing to do with Bible canon coverage (ensureAudioSetup tries it
+      // first). Without this, a language with e.g. NT-only DBT audio but
+      // full produced OBS audio would show "no timed audio" and disable
+      // clicking entirely for OT stories, even though produced audio for
+      // that story exists and would otherwise play fine.
+      if (!primaryHasTimedAudio) {
+        primaryHasTimedAudio = await hasProducedAudio(selectedLangs[0])
+      }
 
       // Also check the CDN's live per-language media index (audio/timing
       // availability per canon) — see src/lib/bw/dbt-media.ts.
@@ -270,6 +349,7 @@ export default function StoryReaderIsland({
           const langData = await loadLanguageData(lang)
           let hasAudio = langData && TIMING_CATS.includes(langData.category)
             && !(neededTestaments.has("ot") && langData.canon === "nt")
+          if (!hasAudio) hasAudio = await hasProducedAudio(lang)
           if (!hasAudio) {
             const avail = await availabilityFor(lang)
             for (const canon of ["nt", "ot"] as const) {
@@ -304,15 +384,21 @@ export default function StoryReaderIsland({
         const langData = await loadLanguageData(lang)
         if (!langData?.data) continue
 
-        // Build text fileset IDs per canon
+        // Build text fileset IDs per canon. Only fall back to the
+        // language's single "best" fileset for a canon it doesn't have its
+        // own canonData entry for when that fileset actually covers both
+        // testaments ("full") — otherwise an NT-only (or OT-only) language
+        // would silently inherit the wrong canon's fileset id here and
+        // 404 trying to fetch a book that fileset never contains.
         const canonData = langData.canonData as Record<string, any> | undefined
+        const canonCoversFull = langData.canon === "full"
         const ntTextId = parseTextFilesetId(
-          canonData?.nt?.data?.t || langData.data?.t,
-          canonData?.nt?.distinctId || langData.distinctId,
+          canonData?.nt?.data?.t || (canonCoversFull ? langData.data?.t : undefined),
+          canonData?.nt?.distinctId || (canonCoversFull ? langData.distinctId : undefined),
         )
         const otTextId = parseTextFilesetId(
-          canonData?.ot?.data?.t || langData.data?.t,
-          canonData?.ot?.distinctId || langData.distinctId,
+          canonData?.ot?.data?.t || (canonCoversFull ? langData.data?.t : undefined),
+          canonData?.ot?.distinctId || (canonCoversFull ? langData.distinctId : undefined),
         )
 
         if (!ntTextId && !otTextId) continue
@@ -321,7 +407,9 @@ export default function StoryReaderIsland({
         for (const refKey of refs) {
           const [book, chapter] = refKey.split(".")
           const testament = getTestament(book)
-          const textFilesetId = testament === "ot" ? (otTextId || ntTextId) : (ntTextId || otTextId)
+          const textFilesetId = testament === "ot"
+            ? (otTextId || (canonCoversFull ? ntTextId : null))
+            : (ntTextId || (canonCoversFull ? otTextId : null))
           if (textFilesetId) {
             await loadChapter(book, parseInt(chapter, 10), textFilesetId, lang)
           }
@@ -331,7 +419,7 @@ export default function StoryReaderIsland({
       setTextWarning(null)
     }
     loadAllLanguages()
-  }, [markdown, selectedLangs.join(","), engIsExplicit])
+  }, [markdown, selectedLangs.join(","), engIsExplicit, producedContent, storyId])
 
   // Ensure audio context is set up (called on-demand before playing)
   const ensureAudioSetup = useCallback(async () => {
@@ -339,6 +427,73 @@ export default function StoryReaderIsland({
     if (audioSetupPromise.current) return audioSetupPromise.current
 
     audioSetupPromise.current = (async () => {
+      // Produced (real, purpose-made) narration audio takes precedence over
+      // the reconstructed Bible-verse audio below, independently of whether
+      // produced TEXT also exists for this language — see the [produced]
+      // doc comment in OBS/index.toml. Falls through to the verse-audio
+      // path below when there's no produced audio for audioLang.
+      if (producedContent) {
+        const media = await loadObsMedia(audioLang)
+        const rawAudioUrl = media?.stories[storyId]?.audio_url
+        if (media && rawAudioUrl) {
+          // Use a local blob: URL instead of the remote one — see
+          // loadObsProducedAudioBlobUrl's comment for why (git.door43.org's
+          // release-download host doesn't support HTTP Range requests, so
+          // the raw URL can't be seeked into until it's fully downloaded).
+          const audioUrl = (await loadObsProducedAudioBlobUrl(audioLang, storyId, rawAudioUrl)) || rawAudioUrl
+          const timing = await loadObsProducedTiming(audioLang, storyId)
+          const tempSections = parseMarkdownIntoSections(markdown, {}, localeData, engLocale, sceneBodiesForLang(selectedLang))
+          overlayProducedText(tempSections.sections, producedStories[audioLang] ?? null)
+          const verseEntries: VerseEntry[] = tempSections.sections.map((section, i) => {
+            const seg = timing?.[String(i + 1)]
+            const sectionImageUrl = section.imageUrls.length > 0
+              ? resolveMediumUrl(section.imageUrls[0], imageConfig, 640)
+              : null
+            return {
+              verseStart: i + 1, verseEnd: i + 1,
+              startTime: seg ? seg[0] : 0,
+              endTime: seg ? seg[1] : 0,
+              audioUrl,
+              sectionIndex: i,
+              imageUrl: sectionImageUrl,
+            }
+          })
+          // Same zero-duration fallback as the reconstructed-audio path
+          // below — a segment with no published timing yet (or the last
+          // segment, which has no following boundary) plays through to the
+          // next segment's start, or 30s if there is none.
+          for (let i = 0; i < verseEntries.length; i++) {
+            const e = verseEntries[i]
+            if (e.startTime >= e.endTime) {
+              const next = verseEntries[i + 1]
+              e.endTime = next ? next.startTime : e.startTime + 30
+            }
+          }
+          // Produced-audio diagnostics — enable by adding ?audiodebug to the
+          // URL. Mirrors the reconstructed-audio debug block below.
+          if (typeof window !== "undefined" && window.location.search.includes("audiodebug")) {
+            console.group(`[audiodebug/produced] ${templateName} / ${categoryId}/${storyId} · lang=${audioLang}`)
+            console.log("audioUrl:", audioUrl)
+            console.log("timing fetched:", timing)
+            console.log("verse entries (section · time):")
+            for (const e of verseEntries) {
+              console.log(`  §${e.sectionIndex}  t=${e.startTime.toFixed(2)}–${e.endTime.toFixed(2)}s`)
+            }
+            console.groupEnd()
+          }
+
+          setAudioForChapter({
+            distinctId: "",
+            bookCode: "",
+            chapter: 0,
+            bookName: templateName,
+            audioUrl,
+            verseEntries,
+          })
+          return
+        }
+      }
+
       const langData = await loadLanguageData(audioLang)
 
       const tempSections = parseMarkdownIntoSections(markdown, {}, localeData, engLocale)
@@ -598,12 +753,12 @@ export default function StoryReaderIsland({
     })()
 
     return audioSetupPromise.current
-  }, [audioLang, templateName, markdown])
+  }, [audioLang, templateName, markdown, producedContent, storyId, producedStories])
 
   // Reset audio setup when audio language or content changes
   useEffect(() => {
     audioSetupPromise.current = null
-  }, [audioLang, templateName, markdown])
+  }, [audioLang, templateName, markdown, producedStories])
 
   // Build sections map per language
   const sectionsMap: Record<string, Section[]> = {}
@@ -617,11 +772,14 @@ export default function StoryReaderIsland({
       }
     }
     const parsed = parseMarkdownIntoSections(markdown, langChapterText, localeData, engLocale, sceneBodiesForLang(lang))
+    overlayProducedText(parsed.sections, producedStories[lang])
     sectionsMap[lang] = parsed.sections
   }
 
   const primaryParsed = parseMarkdownIntoSections(markdown, {}, localeData, engLocale, sceneBodiesForLang(selectedLang))
-  const storyTitle = primaryParsed.title || ""
+  const primaryProduced = producedStories[selectedLang]
+  overlayProducedText(primaryParsed.sections, primaryProduced)
+  const storyTitle = primaryProduced?.title || primaryParsed.title || ""
 
   const handleSectionClick = (sectionIndex: number) => {
     if (!audioLang) return // Audio disabled
@@ -639,6 +797,9 @@ export default function StoryReaderIsland({
       const entryIdx = entries.findIndex(
         (e) => e.sectionIndex === sectionIndex && e.audioUrl,
       )
+      if (typeof window !== "undefined" && window.location.search.includes("audiodebug")) {
+        console.log(`[audiodebug/click] sectionIndex=${sectionIndex} -> entryIdx=${entryIdx}`)
+      }
       if (entryIdx >= 0) {
         playVerse(entryIdx)
       } else {
@@ -732,6 +893,22 @@ export default function StoryReaderIsland({
 }
 
 // --- Helpers ---
+
+/**
+ * Overlay produced (real, purpose-made) narration text onto the local
+ * reconstructed sections, matched 1:1 by position — both are built from
+ * the same door43 canonical story images, so section counts line up.
+ * Images and Bible references stay local; only the words shift, and only
+ * for sections where produced text actually exists (a story can have
+ * fewer produced sections than local ones, e.g. an in-progress translation).
+ */
+function overlayProducedText(sections: Section[], produced: Door43Story | null | undefined) {
+  if (!produced) return
+  sections.forEach((section, i) => {
+    const producedText = produced.sections[i]?.text
+    if (producedText) section.text = producedText
+  })
+}
 
 async function fetchPkfTimingData(
   langCode: string,

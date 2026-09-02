@@ -291,35 +291,18 @@ export function loadTemplateStructure(
     categories.push({ id: cat.id, image: cat.image, stories })
   }
 
-  // door43-live templates (e.g. OBS-UW) hold no local per-story .md content
-  // and so declare neither `categories = [...]` nor `[[categories]]` — their
-  // story list is synthesized here from `story_count` instead, into a single
-  // flat category. This only produces the SHAPE (ids "01".."NN") needed for
-  // routing; the actual text/images/audio/timing for each story are
-  // resolved live from cdn.bibel.wiki's OBS catalog + door43 at read time —
-  // see src/lib/bw/door43-obs.ts. Per-language availability/URLs are NOT
-  // staged locally (no languages.json lookup here — that was this
-  // template's first-pass design, superseded once cdn.bibel.wiki started
-  // publishing a proper catalog for this).
-  const door43 = /\[door43\]\s*\n/.test(rootContent)
-
-  if (categories.length === 0 && door43) {
-    const storyCountMatch = rootContent.match(/^story_count\s*=\s*(\d+)/m)
-    const storyCount = storyCountMatch ? parseInt(storyCountMatch[1], 10) : 0
-    if (storyCount > 0) {
-      const stories: TemplateStory[] = Array.from({ length: storyCount }, (_, i) => {
-        const id = String(i + 1).padStart(2, "0")
-        return { id, chapter: i + 1, image: "" }
-      })
-      categories.push({ id: "01", image: coverImage, stories })
-    }
-  }
+  // `[produced]` (currently only OBS) flags real, purpose-made per-language
+  // content (door43/OBS-TLF) that StoryReaderIsland overlays live on top of
+  // this template's normal local content wherever it exists for the
+  // selected language — see src/lib/bw/door43-obs.ts. Doesn't change
+  // anything else about how this template is built or routed.
+  const producedContent = /\[produced\]\s*\n/.test(rootContent)
 
   if (!coverImage && categories.length > 0 && categories[0].stories.length > 0) {
     coverImage = categories[0].stories[0].image
   }
 
-  return { name: templateName, image: coverImage, layoutTheme, imageConfig, videoConfig, categories, door43 }
+  return { name: templateName, image: coverImage, layoutTheme, imageConfig, videoConfig, categories, producedContent }
 }
 
 export function loadAllTemplates(): Record<string, TemplateStructure> {
@@ -438,15 +421,6 @@ export function loadAllLocaleData(
 export function findMissingStoryIds(templateName: string): string[] {
   const structure = loadTemplateStructure(templateName)
   if (!structure) return []
-  // door43-live templates (OBS-UW) have no local .md content for ANY story
-  // by design — loadMarkdownContent() always returns null for them, which
-  // would otherwise flag every single story "missing" here and make
-  // NavigationGridIsland render the entire grid as unclickable (href
-  // undefined, click prevented — see its isMissing() usage). Per-language
-  // availability is real but only knowable live, in the reader itself
-  // (Door43StoryReaderIsland's own "no-language"/"error" states) — not
-  // something this build-time, per-template check can determine.
-  if (structure.door43) return []
   const missing: string[] = []
   for (const cat of structure.categories) {
     for (const story of cat.stories) {
@@ -468,10 +442,6 @@ export function extractStoryTestaments(
 ): Record<string, string[]> {
   const structure = loadTemplateStructure(templateName)
   if (!structure) return {}
-  // door43-live templates have no local .md to scan for [[ref:...]]
-  // markers (OBS has no book/chapter/verse structure at all) — see
-  // findMissingStoryIds's comment above for the same reasoning.
-  if (structure.door43) return {}
 
   const NT_BOOKS = new Set([
     "MAT", "MRK", "LUK", "JHN", "JOH", "ACT", "ROM", "1CO", "2CO",
