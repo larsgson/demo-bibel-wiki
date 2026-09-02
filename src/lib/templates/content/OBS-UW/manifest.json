@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "path": "index.toml",
+      "size": 2266
+    },
+    {
+      "path": "languages.json",
+      "size": 6130
+    },
+    {
+      "path": "locales/eng.toml",
+      "size": 2239
+    }
+  ],
+  "total_files": 3,
+  "total_size": 10635
+}

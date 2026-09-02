@@ -30,6 +30,12 @@ export interface TemplateStructure {
   imageConfig: ImageConfig | null
   videoConfig: VideoConfig | null
   categories: TemplateCategory[]
+  /** True for a template whose story text/images/audio/timing are resolved
+   *  LIVE from cdn.bibel.wiki's OBS catalog + door43.org at read time (e.g.
+   *  OBS-UW), not baked in at build time from local .md files — see
+   *  src/lib/bw/door43-obs.ts. Per-language availability and resolved URLs
+   *  come entirely from that live catalog, not from anything local. */
+  door43: boolean
 }
 
 export interface StoryMeta {

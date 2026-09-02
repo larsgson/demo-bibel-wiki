@@ -7,6 +7,7 @@ import { resolveThumbUrl } from "../lib/bw/image-utils"
 import { t as translate } from "../lib/bw/ui-locales"
 import { uiLangForRegion } from "../lib/data/region-config"
 import { $activeRegion } from "../stores/region-store"
+import { loadObsMedia, type ObsMedia } from "../lib/bw/door43-obs"
 
 interface Props {
   templateName: string
@@ -42,8 +43,29 @@ export default function NavigationGridIsland({
   const [hydrated, setHydrated] = useState(false)
   const [openCatId, setOpenCatId] = useState<string | null>(null)
   const [langCanons, setLangCanons] = useState<Record<string, Set<string>>>({})
+  const [door43Media, setDoor43Media] = useState<ObsMedia | null>(null)
 
   useEffect(() => setHydrated(true), [])
+
+  // door43-live templates (OBS-UW) have no local per-language story titles
+  // to speak of beyond English (locales/eng.toml) — real vernacular titles
+  // come from cdn.bibel.wiki's own per-story parse instead (media.json's
+  // stories[id].title — see src/lib/bw/door43-obs.ts). Fetched here so the
+  // browse grid shows real titles, not "Story 01".."Story 50", without
+  // ever fetching a single story body itself.
+  useEffect(() => {
+    if (!hydrated || !structure.door43) {
+      setDoor43Media(null)
+      return
+    }
+    let cancelled = false
+    loadObsMedia(selectedLang).then((m) => {
+      if (!cancelled) setDoor43Media(m)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [hydrated, structure.door43, selectedLang])
 
   // Fetch language canon coverage from compact data
   useEffect(() => {
@@ -103,11 +125,17 @@ export default function NavigationGridIsland({
   }
 
   const getStoryTitle = (catId: string, storyId: string) => {
+    if (door43Media) return door43Media.stories[storyId]?.title || `Story ${storyId}`
     const key = `${catId}.${storyId}`
     return localeData?.stories?.[key]?.title || `Story ${storyId}`
   }
 
-  const bookTitle = localeData?.bookTitle || engLocale?.bookTitle || templateName
+  // collectionTitle is only present for the 17 ts-desktop-layout OBS
+  // languages — the standard layout's own manifest title is always the
+  // fixed, untranslated English string "Open Bible Stories", so there's
+  // nothing to prefer over the local locale for the other 197 (not a gap,
+  // see src/lib/bw/door43-obs.ts).
+  const bookTitle = door43Media?.collectionTitle || localeData?.bookTitle || engLocale?.bookTitle || templateName
 
   const toggleAccordion = useCallback((catId: string) => {
     setOpenCatId((prev) => {
