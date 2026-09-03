@@ -384,21 +384,26 @@ export default function StoryReaderIsland({
         const langData = await loadLanguageData(lang)
         if (!langData?.data) continue
 
-        // Build text fileset IDs per canon. Only fall back to the
-        // language's single "best" fileset for a canon it doesn't have its
-        // own canonData entry for when that fileset actually covers both
-        // testaments ("full") — otherwise an NT-only (or OT-only) language
-        // would silently inherit the wrong canon's fileset id here and
-        // 404 trying to fetch a book that fileset never contains.
+        // Build text fileset IDs per canon. `canonData` is only populated
+        // when BOTH canons resolved (langData.canon === "full") — for a
+        // single-canon language (canon === "nt" or "ot", the common case),
+        // it's always undefined, so the language's own top-level
+        // data/distinctId (langData.data.t / langData.distinctId) IS that
+        // canon's fileset and must be used directly. Only fall back to the
+        // OTHER canon's fileset when this language's canon actually
+        // matches (or "full" spans both) — otherwise an NT-only (or
+        // OT-only) language would silently inherit the wrong canon's
+        // fileset id here and 404 trying to fetch a book it never contains.
         const canonData = langData.canonData as Record<string, any> | undefined
-        const canonCoversFull = langData.canon === "full"
+        const canonMatchesNt = langData.canon === "nt" || langData.canon === "full"
+        const canonMatchesOt = langData.canon === "ot" || langData.canon === "full"
         const ntTextId = parseTextFilesetId(
-          canonData?.nt?.data?.t || (canonCoversFull ? langData.data?.t : undefined),
-          canonData?.nt?.distinctId || (canonCoversFull ? langData.distinctId : undefined),
+          canonData?.nt?.data?.t || (canonMatchesNt ? langData.data?.t : undefined),
+          canonData?.nt?.distinctId || (canonMatchesNt ? langData.distinctId : undefined),
         )
         const otTextId = parseTextFilesetId(
-          canonData?.ot?.data?.t || (canonCoversFull ? langData.data?.t : undefined),
-          canonData?.ot?.distinctId || (canonCoversFull ? langData.distinctId : undefined),
+          canonData?.ot?.data?.t || (canonMatchesOt ? langData.data?.t : undefined),
+          canonData?.ot?.distinctId || (canonMatchesOt ? langData.distinctId : undefined),
         )
 
         if (!ntTextId && !otTextId) continue
@@ -408,8 +413,8 @@ export default function StoryReaderIsland({
           const [book, chapter] = refKey.split(".")
           const testament = getTestament(book)
           const textFilesetId = testament === "ot"
-            ? (otTextId || (canonCoversFull ? ntTextId : null))
-            : (ntTextId || (canonCoversFull ? otTextId : null))
+            ? (otTextId || (langData.canon === "full" ? ntTextId : null))
+            : (ntTextId || (langData.canon === "full" ? otTextId : null))
           if (textFilesetId) {
             await loadChapter(book, parseInt(chapter, 10), textFilesetId, lang)
           }
@@ -519,11 +524,17 @@ export default function StoryReaderIsland({
         neededTestaments.add(getTestament(book))
       }
 
-      // Get canon-specific data for audio fileset IDs
+      // Get canon-specific data for audio fileset IDs. Same reasoning as
+      // the text-loading fallback above: canonData is only populated for
+      // "full" (both-canon) languages, so a single-canon language's own
+      // top-level langData IS that canon's data — only usable as a
+      // fallback when it actually matches (or spans, via "full") the
+      // testament being resolved, never for the other one.
       const canonData = langData?.canonData as Record<string, any> | undefined
       const getCanonLangData = (testament: string) => {
         if (canonData?.[testament]) return canonData[testament]
-        return langData
+        if (langData?.canon === testament || langData?.canon === "full") return langData
+        return null
       }
 
       // Build audio fileset IDs per canon, respecting language preferences
