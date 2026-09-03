@@ -314,6 +314,40 @@ if (hasCachedSourceCatalog) {
     const priority = overlap.priority ?? ["pkf", "helloao", "dbt"]
     const PROVIDER_BY_PREFIX = { d: "dbt", h: "helloao", p: "pkf" }
 
+    // helloAO's own translation catalog, fetched up front — used below as a
+    // coverage guard (a cluster is a genuinely DISTINCT translation, not a
+    // same-content duplicate — see the resolution loop's comment), and again
+    // in the single-candidate pass further down, so fetched once and shared.
+    const helloaoByIso = new Map()
+    try {
+      const helloaoRes = await fetch("https://bible.helloao.org/api/available_translations.json")
+      if (helloaoRes.ok) {
+        const { translations } = await helloaoRes.json()
+        for (const t of translations ?? []) {
+          if (!helloaoByIso.has(t.language)) helloaoByIso.set(t.language, [])
+          helloaoByIso.get(t.language).push(t)
+        }
+      }
+    } catch {
+      // Best-effort — the coverage guard below just no-ops without this data,
+      // same permissive fallback the rest of this script already uses.
+    }
+    function helloaoBookCount(id) {
+      for (const list of helloaoByIso.values()) {
+        const t = list.find((x) => x.id === id)
+        if (t) return t.numberOfBooks ?? 0
+      }
+      return 0
+    }
+    // A canon has a fixed real book count (NT=27, OT=39) — a helloAO
+    // candidate covering far fewer is almost certainly a partial excerpt
+    // (e.g. "just Matthew and Mark"), not a real alternative to a fuller
+    // translation from another provider. Thresholds are deliberately well
+    // below a full canon, so a genuinely-partial-but-substantial translation
+    // can still win on provider priority as before — this only excludes the
+    // "a handful of books" case.
+    const MIN_BOOKS = { nt: 15, ot: 20 }
+
     // Normalize both known shapes into byIsoCanon: Map<"iso:canon", clusters[]>,
     // each cluster `{ ids: string[] }` with ids using the CURRENT single-letter
     // prefix scheme (d:/h:/p:) — see the schema note above for why this can't
@@ -340,23 +374,45 @@ if (hasCachedSourceCatalog) {
 
     for (const [key, clusters] of byIsoCanon) {
       const [iso, canon] = key.split(":")
+      // Each CLUSTER is a distinct translation (catalog-overlap.json's own
+      // dedup already groups same-content ids from different providers into
+      // one cluster) — clusters are flattened together here only so
+      // provider priority can be applied across all of them, NOT because
+      // they're interchangeable. Confirmed via "ahr:nt": three separate
+      // clusters — a 27-book DBT NT, a second DBT NT, and a helloAO
+      // translation covering only Matthew+Mark — where naive flattening
+      // picked the 2-book helloAO id purely because it's the higher-priority
+      // provider, silently losing 25 books' worth of content. The coverage
+      // guard below catches exactly that shape of mistake for helloAO
+      // candidates (the only provider this script can cheaply check book
+      // counts for); `fallback` preserves the old behavior for a language
+      // whose ONLY candidate is a small helloAO translation with nothing
+      // else to prefer instead.
       const allIds = clusters.flatMap((c) => c.ids ?? [])
       let resolved = null
+      let fallback = null
       for (const provider of priority) {
-        const match = allIds.find((x) => {
+        const candidates = allIds.filter((x) => {
           const prefix = x.split(":")[0]
           return prefix === provider || PROVIDER_BY_PREFIX[prefix] === provider
         })
+        if (candidates.length === 0) continue
+        if (!fallback) fallback = candidates[0]
+        const match = provider === "helloao"
+          ? candidates.find((x) => helloaoBookCount(x.split(":").slice(1).join(":")) >= (MIN_BOOKS[canon] ?? 27))
+          : candidates[0]
         if (match) {
-          const [prefix, ...rest] = match.split(":")
-          const id = rest.join(":")
-          resolved = { provider: PROVIDER_BY_PREFIX[prefix] ?? prefix, id }
+          resolved = match
           break
         }
       }
-      if (!resolved) continue
+      const winner = resolved ?? fallback
+      if (!winner) continue
+      const [prefix, ...rest] = winner.split(":")
+      const id = rest.join(":")
+      const finalResolved = { provider: PROVIDER_BY_PREFIX[prefix] ?? prefix, id }
       catalog[iso] ??= {}
-      catalog[iso][canon] = resolved.provider === "pkf" ? { provider: "pkf" } : resolved
+      catalog[iso][canon] = finalResolved.provider === "pkf" ? { provider: "pkf" } : finalResolved
     }
 
     // ── Supplementary pass: single-candidate pairs via catalog-index.json ──
@@ -384,22 +440,15 @@ if (hasCachedSourceCatalog) {
     // candidate to prefer (that comparison is overlap.json's job, not
     // ours). Never overrides anything the overlap pass above already set.
     try {
-      const [indexRes, helloaoRes, dbtRes] = await Promise.all([
+      // helloaoByIso already fetched above, shared with the resolution loop's
+      // coverage guard — no need to fetch it again here.
+      const [indexRes, dbtRes] = await Promise.all([
         fetch("https://cdn.bibel.wiki/catalog/index.json"),
-        fetch("https://bible.helloao.org/api/available_translations.json"),
         fetch("https://cdn.bibel.wiki/dbt/_catalog.json"),
       ])
       if (!indexRes.ok) throw new Error(`fetch catalog/index.json: ${indexRes.status}`)
       const index = await indexRes.json()
       checkSchemaVersion("catalog/index.json", index)
-      const helloaoByIso = new Map()
-      if (helloaoRes.ok) {
-        const { translations } = await helloaoRes.json()
-        for (const t of translations ?? []) {
-          if (!helloaoByIso.has(t.language)) helloaoByIso.set(t.language, [])
-          helloaoByIso.get(t.language).push(t)
-        }
-      }
       // DBT raw rows: [iso, dbtId, canon, ...fields], a "t:"/"T:" field
       // means real fetchable text exists (vs. "a:"/"A:" audio-only) — see
       // config/regions/za.toml's/cas.toml's own notes on this exact

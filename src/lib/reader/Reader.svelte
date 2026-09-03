@@ -18,6 +18,7 @@
     import { loadBookList } from '../bw/book-list';
     import { nameFor } from '../data/languageNames';
     import { getTestament } from '../bw/bible-utils';
+    import { parseTextFilesetId } from '../bw/fileset-utils';
     import type { MediaManifest, VideoEntry, AudioEntry } from '../data/pkfInfo';
     import { settings } from './settings';
     import SettingsPanel from './SettingsPanel.svelte';
@@ -189,8 +190,14 @@
         window.addEventListener('navigate-to-chapter', ((e: CustomEvent) => {
             const { book, chapter, highlightVerses } = e.detail;
             const doc = catalog?.documents.find((d) => d.bookCode === book);
+            if (typeof window !== 'undefined' && window.location.search.includes('readerdebug')) {
+                console.log('[readerdebug] navigate-to-chapter', { book, chapter, catalogLoaded: !!catalog, docFound: !!doc, currentBook: currentBook?.bookCode, currentChapter });
+            }
             if (doc) {
                 openBookChapter(doc, chapter).then(() => {
+                    if (typeof window !== 'undefined' && window.location.search.includes('readerdebug')) {
+                        console.log('[readerdebug] openBookChapter done', { currentBook: currentBook?.bookCode, currentChapter, hasRendered: !!rendered, renderError });
+                    }
                     if (highlightVerses?.length) highlightVersesInDom(highlightVerses);
                 });
             }
@@ -231,6 +238,30 @@
         document.removeEventListener('keydown', onGlobalKey);
     });
 
+    /**
+     * DBT's real text-fileset ids need a testament letter the source
+     * catalog's bare id doesn't carry — e.g. base id "AHRDPI" needs to
+     * become "AHRDPIN_ET" for NT / "AHRDPIO_ET" for OT; "AHRDPI_ET" alone
+     * doesn't exist (confirmed directly against the DBT API). Passing the
+     * short "N_ET"/"O_ET" suffix through parseTextFilesetId (which prepends
+     * the base id) reconstructs that correctly — same convention
+     * language-store.ts's loadLanguageData() uses for the story templates'
+     * text loading. Falls back to the other testament's id if this one is
+     * unset, matching the two call sites' prior fallback behavior.
+     */
+    function resolveFlatFilesetId(bookCode: string): string {
+        if (!flatFilesets) return '';
+        const wantOt = getTestament(bookCode) === 'ot';
+        const baseId = wantOt ? (flatFilesets.ot || flatFilesets.nt) : (flatFilesets.nt || flatFilesets.ot);
+        if (!baseId) return '';
+        // The letter must match whichever canon's id is ACTUALLY being used
+        // (own canon, or the cross-canon fallback above), not just the
+        // book's own testament — reusing the NT id for an OT book (or vice
+        // versa) still needs that id's OWN testament letter, not the book's.
+        const usedOt = wantOt ? !!flatFilesets.ot : !flatFilesets.nt && !!flatFilesets.ot;
+        return parseTextFilesetId(`${usedOt ? 'O' : 'N'}_ET`, baseId);
+    }
+
     async function ensurePkf() {
         if (pkfLoaded || isLoaded(docSetId)) {
             pkfLoaded = true;
@@ -258,11 +289,10 @@
             } else if (flatFilesets) {
                 // DBT can fileset NT and OT separately — pick the one matching
                 // this book's testament, falling back to the other if unset
-                // (matches DbtChapterReader.tsx's prior selection exactly).
-                const testament = getTestament(book.bookCode);
-                const fsId = testament === 'ot'
-                    ? (flatFilesets.ot || flatFilesets.nt)
-                    : (flatFilesets.nt || flatFilesets.ot);
+                // (matches DbtChapterReader.tsx's prior selection exactly),
+                // then reconstruct the real DBT text-fileset id (see
+                // resolveFlatFilesetId's comment).
+                const fsId = resolveFlatFilesetId(book.bookCode);
                 const verses = fsId ? await loadFlatChapter(book.bookCode, ch, fsId, iso) : null;
                 rendered = { html: renderFlatChapter(verses ?? []), footnotes: [], xrefs: [] };
             } else {
@@ -538,10 +568,7 @@
     let currentFlatFilesetId = $derived.by(() => {
         if (helloaoTranslationId) return `helloao:${helloaoTranslationId}`;
         if (!flatFilesets || !currentBook) return '';
-        const testament = getTestament(currentBook.bookCode);
-        return (testament === 'ot'
-            ? (flatFilesets.ot || flatFilesets.nt)
-            : (flatFilesets.nt || flatFilesets.ot)) ?? '';
+        return resolveFlatFilesetId(currentBook.bookCode);
     });
     function onGlobalClick(e: MouseEvent) {
         if (!popover) return;
