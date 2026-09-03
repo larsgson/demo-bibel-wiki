@@ -2,7 +2,7 @@
 /**
  * Fetch build-time data:
  *   1. PKF data from the se-regional-data GitHub release
- *   2. Story data (language catalog + audio timings) from bible-story-builder
+ *   2. Language catalog from cdn.bibel.wiki
  *   3. Source catalog (per-language text-provider resolution) from cdn.bibel.wiki
  *
  * English/BSB text now comes live from helloAO (see src/lib/reader/helloaoCatalog.ts
@@ -14,8 +14,6 @@
  * Environment variables:
  *   DATA_REPO          — GitHub repo for PKF (default: larsgson/se-regional-data)
  *   DATA_RELEASE_TAG   — Release tag (default: "latest")
- *   STORY_REPO         — GitHub repo for story data (default: larsgson/bible-story-builder)
- *   STORY_RELEASE_TAG  — Story release tag (default: "latest")
  *   SKIP_DATA_FETCH    — Set to "1" to skip (useful in CI when data is cached)
  */
 
@@ -28,8 +26,6 @@ const REPO = process.env.DATA_REPO ?? "larsgson/se-regional-data"
 const TAG = process.env.DATA_RELEASE_TAG ?? "latest"
 const SKIP = process.env.SKIP_DATA_FETCH === "1"
 const DATA_DIR = "data/pkf"
-const STORY_REPO = process.env.STORY_REPO ?? "larsgson/bible-story-builder"
-const STORY_TAG = process.env.STORY_RELEASE_TAG ?? "latest"
 const PUBLIC_DIR = "public"
 const SOURCE_CATALOG_PATH = "data/source-catalog.json"
 
@@ -175,55 +171,44 @@ if (!needManifest && !needFullData) {
 // Ensure public/pkf symlink
 ensureSymlink("../data/pkf", "public/pkf")
 
-// ── 2. Story data (language catalog + per-language story index) from bible-story-builder ──
+// ── 2. Language catalog (from cdn.bibel.wiki) ──
 //
 // Browser-fetched at runtime from public/:
 //   • ALL-langs-compact.json / ALL-langs-mini.json  — language names + catalog
-//   • ALL-langs-data/                               — per-language story index
 // Story CONTENT (markdown/locales) is committed in this repo, so it is NOT fetched.
 //
-// Per-template audio TIMING (templates/<tpl>/ALL-timings/) used to be fetched
-// here too, as a separate zip per template from this same release. Removed:
-// investigation showed it was a frozen, periodically-stale duplicate of data
-// cdn.bibel.wiki already serves live (100% fileset coverage across a 100-pair
-// sample, with ~25% of sampled files showing minor timestamp drift from the
-// CDN's own timing being regenerated after bible-story-builder's copy was
-// taken). StoryReaderIsland.tsx now calls src/lib/bw/dbt-media.ts's
-// loadBookTiming() directly against the live CDN instead — see that file's
-// fetchTimingData() for the replacement. This also removes ~16,800 static
-// JSON files (one per iso/book/template) from every build.
+// This — and the per-language fileset resolution now done live via
+// src/lib/bw/dbt-media.ts's loadLanguageMedia() (see language-store.ts's
+// loadLanguageData()) — used to come from bible-story-builder's GitHub
+// releases/raw main-branch export/ (ALL-langs-compact.json, ALL-langs-mini.json,
+// and a separately-downloaded ALL-langs-data.zip per-language fileset index).
+// Retired 2026-09 once that repo went private, breaking both the
+// unauthenticated raw-file fetch and the release-asset download on Netlify
+// (no GitHub auth available there for a private repo). cdn.bibel.wiki
+// already aggregates this same per-language data live across DBT/PKF/
+// helloao — a better source of truth than a second, separately-built repo
+// — so this repo no longer depends on bible-story-builder for anything.
+//
+// (Per-template audio TIMING was retired the same way, earlier: it was a
+// frozen, periodically-stale duplicate of data cdn.bibel.wiki already
+// serves live — see loadBookTiming()/fetchTimingData() in dbt-media.ts /
+// StoryReaderIsland.tsx.)
 
-if (existsSync(join(PUBLIC_DIR, "ALL-langs-data", "manifest.json"))) {
-  console.log(`Story data already present at ${PUBLIC_DIR}/ALL-langs-data/ — skipping.`)
+if (existsSync(join(PUBLIC_DIR, "ALL-langs-compact.json")) && existsSync(join(PUBLIC_DIR, "ALL-langs-mini.json"))) {
+  console.log(`Language catalog already present at ${PUBLIC_DIR}/ — skipping.`)
 } else {
-  console.log(`\n── Fetching story data from ${STORY_REPO} (tag: ${STORY_TAG}) ──\n`)
+  console.log(`\n── Fetching language catalog from cdn.bibel.wiki ──\n`)
 
-  const dlBase = `https://github.com/${STORY_REPO}/releases/${
-    STORY_TAG === "latest" ? "latest/download" : "download/" + STORY_TAG
-  }`
-  const tmpDir = join("data", ".fetch-tmp")
-  mkdirSync(tmpDir, { recursive: true })
-
-  // 2a. Language JSON files (from the repo main branch export/).
-  for (const f of ["ALL-langs-compact.json", "ALL-langs-mini.json"]) {
-    const r = await fetch(`https://raw.githubusercontent.com/${STORY_REPO}/main/export/${f}`)
-    if (!r.ok) { console.error(`Failed to fetch ${f}: ${r.status}`); process.exit(1) }
-    writeFileSync(join(PUBLIC_DIR, f), await r.text())
-    console.log(`  ✓ ${f}`)
+  const langsCatalogSources = {
+    "ALL-langs-compact.json": "https://cdn.bibel.wiki/catalog/langs.json",
+    "ALL-langs-mini.json": "https://cdn.bibel.wiki/catalog/langs-mini.json",
   }
-
-  // 2b. ALL-langs-data (per-language story index). Zip has manifest.json at root.
-  const langZip = join(tmpDir, "ALL-langs-data.zip")
-  console.log("  Downloading ALL-langs-data.zip...")
-  execSync(`curl -fSL -o "${langZip}" "${dlBase}/ALL-langs-data.zip"`, { stdio: "inherit" })
-  const langDest = join(PUBLIC_DIR, "ALL-langs-data")
-  rmSync(langDest, { recursive: true, force: true })
-  mkdirSync(langDest, { recursive: true })
-  execSync(`unzip -q "${langZip}" -d "${langDest}"`, { stdio: "inherit" })
-  console.log("  ✓ ALL-langs-data/")
-
-  rmSync(tmpDir, { recursive: true, force: true })
-  console.log(`  ✓ Story data ready`)
+  for (const [f, url] of Object.entries(langsCatalogSources)) {
+    const r = await fetch(url)
+    if (!r.ok) { console.error(`Failed to fetch ${f} from ${url}: ${r.status}`); process.exit(1) }
+    writeFileSync(join(PUBLIC_DIR, f), await r.text())
+    console.log(`  ✓ ${f} (from cdn.bibel.wiki)`)
+  }
 }
 
 // ── 3. Source catalog (per-language text-provider resolution) ──

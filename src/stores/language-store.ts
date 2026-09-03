@@ -2,6 +2,7 @@ import { atom, computed } from "nanostores"
 import languagePreferences from "../data/language-preferences.json"
 import { setIso } from "./iso-store"
 import { isStudyLanguage } from "../lib/bw/study-languages"
+import { loadLanguageMedia, type CanonMedia } from "../lib/bw/dbt-media"
 
 // Always initialize with defaults to match server-rendered HTML.
 // Actual values are hydrated from URL in initLanguageFromUrl().
@@ -10,7 +11,6 @@ export const $secondaryLanguages = atom<string[]>([])
 
 export const $languageNames = atom<Record<string, { n: string; v: string }>>({})
 export const $languageData = atom<Record<string, any>>({})
-export const $languageManifest = atom<Record<string, any> | null>(null)
 
 export const $selectedLanguages = computed(
   [$selectedLanguage, $secondaryLanguages],
@@ -220,26 +220,37 @@ export async function loadLanguageNames() {
   }
 }
 
-let manifestPromise: Promise<any> | null = null
-
-export async function loadManifest() {
-  if (manifestPromise) return manifestPromise
-  manifestPromise = fetch("/ALL-langs-data/manifest.json")
-    .then((resp) => resp.json())
-    .then((data) => {
-      $languageManifest.set(data)
-      return data
-    })
-    .catch((e) => {
-      console.warn("Failed to load manifest:", e)
-      manifestPromise = null
-      return null
-    })
-  return manifestPromise
+/**
+ * Classify a canon's fileset coverage into the same taxonomy the old
+ * ALL-langs-data manifest used, since StoryReaderIsland branches on these
+ * exact string values (TIMING_CATS.includes(category)). /dbt/<iso>/media.json
+ * doesn't carry this taxonomy directly, but has everything needed to derive
+ * it: timingBooks (>0 means some real per-verse timing exists for this
+ * canon) plus whether the fileset actually carries text (`t`) and/or audio
+ * (`a`) at all.
+ */
+function classifyCategory(canonMedia: CanonMedia, hasText: boolean, hasAudio: boolean): string {
+  const hasTiming = (canonMedia.timingBooks ?? 0) > 0
+  if (hasTiming && hasText) return "with-timecode"
+  if (hasTiming) return "audio-with-timecode"
+  if (hasText && hasAudio) return "syncable"
+  if (hasText) return "text-only"
+  return "audio-only"
 }
 
 const langDataPromises: Record<string, Promise<any> | undefined> = {}
 
+/**
+ * Resolve fileset info for a language from cdn.bibel.wiki's live
+ * /dbt/<iso>/media.json (see src/lib/bw/dbt-media.ts) — replaces the old
+ * static ALL-langs-data/manifest.json + per-fileset data.json tree fetched
+ * from bible-story-builder's GitHub releases (retired 2026-09 once that
+ * repo went private; the CDN already aggregates this same DBT fileset data
+ * live, per language, so there's no need for a second, separately-built
+ * copy of it). Return shape is unchanged from the old implementation —
+ * {langCode, canon, category, distinctId, data: {a, t}, canonData?} — so
+ * every existing consumer (StoryReaderIsland.tsx) needed no changes.
+ */
 export async function loadLanguageData(langCode: string) {
   const existing = $languageData.get()
   if (existing[langCode]) return existing[langCode]
@@ -247,8 +258,8 @@ export async function loadLanguageData(langCode: string) {
   if (langDataPromises[langCode]) return langDataPromises[langCode]
 
   langDataPromises[langCode] = (async () => {
-    const manifest = await loadManifest()
-    if (!manifest) return null
+    const media = await loadLanguageMedia(langCode)
+    if (!media) return null
 
     // Use language preferences to prioritize preferred fileset (supports per-canon)
     const prefRaw = (languagePreferences as Record<string, any>)[langCode]?.preferredFileset || null
@@ -258,72 +269,34 @@ export async function loadLanguageData(langCode: string) {
       return prefRaw[canon] || null
     }
 
-    const categories = ["with-timecode", "audio-with-timecode", "syncable", "text-only", "audio-only"]
     let result: any = null
     const canonResults: Record<string, any> = {}
 
-    for (const canon of ["nt", "ot"]) {
+    for (const canon of ["nt", "ot"] as const) {
+      const canonMedia = media.canons[canon]
+      if (!canonMedia?.filesets?.length) continue
+
       const preferredFileset = getPreferred(canon)
-      // Fetch every category's best fileset first, then decide — categories
-      // aren't mutually-exclusive complete bundles. E.g. an "audio-with-timecode"
-      // fileset may carry only `.a` (audio) with no `.t`, while the real text
-      // lives in a separate "text-only" fileset for the same language. Locking
-      // onto whichever category resolves first (old behaviour) could pick an
-      // audio-only fileset and never fall through to the text-only one.
-      const byCategory: Record<string, any> = {}
-      for (const cat of categories) {
-        const langEntries = manifest?.files?.[canon]?.[cat]
-        if (!langEntries || !langEntries[langCode]) continue
+      const fileset = preferredFileset
+        ? canonMedia.filesets.find((f) => f.id === preferredFileset) ?? canonMedia.filesets[0]
+        : canonMedia.filesets[0]
 
-        const ids = langEntries[langCode]
-        const idList = Array.isArray(ids) ? ids : Object.keys(ids)
+      const hasText = !!fileset.t
+      const hasAudio = !!fileset.a?.length
+      if (!hasText && !hasAudio) continue
 
-        // If preferred fileset exists in this list, try it first
-        const sortedIds = preferredFileset && idList.includes(preferredFileset)
-          ? [preferredFileset, ...idList.filter((id: string) => id !== preferredFileset)]
-          : idList
-
-        for (const distinctId of sortedIds) {
-          try {
-            const resp = await fetch(`/ALL-langs-data/${canon}/${cat}/${langCode}/${distinctId}/data.json`)
-            if (!resp.ok) continue
-            const data = await resp.json()
-            byCategory[cat] = { distinctId, data }
-            break
-          } catch {
-            continue
-          }
-        }
-        // with-timecode bundles audio+text together — the ideal case, no need
-        // to keep looking at lower-priority categories.
-        if (byCategory["with-timecode"]) break
+      const canonResult = {
+        langCode,
+        canon,
+        category: classifyCategory(canonMedia, hasText, hasAudio),
+        distinctId: fileset.id,
+        data: { a: fileset.a?.[0], t: fileset.t },
       }
 
-      let canonResult: any = null
-      if (byCategory["with-timecode"]) {
-        const r = byCategory["with-timecode"]
-        canonResult = { langCode, canon, category: "with-timecode", distinctId: r.distinctId, data: r.data }
-      } else {
-        const textCat = categories.find((c) => byCategory[c]?.data?.t)
-        const audioCat = byCategory["audio-with-timecode"] ? "audio-with-timecode" : null
-        const text = textCat ? byCategory[textCat] : null
-        const audio = audioCat ? byCategory[audioCat] : null
-        if (text || audio) {
-          canonResult = {
-            langCode,
-            canon,
-            category: audioCat ?? textCat,
-            distinctId: (text ?? audio).distinctId,
-            data: { ...(audio?.data ?? {}), ...(text?.data ?? {}) },
-          }
-        }
-      }
-      if (canonResult) {
-        canonResults[canon] = canonResult
-        // Prefer with-timecode as the primary result
-        if (!result || (canonResult.category === "with-timecode" && result.category !== "with-timecode")) {
-          result = canonResult
-        }
+      canonResults[canon] = canonResult
+      // Prefer with-timecode as the primary result
+      if (!result || (canonResult.category === "with-timecode" && result.category !== "with-timecode")) {
+        result = canonResult
       }
     }
 
