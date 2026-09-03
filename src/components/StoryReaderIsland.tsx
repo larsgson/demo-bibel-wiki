@@ -634,6 +634,17 @@ export default function StoryReaderIsland({
       const firstParsed = chapterRefs.values().next().value
       const verseEntries: import("../stores/audio-store").VerseEntry[] = []
 
+      // Per-chapter running "last known position" — a verse with no timing
+      // data at all (startTime left at Infinity below) should pick up from
+      // wherever the PREVIOUS verse in the same chapter left off, not from
+      // absolute 0. Without this, trailing untimed verses (e.g. a chapter's
+      // last verse or two, past the end of what DBT's alignment covered)
+      // would seek all the way back to the start of the whole chapter's
+      // audio file instead of somewhere near where they actually occur.
+      const lastEndTimeByChapter: Record<string, number> = {}
+      const resolveStartTime = (chapterKey: string, rawStartTime: number): number =>
+        rawStartTime === Infinity ? (lastEndTimeByChapter[chapterKey] ?? 0) : rawStartTime
+
       // Group split references by book+chapter for sequential playback
       for (let sectionIdx = 0; sectionIdx < tempSections.sections.length; sectionIdx++) {
         const section = tempSections.sections[sectionIdx]
@@ -671,9 +682,10 @@ export default function StoryReaderIsland({
 
           if (isNewChapter || isGap) {
             // Flush previous group as an entry
+            const resolvedStart = resolveStartTime(currentChapterKey, startTime)
             verseEntries.push({
               verseStart: vs, verseEnd: ve,
-              startTime: startTime === Infinity ? 0 : startTime,
+              startTime: resolvedStart,
               endTime,
               audioUrl: audioUrlMap.get(currentChapterKey) || null,
               sectionIndex: sectionIdx,
@@ -681,6 +693,7 @@ export default function StoryReaderIsland({
               chapter: currentChapter,
               imageUrl: sectionImageUrl,
             })
+            lastEndTimeByChapter[currentChapterKey] = Math.max(endTime, resolvedStart)
             startTime = Infinity
             endTime = 0
             vs = 0
@@ -703,9 +716,10 @@ export default function StoryReaderIsland({
 
         // Flush last group
         if (currentChapterKey) {
+          const resolvedStart = resolveStartTime(currentChapterKey, startTime)
           verseEntries.push({
             verseStart: vs, verseEnd: ve,
-            startTime: startTime === Infinity ? 0 : startTime,
+            startTime: resolvedStart,
             endTime,
             audioUrl: audioUrlMap.get(currentChapterKey) || null,
             sectionIndex: sectionIdx,
@@ -713,6 +727,7 @@ export default function StoryReaderIsland({
             chapter: currentChapter,
             imageUrl: sectionImageUrl,
           })
+          lastEndTimeByChapter[currentChapterKey] = Math.max(endTime, resolvedStart)
         } else {
           verseEntries.push({
             verseStart: 0, verseEnd: 0, startTime: 0, endTime: 0,

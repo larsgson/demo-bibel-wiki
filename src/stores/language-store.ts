@@ -285,12 +285,27 @@ export async function loadLanguageData(langCode: string) {
       const hasAudio = !!fileset.a?.length
       if (!hasText && !hasAudio) continue
 
+      // fileset.t from /dbt/<iso>/media.json is just the fileset's BASE id
+      // (identical to fileset.id) — it does NOT include the testament
+      // letter DBT's real text-fileset ids need (confirmed directly
+      // against the DBT API: a fileset "ASMDPI" has separate real text
+      // filesets "ASMDPIN_ET"/"ASMDPIN_ET-json" for NT and
+      // "ASMDPIO_ET"/"ASMDPIO_ET-json" for OT — "ASMDPI_ET" alone doesn't
+      // exist). parseTextFilesetId (fileset-utils.ts) expects the OLD
+      // ALL-langs-data convention instead: a short suffix ("N_ET"/"O_ET")
+      // that it prepends the distinctId onto — so build that suffix here
+      // from the canon rather than passing fileset.t through unchanged
+      // (passing it through was the bug: "AHRDPI" resolves to itself,
+      // never gains the required "N"/"O", and 404s against the real API).
+      // Audio needs no such reconstruction — fileset.a already gives the
+      // complete, real fileset id (e.g. "AHRDPIN1DA") directly.
+      const testamentLetter = canon === "nt" ? "N" : "O"
       const canonResult = {
         langCode,
         canon,
         category: classifyCategory(canonMedia, hasText, hasAudio),
         distinctId: fileset.id,
-        data: { a: fileset.a?.[0], t: fileset.t },
+        data: { a: fileset.a?.[0], t: hasText ? `${testamentLetter}_ET` : undefined },
       }
 
       canonResults[canon] = canonResult
