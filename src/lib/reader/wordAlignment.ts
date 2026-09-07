@@ -168,6 +168,18 @@ async function getEditionFileIndex(iso: string, edition: string): Promise<Map<st
         for (const entry of entries) {
             if (entry.type !== 'file') continue;
             const filename = entry.path.split('/').pop()!;
+            // Each book now publishes THREE sibling files (added 2026-09-07):
+            // "{book}_{hash}.json" (the compact-array data this module reads),
+            // plus "{book}_{hash}.meta.json" (per-verse alignment-method
+            // quality codes) and "{book}_{hash}.extra.json" (supplementary
+            // alignments) — neither of which this module consumes. All three
+            // share the same book-code prefix, so indexing by
+            // `filename.split('_')[0]` alone (the old, single-file-per-book
+            // logic) lets whichever of the three the API lists LAST for a
+            // book silently overwrite the correct one — observed picking
+            // .meta.json, whose content isn't alignment spans at all, which
+            // silently broke every lookup for that (iso, edition, book).
+            if (!/\.json$/.test(filename) || /\.(meta|extra)\.json$/.test(filename)) continue;
             const bookCode = filename.split('_')[0];
             index.set(bookCode, filename);
         }
