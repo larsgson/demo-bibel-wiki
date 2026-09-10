@@ -109,11 +109,44 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>{title}</title>
     <script is:inline>
+      // Template-locked subdomains (tgs./dbs./obs./john./test.<domain>) —
+      // detect from hostname before first paint, same reasoning as the
+      // UI-level script right below: CSS keyed off this attribute needs it
+      // present before hydration to avoid a flash of the full sidebar
+      // chrome. Kept in vanilla JS (not an import from template-lock-store)
+      // since is:inline scripts can't use module imports; mirrored exactly
+      // in that module for the hydrated store — see its own comment.
+      try {
+        var TEMPLATE_SUBDOMAINS = { tgs: "TGS", dbs: "DBS", obs: "OBS", john: "John", test: "test" };
+        var host = window.location.hostname;
+        var isLocalOrIp = host === "localhost" || /^[0-9.]+$/.test(host);
+        var parts = host.split(".");
+        var sub = !isLocalOrIp && parts.length >= 3 ? parts[0].toLowerCase() : null;
+        // ?templateLock=<sub> debug override — lets this be tested against
+        // localhost without /etc/hosts edits or a deployed preview; see
+        // template-lock-store.ts's fromQuery() (kept in sync with this).
+        var queryLock = new URLSearchParams(window.location.search).get("templateLock");
+        var querySub = queryLock ? queryLock.toLowerCase() : null;
+        var locked = (sub && TEMPLATE_SUBDOMAINS[sub]) || (querySub && TEMPLATE_SUBDOMAINS[querySub]);
+        if (locked) {
+          document.documentElement.dataset.templateLock = locked;
+        }
+      } catch (e) { /* no lock on failure — same permissive fallback as region detection */ }
+
       // Set the UI level on <html> before first paint so the Simple-mode
       // "no left navigation" CSS applies without a flash of the sidebar.
+      // A template-locked subdomain always FORCES level 1, ignoring
+      // whatever's saved in this origin's own localStorage — there is no
+      // "Standard"/"Study" mode to escalate to on a locked subdomain (the
+      // mode switcher itself is hidden — see the CSS below), so nothing
+      // should ever read a stale level 2/3 from a previous visit here.
       try {
-        var lvl = localStorage.getItem("bw-ui-level") || "1";
-        document.documentElement.dataset.uiLevel = lvl;
+        if (document.documentElement.dataset.templateLock) {
+          document.documentElement.dataset.uiLevel = "1";
+        } else {
+          var lvl = localStorage.getItem("bw-ui-level") || "1";
+          document.documentElement.dataset.uiLevel = lvl;
+        }
       } catch (e) { document.documentElement.dataset.uiLevel = "1"; }
     </script>
   </head>
@@ -272,10 +305,12 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       import { $activeRegion, setRegion, resolveRegionCode } from "../stores/region-store"
       import { regionForIso } from "../lib/data/regions"
       import { regionConfigByCode, uiLangForRegion } from "../lib/data/region-config"
+      import { $lockedTemplate, initTemplateLock } from "../stores/template-lock-store"
 
       initIsoFromUrl()
       initApiConfig()
       initSearchMode()
+      initTemplateLock()
 
       // $activeRegion previously had no initializer anywhere in the app —
       // every uiLangForRegion() read (header title, ReaderLoader, Reader.svelte,
@@ -327,6 +362,10 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
 
       levelBtn.addEventListener("click", (e) => {
         e.stopPropagation()
+        // Belt-and-suspenders alongside the CSS that hides .ui-level-wrapper
+        // outright on a locked subdomain (sidebar.css) — there is no other
+        // level to switch to there, so the popover must never open.
+        if ($lockedTemplate.get()) return
         const open = levelPopover.classList.toggle("open")
         if (open) {
           const close = (ev: Event) => {
@@ -804,6 +843,33 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
   @media (max-width: 768px) {
     html[data-ui-level="1"][data-page-type] .app-main {
       padding-bottom: 0 !important;
+    }
+  }
+
+  /* Template-locked subdomains (tgs./dbs./obs./john./test.<domain>) are
+     ALSO forced to ui-level=1 (see the inline script in <head>), so the
+     rule right above would otherwise hide .site-header here too — but a
+     locked subdomain has no other page to reach the language picker from
+     (there's no Standard/Study-mode header elsewhere to fall back to, and
+     "keep the language picker reachable" was a deliberate requirement for
+     this mode, unlike ordinary Simple mode). Placed after that rule so it
+     wins the cascade at equal specificity (source order, not !important
+     escalation). Only the language button remains — .ui-level-wrapper
+     (the mode gear/popover) is separately hidden below, since there is no
+     other level to switch to on a locked subdomain. */
+  html[data-template-lock][data-page-type] .site-header {
+    display: block !important;
+  }
+  html[data-template-lock] .ui-level-wrapper {
+    display: none !important;
+  }
+  @media (max-width: 768px) {
+    /* Restore the bottom padding the level-1+pageType rule above zeroed
+       out — the header is visible again here, so content still needs to
+       clear it. Same --bottom-header-h value sidebar.css's general
+       mobile-docked-header rule uses. */
+    html[data-template-lock][data-page-type] .app-main {
+      padding-bottom: var(--bottom-header-h, calc(3.5rem + env(safe-area-inset-bottom))) !important;
     }
   }
 
