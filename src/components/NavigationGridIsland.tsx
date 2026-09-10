@@ -7,6 +7,7 @@ import { resolveThumbUrl } from "../lib/bw/image-utils"
 import { t as translate } from "../lib/bw/ui-locales"
 import { uiLangForRegion } from "../lib/data/region-config"
 import { $activeRegion } from "../stores/region-store"
+import { $lockedTemplate } from "../stores/template-lock-store"
 
 interface Props {
   templateName: string
@@ -38,6 +39,7 @@ export default function NavigationGridIsland({
 }: Props) {
   const selectedLang = useStore($selectedLanguage)
   const secondaryLangs = useStore($secondaryLanguages)
+  const lockedTemplate = useStore($lockedTemplate)
   const uiLang = uiLangForRegion($activeRegion.get())
   const [hydrated, setHydrated] = useState(false)
   const [openCatId, setOpenCatId] = useState<string | null>(null)
@@ -161,7 +163,15 @@ export default function NavigationGridIsland({
   return (
     <div className="chapter-picker">
       <div className="flex items-center gap-3 mb-4">
-        <a href={hydrated ? buildLangHref(selectedLang, "", secondaryLangs) : "/"} className="text-lg font-bold" style={{ color: "var(--text)" }}>&larr;</a>
+        {/* On a template-locked subdomain, this grid IS the top of the
+            navigable tree — the ordinary "back" target (the per-language
+            multi-template chooser, "/<lang>/") isn't reachable here at all
+            (see netlify.toml's redirect back to this same page), so linking
+            to it would just be a confusing round trip. Omit the arrow
+            entirely rather than link somewhere that bounces right back. */}
+        {!lockedTemplate && (
+          <a href={hydrated ? buildLangHref(selectedLang, "", secondaryLangs) : "/"} className="text-lg font-bold" style={{ color: "var(--text)" }}>&larr;</a>
+        )}
         <h1 className="chapter-picker-title" style={{ marginBottom: 0 }}>{bookTitle}</h1>
       </div>
       <div>

@@ -276,18 +276,45 @@
 
 # Template-locked subdomains — each serves ONLY its one template's content,
 # in Simple mode (see src/stores/template-lock-store.ts, which does the
-# actual UI locking client-side from the hostname). Root-only redirects,
-# same reasoning as the region ones above (force=true since dist/index.html
-# would otherwise win): the bare subdomain lands on that template's own
-# category grid (/l/<Template>/, defaulting to eng). Deeper paths need NO
-# redirect of their own — internal links are always relative + iso-prefixed
-# (e.g. /eng/TGS/01/01), which is either a real prerendered static file
-# already (served directly, same as on the main domain) or falls through to
-# the existing generic "/:iso/:template/..." redirects below, which are
-# host-agnostic and so already cover every subdomain too.
+# actual UI locking client-side from the hostname). force=true throughout,
+# since these all match a real prerendered static file that Netlify would
+# otherwise serve directly (dist/index.html for the bare root; dist/eng/
+# index.html — src/pages/[iso]/index.astro's per-language, ALL-templates
+# chooser page — for the bare "/eng" case; "eng" is the only ISO that page
+# prerenders today, per config/prerender-isos.json/getIsoPaths(), which is
+# why this is a literal path rather than a ":iso" placeholder — a wildcard
+# there would ALSO match any other single path segment with force=true,
+# including real static assets like /manifest.webmanifest or /robots.txt,
+# and hijack those too. That chooser page isn't host-scoped at all — the
+# SAME static file serves the main domain and every subdomain alike — so
+# on a locked subdomain it must be redirected away rather than left to
+# render normally. The app itself no longer LINKS to "/eng/" while locked
+# (NavigationGridIsland's back arrow is omitted entirely there instead),
+# but a bookmark, browser-history entry, or a hand-typed URL can still
+# land here directly. Revisit this list if prerender-isos.json ever grows
+# past just "eng".
+#
+# Deeper template paths (e.g. /eng/TGS/01/01) need no redirect of their
+# own — internal links are always relative + iso-prefixed, which is either
+# a real prerendered static file already (served directly, same as on the
+# main domain) or falls through to the existing generic
+# "/:iso/:template/..." redirects below, which are host-agnostic and so
+# already cover every subdomain too.
 [[redirects]]
   from = "https://tgs.demo.bibel.wiki/"
   to = "/l/TGS/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://tgs.demo.bibel.wiki/eng"
+  to = "/eng/TGS/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://tgs.demo.bibel.wiki/eng/"
+  to = "/eng/TGS/"
   status = 200
   force = true
 
@@ -298,8 +325,32 @@
   force = true
 
 [[redirects]]
+  from = "https://dbs.demo.bibel.wiki/eng"
+  to = "/eng/DBS/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://dbs.demo.bibel.wiki/eng/"
+  to = "/eng/DBS/"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "https://obs.demo.bibel.wiki/"
   to = "/l/OBS/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://obs.demo.bibel.wiki/eng"
+  to = "/eng/OBS/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://obs.demo.bibel.wiki/eng/"
+  to = "/eng/OBS/"
   status = 200
   force = true
 
@@ -310,10 +361,35 @@
   force = true
 
 [[redirects]]
+  from = "https://john.demo.bibel.wiki/eng"
+  to = "/eng/John/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://john.demo.bibel.wiki/eng/"
+  to = "/eng/John/"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "https://test.demo.bibel.wiki/"
   to = "/l/test/"
   status = 200
   force = true
+
+[[redirects]]
+  from = "https://test.demo.bibel.wiki/eng"
+  to = "/eng/test/"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "https://test.demo.bibel.wiki/eng/"
+  to = "/eng/test/"
+  status = 200
+  force = true
+
 
 # Non-prerendered ISOs fall through to the generic /l/ pages.
 # Netlify serves static files first, so prerendered pages take priority.
