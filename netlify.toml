@@ -276,23 +276,29 @@
 
 # Template-locked subdomains — each serves ONLY its one template's content,
 # in Simple mode (see src/stores/template-lock-store.ts, which does the
-# actual UI locking client-side from the hostname). force=true throughout,
-# since these all match a real prerendered static file that Netlify would
-# otherwise serve directly (dist/index.html for the bare root; dist/eng/
-# index.html — src/pages/[iso]/index.astro's per-language, ALL-templates
-# chooser page — for the bare "/eng" case; "eng" is the only ISO that page
-# prerenders today, per config/prerender-isos.json/getIsoPaths(), which is
-# why this is a literal path rather than a ":iso" placeholder — a wildcard
-# there would ALSO match any other single path segment with force=true,
-# including real static assets like /manifest.webmanifest or /robots.txt,
-# and hijack those too. That chooser page isn't host-scoped at all — the
-# SAME static file serves the main domain and every subdomain alike — so
-# on a locked subdomain it must be redirected away rather than left to
-# render normally. The app itself no longer LINKS to "/eng/" while locked
-# (NavigationGridIsland's back arrow is omitted entirely there instead),
-# but a bookmark, browser-history entry, or a hand-typed URL can still
-# land here directly. Revisit this list if prerender-isos.json ever grows
-# past just "eng".
+# actual UI locking client-side from the hostname).
+#
+# Root + literal "/eng" rules use force=true, since they match a real
+# prerendered static file Netlify would otherwise serve directly
+# (dist/index.html for the bare root; dist/eng/index.html —
+# src/pages/[iso]/index.astro's per-language, ALL-templates chooser page —
+# for "/eng"; "eng" is the only ISO that page prerenders today, per
+# config/prerender-isos.json/getIsoPaths()). Revisit this if that list
+# ever grows past just "eng".
+#
+# The ":iso" wildcard rules right after each of those are DELIBERATELY
+# NOT force=true — they exist to catch every OTHER (non-prerendered)
+# language code landing on "/<iso>/" or "/<iso>" (e.g. switching language
+# from the locked template's own root, where the app can't always tell —
+# see LanguageButton.tsx's own client-side fix for the common case; this
+# is the infra-level safety net for bookmarks/history/hand-typed URLs),
+# which would otherwise fall through to the SAME all-templates chooser
+# page via the generic "/:iso" redirect further down (host-agnostic, so
+# it already applies to every subdomain too). Without force, a real
+# static asset that happens to be a single path segment — /robots.txt,
+# /manifest.webmanifest, etc — is served directly as normal and never
+# even reaches this rule, since Netlify only falls back to a non-forced
+# redirect when no real file exists at that exact path.
 #
 # Deeper template paths (e.g. /eng/TGS/01/01) need no redirect of their
 # own — internal links are always relative + iso-prefixed, which is either
@@ -319,6 +325,16 @@
   force = true
 
 [[redirects]]
+  from = "https://tgs.demo.bibel.wiki/:iso"
+  to = "/:iso/TGS/"
+  status = 200
+
+[[redirects]]
+  from = "https://tgs.demo.bibel.wiki/:iso/"
+  to = "/:iso/TGS/"
+  status = 200
+
+[[redirects]]
   from = "https://dbs.demo.bibel.wiki/"
   to = "/l/DBS/"
   status = 200
@@ -335,6 +351,16 @@
   to = "/eng/DBS/"
   status = 200
   force = true
+
+[[redirects]]
+  from = "https://dbs.demo.bibel.wiki/:iso"
+  to = "/:iso/DBS/"
+  status = 200
+
+[[redirects]]
+  from = "https://dbs.demo.bibel.wiki/:iso/"
+  to = "/:iso/DBS/"
+  status = 200
 
 [[redirects]]
   from = "https://obs.demo.bibel.wiki/"
@@ -355,6 +381,16 @@
   force = true
 
 [[redirects]]
+  from = "https://obs.demo.bibel.wiki/:iso"
+  to = "/:iso/OBS/"
+  status = 200
+
+[[redirects]]
+  from = "https://obs.demo.bibel.wiki/:iso/"
+  to = "/:iso/OBS/"
+  status = 200
+
+[[redirects]]
   from = "https://john.demo.bibel.wiki/"
   to = "/l/John/"
   status = 200
@@ -373,6 +409,16 @@
   force = true
 
 [[redirects]]
+  from = "https://john.demo.bibel.wiki/:iso"
+  to = "/:iso/John/"
+  status = 200
+
+[[redirects]]
+  from = "https://john.demo.bibel.wiki/:iso/"
+  to = "/:iso/John/"
+  status = 200
+
+[[redirects]]
   from = "https://test.demo.bibel.wiki/"
   to = "/l/test/"
   status = 200
@@ -389,6 +435,16 @@
   to = "/eng/test/"
   status = 200
   force = true
+
+[[redirects]]
+  from = "https://test.demo.bibel.wiki/:iso"
+  to = "/:iso/test/"
+  status = 200
+
+[[redirects]]
+  from = "https://test.demo.bibel.wiki/:iso/"
+  to = "/:iso/test/"
+  status = 200
 
 
 # Non-prerendered ISOs fall through to the generic /l/ pages.

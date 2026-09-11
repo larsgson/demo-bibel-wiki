@@ -9,6 +9,7 @@ import {
   initLanguageFromUrl,
 } from "../stores/language-store"
 import { buildLangHref } from "../lib/bw/url-utils"
+import { $lockedTemplate } from "../stores/template-lock-store"
 import { t as translate, resolveUILang, localeCode } from "../lib/bw/ui-locales"
 import LanguagePicker from "./LanguagePicker"
 
@@ -41,6 +42,14 @@ export default function LanguageButton() {
     if (parts[0] === "l") rest = parts.slice(1).join("/")
     else if (parts.length >= 1 && /^[a-z]{3}$/.test(parts[0])) rest = parts.slice(1).join("/")
     else rest = parts.join("/")
+    // On a template-locked subdomain, the bare "/" root is served via a
+    // Netlify REWRITE (not a redirect) of /l/<Template>/'s content — so
+    // window.location.pathname is still just "/" there, and `rest` above
+    // comes out empty even though the visitor is clearly inside that one
+    // template. Without this, switching language from the subdomain root
+    // would build "/<iso>/" (the all-templates chooser), defeating the lock.
+    const locked = $lockedTemplate.get()
+    if (locked && !rest.split("/")[0]) rest = locked
     window.location.href = buildLangHref(iso, rest, secondaries)
   }
 
