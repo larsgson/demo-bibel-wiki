@@ -18,11 +18,43 @@
  * needs DBT_API_KEY). helloAO is text-only (never audio — confirmed, not a
  * temporary gap), so it isn't part of the audio chain; see §6a of the
  * delivery spec.
+ *
+ * WITHIN whichever tier actually has a fileset, ../../data/language-
+ * preferences.json's `preferredFileset` (iso -> base fileset id, e.g.
+ * "EN1ESV", or per-canon {nt,ot}) moves that edition's fileset to the front
+ * of the list `resolveChapterAudioUrl` tries — same config knob the OBS/
+ * story-template path (language-store.ts, StoryReaderIsland.tsx) already
+ * uses. Never widens WHICH tier is tried (raw still always wins over dbt),
+ * only reorders within one — EXCEPT for one new case, see below.
+ *
+ * ── helloAO-backed editions (not real DBT editions) ─────────────────────
+ * bcv-commons/bibles' doc/dbt-timing.md (redesigned 2026-09-14) documents
+ * a real exception: some editions look like they belong in the DBT
+ * fileset list but their actual audio/text comes from helloAO instead —
+ * currently one confirmed case, English's "ENGBSBHAY" (Berean Standard
+ * Bible, helloAO's "hays" narration), which as of this writing has real
+ * audio AND real per-verse timing, but isn't a DBT edition at all (its
+ * `media.json` fileset entry, once backfilled, carries `audioSource: {
+ * source: "helloao", translation, reader }` instead of resolving through
+ * DBT). `media.json` itself hadn't been backfilled with this entry yet as
+ * of 2026-09-14, so `preferredFileset` pointing at an id NOT present in
+ * the canon's `filesets[]` at all is treated as a possible helloAO-backed
+ * edition: `loadHelloaoSource` checks the per-edition sidecar
+ * (`align/<canon>/<iso>/<id>/_source.json`, confirmed live independent of
+ * `media.json`'s own catch-up), and if it resolves, `fetchHelloaoChapterAudio`
+ * fetches the ACTUAL audio URL + real per-verse start times directly from
+ * helloAO's own per-chapter API (`thisChapterAudioLinks`/
+ * `thisChapterAudioTimings`) — a source dbt-media.ts otherwise treats as
+ * text-only (see the "No helloAO tier" note below, which still holds for
+ * every OTHER helloAO translation; BSB/hays is the one real exception).
  */
 
 import { pkfUrl } from "./pkf-url"
 import { getTestament } from "./bible-utils"
 import { fetchDbtAudioUrl } from "./dbt-audio"
+import languagePreferences from "../../data/language-preferences.json"
+
+const HELLOAO_API_BASE = "https://bible.helloao.org"
 
 export type MediaSource = "raw" | "helloao" | "dbt" | "ebible"
 
@@ -167,7 +199,14 @@ export interface ResolvedAudio {
    *  source "dbt": raw/contrib fileset ids follow a different, non-DBT
    *  naming scheme and aren't guaranteed to appear in the DBT timing file). */
   filesetId: string
-  source: "raw" | "dbt"
+  source: "raw" | "dbt" | "helloao"
+  /** Only for source "helloao" — real per-verse start times (seconds),
+   *  index 0 = verse 1, straight from helloAO's own thisChapterAudioTimings
+   *  (NOT audio-sync's; a completely separate timing source, fetched
+   *  alongside the audio URL in the same call since both come from the
+   *  same per-chapter response). null when helloAO had no timing for this
+   *  specific chapter — the audio URL is still usable without it. */
+  verseStarts?: number[] | null
 }
 
 /**
@@ -176,11 +215,118 @@ export interface ResolvedAudio {
  * Returns null when no source has audio for this chapter (e.g. OT chapter for
  * an NT-only recording, or the language has no audio at all).
  *
- * No helloAO tier: helloAO is a text-only API (confirmed — its
- * `thisChapterAudioLinks` field exists in the schema but is never populated,
- * by design, not as a temporary gap). Adding a lookup there would cost a real
- * network round-trip on every resolution for a source that can never answer.
+ * No general helloAO tier: helloAO's `thisChapterAudioLinks` field exists
+ * in the schema but is unpopulated for nearly every translation — BSB
+ * (helloAO's "hays" narration) is the one confirmed real exception, and is
+ * only ever probed here when explicitly configured via `preferredFileset`
+ * (tier 0 below), never scanned for generally — that would cost a real
+ * network round-trip on every resolution for a source that almost never
+ * answers.
  */
+/** ../../data/language-preferences.json's `preferredFileset` for one
+ *  (iso, canon) — a base fileset id (matching FilesetEntry.id, e.g.
+ *  "EN1ESV"), not an audio/text-specific id. Same shape/lookup
+ *  language-store.ts's loadLanguageData() already uses. */
+function preferredFilesetId(iso: string, canon: "nt" | "ot"): string | null {
+  const pref = (languagePreferences as Record<string, { preferredFileset?: string | Record<string, string> }>)[iso]
+    ?.preferredFileset
+  if (!pref) return null
+  return typeof pref === "string" ? pref : pref[canon] ?? null
+}
+
+/** Move the preferred fileset (if configured and present) to the front,
+ *  otherwise leave the CDN's own listed order untouched. Array.sort is
+ *  stable, so this never reorders anything else. */
+function orderedByPreference(filesets: FilesetEntry[], preferred: string | null): FilesetEntry[] {
+  if (!preferred) return filesets
+  return [...filesets].sort((a, b) => (a.id === preferred ? -1 : b.id === preferred ? 1 : 0))
+}
+
+interface HelloaoSourceRef {
+  source: string
+  /** NT/OT canon field is "translation" in the audio half of the sidecar,
+   *  "id" in the text half — same value either way (a helloAO translation
+   *  id, e.g. "BSB"). Accept both so callers don't need to know which half
+   *  they're reading. */
+  translation?: string
+  id?: string
+  reader?: string
+  verified?: boolean
+}
+
+interface HelloaoBackedSource {
+  audio?: HelloaoSourceRef
+  text?: HelloaoSourceRef
+}
+
+const helloaoSourceCache = new Map<string, Promise<HelloaoBackedSource | null>>()
+
+/** `align/<canon>/<iso>/<distinctId>/_source.json` — see the module doc
+ *  comment above. Exists independently of media.json's own filesets[]
+ *  entry for the same id, so this resolves a configured-but-not-yet-
+ *  cataloged edition today. */
+function loadHelloaoSource(canon: "nt" | "ot", iso: string, distinctId: string): Promise<HelloaoBackedSource | null> {
+  const key = `${canon}/${iso}/${distinctId}`
+  const cached = helloaoSourceCache.get(key)
+  if (cached) return cached
+  const p = fetch(pkfUrl(`/align/${canon}/${iso}/${distinctId}/_source.json`))
+    .then((r) => (r.ok ? (r.json() as Promise<HelloaoBackedSource>) : null))
+    .catch(() => null)
+  helloaoSourceCache.set(key, p)
+  return p
+}
+
+interface HelloaoChapterAudio {
+  url: string
+  verseStarts: number[] | null
+}
+
+const helloaoChapterCache = new Map<string, Promise<HelloaoChapterAudio | null>>()
+
+/** One chapter's real audio URL + real per-verse start times, straight
+ *  from helloAO's own per-chapter API — thisChapterAudioLinks[reader] for
+ *  the URL, thisChapterAudioTimings[reader] (a relative link to a SECOND
+ *  small JSON file, `{ verses: number[], ... }`) for timing. Both are
+ *  top-level fields on the chapter response, not nested under "chapter". */
+function fetchHelloaoChapterAudio(
+  translationId: string,
+  reader: string,
+  bookCode: string,
+  chapter: number,
+): Promise<HelloaoChapterAudio | null> {
+  const key = `${translationId}/${reader}/${bookCode}/${chapter}`
+  const cached = helloaoChapterCache.get(key)
+  if (cached) return cached
+  const p = (async (): Promise<HelloaoChapterAudio | null> => {
+    try {
+      const res = await fetch(`${HELLOAO_API_BASE}/api/${translationId}/${bookCode}/${chapter}.json`)
+      if (!res.ok) return null
+      const data = await res.json()
+      const url: string | undefined = data?.thisChapterAudioLinks?.[reader]
+      if (!url) return null
+
+      let verseStarts: number[] | null = null
+      const timingsPath: string | undefined = data?.thisChapterAudioTimings?.[reader]
+      if (timingsPath) {
+        try {
+          const timingsRes = await fetch(`${HELLOAO_API_BASE}${timingsPath}`)
+          if (timingsRes.ok) {
+            const timingsData = await timingsRes.json()
+            if (Array.isArray(timingsData?.verses)) verseStarts = timingsData.verses
+          }
+        } catch {
+          // Audio is still usable without timing — no highlighting, that's all.
+        }
+      }
+      return { url, verseStarts }
+    } catch {
+      return null
+    }
+  })()
+  helloaoChapterCache.set(key, p)
+  return p
+}
+
 export async function resolveChapterAudioUrl(
   iso: string,
   bookCode: string,
@@ -193,18 +339,37 @@ export async function resolveChapterAudioUrl(
   if (!canonMedia?.filesets?.length) return null
 
   const sources = new Set(canonMedia.sources ?? [])
+  const preferred = preferredFilesetId(iso, canon)
+  const filesets = orderedByPreference(canonMedia.filesets, preferred)
+
+  // 0. A configured preferred fileset that isn't a real catalog entry at
+  //    all yet — check whether it's a helloAO-backed edition (see the
+  //    module doc comment) before falling through to the normal tiers.
+  //    Checked first since an explicit preference should win outright
+  //    once it resolves; a harmless one-request no-op (404) for every
+  //    language without this kind of override.
+  if (preferred && !canonMedia.filesets.some((f) => f.id === preferred)) {
+    const src = await loadHelloaoSource(canon, iso, preferred)
+    const translationId = src?.audio?.translation ?? src?.audio?.id
+    if (src?.audio?.source === "helloao" && translationId && src.audio.reader) {
+      const chapterAudio = await fetchHelloaoChapterAudio(translationId, src.audio.reader, bookCode, chapter)
+      if (chapterAudio) {
+        return { url: chapterAudio.url, filesetId: preferred, source: "helloao", verseStarts: chapterAudio.verseStarts }
+      }
+    }
+  }
 
   // 1. Raw/contrib — direct CDN file, no key, tried against each fileset id
   //    (the /audio/ path segment matches the SAB fileset id, e.g. "NBS").
   if (sources.has("contrib")) {
-    for (const f of canonMedia.filesets) {
+    for (const f of filesets) {
       const url = await rawAudioUrl(iso, f.id, bookCode, chapter)
       if (url) return { url, filesetId: f.id, source: "raw" }
     }
   }
 
   // 2. dbt-proxy (needs DBT_API_KEY) — per audio fileset id.
-  const audioFilesetIds = canonMedia.filesets.flatMap((f) => f.a ?? [])
+  const audioFilesetIds = filesets.flatMap((f) => f.a ?? [])
   for (const fileset of audioFilesetIds) {
     const url = await fetchDbtAudioUrl(fileset, bookCode, chapter)
     if (url) return { url, filesetId: fileset, source: "dbt" }

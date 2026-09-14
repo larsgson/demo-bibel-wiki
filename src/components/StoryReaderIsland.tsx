@@ -464,14 +464,29 @@ export default function StoryReaderIsland({
             }
           })
           // Same zero-duration fallback as the reconstructed-audio path
-          // below — a segment with no published timing yet (or the last
-          // segment, which has no following boundary) plays through to the
-          // next segment's start, or 30s if there is none.
-          for (let i = 0; i < verseEntries.length; i++) {
-            const e = verseEntries[i]
-            if (e.startTime >= e.endTime) {
-              const next = verseEntries[i + 1]
-              e.endTime = next ? next.startTime : e.startTime + 30
+          // below — but ONLY when this story has SOME real timing to
+          // anchor to. A story can have NO published timing at all (not a
+          // few trailing gaps — genuinely none for any segment): produced
+          // audio is recognized independently of its alignment, so a
+          // language can show up with a real audio_url well before
+          // audio-sync has run against it (see the [produced] doc comment
+          // in OBS/index.toml) — confirmed for "eng" specifically, whose
+          // audio was only just added and has no align/obs data yet at
+          // all, while e.g. "ahr" already has full per-segment timing.
+          // Silently seeking every section to the story's start in that
+          // all-untimed case would be misleading (every picture appears to
+          // "work" but actually plays the same fixed 30s from position 0
+          // regardless of which was clicked) — worse than the existing
+          // "timing not yet available" toast, which is what playVerse's
+          // own zero-duration guard already shows when left at [0, 0].
+          const hasAnyRealTiming = timing != null && Object.keys(timing).length > 0
+          if (hasAnyRealTiming) {
+            for (let i = 0; i < verseEntries.length; i++) {
+              const e = verseEntries[i]
+              if (e.startTime >= e.endTime) {
+                const next = verseEntries.slice(i + 1).find((n) => n.startTime > e.startTime)
+                e.endTime = next ? next.startTime : e.startTime + 30
+              }
             }
           }
           // Produced-audio diagnostics — enable by adding ?audiodebug to the

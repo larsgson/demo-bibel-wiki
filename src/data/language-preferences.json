@@ -1,4 +1,4 @@
 {
-  "eng": { "preferredFileset": { "nt": "EN1ESV", "ot": "ENGESV" } },
+  "eng": { "preferredFileset": "ENGBSBHAY" },
   "swe": { "preferredFileset": "SWESFV" }
 }

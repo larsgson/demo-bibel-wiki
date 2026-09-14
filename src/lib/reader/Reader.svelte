@@ -631,13 +631,38 @@
     // id: {[filesetId]: {[chapter]: {[verse]: [start, end]}}}. Only
     // attempted for source "dbt" (raw/contrib fileset ids follow a
     // non-DBT naming scheme, not guaranteed to appear in this file).
+    //
+    // Source "helloao" (see dbt-media.ts's module doc comment — currently
+    // just BSB/hays) carries its own real per-verse start times directly
+    // on the ResolvedAudio itself (verseStarts), fetched alongside the
+    // audio URL in the same call — no separate lookup needed, unlike DBT's
+    // loadBookTiming. Converted to the same {[verse]: [start, end]} shape
+    // here: verse N's end = verse N+1's start; the last verse has no known
+    // end (helloAO doesn't publish one), so it gets the same "+30s, no
+    // real end known" fallback convention used elsewhere in this app for
+    // exactly this situation (e.g. StoryReaderIsland's zero-duration fix).
     let dbtTimingVerses = $state<Record<string, [number, number]> | null>(null);
     $effect(() => {
         const book = currentBook?.bookCode;
         const ch = currentChapter;
         const audio = dbtAudio;
         dbtTimingVerses = null;
-        if (!book || !audio || audio.source !== 'dbt') return;
+        if (!book || !audio) return;
+
+        if (audio.source === 'helloao') {
+            const starts = audio.verseStarts;
+            if (!starts?.length) return;
+            const verses: Record<string, [number, number]> = {};
+            for (let i = 0; i < starts.length; i++) {
+                const start = starts[i];
+                const end = i + 1 < starts.length ? starts[i + 1] : start + 30;
+                verses[String(i + 1)] = [start, end];
+            }
+            dbtTimingVerses = verses;
+            return;
+        }
+
+        if (audio.source !== 'dbt') return;
         let cancelled = false;
         loadBookTiming(iso, book).then((timing) => {
             if (cancelled) return;
@@ -656,7 +681,7 @@
                     url: dbtAudio.url,
                     bookCode: currentBook.bookCode,
                     chapter: currentChapter,
-                    num: null, len: null, size: null, timingFile: null, src: 'dbt',
+                    num: null, len: null, size: null, timingFile: null, src: dbtAudio.source,
                 }]
               : []
     );
