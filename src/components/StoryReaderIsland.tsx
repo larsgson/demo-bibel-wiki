@@ -436,7 +436,17 @@ export default function StoryReaderIsland({
           const canonHasDbtAudio = testament === "ot" ? otHasDbtAudio : ntHasDbtAudio
 
           let textFilesetId = dbtTextFilesetId || ""
-          if (!canonHasDbtAudio) {
+          // Only skip the source-catalog fallback when there's an ACTUAL
+          // DBT text id to stay paired with its audio — a canon can list a
+          // DBT audio fileset id that itself 404s against the real DBT API
+          // (confirmed for Norwegian's "NBSN2DA") while having no DBT text
+          // fileset at all (fileset.t undefined, e.g. same language: its
+          // real DBT text id is catalog-only, "NORNBS", not derivable from
+          // media.json's bare "NBS" base id at all). With no real DBT text
+          // in hand, there's nothing to keep paired with audio, so always
+          // fall through to the catalog in that case regardless of the
+          // (possibly non-functional) audio id.
+          if (!dbtTextFilesetId || !canonHasDbtAudio) {
             // No DBT audio riding on this canon's own fileset, so there's
             // no text/audio edition to stay in sync with here — safe to
             // always consult the build-time source catalog (data/source-
@@ -455,6 +465,13 @@ export default function StoryReaderIsland({
             const catalogSrc = await resolveTextSource(lang, testament)
             if (catalogSrc?.provider === "helloao" && catalogSrc.id) {
               textFilesetId = `helloao:${catalogSrc.id}`
+            } else if (!textFilesetId && catalogSrc?.provider === "dbt" && catalogSrc.id) {
+              // Our own per-testament-letter reconstruction (ntTextId/
+              // otTextId above) found nothing, but the catalog's own DBT id
+              // is a real, directly-usable fileset id (e.g. Norwegian's
+              // "NORNBS" — not derivable from media.json's bare "NBS" base
+              // id, which has no letter-suffix convention at all here).
+              textFilesetId = catalogSrc.id
             }
           }
           await loadChapter(book, parseInt(chapter, 10), textFilesetId, lang)

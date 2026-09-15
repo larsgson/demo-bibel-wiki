@@ -64,6 +64,7 @@
 import { pkfUrl } from "./pkf-url"
 import { getTestament } from "./bible-utils"
 import { fetchDbtAudioUrl } from "./dbt-audio"
+import { shouldProbePkf } from "./language-list"
 import languagePreferences from "../../data/language-preferences.json"
 
 const HELLOAO_API_BASE = "https://bible.helloao.org"
@@ -207,19 +208,23 @@ const pkfAudioMediaCache = new Map<string, Promise<PkfAudioItem[] | null>>()
  * checked first, ahead of raw/dbt, matching the priority order every other
  * "does language X have audio" decision in this app already uses (PKF >
  * everything else). "eng" never has PKF data (not a Scripture Earth
- * language), skipped outright rather than spending a request finding that
- * out every time — same optimization StoryReaderIsland's own prior copy of
- * this check had.
+ * language) and shouldProbePkf(iso) says this language has no .pkf bundle
+ * at all (config/pkf-langs.json's known 589-language list — the same gate
+ * chapter-store.ts's loadPkfInfo and language-list.ts's other PKF checks
+ * already use) — both skipped outright rather than spending a request
+ * (and, for most languages with no PKF data, a guaranteed 404) finding
+ * that out every time.
  */
-function loadPkfAudioItems(iso: string): Promise<PkfAudioItem[] | null> {
+async function loadPkfAudioItems(iso: string): Promise<PkfAudioItem[] | null> {
   const cached = pkfAudioMediaCache.get(iso)
   if (cached) return cached
-  const p = iso === "eng"
-    ? Promise.resolve(null)
-    : fetch(pkfUrl(`/pkf/${iso}/info.json`))
-        .then((r) => (r.ok ? r.json() : null))
-        .then((info) => info?.media?.audio?.items ?? null)
-        .catch(() => null)
+  const p = (async () => {
+    if (iso === "eng" || !(await shouldProbePkf(iso))) return null
+    return fetch(pkfUrl(`/pkf/${iso}/info.json`))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((info) => info?.media?.audio?.items ?? null)
+      .catch(() => null)
+  })()
   pkfAudioMediaCache.set(iso, p)
   return p
 }
@@ -446,6 +451,29 @@ export async function resolveChapterAudioUrl(
     if (url) {
       if (debug) console.log(`[readerdebug/audio] resolved via dbt:`, fileset, url)
       return { url, filesetId: fileset, source: "dbt" }
+    }
+  }
+
+  // 4. Raw CDN file again, this time unconditional on sources.has("contrib")
+  //    — a last-resort fallback for bibles' small set of "legacy" historical
+  //    audio+timing imports (confirmed 2026-09-15, Norwegian's "NBS": real
+  //    audio+timing they still hold, but with NO live DBT fileset mapping —
+  //    audioFilesetIds above (e.g. "NBSN2DA") 404s against the real DBT API
+  //    and always will, yet the exact same raw path tier 2 already uses
+  //    (keyed by the base fileset id, not the audio id) serves the real
+  //    file: confirmed live, `/audio/nor/NBS/JHN_1.mp3` → 200. Tried last,
+  //    after (not instead of) real DBT, since bibles says this case is rare
+  //    (4 total across all languages) and every OTHER language's raw file,
+  //    if any exists at this path, would already have been caught by tier 2
+  //    via sources.has("contrib") — this is purely for languages sources
+  //    doesn't flag as contrib-sourced at all.
+  if (!sources.has("contrib")) {
+    for (const f of filesets) {
+      const url = await rawAudioUrl(iso, f.id, bookCode, chapter)
+      if (url) {
+        if (debug) console.log(`[readerdebug/audio] resolved via raw (legacy fallback):`, f.id, url)
+        return { url, filesetId: f.id, source: "raw" }
+      }
     }
   }
 

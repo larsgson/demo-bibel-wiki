@@ -203,10 +203,16 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
         entry.audio = !!(entry.audio || audio)
         entry.timing = !!(entry.timing || timing)
       } else {
+        // media-index.json has no cached display name for ~200 of its
+        // ~2,500 languages (real gap in the live CDN data, not a bug in
+        // this parsing) — fall back to the raw iso code rather than
+        // leaving `name` undefined, which used to crash the sort below for
+        // every visitor, not just these languages.
+        const name = avail.name || iso.toUpperCase()
         byIso.set(iso, {
           iso,
-          name: avail.name,
-          vernacular: avail.vernacular || avail.name,
+          name,
+          vernacular: avail.vernacular || name,
           pkf: PKF_SET.has(iso),
           study: isStudyLanguage(iso),
           audio,
@@ -218,6 +224,6 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
     console.warn("Failed to load CDN media index:", e)
   }
 
-  cache = [...byIso.values()].sort((a, b) => a.name.localeCompare(b.name))
+  cache = [...byIso.values()].sort((a, b) => (a.name || a.iso).localeCompare(b.name || b.iso))
   return cache
 }
