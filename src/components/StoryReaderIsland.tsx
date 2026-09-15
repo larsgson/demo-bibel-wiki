@@ -287,6 +287,7 @@ export default function StoryReaderIsland({
       const tempSections = parseMarkdownIntoSections(markdown)
       const refs = new Set<string>()
       const neededTestaments = new Set<string>()
+      const neededBooksForGating = new Set<string>()
       for (const section of tempSections.sections) {
         if (section.reference) {
           for (const ref of splitReference(section.reference)) {
@@ -294,9 +295,28 @@ export default function StoryReaderIsland({
             if (parsed) {
               refs.add(`${parsed.book}.${parsed.chapter}`)
               neededTestaments.add(getTestament(parsed.book))
+              neededBooksForGating.add(parsed.book)
             }
           }
         }
+      }
+
+      // Real per-book timing (cdn.bibel.wiki/dbt/<iso>/timing/<BOOK>.json)
+      // for at least one needed book — the authoritative ground truth
+      // ensureAudioSetup's own fetchTimingData will use later regardless,
+      // so worth checking here directly rather than only trusting a
+      // summary count. Needed because bibles' own availability.json/
+      // media.json `timingBooks` rollup can under-report real coverage
+      // (confirmed live 2026-09-16: French's real GEN timing exists and
+      // plays, but both files list no timingBooks for French at all) —
+      // without this, a language with genuinely working timed audio could
+      // get wrongly gated out here before ever reaching the real fetch.
+      async function hasRealBookTiming(iso: string): Promise<boolean> {
+        for (const book of neededBooksForGating) {
+          const timing = await loadBookTiming(iso, book)
+          if (timing && Object.keys(timing).length > 0) return true
+        }
+        return false
       }
 
       // Check if primary language has timed audio for required testaments
@@ -330,12 +350,24 @@ export default function StoryReaderIsland({
         }
       }
 
+      // Also check real per-book timing directly (see hasRealBookTiming's
+      // comment above) — catches languages the summary undercounts.
+      if (!primaryHasTimedAudio) {
+        primaryHasTimedAudio = await hasRealBookTiming(selectedLangs[0])
+      }
+
       // Also check PKF audio data (Scripture Earth)
       if (!primaryHasTimedAudio) {
         const pkfMedia = await loadPkfMedia(selectedLangs[0])
         if (pkfMedia?.audio?.items?.length > 0) {
           primaryHasTimedAudio = true
         }
+      }
+
+      if (typeof window !== "undefined" && window.location.search.includes("readerdebug")) {
+        console.log(`[readerdebug/gate] ${selectedLangs[0]} primaryHasTimedAudio=${primaryHasTimedAudio}`, {
+          category: primaryLangData?.category, canon: primaryLangData?.canon, neededTestaments: [...neededTestaments],
+        })
       }
 
       if (primaryHasTimedAudio) {
@@ -357,6 +389,7 @@ export default function StoryReaderIsland({
               if (avail?.[canon]?.timing) { hasAudio = true; break }
             }
           }
+          if (!hasAudio) hasAudio = await hasRealBookTiming(lang)
           if (!hasAudio) {
             const pkfMedia = await loadPkfMedia(lang)
             if (pkfMedia?.audio?.items?.length > 0) hasAudio = true
@@ -480,11 +513,22 @@ export default function StoryReaderIsland({
 
       setTextWarning(null)
     }
-    loadAllLanguages()
+    loadAllLanguages().catch((e) => {
+      // This effect had no .catch() before — an exception anywhere in it
+      // (e.g. a real bug in the audio-availability gating above) would
+      // silently abort before ever calling setAudioLang, leaving
+      // audioLang stuck at its previous/default value with NO console
+      // output at all (handleSectionClick's `if (!audioLang) return` then
+      // makes clicking look like it does nothing) — surfaced now instead.
+      console.error("[StoryReaderIsland] loadAllLanguages failed:", e)
+    })
   }, [markdown, selectedLangs.join(","), engIsExplicit, producedContent, storyId])
 
   // Ensure audio context is set up (called on-demand before playing)
   const ensureAudioSetup = useCallback(async () => {
+    if (typeof window !== "undefined" && window.location.search.includes("readerdebug")) {
+      console.log(`[readerdebug/setup] ensureAudioSetup called, audioLang=${audioLang}, cached=${!!audioSetupPromise.current}`)
+    }
     if (!audioLang) return // Audio disabled — no language has timed audio
     if (audioSetupPromise.current) return audioSetupPromise.current
 
@@ -588,6 +632,10 @@ export default function StoryReaderIsland({
             neededBooks.add(p.book)
           }
         }
+      }
+
+      if (typeof window !== "undefined" && window.location.search.includes("readerdebug")) {
+        console.log(`[readerdebug/setup] chapterRefs:`, [...chapterRefs.entries()])
       }
 
       // Resolve real playable audio for every needed chapter via the SAME
@@ -801,7 +849,20 @@ export default function StoryReaderIsland({
         audioUrl: primaryUrl,
         verseEntries,
       })
-    })()
+    })().catch((e) => {
+      // audioSetupPromise.current caches whatever this IIFE returns —
+      // without this, an exception here (this whole block had no error
+      // handling before) would cache a REJECTED promise forever: every
+      // later click just replays that same rejected promise (handled only
+      // by handleSectionClick's un-caught `.then()`), so every click after
+      // the first failure produces literally no console output at all,
+      // looking exactly like "clicking does nothing" — confirmed as the
+      // likely cause of a real bug report, 2026-09-16. Logging it AND
+      // clearing the cache makes the next click retry instead of
+      // replaying the same silent failure forever.
+      console.error("[StoryReaderIsland] ensureAudioSetup failed:", e)
+      audioSetupPromise.current = null
+    })
 
     return audioSetupPromise.current
   }, [audioLang, templateName, markdown, producedContent, storyId, producedStories])
@@ -833,6 +894,9 @@ export default function StoryReaderIsland({
   const storyTitle = primaryProduced?.title || primaryParsed.title || ""
 
   const handleSectionClick = (sectionIndex: number) => {
+    if (typeof window !== "undefined" && window.location.search.includes("readerdebug")) {
+      console.log(`[readerdebug/click] handleSectionClick(${sectionIndex}), audioLang=${audioLang}`)
+    }
     if (!audioLang) return // Audio disabled
     unlockAudio()
     $audioPageStory.set(`${templateName}/${categoryId}/${storyId}`)

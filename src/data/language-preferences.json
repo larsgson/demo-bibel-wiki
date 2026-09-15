@@ -1,4 +1,5 @@
 {
   "eng": { "preferredFileset": "ENGBSBHAY" },
-  "swe": { "preferredFileset": "SWESFV" }
+  "swe": { "preferredFileset": "SWESFV" },
+  "fra": { "preferredFileset": "FRNTLS" }
 }
