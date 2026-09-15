@@ -217,6 +217,20 @@ export interface FilesetEntry {
   a?: string[] // audio fileset ids
   t?: string // text fileset id
   v11n?: string // versification scheme
+  /** Present when this fileset's AUDIO isn't a real DBT edition at all —
+   *  it looks like one (has an `a` id, sits in `filesets[]` normally) but
+   *  that id 404s against the real DBT API; the real audio comes from
+   *  `source` instead (currently always "helloao"). See the module doc
+   *  comment's "helloAO-backed editions" section — this is the SAME case
+   *  that comment describes for a preferredFileset id absent from
+   *  `filesets[]` entirely, except media.json has since been backfilled to
+   *  carry it directly on the normal entry instead (confirmed live for
+   *  "ENGBSBHAY", 2026-09-16) — resolveChapterAudioUrl must check both. */
+  audioSource?: { source: "helloao"; translation?: string; id?: string; reader?: string }
+  /** Same idea as audioSource, for TEXT — not consumed by this file (audio-
+   *  only), kept here only so callers reading FilesetEntry directly don't
+   *  need a second, incompatible type. */
+  textSource?: { source: "helloao"; id?: string; verified?: boolean }
 }
 
 export interface CanonMedia {
@@ -482,18 +496,31 @@ export async function resolveChapterAudioUrl(
     })
   }
 
-  // 0. A configured preferred fileset that isn't a real catalog entry at
-  //    all yet — check whether it's a helloAO-backed edition (see the
-  //    module doc comment) before falling through to the normal tiers.
-  //    Checked first since an explicit preference should win outright
-  //    once it resolves; a harmless one-request no-op (404) for every
-  //    language without this kind of override.
-  if (preferred && !canonMedia.filesets.some((f) => f.id === preferred)) {
-    const src = await loadHelloaoSource(canon, iso, preferred)
-    if (debug) console.log(`[readerdebug/audio] helloAO sidecar for ${preferred}:`, src)
-    const translationId = src?.audio?.translation ?? src?.audio?.id
-    if (src?.audio?.source === "helloao" && translationId && src.audio.reader) {
-      const chapterAudio = await fetchHelloaoChapterAudio(translationId, src.audio.reader, bookCode, chapter)
+  // 0. A configured preferred fileset whose real audio isn't a DBT edition
+  //    at all — checked first since an explicit preference should win
+  //    outright once it resolves; a harmless no-op for every language
+  //    without this kind of override. Two ways this shows up:
+  //      (a) the fileset IS a normal catalog entry now, but carries an
+  //          inline `audioSource` field marking its real source —
+  //          media.json's own backfill of what used to only be
+  //          discoverable via the sidecar below (confirmed live for
+  //          "ENGBSBHAY", 2026-09-16: it started appearing directly in
+  //          filesets[], and this tier hadn't been taught to check that
+  //          yet, so it fell through to tier 3 below and 404'd trying to
+  //          use "ENGBSBHAY" as if it were a real DBT fileset id).
+  //      (b) the fileset isn't in the catalog at all yet — the sidecar
+  //          (`align/<canon>/<iso>/<id>/_source.json`) is the only way to
+  //          find it (media.json not backfilled for this edition yet).
+  if (preferred) {
+    const preferredFileset = canonMedia.filesets.find((f) => f.id === preferred)
+    const inline = preferredFileset?.audioSource
+    const sidecar = inline ? null : await loadHelloaoSource(canon, iso, preferred)
+    if (debug && sidecar) console.log(`[readerdebug/audio] helloAO sidecar for ${preferred}:`, sidecar)
+    const translationId = inline?.translation ?? inline?.id ?? sidecar?.audio?.translation ?? sidecar?.audio?.id
+    const reader = inline?.reader ?? sidecar?.audio?.reader
+    const isHelloao = inline?.source === "helloao" || sidecar?.audio?.source === "helloao"
+    if (isHelloao && translationId && reader) {
+      const chapterAudio = await fetchHelloaoChapterAudio(translationId, reader, bookCode, chapter)
       if (debug) console.log(`[readerdebug/audio] helloAO chapter fetch:`, chapterAudio)
       if (chapterAudio) {
         return { url: chapterAudio.url, filesetId: preferred, source: "helloao", verseStarts: chapterAudio.verseStarts }
@@ -524,7 +551,12 @@ export async function resolveChapterAudioUrl(
   }
 
   // 3. dbt-proxy (needs DBT_API_KEY) — per audio fileset id.
-  const audioFilesetIds = filesets.flatMap((f) => f.a ?? [])
+  // Skip filesets media.json itself already marked non-DBT (audioSource
+  // set) — trying their "a" id against the real DBT API is a guaranteed
+  // 404 (see tier 0's comment); tier 0 above already tried the preferred
+  // one directly, so this only skips re-trying the SAME known-bad id (or
+  // a different non-preferred helloAO-backed edition) here.
+  const audioFilesetIds = filesets.filter((f) => !f.audioSource).flatMap((f) => f.a ?? [])
   for (const fileset of audioFilesetIds) {
     const url = await fetchDbtAudioUrl(fileset, bookCode, chapter)
     if (url) {
