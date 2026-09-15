@@ -31,13 +31,12 @@
  *     (only present for the 17 ts-desktop languages — see doc/obs-media.md,
  *     the standard layout's manifest title is always the fixed English
  *     string "Open Bible Stories", never translated).
- *   - `align/obs/<iso>/<storyId>_timing.json` — audio-sync's per-story,
- *     per-segment alignment, published separately from media.json (a
- *     language can have produced audio before its timing is published
- *     here) — flat array of `{story, segment, timestamp, score, source}`
- *     points, one per segment boundary. Paired up into [start, end] ranges
- *     by loadObsProducedTiming below; check media.json's own audio_url
- *     before assuming this exists.
+ *   - `align/obs/<raw_iso>/<storyId>_timing.json` — audio-sync's own live
+ *     CDN, fetched directly (bibles publishes no timing file of its own
+ *     for OBS as of 2026-09-14 — see loadObsProducedTiming's comment for
+ *     the response shape and why `raw_iso` isn't always the same as this
+ *     module's other `iso` params). Check media.json's own `timingStories`
+ *     before assuming this exists for a given story.
  *
  * media.json exists unconditionally for every catalog-obs-index.json
  * entry (both "t" and "at") — no staging-pipeline dependency, per the doc.
@@ -162,39 +161,70 @@ export function loadObsProducedAudioBlobUrl(iso: string, storyId: string, audioU
   return p
 }
 
-interface ObsTimingPoint {
-  story: string
-  segment: number
-  timestamp: number
-  score?: number
-  source?: string
+/**
+ * door43's OWN raw OBS directory name, for the 36 of 214 languages it tags
+ * with a 2-letter ISO 639-1 code instead of 3-letter 639-3 — needed ONLY
+ * for the align/obs timing URL below. Every OTHER OBS endpoint in this
+ * module (catalog/obs-index.json, obs/<iso>/media.json) is normalized to
+ * 639-3 server-side by bibles itself, so callers never need this — but
+ * audio-sync's own alignment CDN mirrors door43's raw directory names
+ * as-is, unnormalized, so the timing URL specifically needs the ORIGINAL
+ * code. Inverted from bibles' own `iso639_1_to_3` table
+ * (data/obs-iso-639-1.toml in bcv-commons/bibles) — small and rarely
+ * changing (last touched 2026-09-02), so vendored here rather than
+ * fetched live. Missing here just means the language's own iso already
+ * IS its raw code (the other 178 of 214).
+ */
+const OBS_RAW_ISO: Record<string, string> = {
+  amh: "am", arb: "ar", asm: "as", ben: "bn", eng: "en", spa: "es",
+  pes: "fa", fra: "fr", guj: "gu", hau: "ha", hin: "hi", hrv: "hr",
+  hun: "hu", ind: "id", kaz: "kk", kan: "kn", lao: "lo", mal: "ml",
+  mar: "mr", npi: "ne", ory: "or", pan: "pa", rus: "ru", snd: "sd",
+  swh: "sw", tam: "ta", tel: "te", tgk: "tg", tuk: "tk", tgl: "tl",
+  tur: "tr", ukr: "uk", urd: "ur", uzn: "uz", vie: "vi", cmn: "zh",
 }
 
 const producedTimingCache = new Map<string, Promise<ObsProducedTiming | null>>()
 
 /**
- * Per-story produced-audio segment timing from `align/obs/<iso>/
- * <storyId>_timing.json` — a flat array of segment-boundary timestamps
- * (one point per segment start), paired here into [start, end] ranges.
- * The last segment has no following point to bound it, so its range
- * collapses to [start, start] — StoryReaderIsland's zero-duration handling
- * (same fallback the reconstructed-audio path already uses) extends it
- * from there rather than this module guessing a duration.
+ * Per-story produced-audio segment timing, straight from audio-sync's own
+ * CDN via a pure formula — `align/obs/<raw_iso>/<storyId>_timing.json`.
+ * Redesigned 2026-09-14 (see doc/dbt-timing.md / doc/obs-media.md in
+ * bcv-commons/bibles): bibles no longer republishes a merged/converted
+ * timing file for OBS at all — this fetches the SAME real endpoint
+ * audio-sync itself serves.
+ *
+ * Response shape (unchanged by bibles, straight passthrough):
+ * `{"id": "<iso> story <NN>", "pos": [<segment start seconds>, ...],
+ * "score": [...]}` — `pos` is index-aligned to segment order starting at
+ * segment 1. Paired here into [start, end] ranges: a segment's end is the
+ * next one's start; the LAST segment has no following point to bound it,
+ * so its range collapses to [start, start] — StoryReaderIsland's
+ * zero-duration handling (same fallback the reconstructed-audio path
+ * already uses) extends it from there rather than this module guessing a
+ * duration.
+ *
+ * (Older shape, retired the same day: a flat array of
+ * `{story, segment, timestamp, score, source}` points — audio-sync's own
+ * raw output, which bibles used to convert into a merged per-language
+ * file before retiring that entirely. Not handled here since the CDN
+ * itself no longer serves it at this path.)
  */
 export function loadObsProducedTiming(iso: string, storyId: string): Promise<ObsProducedTiming | null> {
   const key = `${iso}/${storyId}`
   const cached = producedTimingCache.get(key)
   if (cached) return cached
-  const p = fetch(pkfUrl(`/align/obs/${iso}/${storyId}_timing.json`))
-    .then((r) => (r.ok ? (r.json() as Promise<ObsTimingPoint[]>) : null))
-    .then((points) => {
-      if (!points || points.length === 0) return null
-      const sorted = [...points].sort((a, b) => a.segment - b.segment)
+  const rawIso = OBS_RAW_ISO[iso] ?? iso
+  const p = fetch(pkfUrl(`/align/obs/${rawIso}/${storyId}_timing.json`))
+    .then((r) => (r.ok ? (r.json() as Promise<{ pos?: number[] }>) : null))
+    .then((data) => {
+      if (!data?.pos || data.pos.length === 0) return null
+      const pos = data.pos
       const out: ObsProducedTiming = {}
-      for (let i = 0; i < sorted.length; i++) {
-        const start = sorted[i].timestamp
-        const end = i + 1 < sorted.length ? sorted[i + 1].timestamp : start
-        out[String(sorted[i].segment)] = [start, end]
+      for (let i = 0; i < pos.length; i++) {
+        const start = pos[i]
+        const end = i + 1 < pos.length ? pos[i + 1] : start
+        out[String(i + 1)] = [start, end]
       }
       return out
     })

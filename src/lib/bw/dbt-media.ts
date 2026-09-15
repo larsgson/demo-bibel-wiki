@@ -14,10 +14,22 @@
  * for languages whose canon sources include "contrib" (raw CDN-hosted audio,
  * no DBT key needed — see internal-docs/cdn-data-delivery-spec.md §6a).
  *
- * Source preference is keyless-first: raw (CDN file, no key) > dbt (proxy,
- * needs DBT_API_KEY). helloAO is text-only (never audio — confirmed, not a
- * temporary gap), so it isn't part of the audio chain; see §6a of the
- * delivery spec.
+ * Source preference: PKF (Scripture Earth's own per-language audio, when
+ * that language has it) > keyless raw (CDN file, no key) > dbt (proxy,
+ * needs DBT_API_KEY). helloAO is text-only in general (never audio —
+ * confirmed, not a temporary gap), so it isn't part of the normal audio
+ * chain; see §6a of the delivery spec. (One real, explicit exception to
+ * that — not a general helloAO tier — is documented further down.)
+ *
+ * resolveChapterAudioUrl is the ONE shared resolver for "real playable
+ * audio for this iso+book+chapter" — used directly by the main reader
+ * (Reader.svelte) and, since 2026-09-15, by the story-template reader too
+ * (StoryReaderIsland.tsx, via ensureAudioSetup) — previously that path
+ * kept its own separate, duplicate resolution logic (including a broken
+ * helloAO-guessing tier that queried a DBT fileset id as if it were a
+ * helloAO translation id, which could never actually succeed) that had
+ * silently drifted out of sync with this one. Unified so a fix here (like
+ * the helloAO-backed-edition case below) never needs making twice again.
  *
  * WITHIN whichever tier actually has a fileset, ../../data/language-
  * preferences.json's `preferredFileset` (iso -> base fileset id, e.g.
@@ -180,7 +192,43 @@ export function loadBookTiming(iso: string, bookCode: string): Promise<BookTimin
   return p
 }
 
-// ── Audio URL resolution (whole-chapter, keyless-first) ─────────────────────
+// ── Audio URL resolution (whole-chapter) ─────────────────────────────────────
+
+interface PkfAudioItem {
+  bookCode?: string
+  chapter?: number
+  url?: string
+}
+
+const pkfAudioMediaCache = new Map<string, Promise<PkfAudioItem[] | null>>()
+
+/**
+ * Scripture Earth's own per-language audio, when that language has it —
+ * checked first, ahead of raw/dbt, matching the priority order every other
+ * "does language X have audio" decision in this app already uses (PKF >
+ * everything else). "eng" never has PKF data (not a Scripture Earth
+ * language), skipped outright rather than spending a request finding that
+ * out every time — same optimization StoryReaderIsland's own prior copy of
+ * this check had.
+ */
+function loadPkfAudioItems(iso: string): Promise<PkfAudioItem[] | null> {
+  const cached = pkfAudioMediaCache.get(iso)
+  if (cached) return cached
+  const p = iso === "eng"
+    ? Promise.resolve(null)
+    : fetch(pkfUrl(`/pkf/${iso}/info.json`))
+        .then((r) => (r.ok ? r.json() : null))
+        .then((info) => info?.media?.audio?.items ?? null)
+        .catch(() => null)
+  pkfAudioMediaCache.set(iso, p)
+  return p
+}
+
+async function pkfAudioUrl(iso: string, bookCode: string, chapter: number): Promise<string | null> {
+  const items = await loadPkfAudioItems(iso)
+  const item = items?.find((i) => i.bookCode === bookCode && i.chapter === chapter)
+  return item?.url ?? null
+}
 
 async function rawAudioUrl(iso: string, filesetId: string, bookCode: string, chapter: number): Promise<string | null> {
   const url = pkfUrl(`/audio/${iso}/${filesetId}/${bookCode}_${chapter}.mp3`)
@@ -199,7 +247,7 @@ export interface ResolvedAudio {
    *  source "dbt": raw/contrib fileset ids follow a different, non-DBT
    *  naming scheme and aren't guaranteed to appear in the DBT timing file). */
   filesetId: string
-  source: "raw" | "dbt" | "helloao"
+  source: "pkf" | "raw" | "dbt" | "helloao"
   /** Only for source "helloao" — real per-verse start times (seconds),
    *  index 0 = verse 1, straight from helloAO's own thisChapterAudioTimings
    *  (NOT audio-sync's; a completely separate timing source, fetched
@@ -342,6 +390,14 @@ export async function resolveChapterAudioUrl(
   const preferred = preferredFilesetId(iso, canon)
   const filesets = orderedByPreference(canonMedia.filesets, preferred)
 
+  const debug = typeof window !== "undefined" && window.location.search.includes("readerdebug")
+  if (debug) {
+    console.log(`[readerdebug/audio] ${iso} ${bookCode} ${chapter}`, {
+      canon, preferred, preferredInCatalog: preferred ? canonMedia.filesets.some((f) => f.id === preferred) : null,
+      sources: [...sources], filesetIds: canonMedia.filesets.map((f) => f.id),
+    })
+  }
+
   // 0. A configured preferred fileset that isn't a real catalog entry at
   //    all yet — check whether it's a helloAO-backed edition (see the
   //    module doc comment) before falling through to the normal tiers.
@@ -350,30 +406,49 @@ export async function resolveChapterAudioUrl(
   //    language without this kind of override.
   if (preferred && !canonMedia.filesets.some((f) => f.id === preferred)) {
     const src = await loadHelloaoSource(canon, iso, preferred)
+    if (debug) console.log(`[readerdebug/audio] helloAO sidecar for ${preferred}:`, src)
     const translationId = src?.audio?.translation ?? src?.audio?.id
     if (src?.audio?.source === "helloao" && translationId && src.audio.reader) {
       const chapterAudio = await fetchHelloaoChapterAudio(translationId, src.audio.reader, bookCode, chapter)
+      if (debug) console.log(`[readerdebug/audio] helloAO chapter fetch:`, chapterAudio)
       if (chapterAudio) {
         return { url: chapterAudio.url, filesetId: preferred, source: "helloao", verseStarts: chapterAudio.verseStarts }
       }
     }
   }
 
-  // 1. Raw/contrib — direct CDN file, no key, tried against each fileset id
+  // 1. PKF (Scripture Earth) — real per-language audio, when this language
+  //    has it. Checked after the explicit-preference override above (that
+  //    should always win outright once configured) but ahead of raw/dbt,
+  //    matching this app's general "pkf > helloao > dbt" default priority.
+  const pkfUrlResult = await pkfAudioUrl(iso, bookCode, chapter)
+  if (pkfUrlResult) {
+    if (debug) console.log(`[readerdebug/audio] resolved via pkf:`, pkfUrlResult)
+    return { url: pkfUrlResult, filesetId: "", source: "pkf" }
+  }
+
+  // 2. Raw/contrib — direct CDN file, no key, tried against each fileset id
   //    (the /audio/ path segment matches the SAB fileset id, e.g. "NBS").
   if (sources.has("contrib")) {
     for (const f of filesets) {
       const url = await rawAudioUrl(iso, f.id, bookCode, chapter)
-      if (url) return { url, filesetId: f.id, source: "raw" }
+      if (url) {
+        if (debug) console.log(`[readerdebug/audio] resolved via raw:`, f.id, url)
+        return { url, filesetId: f.id, source: "raw" }
+      }
     }
   }
 
-  // 2. dbt-proxy (needs DBT_API_KEY) — per audio fileset id.
+  // 3. dbt-proxy (needs DBT_API_KEY) — per audio fileset id.
   const audioFilesetIds = filesets.flatMap((f) => f.a ?? [])
   for (const fileset of audioFilesetIds) {
     const url = await fetchDbtAudioUrl(fileset, bookCode, chapter)
-    if (url) return { url, filesetId: fileset, source: "dbt" }
+    if (url) {
+      if (debug) console.log(`[readerdebug/audio] resolved via dbt:`, fileset, url)
+      return { url, filesetId: fileset, source: "dbt" }
+    }
   }
 
+  if (debug) console.log(`[readerdebug/audio] no audio resolved at all`)
   return null
 }
