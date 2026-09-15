@@ -1,10 +1,19 @@
 /**
  * Media availability + audio resolution from the `cdn.bibel.wiki` /dbt tree.
  *
- * Three CDN documents, in order of use:
+ * Four CDN documents, in order of use:
+ *   - `/dbt/<iso>/availability.json` — per-language rollup (bibles' join of
+ *     their other catalogs — doc/language-availability.md): real
+ *     verse-synced timing (`timingBooks`), text/audio presence, deduped
+ *     cross-source editions. availabilityFor's primary source — covers
+ *     1,970 of ~2,435 known languages as of 2026-09-15 (notably not yet
+ *     Spanish), falling back to media-index.json below when absent.
  *   - `/dbt/_app/media-index.json` — global, compact, ~1,950 languages: which
- *     canons have audio/timing and from which source(s). One fetch, drives
- *     picker badges.
+ *     canons have audio (and, separately, text) and from which source(s).
+ *     One fetch, drives picker badges. NO real timing signal at all (its
+ *     "m" field is just "a" or "at" — audio vs. audio+text) — see
+ *     decodeCanon's comment for a bug this caused when an earlier version
+ *     of this code treated "t" here as a timing flag.
  *   - `/dbt/<iso>/media.json`      — per-language detail: every fileset per
  *     canon (translation id, text-fileset id, audio-fileset ids, sources).
  *   - `/dbt/<iso>/timing/<BOOK>.json` — per-book verse timing, keyed by audio
@@ -85,6 +94,18 @@ function parseSources(s: string | undefined): MediaSource[] {
 
 export interface CanonAvailability {
   audio: boolean
+  /** Real, verse-synced timing exists for at least one book of this canon.
+   *  Only ever true when sourced from /dbt/<iso>/availability.json's real
+   *  `timingBooks` count (see availabilityFor below) — the bulk media-
+   *  index fallback has no timing signal at all (its "m" field is just
+   *  "a" or "at", audio vs. audio+text; a previous version of this code
+   *  misread the "t" — text — as a timing flag, so a text-only edition
+   *  with no real audio timing could get wrongly treated as "has timed
+   *  audio" wherever this field was checked — confirmed live, 2026-09-15,
+   *  as the likely cause of a real "text-only language wrongly offered
+   *  for audio" bug report). Honestly false from that fallback rather
+   *  than continuing that guess.
+   */
   timing: boolean
   sources: MediaSource[]
 }
@@ -103,12 +124,15 @@ interface RawMediaIndex { time: string; l: Record<string, RawLangEntry> }
 function decodeCanon(c: RawCanonEntry | undefined): CanonAvailability | undefined {
   if (!c) return undefined
   const media = c.m ?? ""
-  return { audio: media.includes("a"), timing: media.includes("t"), sources: parseSources(c.s) }
+  return { audio: media.includes("a"), timing: false, sources: parseSources(c.s) }
 }
 
 let mediaIndexPromise: Promise<Map<string, LanguageAvailability>> | null = null
 
-/** The global availability index (~1,950 languages), fetched once. */
+/** The global availability index (~1,950 languages), fetched once. Used as
+ *  availabilityFor's fallback for languages availability.json hasn't been
+ *  published for yet (it covers 1,970 of ~2,435 known languages as of
+ *  2026-09-15 — notably NOT yet Spanish, so this fallback still matters). */
 export function loadMediaIndex(): Promise<Map<string, LanguageAvailability>> {
   if (mediaIndexPromise) return mediaIndexPromise
   mediaIndexPromise = fetch(pkfUrl("/dbt/_app/media-index.json"))
@@ -124,10 +148,65 @@ export function loadMediaIndex(): Promise<Map<string, LanguageAvailability>> {
   return mediaIndexPromise
 }
 
-/** Availability for one language from the already-loaded global index. */
+// ── Per-language availability (/dbt/<iso>/availability.json) ────────────────
+
+interface RawAvailCanon {
+  sources?: string
+  media?: string
+  audioBooks?: number
+  timingBooks?: number
+}
+interface RawAvailability {
+  schema_version: number
+  iso: string
+  bible?: { nt?: RawAvailCanon; ot?: RawAvailCanon; ntp?: RawAvailCanon; otp?: RawAvailCanon }
+}
+
+function decodeAvailCanon(c: RawAvailCanon | undefined): CanonAvailability | undefined {
+  if (!c) return undefined
+  const media = c.media ?? ""
+  return {
+    audio: media.includes("a"),
+    timing: !!(c.timingBooks && c.timingBooks > 0),
+    sources: parseSources(c.sources),
+  }
+}
+
+const availabilityCache = new Map<string, Promise<LanguageAvailability | null>>()
+
+/**
+ * Availability for one language — bibles' per-language rollup
+ * (doc/language-availability.md), correctly distinguishing real
+ * verse-synced timing (`timingBooks`) from mere text+audio presence,
+ * unlike the bulk media-index (see decodeCanon's comment). Falls back to
+ * the bulk index (loadMediaIndex) when this language has no
+ * availability.json yet — not every known language is covered there.
+ */
 export async function availabilityFor(iso: string): Promise<LanguageAvailability | null> {
-  const idx = await loadMediaIndex()
-  return idx.get(iso) ?? null
+  const cached = availabilityCache.get(iso)
+  if (cached) return cached
+  const p = (async () => {
+    try {
+      const resp = await fetch(pkfUrl(`/dbt/${iso}/availability.json`))
+      if (resp.ok) {
+        const raw: RawAvailability = await resp.json()
+        const names = await loadMediaIndex()
+        const known = names.get(iso)
+        return {
+          name: known?.name ?? iso.toUpperCase(),
+          vernacular: known?.vernacular,
+          nt: decodeAvailCanon(raw.bible?.nt),
+          ot: decodeAvailCanon(raw.bible?.ot),
+        }
+      }
+    } catch {
+      // fall through to the bulk-index fallback below
+    }
+    const idx = await loadMediaIndex()
+    return idx.get(iso) ?? null
+  })()
+  availabilityCache.set(iso, p)
+  return p
 }
 
 // ── Per-language media detail (/dbt/<iso>/media.json) ───────────────────────

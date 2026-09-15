@@ -16,6 +16,7 @@ data/source-catalog.json
 public/ALL-langs-data/
 public/ALL-langs-compact.json
 public/ALL-langs-mini.json
+public/language-names-catalog.json
 public/templates/*
 # ...except the "test" template's video-scene timing JSON: small, text,
 # and needed at build time + as a runtime fetch — see loadVideoManifest().

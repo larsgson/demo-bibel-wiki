@@ -3,20 +3,29 @@
  *
  * Master list = union of:
  *   - bibel-wiki's ALL-langs catalog (/ALL-langs-compact.json, ~2137 languages,
- *     with English name + vernacular endonym + category)
+ *     source category + testament/timing detail)
  *   - the .pkf list (config/pkf-langs.json, 588 languages with full offline text
- *     + audio — the priority tier)
+ *     + audio — the priority tier), enriched with Scripture-Earth's own
+ *     media/codex flags from the live PKF manifest
+ *   - bcv-commons/bibles' live media index (/dbt/_app/media-index.json) for
+ *     DBT/Bible Brain audio/timing availability
  *
- * The union is longer than either source (39 .pkf languages are not in the
- * ALL-langs catalog). For those, the live PKF manifest's own `nm`/`v` fields
- * (§3 of the CDN client-data spec) supply the display name — an ISO-uppercase
- * fallback is used only if even the manifest lacks the language.
+ * Display names (English + vernacular) come from a single source now:
+ * bibles' canonical iso -> {name, vernacular} catalog
+ * (/dbt/_app/language-names.json, doc/language-names.md) — see
+ * language-name-catalog.ts. That catalog is itself a union of DBT/PKF/OBS
+ * name sources (2,435 languages as of 2026-09-15, broader than any single
+ * source above), published specifically to replace the per-app fallback
+ * logic this file used to maintain — a real language (ivv/Ivatan) had a
+ * name in the PKF manifest that this file's old logic hadn't been taught
+ * to check, silently falling back to the raw ISO code.
  */
 
 import pkfLangs from "../../../config/pkf-langs.json"
 import { isStudyLanguage } from "./study-languages"
 import { pkfUrl } from "./pkf-url"
 import { loadMediaIndex } from "./dbt-media"
+import { nameFromCatalog, type LanguageNameCatalog } from "./language-name-catalog"
 
 export interface PickerLanguage {
   iso: string
@@ -40,7 +49,7 @@ export interface PickerLanguage {
   codex?: string
 }
 
-interface PkfManifestEntry {
+export interface PkfManifestEntry {
   nm: string
   v?: string
   media: string
@@ -50,9 +59,10 @@ interface PkfManifestEntry {
 let pkfManifestPromise: Promise<Map<string, PkfManifestEntry>> | null = null
 
 /** Live `/pkf/manifest.json`, normalized to an iso→entry map. Cached for the
- *  session. Backs both `loadLocalPkfSet()` (dev on-disk probing) and the
- *  picker enrichment step below (names + Scripture-Earth media/codex flags). */
-function loadPkfManifest(): Promise<Map<string, PkfManifestEntry>> {
+ *  session. Backs `loadLocalPkfSet()` (dev on-disk probing) and the picker
+ *  enrichment step below (Scripture-Earth media/codex flags — NOT names
+ *  anymore, since 2026-09-15: see language-name-catalog.ts). */
+export function loadPkfManifest(): Promise<Map<string, PkfManifestEntry>> {
   if (pkfManifestPromise) return pkfManifestPromise
   pkfManifestPromise = (async () => {
     try {
@@ -118,19 +128,23 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
 
   const byIso = new Map<string, PickerLanguage>()
 
-  // 1. ALL-langs catalog → names, vernaculars, categories
+  // 1. ALL-langs catalog → categories only now (names come from bibles'
+  // canonical catalog in step 3 below — see its comment). Still worth this
+  // pass on its own since `category` (e.g. "with-timecode") isn't in that
+  // catalog at all, and this seeds entries for every ALL-langs-known iso
+  // regardless of whether it happened to have a usable name there.
   try {
     const resp = await fetch("/ALL-langs-compact.json")
     const data = await resp.json()
     if (data.canons) {
       for (const categories of Object.values(data.canons) as any[]) {
         for (const [catName, langs] of Object.entries(categories) as any[]) {
-          for (const [iso, info] of Object.entries(langs) as any[]) {
-            if (!info?.n || byIso.has(iso)) continue
+          for (const iso of Object.keys(langs)) {
+            if (byIso.has(iso)) continue
             byIso.set(iso, {
               iso,
-              name: info.n,
-              vernacular: info.v || info.n,
+              name: iso.toUpperCase(),
+              vernacular: iso.toUpperCase(),
               pkf: PKF_SET.has(iso),
               study: isStudyLanguage(iso),
               category: catName,
@@ -143,7 +157,8 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
     console.warn("Failed to load ALL-langs catalog:", e)
   }
 
-  // 2. .pkf languages not in the catalog (the ~39) → add with ISO fallback name
+  // 2. .pkf languages not in the catalog (the ~39) → add (name filled by
+  // step 3 below).
   for (const iso of PKF_SET) {
     if (byIso.has(iso)) continue
     byIso.set(iso, {
@@ -155,11 +170,48 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
     })
   }
 
-  // 3. Live PKF manifest (/pkf/manifest.json) → authoritative names for .pkf
-  // languages missing from ALL-langs (replaces the ISO-uppercase fallback from
-  // step 2), plus Scripture-Earth's own media/codex flags. `media` here is
-  // SE-scope only (spec §3) — OR'd with the DBT index in step 4 below for the
-  // full picture, never overwritten.
+  // 3. bcv-commons/bibles' canonical iso -> {name, vernacular} catalog
+  // (doc/language-names.md; see language-name-catalog.ts) — unions
+  // DBT/PKF/OBS name sources, so this both fills in every ISO-uppercase
+  // placeholder set above AND adds languages neither ALL-langs nor the
+  // static .pkf list know about at all (e.g. the ~87 OBS-only languages
+  // the catalog unions in) — real additional coverage for "pick a
+  // language" UIs like this one, which is exactly what that file is
+  // published for. Replaces this step's old live-PKF-manifest name
+  // resolution (still fetched for its audio/timing/codex fields below,
+  // just no longer for names).
+  try {
+    const resp = await fetch(pkfUrl("/dbt/_app/language-names.json"))
+    if (resp.ok) {
+      const catalog: LanguageNameCatalog = await resp.json()
+      for (const iso of Object.keys(catalog.l)) {
+        const resolved = nameFromCatalog(catalog, iso)
+        if (!resolved) continue
+        const entry = byIso.get(iso)
+        if (entry) {
+          entry.name = resolved.n
+          entry.vernacular = resolved.v
+        } else {
+          byIso.set(iso, {
+            iso,
+            name: resolved.n,
+            vernacular: resolved.v,
+            pkf: PKF_SET.has(iso),
+            study: isStudyLanguage(iso),
+          })
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to load bibles' language-names catalog:", e)
+  }
+
+  // 4. Live PKF manifest (/pkf/manifest.json) → Scripture-Earth's own
+  // media/codex flags for .pkf languages. `media` here is SE-scope only
+  // (spec §3) — OR'd with the DBT index in step 5 below for the full
+  // picture, never overwritten. Names no longer come from here (step 3
+  // above already resolved them, from the same manifest data bibles'
+  // catalog itself draws on — see doc/language-names.md's "Sources").
   try {
     const pkfManifest = await loadPkfManifest()
     for (const [iso, e] of pkfManifest) {
@@ -167,8 +219,6 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
       const seTiming = e.media.includes("t")
       const entry = byIso.get(iso)
       if (entry) {
-        if (entry.name === iso.toUpperCase()) entry.name = e.nm
-        if (entry.vernacular === iso.toUpperCase()) entry.vernacular = e.v || e.nm
         entry.audio = !!(entry.audio || seAudio)
         entry.timing = !!(entry.timing || seTiming)
         entry.codex = e.codex || entry.codex
@@ -189,7 +239,7 @@ export async function buildPickerLanguages(): Promise<PickerLanguage[]> {
     console.warn("Failed to load PKF manifest for picker enrichment:", e)
   }
 
-  // 4. Live CDN media index (/dbt/_app/media-index.json) → DBT/Bible Brain
+  // 5. Live CDN media index (/dbt/_app/media-index.json) → DBT/Bible Brain
   // audio/timing availability per language, independent of (and often
   // broader than) the .pkf list. OR'd with whatever step 3 already found —
   // a language can have SE audio, DBT audio, or both.

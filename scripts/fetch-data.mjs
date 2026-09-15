@@ -211,6 +211,25 @@ if (existsSync(join(PUBLIC_DIR, "ALL-langs-compact.json")) && existsSync(join(PU
   }
 }
 
+// bibles' canonical iso -> {name, vernacular} catalog (doc/language-
+// names.md), unioning DBT/PKF/OBS name sources — published 2026-09-15
+// specifically to replace the multi-tier local name-fallback logic this
+// app used to maintain (src/lib/bw/language-name-catalog.ts). Baked into
+// public/ as a build-time snapshot for languageNames.ts's synchronous,
+// server-side use (page titles); the client-side consumers (language-
+// store.ts, language-list.ts) fetch the live endpoint directly instead,
+// same freshness tradeoff ALL-langs-compact.json above already accepts.
+if (existsSync(join(PUBLIC_DIR, "language-names-catalog.json"))) {
+  console.log(`Language-names catalog already present at ${PUBLIC_DIR}/ — skipping.`)
+} else {
+  console.log(`\n── Fetching language-names catalog from cdn.bibel.wiki ──\n`)
+  const url = "https://cdn.bibel.wiki/dbt/_app/language-names.json"
+  const r = await fetch(url)
+  if (!r.ok) { console.error(`Failed to fetch language-names-catalog.json from ${url}: ${r.status}`); process.exit(1) }
+  writeFileSync(join(PUBLIC_DIR, "language-names-catalog.json"), await r.text())
+  console.log(`  ✓ language-names-catalog.json (from cdn.bibel.wiki)`)
+}
+
 // ── 3. Source catalog (per-language text-provider resolution) ──
 //
 // cdn.bibel.wiki/catalog/overlap.json computes, build-side, which

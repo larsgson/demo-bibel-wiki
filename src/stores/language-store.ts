@@ -3,6 +3,8 @@ import languagePreferences from "../data/language-preferences.json"
 import { setIso } from "./iso-store"
 import { isStudyLanguage } from "../lib/bw/study-languages"
 import { loadLanguageMedia, type CanonMedia } from "../lib/bw/dbt-media"
+import { nameFromCatalog, type LanguageNameCatalog } from "../lib/bw/language-name-catalog"
+import { pkfUrl } from "../lib/bw/pkf-url"
 
 // Always initialize with defaults to match server-rendered HTML.
 // Actual values are hydrated from URL in initLanguageFromUrl().
@@ -182,37 +184,50 @@ export async function loadLanguageNames() {
   if (languageNamesLoaded) return
   languageNamesLoaded = true
   try {
-    const resp = await fetch("/ALL-langs-compact.json")
-    const data = await resp.json()
-    const names: Record<string, { n: string; v: string }> = {}
+    // Which isos are audio-only in ALL-langs-compact.json (DBT's own
+    // category taxonomy) — this store feeds TEXT-language pickers
+    // (PrimaryLangSelector.svelte, ParallelLeftLangSelector.svelte), so an
+    // audio-only language has no business appearing in them. This is the
+    // one thing bibles' canonical name catalog below doesn't carry (it's
+    // names only, no source/category detail), so it's still worth this
+    // fetch purely to compute the exclusion set — everything else that
+    // fetch used to also provide (the names themselves) now comes from
+    // the canonical catalog instead, which has far broader coverage.
     const audioOnlyLangs = new Set<string>()
-    if (data.canons) {
-      // First pass: collect all languages and track which are audio-only
-      const allLangs = new Map<string, { n: string; v: string }>()
-      for (const [, categories] of Object.entries(data.canons) as any[]) {
+    try {
+      const resp = await fetch("/ALL-langs-compact.json")
+      const data = await resp.json()
+      for (const categories of Object.values(data.canons ?? {}) as any[]) {
         for (const [catName, langs] of Object.entries(categories) as any[]) {
-          for (const [code, info] of Object.entries(langs) as any[]) {
-            if (info.n && !allLangs.has(code)) {
-              allLangs.set(code, { n: info.n, v: info.v || info.n })
-            }
-            if (catName === "audio-only") {
-              audioOnlyLangs.add(code)
-            }
+          if (catName !== "audio-only") continue
+          for (const code of Object.keys(langs)) {
+            const hasTextElsewhere = Object.values(data.canons).some((cats: any) =>
+              Object.entries(cats).some(([cat, ls]: any) => cat !== "audio-only" && ls[code]),
+            )
+            if (!hasTextElsewhere) audioOnlyLangs.add(code)
           }
         }
       }
-      // Only include languages that appear in a non-audio-only category
-      for (const [code, info] of allLangs) {
-        const hasText = !audioOnlyLangs.has(code) ||
-          Object.values(data.canons).some((categories: any) =>
-            Object.entries(categories).some(([cat, langs]: any) =>
-              cat !== "audio-only" && langs[code]
-            )
-          )
-        if (hasText) {
-          names[code] = info
-        }
-      }
+    } catch (e) {
+      console.warn("Failed to load ALL-langs catalog for audio-only filtering:", e)
+    }
+
+    // bcv-commons/bibles' canonical iso -> {name, vernacular} catalog
+    // (doc/language-names.md) — unions DBT/PKF/OBS name sources, so a
+    // PKF-only language like "ivv"/Ivatan (missing from ALL-langs-
+    // compact.json entirely) now resolves correctly. Replaces the old
+    // ALL-langs-only name source plus a separately-maintained live
+    // PKF-manifest merge — see language-name-catalog.ts.
+    const resp = await fetch(pkfUrl("/dbt/_app/language-names.json"))
+    const catalog: LanguageNameCatalog = resp.ok
+      ? await resp.json()
+      : { schema_version: 1, generated_at: "", count: 0, l: {} }
+
+    const names: Record<string, { n: string; v: string }> = {}
+    for (const iso of Object.keys(catalog.l)) {
+      if (audioOnlyLangs.has(iso)) continue
+      const e = nameFromCatalog(catalog, iso)
+      if (e) names[iso] = e
     }
     $languageNames.set(names)
   } catch (e) {
