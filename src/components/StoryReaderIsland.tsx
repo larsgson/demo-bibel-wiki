@@ -300,6 +300,9 @@ export default function StoryReaderIsland({
           }
         }
       }
+      if (typeof window !== "undefined" && window.location.search.includes("readerdebug")) {
+        console.log(`[readerdebug/text] refs:`, [...refs], `sections:`, tempSections.sections.length)
+      }
 
       // Real per-book timing (cdn.bibel.wiki/dbt/<iso>/timing/<BOOK>.json)
       // for at least one needed book — the authoritative ground truth
@@ -507,7 +510,10 @@ export default function StoryReaderIsland({
               textFilesetId = catalogSrc.id
             }
           }
-          await loadChapter(book, parseInt(chapter, 10), textFilesetId, lang)
+          const verses = await loadChapter(book, parseInt(chapter, 10), textFilesetId, lang)
+          if (typeof window !== "undefined" && window.location.search.includes("readerdebug")) {
+            console.log(`[readerdebug/text] loadChapter(${book}, ${chapter}, "${textFilesetId}", ${lang}) ->`, verses)
+          }
         }
       }
 
@@ -886,6 +892,9 @@ export default function StoryReaderIsland({
     const parsed = parseMarkdownIntoSections(markdown, langChapterText, localeData, engLocale, sceneBodiesForLang(lang))
     overlayProducedText(parsed.sections, producedStories[lang])
     sectionsMap[lang] = parsed.sections
+    if (typeof window !== "undefined" && window.location.search.includes("readerdebug")) {
+      console.log(`[readerdebug/render] sectionsMap[${lang}]:`, JSON.stringify(parsed.sections), `langChapterText keys:`, Object.keys(langChapterText))
+    }
   }
 
   const primaryParsed = parseMarkdownIntoSections(markdown, {}, localeData, engLocale, sceneBodiesForLang(selectedLang))

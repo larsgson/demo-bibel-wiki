@@ -23,6 +23,16 @@ const replaceBibleReferences = (
   return result
 }
 
+// Distinguishes "key resolved to a real (possibly empty) string" from "key
+// not found at all" — a story's description is very often intentionally
+// "" (e.g. DBS/locales/eng.toml's "01.11.description"), and `|| null`
+// treated that empty-but-valid resolution as a miss, leaving the literal
+// "[[t:...]]" token embedded in the section's text instead of resolving
+// to nothing. That corrupted text then blocked parseMarkdownIntoSections'
+// later "fill in real Bible text for an otherwise-empty section" step
+// (which only runs when section.text is still empty) — confirmed live,
+// 2026-09-16: a reference-only, no-image story (DBS/01/11, Isaiah 53)
+// showed no text at all because of exactly this.
 const resolveLocaleKey = (
   keyPath: string,
   localeData: Record<string, any> | null | undefined,
@@ -37,21 +47,27 @@ const resolveLocaleKey = (
     // titles elsewhere — see loadLocaleData's matching write side).
     const storyKey = `${parts[0]}.${parts[1]}`
     const verseKey = parts[2]
-    return localeData.sections?.[storyKey]?.[verseKey] || null
+    const val = localeData.sections?.[storyKey]?.[verseKey]
+    return val !== undefined ? val : null
   }
 
   if (parts.length === 3) {
     const storyKey = `${parts[0]}.${parts[1]}`
     const key = parts[2]
-    return localeData.stories?.[storyKey]?.[key] || null
+    const val = localeData.stories?.[storyKey]?.[key]
+    return val !== undefined ? val : null
   }
 
   if (parts.length === 2) {
-    return localeData.categories?.[parts[0]]?.[parts[1]] || null
+    const val = localeData.categories?.[parts[0]]?.[parts[1]]
+    return val !== undefined ? val : null
   }
 
   if (parts.length === 1) {
-    if (keyPath === "title") return localeData.bookTitle || null
+    if (keyPath === "title") {
+      const val = localeData.bookTitle
+      return val !== undefined ? val : null
+    }
   }
 
   return null
@@ -65,8 +81,9 @@ const replaceLocaleMarkers = (
   if (!text || (!localeData && !fallbackLocale)) return text
 
   return text.replace(/\[\[t:([^\]]+)\]\]/g, (fullMatch, keyPath: string) => {
-    const value = resolveLocaleKey(keyPath, localeData) || resolveLocaleKey(keyPath, fallbackLocale)
-    return value || fullMatch
+    const primary = resolveLocaleKey(keyPath, localeData)
+    const value = primary !== null ? primary : resolveLocaleKey(keyPath, fallbackLocale)
+    return value !== null ? value : fullMatch
   })
 }
 
