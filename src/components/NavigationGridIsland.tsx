@@ -168,8 +168,21 @@ export default function NavigationGridIsland({
             multi-template chooser, "/<lang>/") isn't reachable here at all
             (see netlify.toml's redirect back to this same page), so linking
             to it would just be a confusing round trip. Omit the arrow
-            entirely rather than link somewhere that bounces right back. */}
-        {!lockedTemplate && (
+            entirely rather than link somewhere that bounces right back.
+            Gated on `hydrated`, not just `lockedTemplate` alone: this page
+            is fully prerendered (SSG), so the server never knows the
+            hostname and always renders WITH the arrow — but
+            template-lock-store.ts resolves $lockedTemplate synchronously
+            at module load, before this component's first client render,
+            so without this gate the client's very first render already
+            omits the arrow, mismatching the server HTML and throwing a
+            React hydration error (#418) on every locked-subdomain category
+            page load, confirmed live 2026-09-15. Deferring the omission to
+            AFTER mount (once `hydrated` flips) keeps the first client
+            render identical to the server's, then removes the arrow a
+            frame later — same pattern this component already uses for
+            `selectedLang`-dependent output just below. */}
+        {!(hydrated && lockedTemplate) && (
           <a href={hydrated ? buildLangHref(selectedLang, "", secondaryLangs) : "/"} className="text-lg font-bold" style={{ color: "var(--text)" }}>&larr;</a>
         )}
         <h1 className="chapter-picker-title" style={{ marginBottom: 0 }}>{bookTitle}</h1>
