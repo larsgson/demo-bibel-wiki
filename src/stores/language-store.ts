@@ -184,32 +184,25 @@ export async function loadLanguageNames() {
   if (languageNamesLoaded) return
   languageNamesLoaded = true
   try {
-    // Which isos are audio-only in ALL-langs-compact.json (DBT's own
-    // category taxonomy) — this store feeds TEXT-language pickers
-    // (PrimaryLangSelector.svelte, ParallelLeftLangSelector.svelte), so an
-    // audio-only language has no business appearing in them. This is the
-    // one thing bibles' canonical name catalog below doesn't carry (it's
-    // names only, no source/category detail), so it's still worth this
-    // fetch purely to compute the exclusion set — everything else that
-    // fetch used to also provide (the names themselves) now comes from
-    // the canonical catalog instead, which has far broader coverage.
+    // bcv-commons/bibles' audio-only exclusion list (doc/audio-only.md) —
+    // this store feeds TEXT-language pickers (PrimaryLangSelector.svelte,
+    // ParallelLeftLangSelector.svelte), so a language with real audio but
+    // zero real text anywhere (DBT, PKF, helloAO, or OBS) has no business
+    // appearing in them. Published 2026-09-16 specifically to replace this
+    // exact ALL-langs-compact.json category-name-guessing this used to do
+    // (fragile: only covered DBT-known languages, and depended on that
+    // catalog's own ad hoc "audio-only" category string meaning what we
+    // assumed) — a real, checked-across-every-source signal now, same
+    // spirit as language-names.json above replacing the old name fallback.
     const audioOnlyLangs = new Set<string>()
     try {
-      const resp = await fetch("/ALL-langs-compact.json")
-      const data = await resp.json()
-      for (const categories of Object.values(data.canons ?? {}) as any[]) {
-        for (const [catName, langs] of Object.entries(categories) as any[]) {
-          if (catName !== "audio-only") continue
-          for (const code of Object.keys(langs)) {
-            const hasTextElsewhere = Object.values(data.canons).some((cats: any) =>
-              Object.entries(cats).some(([cat, ls]: any) => cat !== "audio-only" && ls[code]),
-            )
-            if (!hasTextElsewhere) audioOnlyLangs.add(code)
-          }
-        }
+      const resp = await fetch(pkfUrl("/dbt/_app/audio-only.json"))
+      if (resp.ok) {
+        const data: { audioOnly?: string[] } = await resp.json()
+        for (const iso of data.audioOnly ?? []) audioOnlyLangs.add(iso)
       }
     } catch (e) {
-      console.warn("Failed to load ALL-langs catalog for audio-only filtering:", e)
+      console.warn("Failed to load bibles' audio-only list:", e)
     }
 
     // bcv-commons/bibles' canonical iso -> {name, vernacular} catalog
