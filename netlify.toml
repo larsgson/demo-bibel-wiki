@@ -447,6 +447,106 @@
   status = 200
 
 
+# Case-hardening: lowercase (or otherwise wrong-case) template-name
+# segments, e.g. "/eng/dbs/" instead of the real on-disk/prerendered
+# "/eng/DBS/". Netlify's file serving is case-sensitive (Linux), so these
+# never match a real prerendered page; without a rule of their own they
+# fall through to the generic "/:iso/:template" catch-all further below,
+# which rewrites (not redirects) to "/l/dbs?lang=eng" — no such page was
+# ever prerendered under that lowercase param, so the client then tries to
+# hydrate against server output that doesn't match what it expects,
+# producing a React hydration error (confirmed live, 2026-09-15:
+# https://dbs.demo.bibel.wiki/eng/dbs/ → React error #418).
+#
+# These are real, actual redirects (301, not a 200 rewrite) — the address
+# bar itself should land on the canonical-case URL, so there's no chance
+# of a client/server mismatch on the page that's actually served. Host-
+# agnostic (no "https://" prefix), so this one rule set covers BOTH the
+# main domain (e.g. clicking into a template from "/eng/") and every
+# template-locked subdomain's own deeper paths — no need to duplicate per
+# subdomain. "test" isn't included: its on-disk/canonical name is already
+# all-lowercase, so there's no case mismatch to correct for it.
+[[redirects]]
+  from = "/:iso/tgs/:cat/:story"
+  to = "/:iso/TGS/:cat/:story"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/tgs/:cat"
+  to = "/:iso/TGS/:cat"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/tgs/"
+  to = "/:iso/TGS/"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/tgs"
+  to = "/:iso/TGS"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/dbs/:cat/:story"
+  to = "/:iso/DBS/:cat/:story"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/dbs/:cat"
+  to = "/:iso/DBS/:cat"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/dbs/"
+  to = "/:iso/DBS/"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/dbs"
+  to = "/:iso/DBS"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/obs/:cat/:story"
+  to = "/:iso/OBS/:cat/:story"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/obs/:cat"
+  to = "/:iso/OBS/:cat"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/obs/"
+  to = "/:iso/OBS/"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/obs"
+  to = "/:iso/OBS"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/john/:cat/:story"
+  to = "/:iso/John/:cat/:story"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/john/:cat"
+  to = "/:iso/John/:cat"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/john/"
+  to = "/:iso/John/"
+  status = 301
+
+[[redirects]]
+  from = "/:iso/john"
+  to = "/:iso/John"
+  status = 301
+
+
 # Non-prerendered ISOs fall through to the generic /l/ pages.
 # Netlify serves static files first, so prerendered pages take priority.
 [[redirects]]
