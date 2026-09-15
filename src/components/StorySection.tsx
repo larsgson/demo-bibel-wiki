@@ -1,5 +1,6 @@
 import type { Section, ImageConfig } from "../lib/bw/types"
-import { resolveImageUrl, resolveMediumUrl } from "../lib/bw/image-utils"
+import { resolveImageUrl, resolveMediumUrl, resolveThumbUrl } from "../lib/bw/image-utils"
+import ProgressiveImage from "./ProgressiveImage"
 
 interface Props {
   section: Section
@@ -54,17 +55,14 @@ export default function StorySection({
       {primarySection.imageUrls.length > 0 && (
         <div className="listen-verse-images">
           {primarySection.imageUrls.map((url, imgIdx) => (
-            <img
+            <ProgressiveImage
               key={imgIdx}
-              src={resolveMediumUrl(url, imageConfig, 800)}
+              thumbSrc={resolveThumbUrl(url, imageConfig, 360)}
+              fullSrc={resolveMediumUrl(url, imageConfig, 800)}
+              fallbackSrc={resolveImageUrl(url, imageConfig)}
               alt={`Section ${sectionIndex + 1}`}
               className="w-full aspect-video object-cover"
               loading={sectionIndex < 3 ? "eager" : "lazy"}
-              onError={(e) => {
-                const img = e.target as HTMLImageElement
-                const fullUrl = resolveImageUrl(url, imageConfig)
-                if (img.src !== fullUrl) img.src = fullUrl
-              }}
             />
           ))}
           {primarySection.reference && (

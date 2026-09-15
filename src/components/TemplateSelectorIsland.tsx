@@ -3,7 +3,8 @@ import { useStore } from "@nanostores/react"
 import { $selectedLanguage, $secondaryLanguages } from "../stores/language-store"
 import { buildLangHref } from "../lib/bw/url-utils"
 import type { ImageConfig } from "../lib/bw/types"
-import { resolveImageUrl } from "../lib/bw/image-utils"
+import { resolveImageUrl, resolveThumbUrl } from "../lib/bw/image-utils"
+import ProgressiveImage from "./ProgressiveImage"
 
 interface TemplateInfo {
   name: string
@@ -40,14 +41,13 @@ export default function TemplateSelectorIsland({ templates }: Props) {
           className="group block rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow"
         >
           <div className="aspect-video bg-gray-100 dark:bg-gray-800 relative overflow-hidden">
-            <img
-              src={resolveImageUrl(t.image, t.imageConfig || null)}
+            <ProgressiveImage
+              thumbSrc={resolveThumbUrl(t.image, t.imageConfig || null, 360)}
+              fullSrc={resolveImageUrl(t.image, t.imageConfig || null)}
+              fallbackSrc={PLACEHOLDER_IMAGE}
               alt={getTitle(t)}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-              onError={(e) => {
-                const img = e.target as HTMLImageElement
-                if (!img.src.endsWith(PLACEHOLDER_IMAGE)) img.src = PLACEHOLDER_IMAGE
-              }}
+              loading="lazy"
             />
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-4">
               <h2 className="text-white text-lg font-semibold">
