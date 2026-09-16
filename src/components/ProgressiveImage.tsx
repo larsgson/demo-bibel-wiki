@@ -51,11 +51,28 @@ export default function ProgressiveImage({
     img.onload = () => {
       if (!cancelled) setSrc(fullSrc)
     }
+    img.onerror = () => {
+      // The upgrade target itself is missing/broken (confirmed live,
+      // 2026-09-16: a medium/610px variant 404ing on the image CDN while
+      // its thumbnail and full-size siblings both exist fine — an
+      // isolated missing-file gap, not a code bug) — without this, the
+      // image would silently stay stuck on the thumbnail forever with no
+      // visible sign anything's wrong. Try the full-size original next,
+      // if one was given and isn't just fullSrc itself.
+      if (!cancelled && fallbackSrc && fallbackSrc !== fullSrc) {
+        const retry = new Image()
+        ;(retry as any).fetchPriority = "low"
+        retry.onload = () => {
+          if (!cancelled) setSrc(fallbackSrc)
+        }
+        retry.src = fallbackSrc
+      }
+    }
     img.src = fullSrc
     return () => {
       cancelled = true
     }
-  }, [thumbSrc, fullSrc])
+  }, [thumbSrc, fullSrc, fallbackSrc])
 
   return (
     <img
