@@ -380,6 +380,28 @@ function preferredFilesetId(iso: string, canon: "nt" | "ot"): string | null {
   return typeof pref === "string" ? pref : pref[canon] ?? null
 }
 
+/**
+ * A specific real DBT AUDIO fileset id to try first — for when DBT
+ * publishes more than one recording of the very same edition and the
+ * default one isn't the one wanted. Concrete case: French's "FRNTLS"
+ * (Louis Segond) has both a dramatized recording (music/sound effects,
+ * "FRNTLSN2DA" — what media.json surfaces and what resolveChapterAudioUrl
+ * would otherwise pick) and a standard-narration one with none
+ * ("FRNTLSN2SA") — confirmed live via catalog/audio.json, 2026-09-16;
+ * media.json itself only ever lists one audio id per fileset, so this
+ * split isn't visible anywhere else this app already reads. Distinct from
+ * `preferredFileset` (which picks WHICH edition/fileset) — this picks
+ * WHICH RECORDING of an edition already selected (by config or by being
+ * the only option), so it's checked independently of whether a
+ * preferredFileset is even configured for this canon.
+ */
+function preferredAudioId(iso: string, canon: "nt" | "ot"): string | null {
+  const pref = (languagePreferences as Record<string, { preferredAudioId?: string | Record<string, string> }>)[iso]
+    ?.preferredAudioId
+  if (!pref) return null
+  return typeof pref === "string" ? pref : pref[canon] ?? null
+}
+
 /** Move the preferred fileset (if configured and present) to the front,
  *  otherwise leave the CDN's own listed order untouched. Array.sort is
  *  stable, so this never reorders anything else. */
@@ -473,6 +495,90 @@ function fetchHelloaoChapterAudio(
   return p
 }
 
+// ── Preferring a non-drama ("SA") recording over a dramatized ("DA") one ────
+//
+// media.json's compact `a` array only ever lists ONE audio id per fileset,
+// so it can't tell us a same-edition SA recording exists at all (confirmed
+// live for French's "FRNTLS": media.json shows only "FRNTLSN2DA", but DBT's
+// fuller catalog/audio.json also has "FRNTLSN2SA" — a real, separately
+// fetchable, non-dramatized recording of the exact same translation).
+// catalog/audio.json is DBT's full, all-language variant listing — fetched
+// lazily (only once the dbt tier below is actually reached) and cached once
+// per session; it's not a per-language slice (~400KB total), so this is
+// deliberately NOT fetched for languages that resolve via PKF/helloAO/raw
+// and never reach this tier at all.
+
+interface RawAudioVariant { id: string; br?: number; c?: string; dbtTiming?: string }
+interface RawAudioCatalog { entries: Record<string, Record<string, RawAudioVariant[]>> }
+
+let audioCatalogPromise: Promise<RawAudioCatalog | null> | null = null
+
+function loadDbtAudioCatalog(): Promise<RawAudioCatalog | null> {
+  if (audioCatalogPromise) return audioCatalogPromise
+  audioCatalogPromise = fetch(pkfUrl("/catalog/audio.json"))
+    .then((r) => (r.ok ? (r.json() as Promise<RawAudioCatalog>) : null))
+    .catch(() => null)
+  return audioCatalogPromise
+}
+
+/** catalog/audio.json's compact id encoding (same convention as
+ *  catalog-text.json — see dbt-timing.md's own note on this): "a:<suffix>"
+ *  means append to distinctId, "A:<literal>" means already-complete. */
+function decodeAudioVariantId(distinctId: string, variant: RawAudioVariant): string | null {
+  if (variant.id.startsWith("A:")) return variant.id.slice(2)
+  if (variant.id.startsWith("a:")) return `${distinctId}${variant.id.slice(2)}`
+  return null
+}
+
+/** "FRNTLSN2DA" -> "FRNTLSN2SA" — DBT's own testament-letter + number +
+ *  format-letter ('D'=drama, 'S'=standard) + 'A' convention. A CANDIDATE
+ *  only, from a naming pattern — always confirmed against the real
+ *  catalog/audio.json listing before ever being trusted (catalog-audio.md
+ *  explicitly warns this app's whole ecosystem against guessing naming-
+ *  convention matches instead of verifying), never used on the strength
+ *  of the pattern alone. */
+function daToSaCandidate(audioId: string): string | null {
+  const m = audioId.match(/^(.*[NO]\d)D(A(?:-[a-z0-9]+)?)$/)
+  return m ? `${m[1]}S${m[2]}` : null
+}
+
+/**
+ * A same-edition, non-dramatized ("SA") sibling of a drama ("DA") DBT
+ * audio fileset id, when — and only when — real, verified per-verse
+ * timing has ALREADY been published for that exact SA id (loadBookTiming,
+ * the confirmed answer — never DBT's own unverified `dbtTiming` catalog
+ * claim, which catalog-audio.md explicitly warns is a weaker, unconfirmed
+ * signal). Returns null (keep the DA id) whenever the SA sibling doesn't
+ * exist, isn't a real catalog-confirmed variant, or has no confirmed
+ * timing yet — which is every language as of 2026-09-17 (SA recordings
+ * don't have published timing anywhere yet; confirmed for French, whose
+ * real GEN/JHN timing files only have the DA id). This is therefore a
+ * no-op everywhere today, and starts preferring SA automatically — with
+ * no further code changes, for any language — the moment matching timing
+ * is published for it.
+ */
+async function preferConfirmedNonDramaAudio(
+  iso: string,
+  canon: "nt" | "ot",
+  distinctId: string,
+  daAudioId: string,
+  bookCode: string,
+): Promise<string | null> {
+  const candidate = daToSaCandidate(daAudioId)
+  if (!candidate) return null
+
+  const catalog = await loadDbtAudioCatalog()
+  const variants = catalog?.entries?.[`${iso}:${canon}`]?.[distinctId]
+  if (!variants) return null
+  const realIds = variants.map((v) => decodeAudioVariantId(distinctId, v))
+  if (!realIds.includes(candidate)) return null
+
+  const timing = await loadBookTiming(iso, bookCode)
+  if (!timing?.[candidate]) return null
+
+  return candidate
+}
+
 export async function resolveChapterAudioUrl(
   iso: string,
   bookCode: string,
@@ -551,17 +657,44 @@ export async function resolveChapterAudioUrl(
   }
 
   // 3. dbt-proxy (needs DBT_API_KEY) — per audio fileset id.
+  // A configured preferredAudioId (a specific RECORDING, not edition —
+  // see its own doc comment) wins outright over whichever one media.json
+  // happened to surface, same "explicit config wins" spirit as the
+  // preferredFileset checks above.
+  const preferredAudio = preferredAudioId(iso, canon)
+  if (preferredAudio) {
+    const url = await fetchDbtAudioUrl(preferredAudio, bookCode, chapter)
+    if (url) {
+      if (debug) console.log(`[readerdebug/audio] resolved via preferred audio id:`, preferredAudio, url)
+      return { url, filesetId: preferredAudio, source: "dbt" }
+    }
+  }
   // Skip filesets media.json itself already marked non-DBT (audioSource
   // set) — trying their "a" id against the real DBT API is a guaranteed
   // 404 (see tier 0's comment); tier 0 above already tried the preferred
   // one directly, so this only skips re-trying the SAME known-bad id (or
   // a different non-preferred helloAO-backed edition) here.
-  const audioFilesetIds = filesets.filter((f) => !f.audioSource).flatMap((f) => f.a ?? [])
-  for (const fileset of audioFilesetIds) {
-    const url = await fetchDbtAudioUrl(fileset, bookCode, chapter)
-    if (url) {
-      if (debug) console.log(`[readerdebug/audio] resolved via dbt:`, fileset, url)
-      return { url, filesetId: fileset, source: "dbt" }
+  for (const f of filesets) {
+    if (f.audioSource) continue
+    for (const audioId of f.a ?? []) {
+      // Prefer a confirmed-real, confirmed-timed non-drama ("SA") sibling
+      // over a dramatized ("DA") id, when one exists — see
+      // preferConfirmedNonDramaAudio's own doc comment. A no-op today for
+      // every language (no SA recording has confirmed timing yet), so
+      // this always falls through to audioId unchanged right now.
+      const preferred = await preferConfirmedNonDramaAudio(iso, canon, f.id, audioId, bookCode)
+      const finalId = preferred ?? audioId
+      const url = await fetchDbtAudioUrl(finalId, bookCode, chapter)
+      if (url) {
+        if (debug) {
+          console.log(
+            `[readerdebug/audio] resolved via dbt:`, finalId,
+            preferred ? `(preferred non-drama over ${audioId})` : "",
+            url,
+          )
+        }
+        return { url, filesetId: finalId, source: "dbt" }
+      }
     }
   }
 

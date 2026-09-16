@@ -1,0 +1,3 @@
+{
+  "_comment": "iso -> Biblica/yaapi.bible edition abbreviation (e.g. 'MGJ'), used by chapter-store.ts's openbible text tier. No bulk iso->abbreviation catalog is published yet — see src/lib/bw/openbible-text.ts's module doc comment — so this is filled in manually as editions are confirmed. Empty until the CDN endpoint goes live and at least one edition is verified against a real response."
+}

@@ -8,23 +8,26 @@ import {
 import { chapterVerses } from "../lib/templates/verseText"
 import { shouldProbePkf } from "../lib/bw/language-list"
 import { pkfUrl as pkfUrlOf } from "../lib/bw/pkf-url"
+import { fetchOpenbibleChapter } from "../lib/bw/openbible-text"
+import openbibleEditions from "../data/openbible-editions.json"
 
 // Cache key: "langCode-BOOK.chapter" e.g. "spa-JHN.1"
 export const $chapterText = atom<Record<string, any>>({})
 
 /**
- * Which tier resolved a chapter's text, and — for the two tiers with a
- * real, externally-known edition identifier — what that identifier is.
+ * Which tier resolved a chapter's text, and — for the tiers with a real,
+ * externally-known edition identifier — what that identifier is.
  * Populated alongside $chapterText, same cache key. Exists so callers that
  * need to know precisely which PUBLISHED EDITION of a language's text is on
  * screen (e.g. ParallelView.svelte's word-alignment feature, which needs to
  * fetch alignment data for that exact edition or not attempt it at all —
  * see wordAlignment.ts) can look it up without re-deriving the resolution
- * chapter-store.ts already did. "helloao" and "dbt" carry a real edition id
- * (the helloAO translation id / DBT distinct-id respectively — both are
- * externally-published identifiers, not internal to this app). "pkf" and
- * "contrib" don't: PKF bundles have no corresponding edition id in any
- * external alignment dataset, and contrib is this app's own local files.
+ * chapter-store.ts already did. "helloao", "dbt", and "openbible" carry a
+ * real edition id (the helloAO translation id / DBT distinct-id / Biblica
+ * edition abbreviation respectively — all externally-published
+ * identifiers, not internal to this app). "pkf" and "contrib" don't: PKF
+ * bundles have no corresponding edition id in any external alignment
+ * dataset, and contrib is this app's own local files.
  */
 export const $chapterSource = atom<Record<string, { provider: string; id?: string } | null>>({})
 
@@ -135,6 +138,22 @@ export async function loadChapter(
     if (!pkfCat?.checked || pkfCat.books.has(book)) {
       verses = await fetchDbtText(filesetId, book, chapter)
       if (verses) source = { provider: "dbt", id: filesetId }
+    }
+  }
+
+  // 6. Try openbible (Biblica, via bcv-commons/bibles' per-chapter proxy)
+  // — last resort, matching bibles' own documented priority order
+  // (pkf > helloao > dbt > openbible). Only fires for languages manually
+  // configured in openbible-editions.json — see openbible-text.ts's
+  // module doc comment for why this can't be resolved automatically yet.
+  if (!verses) {
+    const edition = (openbibleEditions as Record<string, string>)[langCode]
+    if (edition) {
+      const openbibleVerses = await fetchOpenbibleChapter(langCode, edition, book, chapter)
+      if (openbibleVerses) {
+        verses = openbibleVerses.map((v) => ({ num: v.num, text: v.text }))
+        source = { provider: "openbible", id: edition }
+      }
     }
   }
 

@@ -46,6 +46,15 @@
   border-radius: 16px 16px 0 0;
   background: #fff;
   color: rgb(0, 11, 99);
+  /* This picker is a fixed light UI regardless of the page's own theme —
+   * without this, a dark-themed template (e.g. John/theme.css's
+   * `color-scheme: dark`) leaves unstyled native controls inside it (the
+   * search <input> has no explicit background/color of its own) rendered
+   * with the browser's dark form-control chrome, while their text still
+   * inherits this dialog's dark-blue color — dark text on a dark input.
+   * Inherited by every element inside, fixing any similarly-unstyled
+   * control without needing to touch each one individually. */
+  color-scheme: light;
   box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.3);
   overflow: hidden;
 }
