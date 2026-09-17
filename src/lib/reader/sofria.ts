@@ -29,25 +29,33 @@ export type SofriaDoc = {
     sequence: SofriaSeq;
 };
 
-type SofriaSeq = {
+// Exported (2026-09) so non-PKF sources can build hand-crafted, structurally
+// compatible SofriaDoc objects — see src/lib/reader/sofriaEmulate.ts. These
+// were module-private until then, since only this file's own renderer
+// consumed them.
+export type SofriaSeq = {
     type: string;
     blocks?: SofriaBlock[];
 };
 
-type SofriaBlock =
-    | { type: 'paragraph'; subtype?: string; content: SofriaContent[] }
-    | { type: 'graft'; subtype?: string; sequence: SofriaSeq };
+export type SofriaParagraph = { type: 'paragraph'; subtype?: string; content: SofriaContent[] };
+export type SofriaGraft = { type: 'graft'; subtype?: string; sequence: SofriaSeq };
 
-type SofriaContent =
+export type SofriaBlock = SofriaParagraph | SofriaGraft;
+
+export type SofriaMark = { type: 'mark'; subtype?: string; atts?: Record<string, string> };
+export type SofriaWrapper = {
+    type: 'wrapper';
+    subtype?: string;
+    content?: SofriaContent[];
+    atts?: Record<string, string | string[]>;
+};
+
+export type SofriaContent =
     | string
-    | { type: 'mark'; subtype?: string; atts?: Record<string, string> }
-    | {
-          type: 'wrapper';
-          subtype?: string;
-          content?: SofriaContent[];
-          atts?: Record<string, string | string[]>;
-      }
-    | { type: 'graft'; subtype?: string; sequence: SofriaSeq };
+    | SofriaMark
+    | SofriaWrapper
+    | SofriaGraft;
 
 export function fetchSofria(
     docSetId: string,

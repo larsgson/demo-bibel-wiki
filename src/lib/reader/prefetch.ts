@@ -17,7 +17,7 @@
  */
 
 import { hasPkf } from "../bw/language-list"
-import { pkfUrl } from "../bw/pkf-url"
+import { loadPkfInfo, pkfAssetsOf } from "../bw/pkf-info"
 import { loadDocSet, isLoaded } from "./store"
 
 const attempted = new Set<string>()
@@ -26,12 +26,11 @@ export function prefetchPkfText(iso: string): void {
   if (!iso || attempted.has(iso) || !hasPkf(iso)) return
   attempted.add(iso)
 
-  fetch(pkfUrl(`/pkf/${iso}/info.json`))
-    .then((r) => (r.ok ? r.json() : null))
+  loadPkfInfo(iso)
     .then((info) => {
-      const pkfAsset = info?.assets?.find((a: any) => a.kind === "pkf")
-      if (!pkfAsset || isLoaded(pkfAsset.base)) return
-      return loadDocSet(pkfAsset.base, pkfUrl(`/pkf/${iso}/${pkfAsset.name}`))
+      const assets = pkfAssetsOf(iso, info)
+      if (!assets || isLoaded(assets.docSetId)) return
+      return loadDocSet(assets.docSetId, assets.pkfUrl)
     })
     .catch(() => {
       // Speculative — a failure here just means the reader's own load does

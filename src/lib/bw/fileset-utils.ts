@@ -6,7 +6,7 @@ export function parseTextFilesetId(
   distinctId: string,
 ): string {
   if (!tField) return ""
-  // contrib-sourced text — handled by chapter-store, not DBT
+  // contrib-sourced text — no DBT fileset exists for it
   if (tField.startsWith("contrib:")) return ""
   let raw = tField
   if (raw.endsWith(".txt")) {

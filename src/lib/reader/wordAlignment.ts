@@ -30,13 +30,13 @@
  *      knowing this app's Indonesian PKF content is the "INDTSI" printing.
  *      Take the same care adding an entry here as picking a wrong one
  *      produces confidently WRONG word matches, not just missing ones.
- *   2. `translationIdForSource()` — chapter-store.ts's own
- *      `getChapterSource()` reports which tier resolved the CURRENTLY
- *      DISPLAYED text; helloAO and DBT both carry a real, externally-
- *      published edition id (a helloAO translation id / DBT distinct-id)
- *      that lines up 1:1 with compact-alignments' own edition-folder
- *      naming, so those are trusted outright. PKF and contrib (this app's
- *      own local files) report null — genuinely unknown, not a guess.
+ *   2. `translationIdForSource()` — chapter-doc.ts's own
+ *      `getChapterSource()` (surfaced via chapter-store.ts) reports which
+ *      provider resolved the CURRENTLY DISPLAYED text; helloAO and DBT
+ *      both carry a real, externally-published edition id (a helloAO
+ *      translation id / DBT distinct-id) that lines up 1:1 with
+ *      compact-alignments' own edition-folder naming, so those are trusted
+ *      outright. PKF and openbible report null — genuinely unknown, not a guess.
  *   3. `discoverEditionForLang()` — for whatever's left unknown, ONLY when
  *      that language has EXACTLY ONE published compact-alignments edition
  *      at all. With a single candidate there's no "which of several editions
@@ -115,21 +115,22 @@ export function manualEditionForLang(iso: string): string | null {
 }
 
 /**
- * The KNOWN published edition id for whatever chapter-store.ts actually
+ * The KNOWN published edition id for whatever chapter-doc.ts actually
  * resolved — see the module doc comment. `source` should come straight from
- * chapter-store.ts's `getChapterSource()`, called for the SAME (book,
- * chapter, langCode) that was just loaded, so this reflects the exact text
- * on screen, not a guess about it.
+ * chapter-store.ts's `getChapterSource()` (a thin wrapper over
+ * chapter-doc.ts's own), called for the SAME (book, chapter, langCode)
+ * that was just loaded, so this reflects the exact text on screen, not a
+ * guess about it.
  *
  * Only "helloao" and "dbt" carry a real, externally-published edition
  * identifier (a helloAO translation id / DBT distinct-id) — both are
  * trustworthy 1:1 with compact-alignments' own edition-folder naming
  * convention (iso + that same id). "pkf" (Proskomma bundles have no
- * corresponding id in any external alignment dataset) and "contrib" (this
- * app's own local files) return null — not a guess, a genuine "unknown",
- * same as no source info at all. `getChapterAlignment` falls back to
- * `discoverEditionForLang` in that case, which only succeeds when the
- * language has exactly one published edition — see that function's comment.
+ * corresponding id in any external alignment dataset) and "openbible"
+ * return null — not a guess, a genuine "unknown", same as no source info
+ * at all. `getChapterAlignment` falls back to `discoverEditionForLang` in
+ * that case, which only succeeds when the language has exactly one
+ * published edition — see that function's comment.
  */
 export function translationIdForSource(source: { provider: string; id?: string } | null): string | null {
     if (!source?.id) return null;

@@ -19,7 +19,6 @@
     import { loadChapter, getChapterSource } from '../../stores/chapter-store';
     import { getTestament } from '../bw/bible-utils';
     import { getBookByCode, getBookById } from '../bw/bible-books';
-    import { resolveTextSource } from '../bw/source-catalog';
     import { syncScrollPanelsByVerse, resetScrollPanels } from './scrollSync';
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
@@ -54,13 +53,8 @@
         bookCode: string;
         chapter: number;
         iso: string;
-        /** DBT-style fileset id — only consulted by chapter-store's DBT
-         *  fallback tier. Empty string is safe for PKF/helloAO-full
-         *  languages (never reach that tier); Reader.svelte passes the real
-         *  per-testament id for flat-mode (DBT-sourced) languages. */
-        filesetId?: string;
     };
-    let { bookCode, chapter, iso, filesetId = '' }: Props = $props();
+    let { bookCode, chapter, iso }: Props = $props();
 
     let originalWords = $state<ShoreshWord[] | null>(null);
     let originalError = $state(false);
@@ -268,27 +262,6 @@
         recomputeHeight();
     });
 
-    /**
-     * The right/target panel gets a real filesetId from Reader.svelte
-     * (resolved once for the app's primary language, before this component
-     * even mounts — see Reader.svelte's currentFlatFilesetId). The left
-     * panel's language is picked entirely within this component, so nothing
-     * upstream has ever resolved ITS filesetId — needed for chapter-store's
-     * DBT/helloAO fallback tiers (its PKF tier ignores filesetId entirely,
-     * so this only matters for languages without PKF data, e.g. French).
-     * Ported from the same testament-first-then-other-testament fallback
-     * ReaderLoader.tsx uses when resolving the app's own primary language.
-     */
-    async function resolveLeftFilesetId(langCode: string, book: string): Promise<string> {
-        if (langCode === 'eng' || langCode === 'original') return '';
-        const testament = getTestament(book);
-        const other = testament === 'ot' ? 'nt' : 'ot';
-        const source = (await resolveTextSource(langCode, testament)) ?? (await resolveTextSource(langCode, other));
-        if (source?.provider === 'helloao' && source.id) return `helloao:${source.id}`;
-        if (source?.provider === 'dbt' && source.id) return source.id;
-        return '';
-    }
-
     async function load(book: string, ch: number, langCode: string, leftLang: string) {
         loading = true;
         originalWords = null;
@@ -304,11 +277,8 @@
         // alignment matching at all (see wordAlignment.ts's module doc),
         // so languages/situations that don't ask for it never pay for it.
         const wordsLoad = leftLang === 'original' ? fetchShoreshChapter(book, ch) : null;
-        const leftLoad =
-            leftLang === 'original'
-                ? null
-                : resolveLeftFilesetId(leftLang, book).then((fsId) => loadChapter(book, ch, fsId, leftLang));
-        const rightLoad = loadChapter(book, ch, filesetId, langCode);
+        const leftLoad = leftLang === 'original' ? null : loadChapter(book, ch, leftLang);
+        const rightLoad = loadChapter(book, ch, langCode);
 
         const [words, left, verses] = await Promise.all([
             wordsLoad ?? Promise.resolve(null),

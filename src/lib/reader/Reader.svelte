@@ -7,18 +7,14 @@
         type SwipeCustomEvent,
         type PinchCustomEvent
     } from 'svelte-gestures';
-    import { fetchCatalog, chapterCount, type Catalog, type CatalogDoc } from './catalog';
-    import { fetchHelloaoCatalog } from './helloaoCatalog';
-    import { buildStaticCatalog } from './staticCatalog';
+    import { chapterCount, type Catalog, type CatalogDoc } from './catalog';
+    import { loadReaderCatalog } from './readerCatalog';
     import { loadDocSet, isLoaded } from './store';
-    import { fetchSofria, renderSofria, type RenderedChapter, type CaptionMode } from './sofria';
-    import { fetchAndRenderHelloaoChapter } from './helloaoChapterRender';
-    import { renderFlatChapter } from './flatChapterRender';
-    import { loadChapter as loadFlatChapter } from '../../stores/chapter-store';
-    import { loadBookList } from '../bw/book-list';
+    import { renderSofria, type RenderedChapter, type CaptionMode } from './sofria';
+    import { loadChapterDoc } from '../bw/chapter-doc';
+    import { resolveTextEditions } from '../bw/text-edition';
+    import type { PkfAssets } from '../bw/pkf-info';
     import { nameFor } from '../data/languageNames';
-    import { getTestament } from '../bw/bible-utils';
-    import { parseTextFilesetId } from '../bw/fileset-utils';
     import type { MediaManifest, VideoEntry, AudioEntry } from '../data/pkfInfo';
     import { settings } from './settings';
     import SettingsPanel from './SettingsPanel.svelte';
@@ -45,42 +41,16 @@
 
     type Props = {
         iso: string;          // e.g. "zai"
-        docSetId: string;     // e.g. "zai_zai"
-        pkfUrl: string;       // e.g. "/pkf/zai/zai_zai.0HgVnSWZ.pkf"
-        catalogUrl?: string;  // e.g. "/pkf/zai/zai_zai.C3ggCijo.json" — ignored when helloaoTranslationId is set
-        styleUrl?: string | null;                      // e.g. "/pkf/zai/styles/delta.css"
-        figureUrls?: Record<string, string>;           // filename -> hosted URL
-        captionMode?: CaptionMode;                     // from config/figure_captions.json
-        media?: MediaManifest;                         // per-iso video + audio manifest
-        // Any helloAO translation id (e.g. "BSB", "eng-NASB") — when set, the
-        // catalog and every chapter are fetched live from helloAO instead of
-        // the PKF/Proskomma pipeline. Not English/BSB-specific: any language
-        // configured with a helloAO text source can use this.
-        helloaoTranslationId?: string | null;
-        // DBT-style fileset ids, one per testament (DBT can use a different
-        // fileset for NT vs OT) — when set, chapters come from
-        // chapter-store.loadChapter's plain verse text (the DBT proxy has no
-        // headings/poetry/footnote structure, unlike PKF or helloAO's API —
-        // see flatChapterRender.ts). Only for provider === "dbt"; any
-        // helloAO-sourced language, "bsb"-flagged or not, uses
-        // helloaoTranslationId above instead, since that data IS just as
-        // rich as English/BSB's. The book/chapter catalog is synthesized
-        // from the static 66-book table (buildStaticCatalog) rather than
-        // fetched, since no live per-translation catalog exists for DBT.
-        flatFilesets?: { nt?: string | null; ot?: string | null } | null;
     };
-    let {
-        iso,
-        docSetId,
-        pkfUrl,
-        catalogUrl,
-        styleUrl,
-        figureUrls = {},
-        captionMode = 'hide',
-        media,
-        helloaoTranslationId = null,
-        flatFilesets = null
-    }: Props = $props();
+    let { iso }: Props = $props();
+
+    // PKF asset bundle for this language (docSetId/pkfUrl/styleUrl/
+    // figureUrls/media), when any canon resolves to a PKF edition —
+    // resolved once on mount via the shared text-edition resolver. null
+    // for PKF-less languages (helloAO-full or DBT-flat).
+    let pkfExtras = $state<PkfAssets | null>(null);
+    const captionMode: CaptionMode = 'hide';
+    let media = $derived<MediaManifest | undefined>(pkfExtras?.media);
 
     let catalog = $state<Catalog | null>(null);
     let loadError = $state<string | null>(null);
@@ -127,15 +97,24 @@
             if (cfg.collection?.textDirection) textDir = cfg.collection.textDirection;
             return cfg;
         });
-        if (flatFilesets && nameFor(iso)?.d === 'rtl') textDir = 'rtl';
-        if (styleUrl) {
+        // Resolve which (if any) canon uses a PKF edition for this language —
+        // drives styleUrl/figureUrls/media/docSetId/pkfUrl/ensurePkf/glossary.
+        const [ntEditions, otEditions] = await Promise.all([
+            resolveTextEditions(iso, 'nt'),
+            resolveTextEditions(iso, 'ot')
+        ]);
+        const pkfEdition = [...ntEditions, ...otEditions].find((e) => e.provider === 'pkf' && e.pkf);
+        pkfExtras = pkfEdition?.pkf ?? null;
+
+        if (!pkfExtras && nameFor(iso)?.d === 'rtl') textDir = 'rtl';
+        if (pkfExtras?.styleUrl) {
             // Swap in this language's CSS bundle. Any previously-injected link with
             // the same id gets removed first so only one language's styles are live.
             const existing = document.getElementById(LINK_ID);
             if (existing) existing.remove();
             linkEl = document.createElement('link');
             linkEl.rel = 'stylesheet';
-            linkEl.href = styleUrl;
+            linkEl.href = pkfExtras.styleUrl;
             linkEl.id = LINK_ID;
             linkEl.dataset.iso = iso;
             document.head.appendChild(linkEl);
@@ -144,22 +123,14 @@
         document.addEventListener('keydown', onGlobalKey);
         loadBookmarks();
         try {
-            if (flatFilesets) {
-                const bookList = await loadBookList(iso);
-                const vernacular = bookList ? new Map(bookList.map((b) => [b.code, b.name])) : undefined;
-                catalog = buildStaticCatalog(iso, vernacular);
-            } else if (helloaoTranslationId) {
-                catalog = await fetchHelloaoCatalog(helloaoTranslationId);
-            } else {
-                catalog = await fetchCatalog(catalogUrl ?? '');
-            }
+            catalog = await loadReaderCatalog(iso);
         } catch (e) {
             loadError = e instanceof Error ? e.message : String(e);
             return;
         }
         // Eagerly load the PKF binary in the background so the first chapter
         // open is instant instead of waiting for fetch + parse.
-        if (!helloaoTranslationId && !flatFilesets) ensurePkf();
+        if (pkfExtras) ensurePkf();
 
         // Initial visibility from the current pane — the default can be
         // overridden by a ?pane= signal (e.g. arriving on the study pane), which
@@ -238,36 +209,13 @@
         document.removeEventListener('keydown', onGlobalKey);
     });
 
-    /**
-     * DBT's real text-fileset ids need a testament letter the source
-     * catalog's bare id doesn't carry — e.g. base id "AHRDPI" needs to
-     * become "AHRDPIN_ET" for NT / "AHRDPIO_ET" for OT; "AHRDPI_ET" alone
-     * doesn't exist (confirmed directly against the DBT API). Passing the
-     * short "N_ET"/"O_ET" suffix through parseTextFilesetId (which prepends
-     * the base id) reconstructs that correctly — same convention
-     * language-store.ts's loadLanguageData() uses for the story templates'
-     * text loading. Falls back to the other testament's id if this one is
-     * unset, matching the two call sites' prior fallback behavior.
-     */
-    function resolveFlatFilesetId(bookCode: string): string {
-        if (!flatFilesets) return '';
-        const wantOt = getTestament(bookCode) === 'ot';
-        const baseId = wantOt ? (flatFilesets.ot || flatFilesets.nt) : (flatFilesets.nt || flatFilesets.ot);
-        if (!baseId) return '';
-        // The letter must match whichever canon's id is ACTUALLY being used
-        // (own canon, or the cross-canon fallback above), not just the
-        // book's own testament — reusing the NT id for an OT book (or vice
-        // versa) still needs that id's OWN testament letter, not the book's.
-        const usedOt = wantOt ? !!flatFilesets.ot : !flatFilesets.nt && !!flatFilesets.ot;
-        return parseTextFilesetId(`${usedOt ? 'O' : 'N'}_ET`, baseId);
-    }
-
     async function ensurePkf() {
-        if (pkfLoaded || isLoaded(docSetId)) {
+        if (!pkfExtras) return;
+        if (pkfLoaded || isLoaded(pkfExtras.docSetId)) {
             pkfLoaded = true;
             return;
         }
-        await loadDocSet(docSetId, pkfUrl);
+        await loadDocSet(pkfExtras.docSetId, pkfExtras.pkfUrl);
         pkfLoaded = true;
     }
 
@@ -284,20 +232,8 @@
         saveLastPosition({ book: book.bookCode, chapter: ch });
         window.dispatchEvent(new CustomEvent('bible-position-changed', { detail: { book: book.bookCode, chapter: ch } }));
         try {
-            if (helloaoTranslationId) {
-                rendered = await fetchAndRenderHelloaoChapter(helloaoTranslationId, book.bookCode, ch);
-            } else if (flatFilesets) {
-                // DBT can fileset NT and OT separately — pick the one matching
-                // this book's testament, falling back to the other if unset
-                // (matches DbtChapterReader.tsx's prior selection exactly),
-                // then reconstruct the real DBT text-fileset id (see
-                // resolveFlatFilesetId's comment).
-                const fsId = resolveFlatFilesetId(book.bookCode);
-                const verses = fsId ? await loadFlatChapter(book.bookCode, ch, fsId, iso) : null;
-                rendered = { html: renderFlatChapter(verses ?? []), footnotes: [], xrefs: [] };
-            } else {
-                await ensurePkf();
-                const sofria = fetchSofria(docSetId, book.bookCode, ch);
+            const res = await loadChapterDoc(iso, book.bookCode, ch);
+            if (res) {
                 const inlineForRender = $settings.showVideos
                     ? (media?.videos.filter(
                           (v) =>
@@ -306,9 +242,11 @@
                               v.placement?.verse != null
                       ) ?? [])
                     : [];
-                const figsForRender = $settings.showIllustrations ? figureUrls : {};
+                const figsForRender = $settings.showIllustrations ? (pkfExtras?.figureUrls ?? {}) : {};
                 const hideVerseNumberOne = appCfg?.features?.['hide-verse-number-1'] === true;
-                rendered = renderSofria(sofria, figsForRender, captionMode, inlineForRender, hideVerseNumberOne);
+                rendered = renderSofria(res.doc, figsForRender, captionMode, inlineForRender, hideVerseNumberOne);
+            } else {
+                rendered = null;
             }
         } catch (e) {
             renderError = e instanceof Error ? e.message : String(e);
@@ -329,12 +267,14 @@
         if (!verses.length) return;
         requestAnimationFrame(() => {
             let firstEl: Element | null = null;
+            // A verse spanning multiple lines (poetry) emits one .verse-block
+            // per line, all sharing the same data-v — highlight every one.
             for (const v of verses) {
-                const el = document.querySelector(`.verse-block[data-v="${v}"]`);
-                if (el) {
+                const els = document.querySelectorAll(`.verse-block[data-v="${v}"]`);
+                els.forEach((el) => {
                     el.classList.add('search-highlight');
                     if (!firstEl) firstEl = el;
-                }
+                });
             }
             if (firstEl) firstEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
         });
@@ -349,8 +289,8 @@
         document.querySelectorAll('.verse-block.audio-playing').forEach((el) =>
             el.classList.remove('audio-playing'));
         if (verseNum == null) return;
-        const el = document.querySelector(`.verse-block[data-v="${verseNum}"]`);
-        if (el) el.classList.add('audio-playing');
+        document.querySelectorAll(`.verse-block[data-v="${verseNum}"]`).forEach((el) =>
+            el.classList.add('audio-playing'));
     }
 
     function handleAudioTimeUpdate(t: number) {
@@ -471,8 +411,8 @@
         if (glossaryLoaded) return;
         glossaryLoaded = true;
         // Needs the pkf to be thawed first; assume caller runs after ensurePkf().
-        if (!isLoaded(docSetId)) return;
-        glossary = loadGlossary(getProskomma(), docSetId);
+        if (!pkfExtras || !isLoaded(pkfExtras.docSetId)) return;
+        glossary = loadGlossary(getProskomma(), pkfExtras.docSetId);
     }
 
     /** Settings drawer visibility toggle. */
@@ -559,17 +499,6 @@
         currentBook ? (currentBook.toc2 ?? currentBook.toc ?? currentBook.bookCode) : iso
     );
     let chapterLabel = $derived(String(currentChapter));
-    // ParallelView's target-language panel also goes through
-    // chapter-store.loadChapter directly (not this component's own render
-    // path), so it needs its own id: the same per-testament DBT fileset for
-    // flat-mode languages, or the "helloao:<tid>" form chapter-store already
-    // recognises (its eng/BSB special case doesn't cover other helloAO
-    // languages, e.g. luo/kik) for the rich-helloAO branch.
-    let currentFlatFilesetId = $derived.by(() => {
-        if (helloaoTranslationId) return `helloao:${helloaoTranslationId}`;
-        if (!flatFilesets || !currentBook) return '';
-        return resolveFlatFilesetId(currentBook.bookCode);
-    });
     function onGlobalClick(e: MouseEvent) {
         if (!popover) return;
         const target = e.target as Node | null;
@@ -849,10 +778,15 @@
         }
 
         // Verse-block tap → toggle .selected. Imperative DOM toggle so opened
-        // inline video players are not disturbed by re-renders.
+        // inline video players are not disturbed by re-renders. A verse
+        // spanning multiple lines (poetry) shares its data-v across several
+        // blocks — toggle them together so the whole verse selects as one.
         const verse = target.closest<HTMLElement>('.verse-block[data-v]');
         if (verse) {
-            verse.classList.toggle('selected');
+            const v = verse.getAttribute('data-v');
+            const selecting = !verse.classList.contains('selected');
+            document.querySelectorAll(`.verse-block[data-v="${v}"]`).forEach((el) =>
+                el.classList.toggle('selected', selecting));
         }
     }
 </script>
@@ -968,7 +902,6 @@
                         bookCode={currentBook.bookCode}
                         chapter={currentChapter}
                         {iso}
-                        filesetId={currentFlatFilesetId}
                     />
                 </div>
             {:else if mode === 'text'}

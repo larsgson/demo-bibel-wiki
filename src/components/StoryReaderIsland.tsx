@@ -23,7 +23,6 @@ import {
 import { playScene, setVideoForChapter } from "../stores/video-store"
 import { parseMarkdownIntoSections } from "../lib/bw/markdown-parser"
 import { parseReference, splitReference, getTestament } from "../lib/bw/bible-utils"
-import { parseTextFilesetId } from "../lib/bw/fileset-utils"
 import StorySection from "./StorySection"
 import { buildLangHref } from "../lib/bw/url-utils"
 import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
@@ -32,8 +31,8 @@ import { shouldProbePkf } from "../lib/bw/language-list"
 import { loadLanguageMedia, loadBookTiming, availabilityFor, resolveChapterAudioUrl } from "../lib/bw/dbt-media"
 import { loadVernacularFontFace } from "../lib/bw/vernacular-font"
 import { pkfUrl } from "../lib/bw/pkf-url"
+import { loadPkfInfo } from "../lib/bw/pkf-info"
 import { loadObsMedia, fetchDoor43Story, loadObsProducedTiming, loadObsProducedAudioBlobUrl, type Door43Story } from "../lib/bw/door43-obs"
-import { resolveTextSource } from "../lib/bw/source-catalog"
 import languageStyles from "../data/language-styles.json"
 
 interface Props {
@@ -414,105 +413,18 @@ export default function StoryReaderIsland({
         }
       }
 
-      // Load text for all selected languages, using canon-specific fileset IDs.
-      // Note this deliberately does NOT skip a language for lacking a DBT
-      // text fileset (langData null, or no ntTextId/otTextId): loadChapter
-      // (chapter-store.ts) tries PKF and contrib text BEFORE it ever needs
-      // a fileset id, so a PKF-only language (no DBT catalog entry at all,
-      // e.g. audio resolved via dbt-media.ts's PKF tier) would otherwise
-      // never get its text loaded even though loadChapter can find it —
-      // exactly what happened for "fra" here, matching PKF audio to no text.
+      // Load text for all selected languages. loadChapter (chapter-store.ts,
+      // backed by the shared text-edition resolver) picks the right edition
+      // per canon on its own — no per-language fileset derivation needed here.
       let primaryHasText = false
       for (const lang of selectedLangs) {
-        const langData = await loadLanguageData(lang)
-
-        // Build text fileset IDs per canon. `canonData` is only populated
-        // when BOTH canons resolved (langData.canon === "full") — for a
-        // single-canon language (canon === "nt" or "ot", the common case),
-        // it's always undefined, so the language's own top-level
-        // data/distinctId (langData.data.t / langData.distinctId) IS that
-        // canon's fileset and must be used directly. Only fall back to the
-        // OTHER canon's fileset when this language's canon actually
-        // matches (or "full" spans both) — otherwise an NT-only (or
-        // OT-only) language would silently inherit the wrong canon's
-        // fileset id here and 404 trying to fetch a book it never contains.
-        const canonData = langData?.canonData as Record<string, any> | undefined
-        const canonMatchesNt = langData?.canon === "nt" || langData?.canon === "full"
-        const canonMatchesOt = langData?.canon === "ot" || langData?.canon === "full"
-        const ntTextId = parseTextFilesetId(
-          canonData?.nt?.data?.t || (canonMatchesNt ? langData?.data?.t : undefined),
-          canonData?.nt?.distinctId || (canonMatchesNt ? langData?.distinctId : undefined),
-        )
-        const otTextId = parseTextFilesetId(
-          canonData?.ot?.data?.t || (canonMatchesOt ? langData?.data?.t : undefined),
-          canonData?.ot?.distinctId || (canonMatchesOt ? langData?.distinctId : undefined),
-        )
-        // Whether THIS canon's DBT fileset also carries real audio — when it
-        // does, that DBT audio is what ensureAudioSetup below will actually
-        // play (dbt-media.ts's own PKF/preference/raw tiers all take
-        // priority over plain DBT, but plain DBT is "usually the only
-        // source" once it's reached, per real per-canon catalogs seen this
-        // session). Text must stay on that SAME DBT edition in that case —
-        // switching to a different catalog-preferred helloAO edition below
-        // would resync text and audio to two different translations again
-        // (the exact BSB text/ESV audio class of bug this session started
-        // from), even though catalogSrc's pick is a perfectly good EDITION
-        // on its own, just not the one being narrated.
-        const ntHasDbtAudio = !!(canonData?.nt?.data?.a || (canonMatchesNt ? langData?.data?.a : undefined))
-        const otHasDbtAudio = !!(canonData?.ot?.data?.a || (canonMatchesOt ? langData?.data?.a : undefined))
-
         if (lang === selectedLangs[0]) primaryHasText = true
 
         for (const refKey of refs) {
           const [book, chapter] = refKey.split(".")
-          const testament = getTestament(book)
-          const dbtTextFilesetId = testament === "ot"
-            ? (otTextId || (langData?.canon === "full" ? ntTextId : null))
-            : (ntTextId || (langData?.canon === "full" ? otTextId : null))
-          const canonHasDbtAudio = testament === "ot" ? otHasDbtAudio : ntHasDbtAudio
-
-          let textFilesetId = dbtTextFilesetId || ""
-          // Only skip the source-catalog fallback when there's an ACTUAL
-          // DBT text id to stay paired with its audio — a canon can list a
-          // DBT audio fileset id that itself 404s against the real DBT API
-          // (confirmed for Norwegian's "NBSN2DA") while having no DBT text
-          // fileset at all (fileset.t undefined, e.g. same language: its
-          // real DBT text id is catalog-only, "NORNBS", not derivable from
-          // media.json's bare "NBS" base id at all). With no real DBT text
-          // in hand, there's nothing to keep paired with audio, so always
-          // fall through to the catalog in that case regardless of the
-          // (possibly non-functional) audio id.
-          if (!dbtTextFilesetId || !canonHasDbtAudio) {
-            // No DBT audio riding on this canon's own fileset, so there's
-            // no text/audio edition to stay in sync with here — safe to
-            // always consult the build-time source catalog (data/source-
-            // catalog.json, the same one the main reader's ReaderLoader.tsx
-            // uses) and prefer its answer whenever it's helloAO. It's the
-            // authoritative PKF > helloAO > DBT text resolution, and more
-            // reliable than deriving a helloAO translation id from a DBT
-            // distinct-id the way loadChapter's own internal fallback tier
-            // does (which can miss a real mapping, or find none at all when
-            // there's no DBT id for this canon to derive from — see Spanish
-            // OT, whose DBT canon has zero filesets but whose catalog entry
-            // is a real, working {provider: "helloao", id: "spa_r09"}).
-            // loadChapter's own tier 1 always tries PKF first regardless of
-            // what's passed here, so this still preserves PKF > helloAO >
-            // DBT overall.
-            const catalogSrc = await resolveTextSource(lang, testament)
-            if (catalogSrc?.provider === "helloao" && catalogSrc.id) {
-              textFilesetId = `helloao:${catalogSrc.id}`
-            } else if (!textFilesetId && catalogSrc?.provider === "dbt" && catalogSrc.id) {
-              // Our own per-testament-letter reconstruction (ntTextId/
-              // otTextId above) found nothing, but the catalog's own DBT id
-              // is a real, directly-usable fileset id (e.g. Norwegian's
-              // "NORNBS" — not derivable from media.json's bare "NBS" base
-              // id, which has no letter-suffix convention at all here).
-              textFilesetId = catalogSrc.id
-            }
-          }
-          const verses = await loadChapter(book, parseInt(chapter, 10), textFilesetId, lang)
+          const verses = await loadChapter(book, parseInt(chapter, 10), lang)
           if (typeof window !== "undefined" && window.location.search.includes("readerdebug")) {
-            console.log(`[readerdebug/text] loadChapter(${book}, ${chapter}, "${textFilesetId}", ${lang}) ->`, verses)
+            console.log(`[readerdebug/text] loadChapter(${book}, ${chapter}, ${lang}) ->`, verses)
           }
         }
       }
@@ -1034,23 +946,9 @@ function overlayProducedText(sections: Section[], produced: Door43Story | null |
   })
 }
 
-const pkfAudioCache = new Map<string, any>()
-
 async function loadPkfMedia(langCode: string): Promise<any | null> {
-  if (pkfAudioCache.has(langCode)) return pkfAudioCache.get(langCode)
-  // BSB-only / bridge / un-fetched languages have no PKF data — skip (avoids 404).
-  if (langCode === "eng" || !(await shouldProbePkf(langCode))) { pkfAudioCache.set(langCode, null); return null }
-  try {
-    const resp = await fetch(pkfUrl(`/pkf/${langCode}/info.json`))
-    if (!resp.ok) { pkfAudioCache.set(langCode, null); return null }
-    const info = await resp.json()
-    const media = info?.media ?? null
-    pkfAudioCache.set(langCode, media)
-    return media
-  } catch {
-    pkfAudioCache.set(langCode, null)
-    return null
-  }
+  const info = await loadPkfInfo(langCode)
+  return info?.media ?? null
 }
 
 async function fetchPkfTimingData(

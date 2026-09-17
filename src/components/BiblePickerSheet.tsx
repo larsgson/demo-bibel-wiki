@@ -14,8 +14,7 @@ import { loadVernacularNav, vernacularLabel, type VernacularStrings } from "../l
 import { sectionOf, testamentOf, sectionLabel } from "../lib/bw/bible-sections"
 import { loadBookList } from "../lib/bw/book-list"
 import staticBooks from "../lib/bw/bible-books"
-import { pkfUrl } from "../lib/bw/pkf-url"
-import { fetchHelloaoCatalog } from "../lib/reader/helloaoCatalog"
+import { loadReaderCatalog } from "../lib/reader/readerCatalog"
 import "../styles/bible-picker.css"
 
 /**
@@ -126,23 +125,9 @@ function catalogToVerseData(catalog: { documents?: any[] }): VerseData {
 
 async function loadVerseData(iso: string): Promise<VerseData | null> {
   try {
-    // English (and any other language routed to the full helloAO chapter
-    // reader) has no PKF catalog on the CDN — its catalog is fetched live
-    // from helloAO instead, same mechanism as the reader itself.
-    if (iso === "eng") {
-      return catalogToVerseData(await fetchHelloaoCatalog("BSB"))
-    }
-    const infoRes = await fetch(pkfUrl(`/pkf/${iso}/info.json`))
-    if (!infoRes.ok) return null
-    const info = await infoRes.json()
-    const pkfAsset = info.assets?.find((a: any) => a.kind === "pkf")
-    const catalogAsset = pkfAsset
-      ? info.assets?.find((a: any) => a.kind === "json" && a.base === pkfAsset.base)
-      : null
-    if (!catalogAsset) return null
-    const catRes = await fetch(pkfUrl(`/pkf/${iso}/${catalogAsset.name}`))
-    if (!catRes.ok) return null
-    return catalogToVerseData(await catRes.json())
+    const catalog = await loadReaderCatalog(iso)
+    const data = catalogToVerseData(catalog)
+    return data.size > 0 ? data : null
   } catch {
     return null
   }

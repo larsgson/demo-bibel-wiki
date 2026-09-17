@@ -73,7 +73,7 @@
 import { pkfUrl } from "./pkf-url"
 import { getTestament } from "./bible-utils"
 import { fetchDbtAudioUrl } from "./dbt-audio"
-import { shouldProbePkf } from "./language-list"
+import { loadPkfInfo } from "./pkf-info"
 import languagePreferences from "../../data/language-preferences.json"
 
 const HELLOAO_API_BASE = "https://bible.helloao.org"
@@ -303,7 +303,7 @@ const pkfAudioMediaCache = new Map<string, Promise<PkfAudioItem[] | null>>()
  * everything else). "eng" never has PKF data (not a Scripture Earth
  * language) and shouldProbePkf(iso) says this language has no .pkf bundle
  * at all (config/pkf-langs.json's known 589-language list — the same gate
- * chapter-store.ts's loadPkfInfo and language-list.ts's other PKF checks
+ * pkf-info.ts's loadPkfInfo and language-list.ts's other PKF checks
  * already use) — both skipped outright rather than spending a request
  * (and, for most languages with no PKF data, a guaranteed 404) finding
  * that out every time.
@@ -312,11 +312,8 @@ async function loadPkfAudioItems(iso: string): Promise<PkfAudioItem[] | null> {
   const cached = pkfAudioMediaCache.get(iso)
   if (cached) return cached
   const p = (async () => {
-    if (iso === "eng" || !(await shouldProbePkf(iso))) return null
-    return fetch(pkfUrl(`/pkf/${iso}/info.json`))
-      .then((r) => (r.ok ? r.json() : null))
-      .then((info) => info?.media?.audio?.items ?? null)
-      .catch(() => null)
+    const info = await loadPkfInfo(iso)
+    return info?.media?.audio?.items ?? null
   })()
   pkfAudioMediaCache.set(iso, p)
   return p
@@ -373,7 +370,7 @@ export interface ResolvedAudio {
  *  (iso, canon) — a base fileset id (matching FilesetEntry.id, e.g.
  *  "EN1ESV"), not an audio/text-specific id. Same shape/lookup
  *  language-store.ts's loadLanguageData() already uses. */
-function preferredFilesetId(iso: string, canon: "nt" | "ot"): string | null {
+export function preferredFilesetId(iso: string, canon: "nt" | "ot"): string | null {
   const pref = (languagePreferences as Record<string, { preferredFileset?: string | Record<string, string> }>)[iso]
     ?.preferredFileset
   if (!pref) return null
@@ -405,12 +402,12 @@ function preferredAudioId(iso: string, canon: "nt" | "ot"): string | null {
 /** Move the preferred fileset (if configured and present) to the front,
  *  otherwise leave the CDN's own listed order untouched. Array.sort is
  *  stable, so this never reorders anything else. */
-function orderedByPreference(filesets: FilesetEntry[], preferred: string | null): FilesetEntry[] {
+export function orderedByPreference(filesets: FilesetEntry[], preferred: string | null): FilesetEntry[] {
   if (!preferred) return filesets
   return [...filesets].sort((a, b) => (a.id === preferred ? -1 : b.id === preferred ? 1 : 0))
 }
 
-interface HelloaoSourceRef {
+export interface HelloaoSourceRef {
   source: string
   /** NT/OT canon field is "translation" in the audio half of the sidecar,
    *  "id" in the text half — same value either way (a helloAO translation
@@ -422,7 +419,7 @@ interface HelloaoSourceRef {
   verified?: boolean
 }
 
-interface HelloaoBackedSource {
+export interface HelloaoBackedSource {
   audio?: HelloaoSourceRef
   text?: HelloaoSourceRef
 }
@@ -433,7 +430,7 @@ const helloaoSourceCache = new Map<string, Promise<HelloaoBackedSource | null>>(
  *  comment above. Exists independently of media.json's own filesets[]
  *  entry for the same id, so this resolves a configured-but-not-yet-
  *  cataloged edition today. */
-function loadHelloaoSource(canon: "nt" | "ot", iso: string, distinctId: string): Promise<HelloaoBackedSource | null> {
+export function loadHelloaoSource(canon: "nt" | "ot", iso: string, distinctId: string): Promise<HelloaoBackedSource | null> {
   const key = `${canon}/${iso}/${distinctId}`
   const cached = helloaoSourceCache.get(key)
   if (cached) return cached
@@ -497,16 +494,24 @@ function fetchHelloaoChapterAudio(
 
 // ── Preferring a non-drama ("SA") recording over a dramatized ("DA") one ────
 //
+// Corrected 2026-09-17: the D/S letter in a DBT audio fileset id is NOT
+// what distinguishes drama from non-drama (an earlier version of this
+// code guessed that, wrongly) — the NUMBER right before it is: "1" is the
+// non-drama (plain narration) recording, "2" is the dramatized one (full
+// cast, music, sound effects). Confirmed for French: the id we currently
+// default to, "FRNTLSN2DA", has "2" at that position — consistent with
+// the background music actually reported. The trailing D/S letter means
+// something else this app doesn't need to know to do this correctly.
+//
 // media.json's compact `a` array only ever lists ONE audio id per fileset,
-// so it can't tell us a same-edition SA recording exists at all (confirmed
-// live for French's "FRNTLS": media.json shows only "FRNTLSN2DA", but DBT's
-// fuller catalog/audio.json also has "FRNTLSN2SA" — a real, separately
-// fetchable, non-dramatized recording of the exact same translation).
-// catalog/audio.json is DBT's full, all-language variant listing — fetched
-// lazily (only once the dbt tier below is actually reached) and cached once
-// per session; it's not a per-language slice (~400KB total), so this is
-// deliberately NOT fetched for languages that resolve via PKF/helloAO/raw
-// and never reach this tier at all.
+// so it can't tell us a same-edition "1" recording exists at all — it
+// only ever surfaces whichever one DBT's catalog lists as primary
+// (apparently always "2" when both exist). catalog/audio.json is DBT's
+// full, all-language variant listing, fetched lazily (only once the dbt
+// tier below is actually reached) and cached once per session; it's not
+// a per-language slice (~400KB total), so this is deliberately NOT
+// fetched for languages that resolve via PKF/helloAO/raw and never reach
+// this tier at all.
 
 interface RawAudioVariant { id: string; br?: number; c?: string; dbtTiming?: string }
 interface RawAudioCatalog { entries: Record<string, Record<string, RawAudioVariant[]>> }
@@ -530,41 +535,45 @@ function decodeAudioVariantId(distinctId: string, variant: RawAudioVariant): str
   return null
 }
 
-/** "FRNTLSN2DA" -> "FRNTLSN2SA" — DBT's own testament-letter + number +
- *  format-letter ('D'=drama, 'S'=standard) + 'A' convention. A CANDIDATE
- *  only, from a naming pattern — always confirmed against the real
- *  catalog/audio.json listing before ever being trusted (catalog-audio.md
- *  explicitly warns this app's whole ecosystem against guessing naming-
- *  convention matches instead of verifying), never used on the strength
- *  of the pattern alone. */
-function daToSaCandidate(audioId: string): string | null {
-  const m = audioId.match(/^(.*[NO]\d)D(A(?:-[a-z0-9]+)?)$/)
-  return m ? `${m[1]}S${m[2]}` : null
+/** "FRNTLSN2DA" -> "FRNTLSN1DA" — swaps the drama-indicating "2" for the
+ *  non-drama "1", keeping the testament letter and whatever the trailing
+ *  D/S(+bitrate suffix) letter is unchanged. A CANDIDATE only, from a
+ *  naming pattern — always confirmed against the real catalog/audio.json
+ *  listing before ever being trusted (catalog-audio.md explicitly warns
+ *  this app's whole ecosystem against guessing naming-convention matches
+ *  instead of verifying), never used on the strength of the pattern
+ *  alone. Only fires when the CURRENT id has "2" at that position — an
+ *  id already using "1" has nothing to swap to. */
+function nonDramaCandidate(audioId: string): string | null {
+  const m = audioId.match(/^(.*[NO])2([A-Z]A(?:-[a-z0-9]+)?)$/)
+  return m ? `${m[1]}1${m[2]}` : null
 }
 
 /**
- * A same-edition, non-dramatized ("SA") sibling of a drama ("DA") DBT
- * audio fileset id, when — and only when — real, verified per-verse
- * timing has ALREADY been published for that exact SA id (loadBookTiming,
- * the confirmed answer — never DBT's own unverified `dbtTiming` catalog
+ * A same-edition, non-drama ("1") sibling of a dramatized ("2") DBT audio
+ * fileset id, when — and only when — real, verified per-verse timing has
+ * ALREADY been published for that exact "1" id (loadBookTiming, the
+ * confirmed answer — never DBT's own unverified `dbtTiming` catalog
  * claim, which catalog-audio.md explicitly warns is a weaker, unconfirmed
- * signal). Returns null (keep the DA id) whenever the SA sibling doesn't
- * exist, isn't a real catalog-confirmed variant, or has no confirmed
- * timing yet — which is every language as of 2026-09-17 (SA recordings
- * don't have published timing anywhere yet; confirmed for French, whose
- * real GEN/JHN timing files only have the DA id). This is therefore a
- * no-op everywhere today, and starts preferring SA automatically — with
- * no further code changes, for any language — the moment matching timing
- * is published for it.
+ * signal). Returns null (keep the "2" id) whenever the "1" sibling
+ * doesn't exist, isn't a real catalog-confirmed variant, or has no
+ * confirmed timing yet — confirmed true for French right now: DBT's real
+ * catalog doesn't even list an "N1" variant for "FRNTLS" at all (only
+ * "N2DA"/"N2DA-opus16"/"N2SA" exist), so there is currently no non-drama
+ * recording to switch to for that edition specifically. This is
+ * therefore a no-op wherever a "1" recording doesn't exist yet, and
+ * starts preferring one automatically — with no further code changes,
+ * for any language — the moment both a real "1" variant and its
+ * published timing exist.
  */
 async function preferConfirmedNonDramaAudio(
   iso: string,
   canon: "nt" | "ot",
   distinctId: string,
-  daAudioId: string,
+  dramaAudioId: string,
   bookCode: string,
 ): Promise<string | null> {
-  const candidate = daToSaCandidate(daAudioId)
+  const candidate = nonDramaCandidate(dramaAudioId)
   if (!candidate) return null
 
   const catalog = await loadDbtAudioCatalog()

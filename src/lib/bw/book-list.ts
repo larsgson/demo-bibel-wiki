@@ -10,7 +10,7 @@
 
 import { getTestament } from "./bible-utils"
 import books from "../../lib/bw/bible-books"
-import { resolveTextSource } from "./source-catalog"
+import { resolveTextEditions } from "./text-edition"
 
 const HELLOAO_API = "https://bible.helloao.org/api"
 
@@ -50,12 +50,12 @@ const bookListCache = new Map<string, BookEntry[] | null>()
 export async function loadBookList(iso: string): Promise<BookEntry[] | null> {
   if (bookListCache.has(iso)) return bookListCache.get(iso)!
 
-  // Build-time-resolved default (data/source-catalog.json) answers this
-  // directly for the common case — falls back to the live, full-catalog
-  // filter only when the catalog has no unambiguous helloAO id for this
-  // language (see source-catalog.ts's "id left out when ambiguous" note).
-  const resolved = await resolveTextSource(iso, "nt")
-  let tid = resolved?.provider === "helloao" ? (resolved.id ?? null) : null
+  // The shared text-edition resolver answers this directly for the common
+  // case — falls back to the live, full-catalog filter only when it has no
+  // helloAO candidate for this language at all.
+  const editions = await resolveTextEditions(iso, "nt")
+  const helloaoEdition = editions.find((e) => e.provider === "helloao")
+  let tid = helloaoEdition?.id ?? null
   if (!tid) {
     const tx = (await helloaoTranslations()).filter((t) => t.language === iso)
     tid = tx[0]?.id ?? null
