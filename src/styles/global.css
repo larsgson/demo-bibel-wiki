@@ -32,6 +32,10 @@ body {
     --border: #e0e0e0;
     --accent: #1a5276;
     --accent-hover: #2980b9;
+    /* Text color for content painted ON TOP of --accent (e.g. a hovered/
+     * highlighted row) — --accent is a dark navy here, so --text (near
+     * black) would be unreadable against it; see LanguageSelectorIsland.tsx. */
+    --text-on-accent: #ffffff;
   }
 
   .dark {
@@ -43,6 +47,7 @@ body {
     --border: #2a2a4a;
     --accent: #2980b9;
     --accent-hover: #3498db;
+    --text-on-accent: #ffffff;
   }
 
   body {

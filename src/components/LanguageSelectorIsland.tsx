@@ -305,9 +305,8 @@ export default function LanguageSelectorIsland({ mode, onClose }: Props) {
                     selected ? "font-semibold" : ""
                   }`}
                   style={{
-                    color: "var(--text)",
+                    color: highlighted ? "var(--text-on-accent, #fff)" : "var(--text)",
                     backgroundColor: highlighted ? "var(--accent, #3b82f6)" : "transparent",
-                    opacity: highlighted ? 0.9 : 1,
                   }}
                 >
                   <div className="flex-1 min-w-0">
@@ -316,12 +315,18 @@ export default function LanguageSelectorIsland({ mode, onClose }: Props) {
                       {selected && " \u2713"}
                     </div>
                     {lang.vernacular !== lang.english && (
-                      <div className="text-sm truncate" style={{ color: "var(--text)", opacity: 0.6 }}>
+                      <div
+                        className="text-sm truncate"
+                        style={{ color: highlighted ? "var(--text-on-accent, #fff)" : "var(--text)", opacity: highlighted ? 0.85 : 0.6 }}
+                      >
                         {highlightMatch(lang.vernacular, search)}
                       </div>
                     )}
                   </div>
-                  <span className="text-xs flex-shrink-0" style={{ color: "var(--text)", opacity: 0.4 }}>
+                  <span
+                    className="text-xs flex-shrink-0"
+                    style={{ color: highlighted ? "var(--text-on-accent, #fff)" : "var(--text)", opacity: highlighted ? 0.85 : 0.4 }}
+                  >
                     {highlightMatch(lang.code, search)}
                   </span>
                 </button>
