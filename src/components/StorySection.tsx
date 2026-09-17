@@ -1,3 +1,4 @@
+import { useState } from "react"
 import type { Section, ImageConfig } from "../lib/bw/types"
 import { resolveImageUrl, resolveMediumUrl, resolveThumbUrl } from "../lib/bw/image-utils"
 import ProgressiveImage from "./ProgressiveImage"
@@ -40,9 +41,26 @@ export default function StorySection({
 }: Props) {
   const primaryLang = selectedLanguages[0]
   const primarySection = sectionsMap[primaryLang]?.[sectionIndex]
+  // Every image this section has (thumbnail AND fallback, see
+  // ProgressiveImage) that has genuinely failed to load — not just slow.
+  // Once ALL of them have, this is treated exactly like an image-less
+  // section (same fallback backdrop, same reader-style text) rather than
+  // leaving a permanently broken picture on screen.
+  const [failedImageCount, setFailedImageCount] = useState(0)
   if (!primarySection) return null
 
   const hasReference = !!primarySection.reference || !!isVideoSection?.(sectionIndex)
+  const totalImages = primarySection.imageUrls.length
+  const hasWorkingImages = totalImages > 0 && failedImageCount < totalImages
+  // Distinguishes WHY there's no working image, for the blue placeholder
+  // below: a genuinely image-less section only needs it while an audio
+  // player is actually showing the section (see BaseLayout.astro's
+  // populateFocusPanel, and the mini player which only ever renders while
+  // playing at all) — no need to clutter normal browsing with a colored
+  // box a section was never going to have a picture for. A section whose
+  // image failed to load, though, should show it always — that's a
+  // broken/degraded state worth surfacing regardless of play state.
+  const imageLoadFailed = totalImages > 0 && !hasWorkingImages
   return (
     <div
       id={`verse-${sectionIndex}`}
@@ -63,9 +81,12 @@ export default function StorySection({
         },
       } : {})}
     >
-      {/* Images + verse ref */}
-      {primarySection.imageUrls.length > 0 && (
-        <div className="listen-verse-images">
+      {/* Images + verse ref — kept mounted (not unmounted) even once every
+          image has failed, so a later successful retry (e.g. connectivity
+          coming back) can still recover; it's just visually hidden behind
+          the fallback backdrop below via CSS, not removed from the DOM. */}
+      {totalImages > 0 && (
+        <div className="listen-verse-images" style={hasWorkingImages ? undefined : { display: "none" }}>
           {primarySection.imageUrls.map((url, imgIdx) => (
             <ProgressiveImage
               key={imgIdx}
@@ -75,6 +96,7 @@ export default function StorySection({
               alt={`Section ${sectionIndex + 1}`}
               className="w-full aspect-video object-cover"
               loading={sectionIndex < 3 ? "eager" : "lazy"}
+              onError={() => setFailedImageCount((n) => n + 1)}
             />
           ))}
           {primarySection.reference && (
@@ -83,15 +105,35 @@ export default function StorySection({
         </div>
       )}
 
+      {/* No-image fallback (genuinely no image, OR every image failed to
+          load — same treatment either way): the focus/mini audio players
+          normally overlay their play/pause/stop controls on the section's
+          photo — with no photo there's nothing for them to sit on (and,
+          for the mini player, its controls are literally white-on-white
+          against the page background). A themed placeholder area gives
+          both players the same "photo-like" backdrop they expect; only
+          rendered when the section is actually playable, since a
+          non-audio text-only section has no controls to backdrop at all.
+          Also gives the cloned focus panel a fixed-size anchor so its
+          centered controls don't end up lost partway down a long excerpt
+          — see BaseLayout.astro's populateFocusPanel. */}
+      {!hasWorkingImages && hasReference && (
+        <div
+          className={`listen-verse-images listen-verse-noimage-fallback${
+            imageLoadFailed ? "" : " listen-verse-noimage-fallback--empty"
+          }`}
+        />
+      )}
+
       {/* No-image verse ref fallback */}
-      {primarySection.imageUrls.length === 0 && primarySection.reference && (
+      {!hasWorkingImages && primarySection.reference && (
         <div className="listen-verse-ref-inline">{primarySection.reference}</div>
       )}
 
       {/* Section heading (no-image case only) — styled like the Bible
           reader's own section headings (reader.css's h3.s) rather than the
           caption look, since there's no image for it to overlay. */}
-      {primarySection.imageUrls.length === 0 && primarySection.heading && (
+      {!hasWorkingImages && primarySection.heading && (
         <div className="px-3 pt-3">
           <h3 className="listen-verse-heading-plain">{primarySection.heading}</h3>
         </div>
@@ -100,7 +142,7 @@ export default function StorySection({
       {/* Multi-language text */}
       {selectedLanguages.map((langCode, langIndex) => {
         const langSection = sectionsMap[langCode]?.[sectionIndex]
-        const hasImages = primarySection.imageUrls.length > 0
+        const hasImages = hasWorkingImages
         // Image-less, reference-only sections get the actual Bible-reader
         // rendering (verse numbers, paragraph/poetry structure) when it's
         // resolved — keyed off the section's own (untranslated) reference

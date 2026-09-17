@@ -500,7 +500,18 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
             clone.removeAttribute("data-clickable")
             clone.style.cursor = "default"
             clone.classList.remove("verse-focus-active")
+            // The blue placeholder is hidden by default while just browsing
+            // (see .listen-verse-noimage-fallback--empty) — this IS the
+            // section actively playing/focused, so show it here regardless.
+            clone.querySelector(".listen-verse-noimage-fallback--empty")
+              ?.classList.remove("listen-verse-noimage-fallback--empty")
             focusPanelContent.appendChild(clone)
+            // Pin the controls to a fixed corner (same spot the "playing"
+            // state already uses) whenever this section has no real photo
+            // — see the .listen-verse-noimage-fallback placeholder and the
+            // .focus-panel-controls.no-image CSS comment.
+            const hasImage = !clone.querySelector(".listen-verse-noimage-fallback")
+            focusPanelControls.classList.toggle("no-image", !hasImage)
             if ($playerMediaKind.get() === "video") {
               const imagesWrap = clone.querySelector(".listen-verse-images")
               if (imagesWrap) placeVideoInto(imagesWrap)

@@ -89,7 +89,15 @@ body {
   transform: translate(-50%, -50%);
   z-index: 950;
   width: min(90vw, 48rem);
-  overflow: visible;
+  /* Bounded + scrollable rather than unconstrained "visible" — an
+   * image-less section's content can be a long excerpt (see
+   * reference-html.ts), which would otherwise grow the panel taller than
+   * the viewport with no way to reach the rest. .focus-panel-controls
+   * stays pinned to THIS box's own corner (see .no-image below), which
+   * only works correctly once this box itself is height-capped. */
+  max-height: 85vh;
+  overflow-y: auto;
+  overflow-x: visible;
   border: 3px solid #e74c3c;
   border-radius: 0.75rem;
   background: var(--bg);
@@ -113,8 +121,18 @@ body {
   transition: top 0.3s, left 0.3s, transform 0.3s;
 }
 
-/* While playing: small pause button at bottom-right */
-.focus-panel-controls.is-playing {
+/* While playing: small pause button at bottom-right. Also used (regardless
+ * of play state) whenever the section has no image — see populateFocusPanel
+ * in BaseLayout.astro. .focus-panel-controls is positioned relative to
+ * .focus-panel itself (a sibling of .focus-panel-content, not a child of
+ * it), so bottom/right here stay anchored to .focus-panel's own (now
+ * height-capped — see above) box corner regardless of how tall an
+ * image-less excerpt's content scrolls underneath — unlike centering on
+ * the content's own natural middle, which for a long excerpt (see
+ * reference-html.ts) would land somewhere mid-passage, easily scrolled
+ * out of view. */
+.focus-panel-controls.is-playing,
+.focus-panel-controls.no-image {
   top: auto;
   left: auto;
   bottom: 12px;
@@ -219,7 +237,12 @@ body.audio-paused .focus-panel-content .listen-verse-images img { -webkit-animat
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   z-index: 1000;
   transition: transform 0.2s;
-  background: var(--bg);
+  /* Only ever visible when the current section has no image at all — a
+   * real photo (.listen-player-image img) always fully covers this. Was
+   * var(--bg) — white-on-white in light theme, since .listen-player-btn
+   * below is a translucent WHITE circle with a white icon, meant to read
+   * against a photo, not a plain page background. */
+  background: var(--accent-hover, #2980b9);
   cursor: pointer;
 }
 
@@ -603,6 +626,27 @@ body.focus-mode .verse-focus-active {
     rgba(0, 0, 0, 0.3) 40%,
     rgba(0, 0, 0, 0.5) 100%
   );
+}
+
+/* Medium-blue "photo-like" backdrop for playable, image-less sections —
+ * see StorySection.tsx's comment. Same medium-blue value in both themes
+ * (light's --accent-hover / dark's --accent both already resolve to it —
+ * see global.css's :root/.dark blocks), so the white audio-control icons
+ * that assume a photo behind them stay readable either way. */
+.listen-verse-noimage-fallback {
+  aspect-ratio: 16 / 9;
+  background: var(--accent-hover, #2980b9);
+}
+
+/* Hidden while just browsing — a section that was never going to have a
+ * picture doesn't need one invented for it. Un-hidden (class removed) by
+ * BaseLayout.astro's populateFocusPanel specifically in the cloned focus
+ * panel, i.e. only while that section is the one actually playing; the
+ * mini player never needs this override since it only exists at all while
+ * something is playing. A FAILED image (no --empty modifier — see
+ * StorySection.tsx) is never hidden, in either context. */
+.listen-verse-noimage-fallback--empty {
+  display: none;
 }
 
 .listen-verse-ref-inline {

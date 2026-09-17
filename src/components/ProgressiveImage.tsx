@@ -12,6 +12,11 @@ interface Props {
   /** Tried if thumbSrc itself fails to load (e.g. no thumbs_pattern
    *  configured and resolveThumbUrl fell back to a non-existent path). */
   fallbackSrc?: string
+  /** Called once every option (thumbnail, then fallbackSrc if given) has
+   *  been tried and still failed — a genuinely broken/missing image, not
+   *  just a slow one. Lets a caller swap in its own placeholder instead of
+   *  leaving a permanently broken <img> on screen. */
+  onError?: () => void
 }
 
 /**
@@ -31,6 +36,7 @@ export default function ProgressiveImage({
   className,
   loading = "lazy",
   fallbackSrc,
+  onError,
 }: Props) {
   const [src, setSrc] = useState(thumbSrc)
   const [thumbFailed, setThumbFailed] = useState(false)
@@ -84,6 +90,10 @@ export default function ProgressiveImage({
         if (!thumbFailed && fallbackSrc && src !== fallbackSrc) {
           setThumbFailed(true)
           setSrc(fallbackSrc)
+        } else {
+          // Nothing left to try — thumbnail failed, and either there's no
+          // fallbackSrc or that failed too.
+          onError?.()
         }
       }}
     />
