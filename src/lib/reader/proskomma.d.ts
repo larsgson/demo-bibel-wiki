@@ -5,6 +5,11 @@ declare module 'proskomma-core' {
         gqlQuery(query: string, callback?: (r: unknown) => void): Promise<any>;
         validateSelectors(): void;
         loadSuccinctDocSet(succinctOb: unknown): any;
+        importDocument(
+            selectors: Record<string, string>,
+            contentType: string,
+            contentString: string,
+        ): { headers: Record<string, string> };
         docSets: unknown[];
     }
 }

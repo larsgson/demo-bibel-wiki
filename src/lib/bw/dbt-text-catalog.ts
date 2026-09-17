@@ -48,9 +48,10 @@ function decodeVariantId(distinctId: string, encoded: string): string {
   return encoded
 }
 
-function findJsonVariantId(
+function findVariantId(
   byDistinctId: Record<string, DbtTextVariant[]> | undefined,
   filesetId: string,
+  fmt: string,
 ): string | null {
   if (!byDistinctId) return null
   // The catalog keys entries by DBT's own distinct_id, which in practice is
@@ -64,8 +65,23 @@ function findJsonVariantId(
   for (const distinctId of candidates) {
     const variants = byDistinctId[distinctId]
     if (!variants) continue
-    const jsonVariant = variants.find((v) => v.fmt.includes("j"))
-    if (jsonVariant) return decodeVariantId(distinctId, jsonVariant.id)
+    const variant = variants.find((v) => v.fmt.includes(fmt))
+    if (variant) return decodeVariantId(distinctId, variant.id)
+  }
+  return null
+}
+
+async function dbtVariantFilesetId(
+  iso: string,
+  canon: "nt" | "ot",
+  filesetId: string,
+  fmt: string,
+): Promise<string | null> {
+  const catalog = await loadDbtTextCatalog()
+  if (!catalog) return null
+  for (const key of [`${iso}:${canon}`, `${iso}:${canon}p`]) {
+    const id = findVariantId(catalog.entries[key], filesetId, fmt)
+    if (id) return id
   }
   return null
 }
@@ -74,19 +90,19 @@ function findJsonVariantId(
  * The exact, catalog-confirmed DBT fileset id for this edition's
  * text_json variant — null when this edition has none (or the catalog is
  * unreachable, which is treated the same as "none": no id to guess with,
- * so chapter-doc.ts just falls back to flat text for the session, same as
- * before this catalog existed at all).
+ * so chapter-doc.ts just falls back to the next tier, same as before this
+ * catalog existed at all).
  */
-export async function dbtSofriaFilesetId(
-  iso: string,
-  canon: "nt" | "ot",
-  filesetId: string,
-): Promise<string | null> {
-  const catalog = await loadDbtTextCatalog()
-  if (!catalog) return null
-  for (const key of [`${iso}:${canon}`, `${iso}:${canon}p`]) {
-    const id = findJsonVariantId(catalog.entries[key], filesetId)
-    if (id) return id
-  }
-  return null
+export function dbtSofriaFilesetId(iso: string, canon: "nt" | "ot", filesetId: string): Promise<string | null> {
+  return dbtVariantFilesetId(iso, canon, filesetId, "j")
+}
+
+/**
+ * The exact, catalog-confirmed DBT fileset id for this edition's text_usx
+ * variant — same "never guess" reasoning as dbtSofriaFilesetId. See
+ * dbt-usx.ts for what consumes this (a live Proskomma import, not a
+ * hand-written USX parser — Proskomma already handles USX natively).
+ */
+export function dbtUsxFilesetId(iso: string, canon: "nt" | "ot", filesetId: string): Promise<string | null> {
+  return dbtVariantFilesetId(iso, canon, filesetId, "u")
 }

@@ -150,6 +150,38 @@ export async function fetchDbtSofria(
 }
 
 /**
+ * Fetch DBT's raw USX text for a WHOLE BOOK, given the EXACT text_usx
+ * fileset id (from dbt-text-catalog.ts's dbtUsxFilesetId — never guessed,
+ * same reasoning as fetchDbtSofria above). Unlike text_json/text_plain,
+ * DBT delivers USX per book, not per chapter — confirmed live: fetching
+ * chapter 1 vs chapter 5 of the same fileset/book returns the identical
+ * path. `chapter` is only needed because the fileset endpoint requires
+ * SOME chapter number; pass 1. Proskomma (already a dependency for PKF)
+ * parses USX natively — see dbt-usx.ts, which imports this text into a
+ * live docSet and queries sofria() off it exactly like PKF does, so this
+ * function itself does no parsing at all, just returns the raw XML string.
+ */
+export async function fetchDbtUsx(filesetId: string, book: string): Promise<string | null> {
+  try {
+    const url = `${DBT_PROXY}?type=text&fileset_id=${filesetId}&book_id=${book}&chapter_id=1`
+    const resp = await fetch(url)
+    if (!resp.ok) return null
+
+    const json = await resp.json()
+    const rawData = Array.isArray(json) ? json : json.data || json
+    const item = Array.isArray(rawData) ? rawData[0] : null
+    const path = item?.path
+    if (typeof path !== "string") return null
+
+    const fileResp = await fetch(path)
+    if (!fileResp.ok) return null
+    return await fileResp.text()
+  } catch {
+    return null
+  }
+}
+
+/**
  * Fetch audio URL from DBT proxy.
  */
 export async function fetchDbtAudioUrl(

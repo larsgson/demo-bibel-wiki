@@ -5,6 +5,7 @@ import { isLoaded, loadDocSet } from "../reader/store"
 import { loadPkfCatalog } from "./pkf-info"
 import { fetchHelloaoChapter, fetchDbtText, fetchDbtSofria } from "./content-sources"
 import { dbtSofriaFilesetId } from "./dbt-text-catalog"
+import { loadDbtUsxSofria } from "./dbt-usx"
 import { fetchOpenbibleChapter } from "./openbible-text"
 import { getTestament } from "./bible-utils"
 import { resolveTextEditions, type TextEdition } from "./text-edition"
@@ -16,8 +17,9 @@ import type { VerseEntry } from "../templates/types"
  * logic. Given (iso, book, chapter): resolve the canon's edition candidates
  * (text-edition.ts), try each in priority order, and return the first that
  * actually has this chapter as a SofriaDoc — native for PKF and DBT's own
- * "text_json" filesets (fetchDbtSofria), emulated for helloAO/flat-DBT/
- * openbible (sofriaEmulate.ts). See internal-docs/unified-text-pipeline.md.
+ * "text_json"/"text_usx" filesets (fetchDbtSofria / dbt-usx.ts), emulated
+ * for helloAO/flat-DBT/openbible (sofriaEmulate.ts). See
+ * internal-docs/unified-text-pipeline.md.
  */
 
 export interface ChapterSource {
@@ -65,6 +67,12 @@ async function fetchDocFor(iso: string, edition: TextEdition, book: string, chap
       const jsonFilesetId = await dbtSofriaFilesetId(iso, edition.canon, edition.id)
       const sofriaSeq = jsonFilesetId ? await fetchDbtSofria(jsonFilesetId, book, chapter) : null
       if (sofriaSeq) return { sequence: sofriaSeq }
+      // No text_json — try text_usx next, via a live Proskomma import
+      // (dbt-usx.ts; Proskomma already parses USX natively, no separate
+      // parser needed). Still native Sofria structure, just a different
+      // DBT format tier than the json one above.
+      const usxSeq = await loadDbtUsxSofria(iso, edition.canon, edition.id, book, chapter)
+      if (usxSeq) return { sequence: usxSeq }
       const verses = await fetchDbtText(edition.id, book, chapter)
       if (!verses || verses.length === 0) return null
       return flatVersesToSofria(verses)

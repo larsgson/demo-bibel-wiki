@@ -5,6 +5,7 @@ const mockFetchHelloaoChapter = vi.fn()
 const mockFetchDbtText = vi.fn()
 const mockFetchDbtSofria = vi.fn()
 const mockDbtSofriaFilesetId = vi.fn()
+const mockLoadDbtUsxSofria = vi.fn()
 const mockFetchOpenbibleChapter = vi.fn()
 const mockLoadPkfCatalog = vi.fn()
 const mockIsLoaded = vi.fn()
@@ -21,6 +22,9 @@ vi.mock('./content-sources', () => ({
 }))
 vi.mock('./dbt-text-catalog', () => ({
     dbtSofriaFilesetId: (...args: unknown[]) => mockDbtSofriaFilesetId(...args),
+}))
+vi.mock('./dbt-usx', () => ({
+    loadDbtUsxSofria: (...args: unknown[]) => mockLoadDbtUsxSofria(...args),
 }))
 vi.mock('./openbible-text', () => ({
     fetchOpenbibleChapter: (...args: unknown[]) => mockFetchOpenbibleChapter(...args),
@@ -63,6 +67,7 @@ beforeEach(() => {
     // one or both of these.
     mockDbtSofriaFilesetId.mockResolvedValue(null)
     mockFetchDbtSofria.mockResolvedValue(null)
+    mockLoadDbtUsxSofria.mockResolvedValue(null)
 })
 
 describe('loadChapterDoc — fallthrough', () => {
@@ -126,15 +131,28 @@ describe('loadChapterDoc — DBT native Sofria', () => {
         expect(mockFetchDbtText).not.toHaveBeenCalled()
     })
 
-    it('falls back to flat text_plain when the catalog has no json id for this edition', async () => {
+    it('falls back to flat text_plain when neither json nor usx has an id for this edition', async () => {
         mockResolveTextEditions.mockResolvedValue([dbtEdition('FLAT')])
         mockDbtSofriaFilesetId.mockResolvedValue(null)
+        mockLoadDbtUsxSofria.mockResolvedValue(null)
         mockFetchDbtText.mockResolvedValue([{ num: 1, text: 'plain text' }])
 
         const res = await loadChapterDoc('xxD2', 'JHN', 1)
         expect(res?.source).toEqual({ provider: 'dbt', id: 'FLAT' })
         expect(mockFetchDbtSofria).not.toHaveBeenCalled()
         expect(mockFetchDbtText).toHaveBeenCalledTimes(1)
+    })
+
+    it('falls back to native USX (via Proskomma) when there is no json variant but there is a usx one', async () => {
+        mockResolveTextEditions.mockResolvedValue([dbtEdition('USXONLY')])
+        mockDbtSofriaFilesetId.mockResolvedValue(null)
+        mockLoadDbtUsxSofria.mockResolvedValue({ type: 'main', blocks: [] })
+
+        const res = await loadChapterDoc('xxD5', 'JHN', 1)
+        expect(res?.doc).toEqual({ sequence: { type: 'main', blocks: [] } })
+        expect(res?.source).toEqual({ provider: 'dbt', id: 'USXONLY' })
+        expect(mockLoadDbtUsxSofria).toHaveBeenCalledWith('xxD5', 'nt', 'USXONLY', 'JHN', 1)
+        expect(mockFetchDbtText).not.toHaveBeenCalled()
     })
 
     it('never guesses a fileset id — fetchDbtSofria is only ever called with the catalog-decoded id, not edition.id', async () => {
