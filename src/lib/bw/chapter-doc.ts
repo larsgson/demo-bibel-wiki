@@ -3,7 +3,8 @@ import { extractVersesFromSofria } from "../reader/sofriaVerses"
 import { helloaoChapterToSofria, flatVersesToSofria } from "../reader/sofriaEmulate"
 import { isLoaded, loadDocSet } from "../reader/store"
 import { loadPkfCatalog } from "./pkf-info"
-import { fetchHelloaoChapter, fetchDbtText } from "./content-sources"
+import { fetchHelloaoChapter, fetchDbtText, fetchDbtSofria } from "./content-sources"
+import { dbtSofriaFilesetId } from "./dbt-text-catalog"
 import { fetchOpenbibleChapter } from "./openbible-text"
 import { getTestament } from "./bible-utils"
 import { resolveTextEditions, type TextEdition } from "./text-edition"
@@ -14,9 +15,9 @@ import type { VerseEntry } from "../templates/types"
  * ParallelView) goes through this instead of maintaining its own fetch/tier
  * logic. Given (iso, book, chapter): resolve the canon's edition candidates
  * (text-edition.ts), try each in priority order, and return the first that
- * actually has this chapter as a SofriaDoc — native for PKF, emulated for
- * helloAO/DBT/openbible (sofriaEmulate.ts). See
- * internal-docs/unified-text-pipeline.md.
+ * actually has this chapter as a SofriaDoc — native for PKF and DBT's own
+ * "text_json" filesets (fetchDbtSofria), emulated for helloAO/flat-DBT/
+ * openbible (sofriaEmulate.ts). See internal-docs/unified-text-pipeline.md.
  */
 
 export interface ChapterSource {
@@ -53,6 +54,17 @@ async function fetchDocFor(iso: string, edition: TextEdition, book: string, chap
       return helloaoChapterToSofria(json)
     }
     case "dbt": {
+      // Prefer DBT's own native Sofria structure (headings/poetry/footnotes)
+      // when this fileset has one — the exact fileset id comes from the
+      // published text-format catalog (dbt-text-catalog.ts), NEVER guessed
+      // (a DBT fileset's real id can't be assumed to share a prefix with
+      // our own resolved base id — confirmed for Spanish's SPABDA/SPNBDA
+      // mismatch). null means either genuinely no json variant, or the
+      // catalog was unreachable — both fall back to the flat text_plain
+      // fetch the same way.
+      const jsonFilesetId = await dbtSofriaFilesetId(iso, edition.canon, edition.id)
+      const sofriaSeq = jsonFilesetId ? await fetchDbtSofria(jsonFilesetId, book, chapter) : null
+      if (sofriaSeq) return { sequence: sofriaSeq }
       const verses = await fetchDbtText(edition.id, book, chapter)
       if (!verses || verses.length === 0) return null
       return flatVersesToSofria(verses)

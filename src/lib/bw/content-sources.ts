@@ -2,6 +2,8 @@
  * Multi-source content resolution for Bible text and audio.
  */
 
+import type { SofriaSeq } from "../reader/sofria"
+
 export interface VerseEntry {
   num: number
   text: string
@@ -102,6 +104,46 @@ export async function fetchDbtText(
       return await fetchDbtTextOnce(strippedMatch[1], book, chapter)
     }
     return null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Fetch DBT's native Sofria-structured text for a chapter, given the EXACT
+ * text_json fileset id (from dbt-text-catalog.ts's dbtSofriaFilesetId —
+ * NEVER guessed/reconstructed here; see that module's doc comment for why
+ * a DBT fileset's real id can't be assumed to share a prefix with our own
+ * resolved base id). Headings, poetry and footnotes intact, unlike the
+ * flat verse-only text_plain filesets fetchDbtText reads. Schema-compatible
+ * with PKF's own Proskomma sofria() output (both are the same upstream
+ * Sofria spec — see sofria.ts's SofriaDoc), so chapter-doc.ts can use this
+ * directly wherever it's available instead of falling back to
+ * flatVersesToSofria.
+ */
+export async function fetchDbtSofria(
+  jsonFilesetId: string,
+  book: string,
+  chapter: number,
+): Promise<SofriaSeq | null> {
+  try {
+    const url = `${DBT_PROXY}?type=text&fileset_id=${jsonFilesetId}&book_id=${book}&chapter_id=${chapter}`
+    const resp = await fetch(url)
+    if (!resp.ok) return null
+
+    const json = await resp.json()
+    const rawData = Array.isArray(json) ? json : json.data || json
+    const item = Array.isArray(rawData) ? rawData[0] : null
+    const path = item?.path
+    if (typeof path !== "string") return null
+
+    // The fileset endpoint above only returns a signed URL pointing at the
+    // actual structured file — a second, unauthenticated request (straight
+    // to DBT's CDN, no proxy/key needed) fetches the real Sofria document.
+    const fileResp = await fetch(path)
+    if (!fileResp.ok) return null
+    const doc = await fileResp.json()
+    return doc?.sequence ?? null
   } catch {
     return null
   }

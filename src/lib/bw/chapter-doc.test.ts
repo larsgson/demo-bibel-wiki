@@ -3,6 +3,8 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 const mockResolveTextEditions = vi.fn()
 const mockFetchHelloaoChapter = vi.fn()
 const mockFetchDbtText = vi.fn()
+const mockFetchDbtSofria = vi.fn()
+const mockDbtSofriaFilesetId = vi.fn()
 const mockFetchOpenbibleChapter = vi.fn()
 const mockLoadPkfCatalog = vi.fn()
 const mockIsLoaded = vi.fn()
@@ -15,6 +17,10 @@ vi.mock('./text-edition', () => ({
 vi.mock('./content-sources', () => ({
     fetchHelloaoChapter: (...args: unknown[]) => mockFetchHelloaoChapter(...args),
     fetchDbtText: (...args: unknown[]) => mockFetchDbtText(...args),
+    fetchDbtSofria: (...args: unknown[]) => mockFetchDbtSofria(...args),
+}))
+vi.mock('./dbt-text-catalog', () => ({
+    dbtSofriaFilesetId: (...args: unknown[]) => mockDbtSofriaFilesetId(...args),
 }))
 vi.mock('./openbible-text', () => ({
     fetchOpenbibleChapter: (...args: unknown[]) => mockFetchOpenbibleChapter(...args),
@@ -51,6 +57,12 @@ function pkfEdition(id: string, canon: 'nt' | 'ot' = 'nt') {
 
 beforeEach(() => {
     vi.clearAllMocks()
+    // Default: the catalog has no json fileset id for this edition, so the
+    // dbt case never even calls fetchDbtSofria — existing tests exercise
+    // the flat-text (fetchDbtText) fallback path unless a test overrides
+    // one or both of these.
+    mockDbtSofriaFilesetId.mockResolvedValue(null)
+    mockFetchDbtSofria.mockResolvedValue(null)
 })
 
 describe('loadChapterDoc — fallthrough', () => {
@@ -98,6 +110,43 @@ describe('loadChapterDoc — caching', () => {
         await loadChapterDoc('xx5', 'GEN', 1)
         await loadChapterDoc('xx6', 'GEN', 1)
         expect(mockFetchDbtText).toHaveBeenCalledTimes(2)
+    })
+})
+
+describe('loadChapterDoc — DBT native Sofria', () => {
+    it('prefers DBT native Sofria structure, fetched by the catalog-given exact id', async () => {
+        mockResolveTextEditions.mockResolvedValue([dbtEdition('RICH')])
+        mockDbtSofriaFilesetId.mockResolvedValue('RICHREAL_ET-json')
+        mockFetchDbtSofria.mockResolvedValue({ type: 'main', blocks: [] })
+
+        const res = await loadChapterDoc('xxD1', 'JHN', 1)
+        expect(res?.doc).toEqual({ sequence: { type: 'main', blocks: [] } })
+        expect(mockDbtSofriaFilesetId).toHaveBeenCalledWith('xxD1', 'nt', 'RICH')
+        expect(mockFetchDbtSofria).toHaveBeenCalledWith('RICHREAL_ET-json', 'JHN', 1)
+        expect(mockFetchDbtText).not.toHaveBeenCalled()
+    })
+
+    it('falls back to flat text_plain when the catalog has no json id for this edition', async () => {
+        mockResolveTextEditions.mockResolvedValue([dbtEdition('FLAT')])
+        mockDbtSofriaFilesetId.mockResolvedValue(null)
+        mockFetchDbtText.mockResolvedValue([{ num: 1, text: 'plain text' }])
+
+        const res = await loadChapterDoc('xxD2', 'JHN', 1)
+        expect(res?.source).toEqual({ provider: 'dbt', id: 'FLAT' })
+        expect(mockFetchDbtSofria).not.toHaveBeenCalled()
+        expect(mockFetchDbtText).toHaveBeenCalledTimes(1)
+    })
+
+    it('never guesses a fileset id — fetchDbtSofria is only ever called with the catalog-decoded id, not edition.id', async () => {
+        mockResolveTextEditions.mockResolvedValue([dbtEdition('SPABDAN')])
+        // Simulates the real Spanish case: our own resolved id ("SPABDAN")
+        // does not share DBT's real fileset prefix at all.
+        mockDbtSofriaFilesetId.mockResolvedValue('SPNBDAN_ET-json')
+        mockFetchDbtSofria.mockResolvedValue({ type: 'main', blocks: [] })
+
+        await loadChapterDoc('xxD4', 'JHN', 1)
+        expect(mockFetchDbtSofria).toHaveBeenCalledWith('SPNBDAN_ET-json', 'JHN', 1)
+        expect(mockFetchDbtSofria).not.toHaveBeenCalledWith('SPABDAN', expect.anything(), expect.anything())
     })
 })
 
