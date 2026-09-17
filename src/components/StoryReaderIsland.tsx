@@ -23,6 +23,7 @@ import {
 import { playScene, setVideoForChapter } from "../stores/video-store"
 import { parseMarkdownIntoSections } from "../lib/bw/markdown-parser"
 import { parseReference, splitReference, getTestament } from "../lib/bw/bible-utils"
+import { loadReferenceHtml } from "../lib/bw/reference-html"
 import StorySection from "./StorySection"
 import { buildLangHref } from "../lib/bw/url-utils"
 import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
@@ -106,6 +107,12 @@ export default function StoryReaderIsland({
   const [audioLang, setAudioLang] = useState<string | null>(null)
   const [videoSceneEntries, setVideoSceneEntries] = useState<VerseEntry[] | null>(null)
   const [producedStories, setProducedStories] = useState<Record<string, Door43Story | null>>({})
+  // Bible-reader-identical HTML (verse numbers, paragraph/poetry structure)
+  // for image-less, reference-only sections — keyed lang -> raw reference
+  // string -> html. Falls back to the flattened-text rendering (already in
+  // sectionsMap) when a given (lang, reference) pair isn't in here yet
+  // (still loading) or resolved to nothing — see loadReferenceHtml.
+  const [referenceHtml, setReferenceHtml] = useState<Record<string, Record<string, string>>>({})
 
   // Prefer the selected reading language's video; fall back to whichever
   // language actually has one (today, only "kir" does — more will be added
@@ -441,6 +448,43 @@ export default function StoryReaderIsland({
       console.error("[StoryReaderIsland] loadAllLanguages failed:", e)
     })
   }, [markdown, selectedLangs.join(","), engIsExplicit, producedContent, storyId])
+
+  // Bible-reader-identical HTML for image-less, reference-only sections
+  // (see reference-html.ts) — independent of the plain-text loadChapter
+  // effect above, since this needs the full structured chapter doc, not
+  // the flattened verse array chapterText already holds. Best-effort: a
+  // section whose (lang, reference) pair isn't resolved here yet (or never
+  // resolves) just keeps using the existing flattened-text rendering.
+  useEffect(() => {
+    if (!markdown) return
+    const tempSections = parseMarkdownIntoSections(markdown)
+    const refs = new Set<string>()
+    for (const section of tempSections.sections) {
+      if (section.imageUrls.length === 0 && section.reference) refs.add(section.reference)
+    }
+    if (refs.size === 0) return
+
+    let cancelled = false
+    ;(async () => {
+      for (const lang of selectedLangs) {
+        for (const reference of refs) {
+          if (referenceHtml[lang]?.[reference] !== undefined) continue
+          const html = await loadReferenceHtml(lang, reference)
+          if (cancelled) return
+          if (html) {
+            setReferenceHtml((prev) => ({
+              ...prev,
+              [lang]: { ...prev[lang], [reference]: html },
+            }))
+          }
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markdown, selectedLangs.join(",")])
 
   // Ensure audio context is set up (called on-demand before playing)
   const ensureAudioSetup = useCallback(async () => {
@@ -921,6 +965,7 @@ export default function StoryReaderIsland({
             onSectionClick={videoInfo ? handleVideoSectionClick : handleSectionClick}
             imageConfig={imageConfig}
             isVideoSection={videoInfo ? isVideoSection : undefined}
+            referenceHtml={referenceHtml}
           />
         ))}
       </div>

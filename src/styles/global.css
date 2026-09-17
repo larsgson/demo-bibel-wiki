@@ -653,6 +653,74 @@ body.focus-mode .verse-focus-active {
   padding-top: 0.5rem;
 }
 
+/* "Reader-style" — plain, book-like paragraph typography for sections with
+ * no image (nothing for the caption-overlay look to play against). Mirrors
+ * the main Bible reader's own paragraph treatment (reader.css's p.p: a
+ * top-padded, first-line-indented "book" rhythm) rather than the caption
+ * style's compact margin-bottom stacking. */
+.listen-verse-text-primary.reader-style {
+  font-size: calc(1rem * var(--primary-font-scale, 1));
+  line-height: 1.6;
+}
+.listen-verse-text-primary.reader-style p {
+  margin: 0;
+  padding-top: 12px;
+  text-indent: 3%;
+}
+.listen-verse-text-primary.reader-style p:first-child {
+  padding-top: 0;
+  text-indent: 0;
+}
+
+.listen-verse-text-secondary.reader-style p {
+  margin: 0;
+  padding-top: 8px;
+  text-indent: 3%;
+}
+.listen-verse-text-secondary.reader-style p:first-child {
+  padding-top: 0;
+  text-indent: 0;
+}
+
+/* Section heading for image-less sections — matches the Bible reader's own
+ * section-heading look (reader.css's h3.s: centred, bold, titles color)
+ * instead of a plain left-aligned label. */
+.listen-verse-heading-plain {
+  margin: 0;
+  text-align: center;
+  color: var(--accent, var(--text));
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding-bottom: 2px;
+}
+
+/* Bible-reader-identical excerpt (renderSofria HTML, via reference-html.ts)
+ * embedded in a story section — bridges reader.css's own --TextColor/etc
+ * variable family to this app's --text/--bg/--accent family, scoped to
+ * just this wrapper, so the excerpt follows the SAME theme (light/dark)
+ * the rest of the story UI is already in rather than reader.css's
+ * defaults (which are only ever redefined on #container[data-color-theme],
+ * an element that doesn't exist on story pages). */
+.listen-verse-reader-excerpt {
+  --TextColor: var(--text);
+  --TitlesColor: var(--accent, var(--text));
+  --VerseNumberColor: var(--accent-hover, var(--accent));
+  --BackgroundColor: transparent;
+  --TextHighlightColor: var(--accent-light, rgba(255, 255, 0, 0.3));
+  --LinkColor: var(--accent, var(--text));
+  --FootnoteBackgroundColor: var(--bg-surface, transparent);
+  --CrossRefColor: var(--accent-hover, var(--accent));
+  --WordsOfJesusColor: var(--accent-hover, var(--accent));
+  padding: 0.75rem;
+  color: var(--TextColor);
+  line-height: 1.6;
+}
+.listen-verse-reader-excerpt.reader-body {
+  max-width: none;
+  margin: 0;
+  padding: 0.75rem;
+}
+
 /* ── Language buttons in header ── */
 
 .lang-buttons {
