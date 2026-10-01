@@ -106,6 +106,19 @@ interface HelloaoVerseLine {
  * wrapper; a verse WITH any poem level renders each line as its own
  * `usfm:q{level}` paragraph.
  */
+// A bare string that's ENTIRELY punctuation (no letter or digit at all) —
+// typically a closing quote mark landing right after a footnote caller,
+// e.g. '”' in `['...again.', {noteId:13}, '”']`. That kind of fragment
+// must attach directly to whatever precedes it, no space, matching how
+// real typesetting places the footnote caller right before the closing
+// punctuation. Real word content (e.g. "skapade Gud himmel") always fails
+// this test, so the distinction is reliable.
+const PUNCTUATION_ONLY = /^[^\p{L}\p{N}]+$/u;
+
+function isGraftNode(x: SofriaContent): boolean {
+    return typeof x === 'object' && x !== null && 'type' in x && x.type === 'graft';
+}
+
 function splitVerseLines(
     content: HelloaoContentItem[],
     footnoteFor: (noteId: number) => SofriaGraft,
@@ -120,7 +133,28 @@ function splitVerseLines(
 
     for (const it of content) {
         if (typeof it === 'string') {
-            current.items.push(it);
+            // Every bare string gets a trailing space too, same as the
+            // {text} branch below — helloAO's plain narrative prose (no
+            // poetry, e.g. Genesis 1) represents a whole verse as
+            // alternating bare strings and {noteId} footnote markers with
+            // NO {text,poem} wrapper at all, so without this a verse like
+            // ["I begynnelsen", {noteId:0}, "skapade Gud himmel", ...]
+            // concatenates with zero separators at all ("begynnelsenskapade
+            // Gud himmeloch jord" — confirmed live, real BSB/swe_fol data).
+            // Trailing/doubled whitespace this introduces is harmless: both
+            // consumers normalize it (sofriaVerses.ts's
+            // `.trim().replace(/\s+/g, ' ')`, and HTML's own whitespace
+            // collapsing for renderSofria's output) — EXCEPT a punctuation-
+            // only fragment (see PUNCTUATION_ONLY), which must NOT get a
+            // space inserted before it: walk back past any footnote graft
+            // node(s) and drop the auto-inserted space immediately before
+            // this one if so.
+            if (PUNCTUATION_ONLY.test(it)) {
+                let i = current.items.length - 1;
+                while (i >= 0 && isGraftNode(current.items[i])) i--;
+                if (i >= 0 && current.items[i] === ' ') current.items.splice(i, 1);
+            }
+            current.items.push(it, ' ');
             continue;
         }
         if (it && typeof it === 'object') {

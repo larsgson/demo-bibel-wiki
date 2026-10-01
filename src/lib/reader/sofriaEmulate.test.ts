@@ -278,6 +278,34 @@ describe('helloaoChapterToSofria — edge cases', () => {
         });
         expect(extractVersesFromSofria(doc)).toEqual([]);
     });
+
+    it('separates adjacent bare strings across a footnote with a space (plain narrative prose, no poetry)', () => {
+        // Real live data, confirmed 2026-10 — GEN 1 narrative prose has no
+        // {text,poem} wrapper at all, just alternating bare strings and
+        // {noteId} markers. Regression: these used to concatenate with no
+        // separator at all ("begynnelsenskapade Gud himmeloch jord").
+        const doc = helloaoChapterToSofria({
+            chapter: {
+                number: 1,
+                content: [
+                    {
+                        type: 'verse',
+                        number: 1,
+                        content: ['I begynnelsen', { noteId: 0 }, 'skapade Gud himmel', { noteId: 1 }, 'och jord.'],
+                    },
+                    {
+                        type: 'verse',
+                        number: 6,
+                        content: ['And God said, “Let there be an expanse', { noteId: 2 }, 'between the waters.”'],
+                    },
+                ],
+                footnotes: [],
+            },
+        });
+        const verses = extractVersesFromSofria(doc);
+        expect(verses[0].text).toBe('I begynnelsen skapade Gud himmel och jord.');
+        expect(verses[1].text).toBe('And God said, “Let there be an expanse between the waters.”');
+    });
 });
 
 describe('flatVersesToSofria (DBT / openbible)', () => {

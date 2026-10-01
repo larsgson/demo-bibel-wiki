@@ -133,13 +133,36 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
         }
       } catch (e) { /* no lock on failure — same permissive fallback as region detection */ }
 
+      // UI-level-locked subdomains (pwa.<domain>) — force a specific level
+      // (no template lock, same routes/content as the main app) with no way
+      // to reach another level. See ui-level-lock-store.ts's own comment for
+      // why the forced value also has to be WRITTEN to localStorage here,
+      // not just reflected in a data-* attribute: bibleAllowed() and
+      // ui-level-store.ts's load() both read localStorage directly, and
+      // this script runs before either of those ever does.
+      var uiLevelLock = null;
+      try {
+        var UI_LEVEL_LOCK_SUBDOMAINS = { pwa: "2" };
+        var lockSub = !isLocalOrIp && parts.length >= 3 ? parts[0].toLowerCase() : null;
+        var queryUiLock = new URLSearchParams(window.location.search).get("uiLevelLock");
+        var queryLockSub = queryUiLock ? queryUiLock.toLowerCase() : null;
+        uiLevelLock = (lockSub && UI_LEVEL_LOCK_SUBDOMAINS[lockSub]) || (queryLockSub && UI_LEVEL_LOCK_SUBDOMAINS[queryLockSub]) || null;
+        if (uiLevelLock) {
+          document.documentElement.dataset.uiLevelLock = uiLevelLock;
+          localStorage.setItem("bw-ui-level", uiLevelLock);
+        }
+      } catch (e) { /* no lock on failure — same permissive fallback as region detection */ }
+
       // Set the UI level on <html> before first paint so the Simple-mode
       // "no left navigation" CSS applies without a flash of the sidebar.
       // A template-locked subdomain always FORCES level 1, ignoring
       // whatever's saved in this origin's own localStorage — there is no
       // "Standard"/"Study" mode to escalate to on a locked subdomain (the
       // mode switcher itself is hidden — see the CSS below), so nothing
-      // should ever read a stale level 2/3 from a previous visit here.
+      // should ever read a stale level 2/3 from a previous visit here. A
+      // ui-level-locked subdomain forces its own configured level the same
+      // way (uiLevelLock was already persisted to localStorage above, so
+      // this read picks it straight back up).
       try {
         if (document.documentElement.dataset.templateLock) {
           document.documentElement.dataset.uiLevel = "1";
@@ -306,11 +329,13 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       import { regionForIso } from "../lib/data/regions"
       import { regionConfigByCode, uiLangForRegion } from "../lib/data/region-config"
       import { $lockedTemplate, initTemplateLock } from "../stores/template-lock-store"
+      import { $lockedUiLevel, initUiLevelLock } from "../stores/ui-level-lock-store"
 
       initIsoFromUrl()
       initApiConfig()
       initSearchMode()
       initTemplateLock()
+      initUiLevelLock()
 
       // $activeRegion previously had no initializer anywhere in the app —
       // every uiLangForRegion() read (header title, ReaderLoader, Reader.svelte,
@@ -365,7 +390,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
         // Belt-and-suspenders alongside the CSS that hides .ui-level-wrapper
         // outright on a locked subdomain (sidebar.css) — there is no other
         // level to switch to there, so the popover must never open.
-        if ($lockedTemplate.get()) return
+        if ($lockedTemplate.get() || $lockedUiLevel.get()) return
         const open = levelPopover.classList.toggle("open")
         if (open) {
           const close = (ev: Event) => {
@@ -872,6 +897,16 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
     display: block !important;
   }
   html[data-template-lock] .ui-level-wrapper {
+    display: none !important;
+  }
+
+  /* UI-level-locked subdomains (pwa.<domain>) — forced to one level (see
+     the inline script in <head> and ui-level-lock-store.ts), with no other
+     level to switch to, so the mode gear/popover is hidden the same way.
+     Unlike template-lock this needs no other special-casing: the forced
+     level's own normal chrome (header/sidebar/bottom-bar) already behaves
+     correctly on its own — there's no content/template restriction here. */
+  html[data-ui-level-lock] .ui-level-wrapper {
     display: none !important;
   }
   @media (max-width: 768px) {
