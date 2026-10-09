@@ -1,11 +1,11 @@
 {
   "repo": "bcv-commons/bibles",
-  "commit": "8c9b471c93e1c05d964d45afaac4cd2fe6e42b17",
+  "commit": "a35466b429d6b574a82c97d08c30a1c4edd73b44",
   "fetchedAt": "2026-10-09",
   "files": {
     "render.js": {
       "upstream": "tools/sofria-render/src/render.js",
-      "sha256": "2f5fb5e2d4f0eb681d0e412bebab9e8408bef6c049dcb827a9d7257cedd83f06"
+      "sha256": "36b24aea74a5f18d19dfda884a8cc0605d08d8d9de39ef89aa60f989070a585a"
     },
     "verses.js": {
       "upstream": "tools/sofria-render/src/verses.js",

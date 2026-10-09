@@ -16,6 +16,8 @@ export interface RenderOptions {
   hideVerseNumberOne?: boolean
   wordsOfJesus?: boolean
   glossaryLinks?: boolean
+  /** true: `\k` keywords become `a.glossary[match]` too (default: SAB's `span.k`). */
+  keywordLinks?: boolean
   introduction?: "inline" | "separate"
   remarks?: "hidden" | "shown"
   figureUrl?: ((src: string) => string | null) | null
@@ -25,6 +27,9 @@ export interface RenderOptions {
   callers?: { footnote?: CallerRule; xref?: CallerRule }
   showNotes?: boolean
   showImages?: boolean
+  /** Figure captions; a hidden caption stays in the HTML with `hidden`. 'heuristic'
+   *  hides plain-ASCII captions sharing no word with the chapter's text. */
+  captions?: "show" | "hide" | "heuristic" | ((caption: string, atts: Record<string, unknown>) => boolean)
   showVideos?: boolean
   verseLayout?: "paragraphs" | "one-per-line"
   verseRangeSeparator?: string

@@ -37,6 +37,40 @@ describe('renderChapterHtml', () => {
   })
 })
 
+describe('renderer options from upstream (a35466b)', () => {
+  const withKeyword = {
+    sequence: {
+      type: 'main',
+      blocks: [
+        {
+          type: 'paragraph' as const,
+          subtype: 'usfm:p',
+          content: [
+            {
+              type: 'wrapper' as const,
+              subtype: 'verses',
+              atts: { number: '1' },
+              content: [
+                { type: 'mark' as const, subtype: 'verses_label', atts: { number: '1' } },
+                'The ',
+                { type: 'wrapper' as const, subtype: 'usfm:k', content: ['Sabbath'] },
+                ' came.',
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  }
+
+  it('keywordLinks turns \\k into a glossary link; off by default', () => {
+    expect(renderChapterHtml(withKeyword).html).toContain('<span class="k">Sabbath</span>')
+    expect(renderChapterHtml(withKeyword, { keywordLinks: true }).html).toContain(
+      '<a class="glossary" match="Sabbath">Sabbath</a>',
+    )
+  })
+})
+
 describe('chapterVerses', () => {
   it('gives labels, integer starts and note-free text in reading order', () => {
     expect(chapterVerses(CHAPTER)).toEqual([
