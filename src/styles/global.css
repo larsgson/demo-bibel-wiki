@@ -738,11 +738,11 @@ body.focus-mode .verse-focus-active {
   padding-bottom: 2px;
 }
 
-/* Bible-reader-identical excerpt (renderSofria HTML, via reference-html.ts)
- * embedded in a story section — bridges reader.css's own --TextColor/etc
+/* Bible-reader-identical excerpt (render.js HTML, via reference-html.ts)
+ * embedded in a story section — bridges the SAB sheets' --TextColor/etc
  * variable family to this app's --text/--bg/--accent family, scoped to
  * just this wrapper, so the excerpt follows the SAME theme (light/dark)
- * the rest of the story UI is already in rather than reader.css's
+ * the rest of the story UI is already in rather than sab-overlay.css's
  * :root defaults. */
 .listen-verse-reader-excerpt {
   --TextColor: var(--text);
@@ -752,16 +752,9 @@ body.focus-mode .verse-focus-active {
   --TextHighlightColor: var(--accent-light, rgba(255, 255, 0, 0.3));
   --LinkColor: var(--accent, var(--text));
   --FootnoteBackgroundColor: var(--bg-surface, transparent);
-  --CrossRefColor: var(--accent-hover, var(--accent));
-  --WordsOfJesusColor: var(--accent-hover, var(--accent));
   padding: 0.75rem;
   color: var(--TextColor);
   line-height: 1.6;
-}
-.listen-verse-reader-excerpt.reader-body {
-  max-width: none;
-  margin: 0;
-  padding: 0.75rem;
 }
 
 /* ── Language buttons in header ── */
@@ -870,29 +863,3 @@ body.focus-mode .verse-focus-active {
   }
 }
 
-/* The CDN's per-language bundle.css defines its own accordion-widget CSS —
- * `.active:after{content:"−"}` (paired with `.collapsible-button:after{content:"+"}`)
- * — with NO #container scoping, even though bundle.css is only ever meant to
- * style content inside the reader's #container. Since it's a bare, global
- * selector, it leaks onto ANY element anywhere on the page using the
- * generic "active" class — and that's a very common, reused class name
- * across our own app chrome (topbar icons, sidebars, bottom bar, pickers,
- * settings). Defend explicitly for every place we use it outside #container;
- * !important because bundle.css's <link> can load after this stylesheet. */
-.standard-bottom-tab.active::after,
-.standard-level-option.active::after,
-.standard-sidebar-menu button.active::after,
-.app-sidebar-util button.active::after,
-.app-sidebar-bible-ch.active::after,
-.app-sidebar-tree-row.active::after,
-.app-sidebar-tree-item.active::after,
-.app-sidebar-root-row.active::after,
-.bible-picker-tab.active::after,
-.bible-picker-cell.active::after,
-.tb-icon.active::after,
-.reader-format-tabs button.active::after,
-.lang-filter-chip.active::after,
-.node-row.active::after,
-.root-row.active::after {
-    content: none !important;
-}

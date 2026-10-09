@@ -517,12 +517,10 @@
     .parallel-verse {
         margin: 0 0 0.6em;
     }
-    /* Verse number reuses .reader-body .v (reader.css) — the app's proven
-     * technique (relative-position, not <sup>) for exactly the layout bug
-     * that was here before: Tailwind Preflight's sub/sup line-height:0
-     * reset collapsing the number's line box. Both panels sit inside the
-     * .reader-body wrapper (see Reader.svelte), so that global rule applies
-     * here without redeclaring it. */
+    /* Verse number reuses the SAB sheet's span.v (relative-position, not
+     * <sup>) — avoids Tailwind Preflight's sub/sup line-height:0 reset
+     * collapsing the number's line box. Both panels sit inside #container
+     * (see Reader.svelte), so that rule applies without redeclaring it. */
     .parallel-word,
     .parallel-token {
         padding: 0 0.1em;

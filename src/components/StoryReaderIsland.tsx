@@ -24,6 +24,7 @@ import { playScene, setVideoForChapter } from "../stores/video-store"
 import { parseMarkdownIntoSections } from "../lib/bw/markdown-parser"
 import { parseReference, splitReference, getTestament } from "../lib/bw/bible-utils"
 import { loadReferenceHtml } from "../lib/bw/reference-html"
+import { ensureSabStyles } from "../lib/sofria/styles"
 import StorySection from "./StorySection"
 import { buildLangHref } from "../lib/bw/url-utils"
 import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
@@ -472,6 +473,7 @@ export default function StoryReaderIsland({
           const html = await loadReferenceHtml(lang, reference)
           if (cancelled) return
           if (html) {
+            ensureSabStyles()
             setReferenceHtml((prev) => ({
               ...prev,
               [lang]: { ...prev[lang], [reference]: html },

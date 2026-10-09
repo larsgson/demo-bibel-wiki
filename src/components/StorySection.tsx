@@ -2,12 +2,11 @@ import { useState } from "react"
 import type { Section, ImageConfig } from "../lib/bw/types"
 import { resolveImageUrl, resolveMediumUrl, resolveThumbUrl } from "../lib/bw/image-utils"
 import ProgressiveImage from "./ProgressiveImage"
-// Side-effect import: brings in the .reader-body/.verse-block/.v etc
-// classes renderSofria's HTML output uses (see reference-html.ts) — the
-// same stylesheet Reader.svelte itself loads. Its own --TextColor/etc
-// variables are bridged to this app's --text/--bg family for
-// .listen-verse-reader-excerpt specifically — see global.css.
-import "../lib/reader/reader.css"
+// The app's additions to the SAB scripture sheets, for the reference
+// excerpts (render.js HTML, see reference-html.ts); StoryReaderIsland links
+// the shared sheet itself (ensureSabStyles). The --TextColor/etc variables
+// are bridged to this app's --text/--bg family in global.css.
+import "../lib/sofria/sab-overlay.css"
 
 interface Props {
   section: Section
@@ -179,7 +178,7 @@ export default function StorySection({
             )}
             {html ? (
               <div
-                className="reader-body listen-verse-reader-excerpt"
+                className="reader-root listen-verse-reader-excerpt"
                 dangerouslySetInnerHTML={{ __html: html }}
               />
             ) : (

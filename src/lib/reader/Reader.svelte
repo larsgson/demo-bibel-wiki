@@ -15,7 +15,8 @@
     import { captionModeFor } from '../data/figureCaptions';
     import { loadChapterDoc } from '../bw/chapter-doc';
     import { resolveTextEditions } from '../bw/text-edition';
-    import { sabSharedStyleUrl, type PkfAssets } from '../bw/pkf-info';
+    import type { PkfAssets } from '../bw/pkf-info';
+    import { ensureSabStyles, clearSabLangStyles } from '../sofria/styles';
     import { nameFor } from '../data/languageNames';
     import type { MediaManifest, VideoEntry, AudioEntry } from '../data/pkfInfo';
     import { settings } from './settings';
@@ -36,6 +37,7 @@
     import { $parallelView as parallelViewStore, toggleParallelView } from '../../stores/parallel-view-store';
     import ParallelView from './ParallelView.svelte';
     import './reader.css';
+    import '../sofria/sab-overlay.css';
 
     // UI language follows the active region (never the scripture ISO).
     const uiLang = uiLangForRegion(activeRegionStore.get());
@@ -86,9 +88,6 @@
         return lvl === '2' || lvl === '3';
     }
 
-    const LINK_ATTR = 'data-bw-lang-css';
-    let linkEls: HTMLLinkElement[] = [];
-
     onMount(async () => {
         saveLastIso(iso);
         // Per-language app-config (attribution, text direction, default ref) —
@@ -112,18 +111,9 @@
         pkfExtras = pkfEdition?.pkf ?? null;
 
         if (!pkfExtras && nameFor(iso)?.d === 'rtl') textDir = 'rtl';
-        // Swap in this language's stylesheets: the shared SAB scripture sheet
-        // (+ delta.css for PKF languages). Any previously-injected links are
-        // removed first so only one language's styles are live.
-        document.querySelectorAll(`link[${LINK_ATTR}]`).forEach((el) => el.remove());
-        linkEls = (pkfExtras?.styleUrls ?? [sabSharedStyleUrl()]).map((href) => {
-            const el = document.createElement('link');
-            el.rel = 'stylesheet';
-            el.href = href;
-            el.setAttribute(LINK_ATTR, iso);
-            document.head.appendChild(el);
-            return el;
-        });
+        // The shared SAB scripture sheet, plus this language's delta.css
+        // (fonts + colours) for PKF languages — replacing any other language's.
+        ensureSabStyles(pkfExtras?.styleUrls ?? []);
         document.addEventListener('click', onGlobalClick);
         document.addEventListener('keydown', onGlobalKey);
         loadBookmarks();
@@ -208,8 +198,7 @@
 
     onDestroy(() => {
         if (!browser) return;
-        linkEls.forEach((el) => el.remove());
-        linkEls = [];
+        clearSabLangStyles();
         document.removeEventListener('click', onGlobalClick);
         document.removeEventListener('keydown', onGlobalKey);
     });

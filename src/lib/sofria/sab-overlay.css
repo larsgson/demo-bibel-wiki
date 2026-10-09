@@ -1,0 +1,108 @@
+/*
+ * The app's additions to the SAB scripture stylesheets (see ./styles.ts),
+ * for the HTML bibles' render.js emits — in the Bible reader
+ * (#container.reader-root > #content) and in story excerpts (.reader-root).
+ * The shared sab-scripture.css styles the scripture itself; a PKF
+ * language's delta.css sets its fonts and colours.
+ *
+ * Rules inside scripture are scoped with :is(#container, .reader-root) —
+ * id-level specificity — so they win over the shared sheet's zero-specificity
+ * :where() scope even though its <link> loads after this bundle.
+ */
+
+/* Normal-palette fallbacks for the colour variables the shared sheet and
+ * the reader chrome use: delta.css (per PKF language, on #container) and the
+ * story bridge in global.css (.listen-verse-reader-excerpt) override them. */
+:root {
+    --TextColor: #000000;
+    --TitlesColor: #000B63;
+    --VerseNumberColor: #1976D2;
+    --BackgroundColor: #FFFFFF;
+    --TextHighlightColor: #FFFF99;
+    --LinkColor: #000B63;
+    --FootnoteBackgroundColor: #F0F0F0;
+    --VideoBackgroundColor: #E0E0E0;
+    --DividerColor: #D0D0D0;
+}
+
+:where(#container, .reader-root) {
+    color: var(--TextColor);
+    background: var(--BackgroundColor);
+}
+
+/* The renderer marks what it keeps but doesn't show with `hidden` (hidden
+ * captions, figures/videos switched off, chapter number in 'none' mode,
+ * callers with showNotes off); author `display:` rules must not bring those
+ * back. */
+:is(#container, .reader-root) [hidden] { display: none !important; }
+/* Notes are shown in the reader's popover, never as the collected list. */
+:is(#container, .reader-root) div.footnotes { display: none; }
+/* A figure whose image isn't in this deployment. */
+:is(#container, .reader-root) div.image-block:has(> span.image-missing) { display: none; }
+:is(#container, .reader-root) div.image-block img { max-width: 100%; height: auto; }
+
+:is(#container, .reader-root) a.footnote-caller:any-link,
+:is(#container, .reader-root) a.glossary { cursor: pointer; text-decoration: none; }
+:is(#container, .reader-root) a.glossary { color: inherit; border-bottom: 1px dotted currentColor; }
+:is(#container, .reader-root) a.glossary:hover { color: var(--LinkColor); border-bottom-style: solid; }
+
+/* Tap-to-select, search hit and audio-playing verse, on its phrases
+ * (Reader.svelte). */
+:is(#container, .reader-root) .seltxt.selected {
+    background-color: color-mix(in srgb, var(--TextHighlightColor) 20%, transparent);
+    border-radius: 3px;
+}
+:is(#container, .reader-root) .seltxt.search-highlight {
+    background: rgba(255, 215, 0, 0.3);
+    border-radius: 3px;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.4);
+}
+:is(#container, .reader-root) .seltxt.audio-playing {
+    background: rgba(0, 11, 99, 0.1);
+    border-radius: 3px;
+}
+
+/* Verse-placed video: thumbnail with a play overlay; Reader.svelte replaces
+ * it with the player on click. */
+:is(#container, .reader-root) div.video-block {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 4px;
+    background-color: rgb(31 41 55);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    cursor: pointer;
+    color: white;
+}
+:is(#container, .reader-root) div.video-block::before {
+    content: "\25b6";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.75);
+}
+:is(#container, .reader-root) div.video-block div.video-title {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    padding: 4px 8px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
+    text-align: start;
+}
+
+/* A book's introduction, collapsed above chapter 1. */
+:is(#container, .reader-root) details.reader-intro {
+    margin: 0.5em 0 1em;
+    padding: 0.4em 0.6em;
+    border: 1px solid var(--DividerColor);
+    border-radius: 6px;
+}
+:is(#container, .reader-root) details.reader-intro > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--TitlesColor);
+}
