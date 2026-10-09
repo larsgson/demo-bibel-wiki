@@ -1,14 +1,15 @@
 import { atom } from "nanostores"
 import { loadChapterVerses, getChapterSource as getChapterDocSource } from "../lib/bw/chapter-doc"
+import type { ChapterVerse } from "../lib/sofria"
 
 // Cache key: "langCode-BOOK.chapter" e.g. "spa-JHN.1"
-export const $chapterText = atom<Record<string, any>>({})
+export const $chapterText = atom<Record<string, ChapterVerse[]>>({})
 
 export async function loadChapter(
   book: string,
   chapter: number,
   langCode: string,
-): Promise<any> {
+): Promise<ChapterVerse[] | null> {
   const cacheKey = `${langCode}-${book}.${chapter}`
   const existing = $chapterText.get()
   if (existing[cacheKey]) return existing[cacheKey]

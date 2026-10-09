@@ -64,11 +64,6 @@ export interface ParsedMarkdown {
 /** Flat lookup: dotted key → string. Built from a parsed locale TOML. */
 export type LocaleMap = Record<string, string>;
 
-export interface VerseEntry {
-    num: number;
-    text: string;
-}
-
 /** start, end seconds for a verse, plus the full verseId (e.g. "1a") from the
  *  SE timing TSV file. Indexed by integer verse num for the simple case. */
 export interface TimingEntry {

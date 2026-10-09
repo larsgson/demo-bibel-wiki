@@ -24,6 +24,7 @@
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
     import { $parallelLeftLang as parallelLeftLangStore } from '../../stores/parallel-left-lang-store';
+    import type { ChapterVerse } from '../sofria';
     import { nameFor } from '../data/languageNames';
     import {
         translationIdForSource,
@@ -58,8 +59,8 @@
 
     let originalWords = $state<ShoreshWord[] | null>(null);
     let originalError = $state(false);
-    let leftVerses = $state<Array<{ num: number; text: string }> | null>(null);
-    let targetVerses = $state<Array<{ num: number; text: string }> | null>(null);
+    let leftVerses = $state<ChapterVerse[] | null>(null);
+    let targetVerses = $state<ChapterVerse[] | null>(null);
     let loading = $state(true);
 
     // The full set of aligned source keys belonging to whichever token the
@@ -93,17 +94,18 @@
     let originalGroups = $derived(originalWords ? groupWordsByVerse(originalWords) : []);
 
     function tokenizedVerses(
-        verses: Array<{ num: number; text: string }> | null,
+        verses: ChapterVerse[] | null,
         alignment: Map<number, VerseAlignment> | null
-    ): Array<{ num: number; tokens: DisplayToken[] }> | null {
+    ): Array<{ label: string; num: number | null; tokens: DisplayToken[] }> | null {
         if (!verses || !alignment || bookId === null) return null;
         return verses.map((v) => {
-            const verseAlignment = alignment.get(v.num);
+            // A range verse ("2-3") aligns by its first verse.
+            const verseAlignment = v.num != null ? alignment.get(v.num) : undefined;
             const targetTokenCount = tokenize(v.text).length;
             const aligned = verseAlignment
-                ? alignVerseTokens(bookId!, chapter, v.num, verseAlignment.compact, targetTokenCount)
+                ? alignVerseTokens(bookId!, chapter, v.num!, verseAlignment.compact, targetTokenCount)
                 : new Map<number, number[]>();
-            return { num: v.num, tokens: tokensForVerse(v.text, aligned) };
+            return { label: v.label, num: v.num, tokens: tokensForVerse(v.text, aligned) };
         });
     }
 
@@ -290,7 +292,7 @@
             originalWords = words;
             originalError = words === null;
         } else {
-            leftVerses = left as Array<{ num: number; text: string }> | null;
+            leftVerses = left;
             originalError = !leftVerses || leftVerses.length === 0;
         }
         targetVerses = verses;
@@ -399,9 +401,9 @@
                 </p>
             {/each}
         {:else if leftTokenVerses}
-            {#each leftTokenVerses as v (v.num)}
+            {#each leftTokenVerses as v (v.label)}
                 <p class="parallel-verse" data-verse={v.num}>
-                    <span class="v">{v.num}</span>
+                    <span class="v">{v.label}</span>
                     {#each v.tokens as tok, i (i)}{#if tok.wordIds}<span
                                 class="parallel-token"
                                 class:parallel-word-hover={tokenColor(tok) === 'yellow'}
@@ -413,8 +415,8 @@
                 </p>
             {/each}
         {:else}
-            {#each leftVerses ?? [] as v (v.num)}
-                <p class="parallel-verse" data-verse={v.num}><span class="v">{v.num}</span> {v.text}</p>
+            {#each leftVerses ?? [] as v (v.label)}
+                <p class="parallel-verse" data-verse={v.num}><span class="v">{v.label}</span> {v.text}</p>
             {/each}
         {/if}
     </section>
@@ -424,9 +426,9 @@
         {:else if !targetVerses || targetVerses.length === 0}
             <div class="alert alert-error text-sm">{tr('noContent')}</div>
         {:else if targetTokenVerses}
-            {#each targetTokenVerses as v (v.num)}
+            {#each targetTokenVerses as v (v.label)}
                 <p class="parallel-verse" data-verse={v.num}>
-                    <span class="v">{v.num}</span>
+                    <span class="v">{v.label}</span>
                     {#each v.tokens as tok, i (i)}{#if tok.wordIds}<span
                                 class="parallel-token"
                                 class:parallel-word-hover={tokenColor(tok) === 'yellow'}
@@ -438,8 +440,8 @@
                 </p>
             {/each}
         {:else}
-            {#each targetVerses as v (v.num)}
-                <p class="parallel-verse" data-verse={v.num}><span class="v">{v.num}</span> {v.text}</p>
+            {#each targetVerses as v (v.label)}
+                <p class="parallel-verse" data-verse={v.num}><span class="v">{v.label}</span> {v.text}</p>
             {/each}
         {/if}
     </section>

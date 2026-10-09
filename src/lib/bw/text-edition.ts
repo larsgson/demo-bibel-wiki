@@ -11,7 +11,8 @@ import {
 } from "./dbt-media"
 import { resolveTextSource, type ResolvedSource } from "./source-catalog"
 import languagePreferences from "../../data/language-preferences.json"
-import openbibleEditions from "../../data/openbible-editions.json"
+import openbibleAllow from "../../data/openbible-editions.json"
+import { loadOpenbibleCatalog, openbibleEditionsFor, type OpenbibleEdition } from "./openbible-text"
 
 /**
  * THE single per-canon text-edition resolver — mirrors dbt-media.ts's
@@ -38,7 +39,7 @@ export type TextProvider = "pkf" | "helloao" | "dbt" | "openbible"
 export interface TextEdition {
   provider: TextProvider
   /** helloAO translation id | DBT text-fileset id (canon letter already
-   *  applied where needed) | openbible edition abbreviation | PKF docSetId. */
+   *  applied where needed) | openbible "<iso>/<abbr>" | PKF docSetId. */
   id: string
   canon: "nt" | "ot"
   /** Which tier produced this candidate — for ?readerdebug tracing only. */
@@ -46,6 +47,9 @@ export interface TextEdition {
   /** Only set for provider "pkf" — the asset bundle loadChapterDoc needs to
    *  actually fetch/query the docSet. */
   pkf?: PkfAssets
+  /** Only set for provider "openbible" — the catalog entry loadChapterDoc
+   *  fetches chapters from. */
+  openbible?: OpenbibleEdition
 }
 
 export function textFilesetIdFor(baseId: string, canon: "nt" | "ot"): string {
@@ -134,7 +138,8 @@ export interface TextEditionInputs {
    *  the "configured but not yet backfilled into media.json" case
    *  resolveChapterAudioUrl's own tier 0 sidecar fallback also handles. */
   preferredSidecarText: { source?: string; id?: string } | null
-  openbibleEdition: string | null
+  /** Published, allow-listed openbible editions for this (iso, canon). */
+  openbibleEditions: OpenbibleEdition[]
 }
 
 /**
@@ -154,7 +159,7 @@ export function rankTextEditions(inputs: TextEditionInputs): TextEdition[] {
     sourceCatalogSrc,
     overlap,
     preferredSidecarText,
-    openbibleEdition,
+    openbibleEditions,
   } = inputs
 
   const out: TextEdition[] = []
@@ -175,7 +180,13 @@ export function rankTextEditions(inputs: TextEditionInputs): TextEdition[] {
   // 0. Explicit text preference (language-preferences.json's preferredText).
   if (preferredText) {
     if (preferredText.source === "dbt") addDbt(preferredText.id, "preferred-text")
-    else add({ provider: preferredText.source, id: preferredText.id, canon, via: "preferred-text" })
+    else if (preferredText.source === "openbible") {
+      // Only an allow-listed, published edition can be fetched at all.
+      const ob = openbibleEditions.find(
+        (e) => e.abbr === preferredText.id || `${iso}/${e.abbr}` === preferredText.id || e.projectId === preferredText.id,
+      )
+      if (ob) add({ provider: "openbible", id: `${iso}/${ob.abbr}`, canon, via: "preferred-text", openbible: ob })
+    } else add({ provider: preferredText.source, id: preferredText.id, canon, via: "preferred-text" })
   }
 
   // 1. Preferred fileset (preferredFileset) — helloAO-backed inline
@@ -237,8 +248,10 @@ export function rankTextEditions(inputs: TextEditionInputs): TextEdition[] {
     add({ provider: "helloao", id: tid, canon, via: "media-h" })
   }
 
-  // 8. openbible.
-  if (openbibleEdition) add({ provider: "openbible", id: openbibleEdition, canon, via: "openbible" })
+  // 8. openbible, in allow-list order.
+  for (const ob of openbibleEditions) {
+    add({ provider: "openbible", id: `${iso}/${ob.abbr}`, canon, via: "openbible", openbible: ob })
+  }
 
   return out
 }
@@ -247,11 +260,14 @@ export function rankTextEditions(inputs: TextEditionInputs): TextEdition[] {
 
 async function gatherInputs(iso: string, canon: "nt" | "ot"): Promise<TextEditionInputs> {
   const preferred = preferredFilesetId(iso, canon)
-  const [media, pkfInfo, sourceCatalogSrc, overlap] = await Promise.all([
+  const allow = (openbibleAllow as { enabled?: string[] }).enabled ?? []
+  const [media, pkfInfo, sourceCatalogSrc, overlap, openbibleCatalog] = await Promise.all([
     loadLanguageMedia(iso),
     loadPkfInfo(iso),
     resolveTextSource(iso, canon),
     loadOverlapCatalog(),
+    // Skipped entirely (no request) while nothing is allow-listed.
+    allow.length ? loadOpenbibleCatalog() : Promise.resolve(null),
   ])
   const canonMedia: CanonMedia | null = media?.canons?.[canon] ?? null
   const filesets = orderedByPreference(canonMedia?.filesets ?? [], preferred)
@@ -273,7 +289,7 @@ async function gatherInputs(iso: string, canon: "nt" | "ot"): Promise<TextEditio
     sourceCatalogSrc,
     overlap,
     preferredSidecarText,
-    openbibleEdition: (openbibleEditions as Record<string, string>)[iso] ?? null,
+    openbibleEditions: openbibleEditionsFor(openbibleCatalog, iso, canon, allow),
   }
 }
 

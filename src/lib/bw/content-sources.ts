@@ -2,18 +2,14 @@
  * Multi-source content resolution for Bible text and audio.
  */
 
-import type { SofriaSeq } from "../reader/sofria"
-
-export interface VerseEntry {
-  num: number
-  text: string
-}
+import type { SofriaSeq } from "../sofria/types"
+import type { FlatVerse } from "../sofria/convert"
 
 const HELLOAO_API = "https://bible.helloao.org/api"
 const DBT_PROXY = "/.netlify/functions/dbt-proxy"
 
-/** helloAO's own `content[]` item shapes — see sofriaEmulate.ts's
- *  helloaoChapterToSofria for how these get turned into a SofriaDoc. */
+/** helloAO's own `content[]` item shapes — turned into Sofria by the
+ *  vendored helloao_to_usj + usj_to_sofria_native (src/lib/sofria/vendor). */
 export type HelloaoContentItem =
   | string
   | { text: string; poem?: number; wordsOfJesus?: boolean }
@@ -37,10 +33,8 @@ export interface HelloaoChapterJson {
 
 /**
  * Fetch ONE chapter's raw helloAO JSON — full structure (headings, poetry,
- * footnotes), unlike fetchHelloaoText above which flattens straight to
- * plain {num,text}[]. Feeds sofriaEmulate.ts's helloaoChapterToSofria so
- * this structure survives into the shared Sofria pipeline instead of being
- * discarded.
+ * footnotes). chapter-doc.ts turns it into Sofria with the vendored
+ * helloAO converter, so this structure survives into the shared pipeline.
  */
 export async function fetchHelloaoChapter(
   tid: string,
@@ -62,7 +56,7 @@ async function fetchDbtTextOnce(
   filesetId: string,
   book: string,
   chapter: number,
-): Promise<VerseEntry[] | null> {
+): Promise<FlatVerse[] | null> {
   const url = `${DBT_PROXY}?type=text&fileset_id=${filesetId}&book_id=${book}&chapter_id=${chapter}`
   const resp = await fetch(url)
   if (!resp.ok) return null
@@ -71,10 +65,12 @@ async function fetchDbtTextOnce(
   const rawData = Array.isArray(json) ? json : json.data || json
   if (!Array.isArray(rawData)) return rawData
 
-  return rawData.map((v: any) => ({
-    num: parseInt(v.verse_start || v.verse_end || "0", 10),
-    text: v.verse_text || "",
-  }))
+  // A combined verse keeps its range as the label ("2-3"), like Sofria's own.
+  return rawData.map((v: any) => {
+    const start = String(v.verse_start ?? v.verse_end ?? "")
+    const end = String(v.verse_end ?? "")
+    return { label: end && end !== start ? `${start}-${end}` : start, text: v.verse_text || "" }
+  })
 }
 
 /**
@@ -94,7 +90,7 @@ export async function fetchDbtText(
   filesetId: string,
   book: string,
   chapter: number,
-): Promise<VerseEntry[] | null> {
+): Promise<FlatVerse[] | null> {
   try {
     const result = await fetchDbtTextOnce(filesetId, book, chapter)
     if (result) return result
@@ -117,9 +113,9 @@ export async function fetchDbtText(
  * resolved base id). Headings, poetry and footnotes intact, unlike the
  * flat verse-only text_plain filesets fetchDbtText reads. Schema-compatible
  * with PKF's own Proskomma sofria() output (both are the same upstream
- * Sofria spec — see sofria.ts's SofriaDoc), so chapter-doc.ts can use this
- * directly wherever it's available instead of falling back to
- * flatVersesToSofria.
+ * Sofria spec — see src/lib/sofria/types.ts), so chapter-doc.ts can use this
+ * directly wherever it's available instead of falling back to the flat
+ * text_plain tier.
  */
 export async function fetchDbtSofria(
   jsonFilesetId: string,

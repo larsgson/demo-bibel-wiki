@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { excerptSofriaDoc, verseRangeIncludes } from './sofriaExcerpt';
 import { renderSofria } from './sofria';
-import { paragraph, versesWrapper, headingGraft, footnoteGraft } from './sofriaEmulate';
+import { paragraph, versesWrapper, headingGraft, footnoteGraft } from '../sofria/__fixtures__/build';
 import type { SofriaDoc, SofriaWrapper } from './sofria';
 
 // A synthetic (non-scripture) doc with two headed sections, mirroring a

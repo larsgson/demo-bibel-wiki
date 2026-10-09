@@ -18,7 +18,7 @@ function baseInputs(overrides: Partial<TextEditionInputs>): TextEditionInputs {
     sourceCatalogSrc: null,
     overlap: null,
     preferredSidecarText: null,
-    openbibleEdition: null,
+    openbibleEditions: [],
     ...overrides,
   }
 }
@@ -267,13 +267,31 @@ describe('rankTextEditions — precedence + dedupe', () => {
     expect(ranked[1]?.provider).toBe('pkf')
   })
 
+  const MGJ = {
+    projectId: 'p1',
+    abbr: 'MGJ',
+    path: 'openbible/xxx/MGJ/',
+    books: ['MAT'],
+    licenses: [{ type: 'CC BY-SA' }],
+    sofriaPattern: '<BOOK>/<chapter>.sofria.json',
+  }
+
   it('openbible only ever appears last', () => {
     const inputs = baseInputs({
-      openbibleEdition: 'MGJ',
+      openbibleEditions: [MGJ],
       sourceCatalogSrc: { provider: 'helloao', id: 'some_tid' },
     })
     const ranked = rankTextEditions(inputs)
-    expect(ranked.at(-1)).toMatchObject({ provider: 'openbible', id: 'MGJ' })
+    expect(ranked.at(-1)).toMatchObject({ provider: 'openbible', id: 'xxx/MGJ', openbible: MGJ })
+  })
+
+  it('a preferred openbible text resolves only through an allow-listed edition', () => {
+    const preferredText = { source: 'openbible' as const, id: 'MGJ' }
+    expect(rankTextEditions(baseInputs({ preferredText, openbibleEditions: [MGJ] }))[0]).toMatchObject({
+      provider: 'openbible',
+      via: 'preferred-text',
+    })
+    expect(rankTextEditions(baseInputs({ preferredText }))).toEqual([])
   })
 
   it('never lists the same provider:id twice even if multiple tiers would add it', () => {

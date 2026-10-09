@@ -43,15 +43,15 @@ describe('loadDbtUsxSofria', () => {
         expect(mockFetchDbtUsx).not.toHaveBeenCalled()
     })
 
-    it('imports real USX via Proskomma and returns a matching Sofria sequence', async () => {
+    it('imports real USX via Proskomma and returns a matching Sofria doc', async () => {
         mockDbtUsxFilesetId.mockResolvedValue('SOMEIDN_ET-usx')
         mockFetchDbtUsx.mockResolvedValue(usxBook('MAT', 'First placeholder verse.'))
 
-        const seq = await loadDbtUsxSofria('xub', 'nt', 'SOMEID', 'MAT', 1)
-        expect(seq).not.toBeNull()
-        expect(seq!.type).toBe('main')
-        expect(JSON.stringify(seq)).toContain('First placeholder verse.')
-        expect(JSON.stringify(seq)).toContain('Second placeholder verse.')
+        const doc = await loadDbtUsxSofria('xub', 'nt', 'SOMEID', 'MAT', 1)
+        expect(doc).not.toBeNull()
+        expect(doc!.sequence.type).toBe('main')
+        expect(JSON.stringify(doc)).toContain('First placeholder verse.')
+        expect(JSON.stringify(doc)).toContain('Second placeholder verse.')
         expect(mockFetchDbtUsx).toHaveBeenCalledWith('SOMEIDN_ET-usx', 'MAT')
     })
 

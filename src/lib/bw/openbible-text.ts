@@ -1,102 +1,128 @@
 import { pkfUrl } from "./pkf-url"
+import type { SofriaDoc } from "../sofria/types"
 
 /**
- * openbible (Biblica's Open Bible catalog, via bcv-commons/bibles' CDN
- * proxy) — a fourth text source, announced 2026-09-16, not yet live on the
- * CDN as of this writing (implemented ahead of go-live per explicit
- * instruction — the shape below is exactly what bibles' announcement
- * documented; verify against a real response once it's confirmed live).
+ * openbible (Biblica's Open Bible editions, published by bcv-commons/bibles
+ * as per-chapter Sofria on the CDN). Everything a client needs comes from
+ * one catalog, `catalog/openbible-editions.json`:
  *
- * Unlike DBT/PKF/helloAO, bibles doesn't proxy openbible's raw content
- * (whole-edition USFM/USX zips from Biblica's own API) — they instead
- * publish an already-parsed, per-chapter derivative specifically so
- * clients don't need their own zip/USFM handling. Path convention:
+ *   { entries: { <project id>: { abbr, iso, published,
+ *                                books?, canon?, licenses?, path?, reason? } },
+ *     formats: { sofria: { path: "<BOOK>/<chapter>.sofria.json" }, ... } }
  *
- *   https://cdn.bibel.wiki/openbible/<iso>/<edition>/<book>/<chapter>.json
- *   https://cdn.bibel.wiki/openbible/<iso>/<edition>/_meta.json
+ * `canon`, `books`, `licenses` and `path` are present only when `published`;
+ * an unpublished entry carries `reason` instead (e.g. "nd_license"). `path`
+ * is the edition's CDN folder ("openbible/ekk/OECV/"). See bibles'
+ * doc/openbible-chapters.md.
  *
- * `<edition>` is Biblica/yaapi.bible's own edition abbreviation (e.g.
- * "MGJ") — NOT the long hex-string "o:" ids currently seen in bibles'
- * own catalog/overlap.json (those are Biblica's internal project/version
- * ids, a different identifier entirely; confirmed live, 2026-09-16 —
- * e.g. "o:66db7559f881a336a4af526a" for "abc"). There is currently no
- * published bulk iso->edition-abbreviation mapping to resolve this
- * automatically, so editions are configured manually in
- * ../../data/openbible-editions.json until one exists (ask bibles, or
- * check whether the go-live confirmation clarifies this).
+ * Which editions this app actually offers is our own decision (licensing),
+ * made in src/data/openbible-editions.json's allow-list — the catalog only
+ * says what exists.
  */
 
-export interface OpenbibleMeta {
-  name: string
-  license: string
-  provider: string
-  copyright: string
-  source: string
-  source_url: string
-  openbible_link: string
+export interface OpenbibleLicense {
+  type: string
+  url?: string
+}
+
+export interface OpenbibleEntry {
+  abbr: string
+  iso: string
+  published: boolean
+  books?: string[]
+  /** "nt" | "ot", or "ntp" / "otp" for a partial testament. */
+  canon?: string[]
+  licenses?: OpenbibleLicense[]
+  path?: string
+  reason?: string
+}
+
+export interface OpenbibleCatalog {
+  entries: Record<string, OpenbibleEntry>
+  formats?: { sofria?: { path?: string } }
+}
+
+/** What chapter-doc.ts needs to fetch one openbible edition's chapters. */
+export interface OpenbibleEdition {
+  projectId: string
+  abbr: string
+  /** CDN folder, e.g. "openbible/ekk/OECV/". */
+  path: string
   books: string[]
+  licenses: OpenbibleLicense[]
+  /** Chapter file pattern inside `path`, e.g. "<BOOK>/<chapter>.sofria.json". */
+  sofriaPattern: string
 }
 
-interface RawOpenbibleChapter {
-  book: string
-  chapter: number
-  verses: { verse: number; text: string }[]
+const DEFAULT_SOFRIA_PATTERN = "<BOOK>/<chapter>.sofria.json"
+
+let catalogPromise: Promise<OpenbibleCatalog | null> | null = null
+
+/** bibles' openbible catalog, fetched once per session. */
+export function loadOpenbibleCatalog(): Promise<OpenbibleCatalog | null> {
+  if (catalogPromise) return catalogPromise
+  catalogPromise = fetch(pkfUrl("/catalog/openbible-editions.json"))
+    .then((r) => (r.ok ? (r.json() as Promise<OpenbibleCatalog>) : null))
+    .catch(() => null)
+  return catalogPromise
 }
 
-const chapterCache = new Map<string, Promise<{ num: number; text: string }[] | null>>()
-
-/** One chapter's plain verse text from openbible, already parsed by
- *  bibles' CDN — no USFM/USX handling needed on our side at all. */
-export function fetchOpenbibleChapter(
+/**
+ * The published editions for (iso, canon) that our allow-list enables, in
+ * allow-list order. An allow-list item is "<iso>/<abbr>" or a project id.
+ * Pure — the catalog is passed in.
+ */
+export function openbibleEditionsFor(
+  catalog: OpenbibleCatalog | null,
   iso: string,
-  edition: string,
-  book: string,
-  chapter: number,
-): Promise<{ num: number; text: string }[] | null> {
-  const key = `${iso}/${edition}/${book}/${chapter}`
-  const cached = chapterCache.get(key)
-  if (cached) return cached
-  const p = fetch(pkfUrl(`/openbible/${iso}/${edition}/${book}/${chapter}.json`))
-    .then((r) => (r.ok ? (r.json() as Promise<RawOpenbibleChapter>) : null))
-    .then((data) => {
-      if (!Array.isArray(data?.verses)) return null
-      return data.verses.map((v) => ({ num: v.verse, text: v.text }))
-    })
-    .catch(() => null)
-  chapterCache.set(key, p)
-  return p
+  canon: "nt" | "ot",
+  allow: string[],
+): OpenbibleEdition[] {
+  if (!catalog?.entries || allow.length === 0) return []
+  const sofriaPattern = catalog.formats?.sofria?.path ?? DEFAULT_SOFRIA_PATTERN
+  const out: OpenbibleEdition[] = []
+  for (const item of allow) {
+    for (const [projectId, e] of Object.entries(catalog.entries)) {
+      if (item !== projectId && item !== `${e.iso}/${e.abbr}`) continue
+      if (e.iso !== iso || !e.published || !e.path || !e.books?.length) continue
+      if (!e.canon?.some((c) => c === canon || c === `${canon}p`)) continue
+      if (out.some((o) => o.projectId === projectId)) continue
+      out.push({
+        projectId,
+        abbr: e.abbr,
+        path: e.path,
+        books: e.books,
+        licenses: e.licenses ?? [],
+        sofriaPattern,
+      })
+    }
+  }
+  return out
 }
 
-const metaCache = new Map<string, Promise<OpenbibleMeta | null>>()
+const chapterCache = new Map<string, Promise<SofriaDoc | null>>()
 
-/** Per-edition attribution/license — one fetch per edition, not per
- *  chapter. Needed for display (bibles asked that yaapi.bible/Biblica be
- *  credited using each edition's own provider/copyright fields) and for
- *  ND detection (see isNDLicense) — checked per EDITION, not per
- *  language, since a single iso can have multiple openbible editions
- *  under different licenses. */
-export function fetchOpenbibleMeta(iso: string, edition: string): Promise<OpenbibleMeta | null> {
-  const key = `${iso}/${edition}`
-  const cached = metaCache.get(key)
+/** One chapter of an openbible edition as Sofria, or null when the edition
+ *  doesn't have that book or the file isn't there. */
+export function fetchOpenbibleChapter(edition: OpenbibleEdition, book: string, chapter: number): Promise<SofriaDoc | null> {
+  if (!edition.books.includes(book)) return Promise.resolve(null)
+  const file = edition.sofriaPattern.replace("<BOOK>", book).replace("<chapter>", String(chapter))
+  const url = pkfUrl(`/${edition.path.replace(/^\/+/, "").replace(/\/?$/, "/")}${file}`)
+  const cached = chapterCache.get(url)
   if (cached) return cached
-  const p = fetch(pkfUrl(`/openbible/${iso}/${edition}/_meta.json`))
-    .then((r) => (r.ok ? (r.json() as Promise<OpenbibleMeta>) : null))
+  const p = fetch(url)
+    .then((r) => (r.ok ? (r.json() as Promise<SofriaDoc>) : null))
+    .then((doc) => (doc?.sequence ? doc : null))
     .catch(() => null)
-  metaCache.set(key, p)
+  chapterCache.set(url, p)
   return p
 }
 
 /**
- * ND (No-Derivatives) clause detection. Deliberately per-edition, checked
- * at point of use — unlike PKF's config/licenses.json (a per-LANGUAGE
- * allow/deny list, whole languages excluded from public release), ND
- * openbible editions are NOT excluded here: show them, just label the
- * license clearly wherever this returns true (explicit instruction,
- * 2026-09-16 — the opposite of what our own initial request to bibles
- * asked for; they may still publish only the non-ND subset for now, in
- * which case this simply never fires yet).
+ * ND (No-Derivatives) detection, per edition. ND editions are not excluded
+ * here — show them, just label the license clearly wherever this returns
+ * true (explicit instruction, 2026-09-16).
  */
-export function isNDLicense(license: string | undefined | null): boolean {
-  if (!license) return false
-  return /ND/i.test(license)
+export function isNDLicense(licenses: OpenbibleLicense[] | undefined | null): boolean {
+  return !!licenses?.some((l) => /\bND\b/i.test(l.type))
 }

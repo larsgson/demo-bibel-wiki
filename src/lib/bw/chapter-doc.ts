@@ -1,7 +1,7 @@
-import { fetchSofria, type SofriaDoc } from "../reader/sofria"
-import { extractVersesFromSofria } from "../reader/sofriaVerses"
-import { helloaoChapterToSofria, flatVersesToSofria } from "../reader/sofriaEmulate"
-import { isLoaded, loadDocSet } from "../reader/store"
+import { chapterVerses, type ChapterVerse, type SofriaDoc } from "../sofria"
+import { pkfChapterSofria } from "../sofria/pkf"
+import { flatVersesToSofria, helloaoToSofria } from "../sofria/convert"
+import { getProskomma, isLoaded, loadDocSet } from "../reader/store"
 import { loadPkfCatalog } from "./pkf-info"
 import { fetchHelloaoChapter, fetchDbtText, fetchDbtSofria } from "./content-sources"
 import { dbtSofriaFilesetId } from "./dbt-text-catalog"
@@ -9,17 +9,17 @@ import { loadDbtUsxSofria } from "./dbt-usx"
 import { fetchOpenbibleChapter } from "./openbible-text"
 import { getTestament } from "./bible-utils"
 import { resolveTextEditions, type TextEdition } from "./text-edition"
-import type { VerseEntry } from "../templates/types"
 
 /**
  * THE single chapter-text fetch — every pane (main reader, story templates,
  * ParallelView) goes through this instead of maintaining its own fetch/tier
  * logic. Given (iso, book, chapter): resolve the canon's edition candidates
  * (text-edition.ts), try each in priority order, and return the first that
- * actually has this chapter as a SofriaDoc — native for PKF and DBT's own
- * "text_json"/"text_usx" filesets (fetchDbtSofria / dbt-usx.ts), emulated
- * for helloAO/flat-DBT/openbible (sofriaEmulate.ts). See
- * internal-docs/unified-text-pipeline.md.
+ * actually has this chapter as a SofriaDoc — native for PKF, openbible and
+ * DBT's own "text_json"/"text_usx" filesets (fetchDbtSofria / dbt-usx.ts);
+ * converted by bibles' vendored helloAO→USJ→Sofria converter for helloAO
+ * and DBT's flat text_plain (src/lib/sofria). See
+ * internal-docs/sofria-rendering-migration.md.
  */
 
 export interface ChapterSource {
@@ -45,7 +45,7 @@ async function fetchDocFor(iso: string, edition: TextEdition, book: string, chap
       if (catalog && !catalog.documents.some((d) => d.bookCode === book)) return null
       try {
         if (!isLoaded(pkf.docSetId)) await loadDocSet(pkf.docSetId, pkf.pkfUrl)
-        return fetchSofria(pkf.docSetId, book, chapter)
+        return pkfChapterSofria(getProskomma(), pkf.docSetId, book, chapter)
       } catch {
         return null
       }
@@ -53,7 +53,7 @@ async function fetchDocFor(iso: string, edition: TextEdition, book: string, chap
     case "helloao": {
       const json = await fetchHelloaoChapter(edition.id, book, chapter)
       if (!json) return null
-      return helloaoChapterToSofria(json)
+      return helloaoToSofria(json, book, { lang: iso, abbr: edition.id })
     }
     case "dbt": {
       // Prefer DBT's own native Sofria structure (headings/poetry/footnotes)
@@ -71,16 +71,14 @@ async function fetchDocFor(iso: string, edition: TextEdition, book: string, chap
       // (dbt-usx.ts; Proskomma already parses USX natively, no separate
       // parser needed). Still native Sofria structure, just a different
       // DBT format tier than the json one above.
-      const usxSeq = await loadDbtUsxSofria(iso, edition.canon, edition.id, book, chapter)
-      if (usxSeq) return { sequence: usxSeq }
+      const usxDoc = await loadDbtUsxSofria(iso, edition.canon, edition.id, book, chapter)
+      if (usxDoc) return usxDoc
       const verses = await fetchDbtText(edition.id, book, chapter)
       if (!verses || verses.length === 0) return null
-      return flatVersesToSofria(verses)
+      return flatVersesToSofria(book, chapter, verses, { lang: iso, abbr: edition.id })
     }
     case "openbible": {
-      const verses = await fetchOpenbibleChapter(iso, edition.id, book, chapter)
-      if (!verses || verses.length === 0) return null
-      return flatVersesToSofria(verses)
+      return edition.openbible ? fetchOpenbibleChapter(edition.openbible, book, chapter) : null
     }
   }
 }
@@ -128,9 +126,11 @@ export async function loadChapterDoc(iso: string, book: string, chapter: number)
   return null
 }
 
-export async function loadChapterVerses(iso: string, book: string, chapter: number): Promise<VerseEntry[] | null> {
+/** A chapter's plain verses (`{label, num, text}`, reading order) — see
+ *  src/lib/sofria's chapterVerses. */
+export async function loadChapterVerses(iso: string, book: string, chapter: number): Promise<ChapterVerse[] | null> {
   const res = await loadChapterDoc(iso, book, chapter)
-  return res ? extractVersesFromSofria(res.doc) : null
+  return res ? chapterVerses(res.doc) : null
 }
 
 /** The provider/edition-id that resolved a chapter's text, if known — only

@@ -1,4 +1,5 @@
 import type { ParsedReference } from "./types"
+import { verseLabelIncludes, verseLabelOverlaps } from "../sofria/verse-label"
 
 const BOOK_CODE_ALIASES: Record<string, string> = {
   JOH: "JHN",
@@ -56,11 +57,13 @@ export const extractVerses = (
 
   if (Array.isArray(chapterData)) {
     let selectedVerses
+    // Entries are chapterVerses() output ({label, num, text}); a range
+    // verse ("2-3") is selected when any verse it covers is asked for.
     if (verses && Array.isArray(verses)) {
-      selectedVerses = chapterData.filter((v: any) => verses.includes(v.num))
+      selectedVerses = chapterData.filter((v: any) => verses.some((n) => verseLabelIncludes(String(v.label), n)))
     } else {
-      selectedVerses = chapterData.filter(
-        (v: any) => v.num >= (verseStart ?? 0) && v.num <= (verseEnd ?? Infinity),
+      selectedVerses = chapterData.filter((v: any) =>
+        verseLabelOverlaps(String(v.label), verseStart ?? 0, verseEnd ?? Infinity),
       )
     }
     if (selectedVerses.length === 0) return null

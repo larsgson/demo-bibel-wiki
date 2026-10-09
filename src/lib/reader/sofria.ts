@@ -1,5 +1,3 @@
-import { getProskomma } from './store';
-
 // Sofria types live in src/lib/sofria/types.ts (re-exported here for the
 // modules that still import them from this file).
 import type { SofriaDoc, SofriaSeq, SofriaContent } from '../sofria/types';
@@ -13,25 +11,6 @@ export type {
     SofriaWrapper,
     SofriaContent
 } from '../sofria/types';
-
-export function fetchSofria(
-    docSetId: string,
-    bookCode: string,
-    chapter: number
-): SofriaDoc {
-    const pk = getProskomma();
-    const q = `{
-        docSet(id: "${docSetId}") {
-            document(bookCode: "${bookCode}") {
-                sofria(chapter: ${chapter})
-            }
-        }
-    }`;
-    const result = pk.gqlQuerySync(q);
-    const raw = result?.data?.docSet?.document?.sofria;
-    if (!raw) throw new Error(`No sofria for ${bookCode} ${chapter}`);
-    return JSON.parse(raw) as SofriaDoc;
-}
 
 // ----- Rendering Sofria → HTML string with USFM-conventional class names -----
 

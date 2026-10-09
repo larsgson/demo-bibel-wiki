@@ -10,7 +10,7 @@ const mockFetchOpenbibleChapter = vi.fn()
 const mockLoadPkfCatalog = vi.fn()
 const mockIsLoaded = vi.fn()
 const mockLoadDocSet = vi.fn()
-const mockFetchSofria = vi.fn()
+const mockPkfChapterSofria = vi.fn()
 
 vi.mock('./text-edition', () => ({
     resolveTextEditions: (...args: unknown[]) => mockResolveTextEditions(...args),
@@ -32,14 +32,15 @@ vi.mock('./openbible-text', () => ({
 vi.mock('./pkf-info', () => ({
     loadPkfCatalog: (...args: unknown[]) => mockLoadPkfCatalog(...args),
 }))
+const PK = { gqlQuerySync: () => undefined }
 vi.mock('../reader/store', () => ({
+    getProskomma: () => PK,
     isLoaded: (...args: unknown[]) => mockIsLoaded(...args),
     loadDocSet: (...args: unknown[]) => mockLoadDocSet(...args),
 }))
-vi.mock('../reader/sofria', async () => {
-    const actual = await vi.importActual<typeof import('../reader/sofria')>('../reader/sofria')
-    return { ...actual, fetchSofria: (...args: unknown[]) => mockFetchSofria(...args) }
-})
+vi.mock('../sofria/pkf', () => ({
+    pkfChapterSofria: (...args: unknown[]) => mockPkfChapterSofria(...args),
+}))
 
 const { loadChapterDoc, loadChapterVerses, getChapterSource } = await import('./chapter-doc')
 
@@ -74,7 +75,7 @@ describe('loadChapterDoc — fallthrough', () => {
     it('falls through to the second candidate when the first resolves to nothing', async () => {
         mockResolveTextEditions.mockResolvedValue([helloaoEdition('BAD'), dbtEdition('GOOD')])
         mockFetchHelloaoChapter.mockResolvedValue(null)
-        mockFetchDbtText.mockResolvedValue([{ num: 1, text: 'hi' }])
+        mockFetchDbtText.mockResolvedValue([{ label: '1', text: 'hi' }])
 
         const res = await loadChapterDoc('xx1', 'JHN', 1)
         expect(res?.source).toEqual({ provider: 'dbt', id: 'GOOD' })
@@ -100,7 +101,7 @@ describe('loadChapterDoc — fallthrough', () => {
 describe('loadChapterDoc — caching', () => {
     it('only calls the winning fetcher once across two calls for the same (iso, book, chapter)', async () => {
         mockResolveTextEditions.mockResolvedValue([dbtEdition('ONE')])
-        mockFetchDbtText.mockResolvedValue([{ num: 1, text: 'x' }])
+        mockFetchDbtText.mockResolvedValue([{ label: '1', text: 'x' }])
 
         const first = await loadChapterDoc('xx4', 'GEN', 1)
         const second = await loadChapterDoc('xx4', 'GEN', 1)
@@ -111,7 +112,7 @@ describe('loadChapterDoc — caching', () => {
 
     it('does not share a cache entry across different isos with the same edition id', async () => {
         mockResolveTextEditions.mockResolvedValue([dbtEdition('SHARED')])
-        mockFetchDbtText.mockResolvedValue([{ num: 1, text: 'x' }])
+        mockFetchDbtText.mockResolvedValue([{ label: '1', text: 'x' }])
         await loadChapterDoc('xx5', 'GEN', 1)
         await loadChapterDoc('xx6', 'GEN', 1)
         expect(mockFetchDbtText).toHaveBeenCalledTimes(2)
@@ -135,7 +136,7 @@ describe('loadChapterDoc — DBT native Sofria', () => {
         mockResolveTextEditions.mockResolvedValue([dbtEdition('FLAT')])
         mockDbtSofriaFilesetId.mockResolvedValue(null)
         mockLoadDbtUsxSofria.mockResolvedValue(null)
-        mockFetchDbtText.mockResolvedValue([{ num: 1, text: 'plain text' }])
+        mockFetchDbtText.mockResolvedValue([{ label: '1', text: 'plain text' }])
 
         const res = await loadChapterDoc('xxD2', 'JHN', 1)
         expect(res?.source).toEqual({ provider: 'dbt', id: 'FLAT' })
@@ -146,7 +147,7 @@ describe('loadChapterDoc — DBT native Sofria', () => {
     it('falls back to native USX (via Proskomma) when there is no json variant but there is a usx one', async () => {
         mockResolveTextEditions.mockResolvedValue([dbtEdition('USXONLY')])
         mockDbtSofriaFilesetId.mockResolvedValue(null)
-        mockLoadDbtUsxSofria.mockResolvedValue({ type: 'main', blocks: [] })
+        mockLoadDbtUsxSofria.mockResolvedValue({ sequence: { type: 'main', blocks: [] } })
 
         const res = await loadChapterDoc('xxD5', 'JHN', 1)
         expect(res?.doc).toEqual({ sequence: { type: 'main', blocks: [] } })
@@ -176,7 +177,7 @@ describe('loadChapterDoc — PKF catalog gate', () => {
         const res = await loadChapterDoc('xx7', 'GEN', 1)
         expect(res).toBeNull()
         expect(mockLoadDocSet).not.toHaveBeenCalled()
-        expect(mockFetchSofria).not.toHaveBeenCalled()
+        expect(mockPkfChapterSofria).not.toHaveBeenCalled()
     })
 
     it('loads the docSet and queries sofria when the catalog does cover the book', async () => {
@@ -184,31 +185,72 @@ describe('loadChapterDoc — PKF catalog gate', () => {
         mockLoadPkfCatalog.mockResolvedValue({ id: 'x', selectors: { lang: 'x', abbr: 'x' }, documents: [{ id: 'JHN', bookCode: 'JHN', h: null, toc: null, toc2: null, toc3: null }] })
         mockIsLoaded.mockReturnValue(false)
         mockLoadDocSet.mockResolvedValue(undefined)
-        mockFetchSofria.mockReturnValue({ sequence: { type: 'main', blocks: [] } })
+        mockPkfChapterSofria.mockReturnValue({ sequence: { type: 'main', blocks: [] } })
 
         const res = await loadChapterDoc('xx8', 'JHN', 1)
         expect(res?.source).toEqual({ provider: 'pkf', id: 'lang_C02' })
         expect(mockLoadDocSet).toHaveBeenCalledWith('lang_C02', 'https://x/lang_C02.pkf')
-        expect(mockFetchSofria).toHaveBeenCalledWith('lang_C02', 'JHN', 1)
+        expect(mockPkfChapterSofria).toHaveBeenCalledWith(PK, 'lang_C02', 'JHN', 1)
     })
 
     it('skips loadDocSet when already loaded', async () => {
         mockResolveTextEditions.mockResolvedValue([pkfEdition('lang_C03', 'nt')])
         mockLoadPkfCatalog.mockResolvedValue(null) // no catalog fetched -> treated as "don't know", proceed
         mockIsLoaded.mockReturnValue(true)
-        mockFetchSofria.mockReturnValue({ sequence: { type: 'main', blocks: [] } })
+        mockPkfChapterSofria.mockReturnValue({ sequence: { type: 'main', blocks: [] } })
 
         await loadChapterDoc('xx9', 'JHN', 1)
         expect(mockLoadDocSet).not.toHaveBeenCalled()
     })
 })
 
+describe('loadChapterDoc — openbible', () => {
+    const edition = {
+        projectId: 'p1',
+        abbr: 'OECV',
+        path: 'openbible/ekk/OECV/',
+        books: ['JHN'],
+        licenses: [],
+        sofriaPattern: '<BOOK>/<chapter>.sofria.json',
+    }
+
+    it('fetches the chapter through the edition from the catalog', async () => {
+        mockResolveTextEditions.mockResolvedValue([
+            { provider: 'openbible' as const, id: 'ekk/OECV', canon: 'nt' as const, via: 'test', openbible: edition },
+        ])
+        mockFetchOpenbibleChapter.mockResolvedValue({ sequence: { type: 'main', blocks: [] } })
+        const res = await loadChapterDoc('xxO1', 'JHN', 3)
+        expect(res?.source).toEqual({ provider: 'openbible', id: 'ekk/OECV' })
+        expect(mockFetchOpenbibleChapter).toHaveBeenCalledWith(edition, 'JHN', 3)
+    })
+
+    it('skips an openbible candidate without catalog details', async () => {
+        mockResolveTextEditions.mockResolvedValue([{ provider: 'openbible' as const, id: 'ekk/X', canon: 'nt' as const, via: 'test' }])
+        expect(await loadChapterDoc('xxO2', 'JHN', 3)).toBeNull()
+        expect(mockFetchOpenbibleChapter).not.toHaveBeenCalled()
+    })
+})
+
+describe('loadChapterDoc — helloAO through the vendored converter', () => {
+    it('turns the helloAO chapter into Sofria with real verse text', async () => {
+        mockResolveTextEditions.mockResolvedValue([helloaoEdition('BSB')])
+        mockFetchHelloaoChapter.mockResolvedValue({
+            chapter: { number: 1, content: [{ type: 'verse', number: 1, content: ['In the beginning'] }] },
+        })
+        const verses = await loadChapterVerses('xxH1', 'GEN', 1)
+        expect(verses).toEqual([{ label: '1', num: 1, text: 'In the beginning' }])
+    })
+})
+
 describe('loadChapterVerses + getChapterSource', () => {
     it('extracts plain verses from the resolved doc', async () => {
         mockResolveTextEditions.mockResolvedValue([dbtEdition('E1')])
-        mockFetchDbtText.mockResolvedValue([{ num: 1, text: 'hello' }])
+        mockFetchDbtText.mockResolvedValue([{ label: '1', text: 'hello' }, { label: '2-3', text: 'range' }])
         const verses = await loadChapterVerses('xxA', 'GEN', 1)
-        expect(verses).toEqual([{ num: 1, text: 'hello' }])
+        expect(verses).toEqual([
+            { label: '1', num: 1, text: 'hello' },
+            { label: '2-3', num: 2, text: 'range' },
+        ])
     })
 
     it('records the winning source for getChapterSource', async () => {

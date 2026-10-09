@@ -1,7 +1,8 @@
 import { fetchDbtUsx } from "./content-sources"
 import { dbtUsxFilesetId } from "./dbt-text-catalog"
-import { importUsxBook, isUsxBookLoaded, usxDocSetId } from "../reader/store"
-import { fetchSofria, type SofriaSeq } from "../reader/sofria"
+import { getProskomma, importUsxBook, isUsxBookLoaded, usxDocSetId } from "../reader/store"
+import { pkfChapterSofria } from "../sofria/pkf"
+import type { SofriaDoc } from "../sofria/types"
 
 /**
  * DBT's `text_usx` filesets, via a LIVE Proskomma import — not a
@@ -16,7 +17,8 @@ import { fetchSofria, type SofriaSeq } from "../reader/sofria"
  * identical file path regardless of which chapter is requested. So this
  * fetches + imports once per (iso, fileset, book), cached for the rest of
  * the session, and every chapter of that book after the first is served
- * straight from fetchSofria with no further network/parse cost.
+ * straight from pkfChapterSofria (with its whole-book fallback) with no
+ * further network/parse cost.
  */
 
 // The selectors' "abbr" value can only contain [A-Za-z0-9 -] (SABProskomma's
@@ -62,7 +64,7 @@ export async function loadDbtUsxSofria(
   filesetId: string,
   book: string,
   chapter: number,
-): Promise<SofriaSeq | null> {
+): Promise<SofriaDoc | null> {
   const usxFilesetId = await dbtUsxFilesetId(iso, canon, filesetId)
   if (!usxFilesetId) return null
 
@@ -70,7 +72,7 @@ export async function loadDbtUsxSofria(
   if (!docSetId) return null
 
   try {
-    return fetchSofria(docSetId, book, chapter).sequence
+    return pkfChapterSofria(getProskomma(), docSetId, book, chapter)
   } catch {
     return null
   }
