@@ -55,7 +55,9 @@ describe('pkfStyleUrls', () => {
     expect(urls[1]).toMatch(/\/pkf\/ind\/styles\/delta\.css$/)
   })
 
-  it('defaults to styles/delta.css when info.json has no style_delta', () => {
-    expect(pkfStyleUrls('ind', {}).at(-1)).toMatch(/\/pkf\/ind\/styles\/delta\.css$/)
+  it('defaults to the shared sheet and styles/delta.css when info.json names neither', () => {
+    const urls = pkfStyleUrls('ind', {})
+    expect(urls[0]).toMatch(/\/pkf\/_styles\/sab-scripture\.css$/)
+    expect(urls[1]).toMatch(/\/pkf\/ind\/styles\/delta\.css$/)
   })
 })

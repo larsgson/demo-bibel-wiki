@@ -113,6 +113,7 @@ export const id = {
     tabVideo: "Video",
     footnote: "Catatan kaki",
     crossRef: "Referensi silang",
+    introduction: "Pendahuluan",
     glossary: "Glosarium",
     close: "Tutup",
     searchAria: "Pencarian AI",

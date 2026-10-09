@@ -31,14 +31,6 @@ export interface PkfAssets {
   media: any
 }
 
-// se-regional-data's shared `sab-scripture.css` (SAB's scripture rules) is
-// scoped to `#container`/`.reader-root` since 2026-10-09, so it can't touch
-// the app chrome. Switched on ahead of Phase 3 for a browser check: the reader
-// still renders the old DOM, whose class names overlap SAB's, so expect it to
-// mix with reader.css until then. Set false to go back to delta.css only. See
-// internal-docs/sofria-rendering-migration.md.
-const LOAD_SHARED_STYLESHEET = true
-
 /** Resolve a path from info.json (relative to `/pkf/<iso>/`) to a fetchable
  *  URL, keeping it root-relative when no PUBLIC_PKF_BASE_URL is set. */
 function resolvePkfPath(iso: string, rel: string): string {
@@ -47,15 +39,21 @@ function resolvePkfPath(iso: string, rel: string): string {
   return url.origin === dummy ? url.pathname : url.href
 }
 
-/** The stylesheets this language's info.json points at: the per-language
- *  `delta.css` (fonts + all three theme palettes, scoped to
- *  `:is(#container,.reader-root)[data-iso]`), preceded by the shared sheet
- *  once that is safe to load. */
+/** se-regional-data's shared SAB scripture sheet (scoped to
+ *  `#container`/`.reader-root`), for readers with no info.json to name it —
+ *  every non-PKF language. */
+export function sabSharedStyleUrl(): string {
+  return pkfUrl("/pkf/_styles/sab-scripture.css")
+}
+
+/** The stylesheets this language's info.json points at, in cascade order:
+ *  the shared SAB scripture sheet, then the per-language `delta.css` (fonts +
+ *  colour variables, scoped to `:is(#container,.reader-root)[data-iso]`). */
 export function pkfStyleUrls(iso: string, info: PkfInfo | null): string[] {
-  const urls: string[] = []
-  if (LOAD_SHARED_STYLESHEET && info?.style_shared) urls.push(resolvePkfPath(iso, info.style_shared))
-  urls.push(resolvePkfPath(iso, info?.style_delta ?? "styles/delta.css"))
-  return urls
+  return [
+    info?.style_shared ? resolvePkfPath(iso, info.style_shared) : sabSharedStyleUrl(),
+    resolvePkfPath(iso, info?.style_delta ?? "styles/delta.css"),
+  ]
 }
 
 const infoCache = new Map<string, Promise<PkfInfo | null>>()

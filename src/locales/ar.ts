@@ -112,6 +112,7 @@ export const ar = {
     tabVideo: "الفيديو",
     footnote: "حاشية",
     crossRef: "مرجع متقاطع",
+    introduction: "مقدمة",
     glossary: "المسرد",
     close: "إغلاق",
     searchAria: "بحث بالذكاء الاصطناعي",

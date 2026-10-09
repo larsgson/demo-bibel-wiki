@@ -113,6 +113,7 @@ export const es = {
     tabVideo: "Video",
     footnote: "Nota",
     crossRef: "Referencia cruzada",
+    introduction: "Introducción",
     glossary: "Glosario",
     close: "Cerrar",
     searchAria: "Búsqueda IA",

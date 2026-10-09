@@ -678,6 +678,84 @@ html[data-ui-level="2"] .reader-audio-bottom {
     margin: 0.8em auto;
 }
 
+/* ---- SAB DOM from render.js (#content) --------------------------------
+ * The shared sab-scripture.css styles the scripture itself; these are the
+ * app's additions on top of it. */
+
+/* The renderer marks what it keeps but doesn't show with `hidden` (hidden
+ * captions, figures/videos switched off, chapter number in 'none' mode);
+ * author `display:` rules must not bring those back. */
+#content [hidden] { display: none !important; }
+/* Notes are shown in the popover only, never as the collected list. */
+#content div.footnotes { display: none; }
+
+#content a.footnote-caller,
+#content a.glossary { cursor: pointer; text-decoration: none; }
+#content a.glossary { color: inherit; border-bottom: 1px dotted currentColor; }
+#content a.glossary:hover { color: var(--LinkColor); border-bottom-style: solid; }
+
+/* Tap-to-select, search hit and audio-playing verse, on its phrases. */
+#content .seltxt.selected {
+    background-color: color-mix(in srgb, var(--TextHighlightColor) 20%, transparent);
+    border-radius: 3px;
+}
+#content .seltxt.search-highlight {
+    background: rgba(255, 215, 0, 0.3);
+    border-radius: 3px;
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.4);
+}
+#content .seltxt.audio-playing {
+    background: rgba(0, 11, 99, 0.1);
+    border-radius: 3px;
+}
+
+#content div.image-block img { max-width: 100%; height: auto; }
+
+/* Verse-placed video: thumbnail with a play overlay; replaced by the player
+ * on click (Reader.svelte). */
+#content div.video-block {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: 4px;
+    background-color: rgb(31 41 55);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    cursor: pointer;
+    color: white;
+}
+#content div.video-block::before {
+    content: "\25b6";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.75);
+}
+#content div.video-block div.video-title {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    padding: 4px 8px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0));
+    text-align: start;
+}
+
+/* A book's introduction, collapsed above chapter 1. */
+#content details.reader-intro {
+    margin: 0.5em 0 1em;
+    padding: 0.4em 0.6em;
+    border: 1px solid var(--DividerColor, rgba(0, 11, 99, 0.12));
+    border-radius: 6px;
+}
+#content details.reader-intro > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--TitlesColor);
+}
+
 /* Body gets a modest max-width for readable line length. */
 .reader-body {
     max-width: 640px;

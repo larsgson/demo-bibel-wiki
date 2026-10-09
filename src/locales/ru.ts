@@ -113,6 +113,7 @@ export const ru = {
     tabVideo: "Видео",
     footnote: "Сноска",
     crossRef: "Перекрёстная ссылка",
+    introduction: "Введение",
     glossary: "Глоссарий",
     close: "Закрыть",
     searchAria: "ИИ-поиск",

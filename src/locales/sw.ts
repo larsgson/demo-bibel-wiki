@@ -113,6 +113,7 @@ export const sw = {
     tabVideo: "Video",
     footnote: "Maelezo ya chini",
     crossRef: "Rejeleo mtambuka",
+    introduction: "Utangulizi",
     glossary: "Kamusi",
     close: "Funga",
     searchAria: "Utafutaji wa AI",

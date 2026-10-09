@@ -10,10 +10,12 @@
     import { chapterCount, type Catalog, type CatalogDoc } from './catalog';
     import { loadReaderCatalog } from './readerCatalog';
     import { loadDocSet, isLoaded } from './store';
-    import { renderSofria, type RenderedChapter, type CaptionMode } from './sofria';
+    import { renderChapterHtml, injectPlacementVideos, verseLabelIncludes, type RenderResult } from '../sofria';
+    import { pkfRenderOptions } from '../sofria/pkf';
+    import { captionModeFor } from '../data/figureCaptions';
     import { loadChapterDoc } from '../bw/chapter-doc';
     import { resolveTextEditions } from '../bw/text-edition';
-    import type { PkfAssets } from '../bw/pkf-info';
+    import { sabSharedStyleUrl, type PkfAssets } from '../bw/pkf-info';
     import { nameFor } from '../data/languageNames';
     import type { MediaManifest, VideoEntry, AudioEntry } from '../data/pkfInfo';
     import { settings } from './settings';
@@ -44,12 +46,11 @@
     };
     let { iso }: Props = $props();
 
-    // PKF asset bundle for this language (docSetId/pkfUrl/styleUrl/
+    // PKF asset bundle for this language (docSetId/pkfUrl/styleUrls/
     // figureUrls/media), when any canon resolves to a PKF edition —
     // resolved once on mount via the shared text-edition resolver. null
     // for PKF-less languages (helloAO-full or DBT-flat).
     let pkfExtras = $state<PkfAssets | null>(null);
-    const captionMode: CaptionMode = 'hide';
     let media = $derived<MediaManifest | undefined>(pkfExtras?.media);
 
     let catalog = $state<Catalog | null>(null);
@@ -57,7 +58,7 @@
 
     let currentBook = $state<CatalogDoc | null>(null);
     let currentChapter = $state<number>(1);
-    let rendered = $state<RenderedChapter | null>(null);
+    let rendered = $state<RenderResult | null>(null);
     let rendering = $state(false);
     let renderError = $state<string | null>(null);
     let pkfLoaded = $state(false);
@@ -67,6 +68,9 @@
     // and the default landing reference. Fetched once per language.
     let appCfg = $state<AppConfig | null>(null);
     let textDir = $state<'ltr' | 'rtl'>('ltr');
+    // Settles once appCfg/textDir are known; chapters render after it, since
+    // the renderer's options come from the app-config.
+    let appCfgReady: Promise<unknown> = Promise.resolve();
 
     // Whole-chapter audio resolved from the /dbt CDN tree (media-index +
     // per-language filesets + timing), used when the CDN media manifest
@@ -97,8 +101,9 @@
             if (cfg.collection?.textDirection) textDir = cfg.collection.textDirection;
             return cfg;
         });
+        appCfgReady = appCfgPromise;
         // Resolve which (if any) canon uses a PKF edition for this language —
-        // drives styleUrl/figureUrls/media/docSetId/pkfUrl/ensurePkf/glossary.
+        // drives styleUrls/figureUrls/media/docSetId/pkfUrl/ensurePkf/glossary.
         const [ntEditions, otEditions] = await Promise.all([
             resolveTextEditions(iso, 'nt'),
             resolveTextEditions(iso, 'ot')
@@ -107,19 +112,18 @@
         pkfExtras = pkfEdition?.pkf ?? null;
 
         if (!pkfExtras && nameFor(iso)?.d === 'rtl') textDir = 'rtl';
-        if (pkfExtras?.styleUrls.length) {
-            // Swap in this language's stylesheets. Any previously-injected links
-            // are removed first so only one language's styles are live.
-            document.querySelectorAll(`link[${LINK_ATTR}]`).forEach((el) => el.remove());
-            linkEls = pkfExtras.styleUrls.map((href) => {
-                const el = document.createElement('link');
-                el.rel = 'stylesheet';
-                el.href = href;
-                el.setAttribute(LINK_ATTR, iso);
-                document.head.appendChild(el);
-                return el;
-            });
-        }
+        // Swap in this language's stylesheets: the shared SAB scripture sheet
+        // (+ delta.css for PKF languages). Any previously-injected links are
+        // removed first so only one language's styles are live.
+        document.querySelectorAll(`link[${LINK_ATTR}]`).forEach((el) => el.remove());
+        linkEls = (pkfExtras?.styleUrls ?? [sabSharedStyleUrl()]).map((href) => {
+            const el = document.createElement('link');
+            el.rel = 'stylesheet';
+            el.href = href;
+            el.setAttribute(LINK_ATTR, iso);
+            document.head.appendChild(el);
+            return el;
+        });
         document.addEventListener('click', onGlobalClick);
         document.addEventListener('keydown', onGlobalKey);
         loadBookmarks();
@@ -233,22 +237,8 @@
         saveLastPosition({ book: book.bookCode, chapter: ch });
         window.dispatchEvent(new CustomEvent('bible-position-changed', { detail: { book: book.bookCode, chapter: ch } }));
         try {
-            const res = await loadChapterDoc(iso, book.bookCode, ch);
-            if (res) {
-                const inlineForRender = $settings.showVideos
-                    ? (media?.videos.filter(
-                          (v) =>
-                              v.placement?.bookCode === book.bookCode &&
-                              v.placement?.chapter === ch &&
-                              v.placement?.verse != null
-                      ) ?? [])
-                    : [];
-                const figsForRender = $settings.showIllustrations ? (pkfExtras?.figureUrls ?? {}) : {};
-                const hideVerseNumberOne = appCfg?.features?.['hide-verse-number-1'] === true;
-                rendered = renderSofria(res.doc, figsForRender, captionMode, inlineForRender, hideVerseNumberOne);
-            } else {
-                rendered = null;
-            }
+            const [res] = await Promise.all([loadChapterDoc(iso, book.bookCode, ch), appCfgReady]);
+            rendered = res ? renderChapter(res.doc, book.bookCode, ch) : null;
         } catch (e) {
             renderError = e instanceof Error ? e.message : String(e);
         } finally {
@@ -261,23 +251,52 @@
         if (browser) window.scrollTo(0, restored ?? 0);
     }
 
-    function highlightVersesInDom(verses: number[]) {
-        // Clear any previous search highlights
-        document.querySelectorAll('.verse-block.search-highlight').forEach((el) =>
-            el.classList.remove('search-highlight'));
-        if (!verses.length) return;
-        requestAnimationFrame(() => {
-            let firstEl: Element | null = null;
-            // A verse spanning multiple lines (poetry) emits one .verse-block
-            // per line, all sharing the same data-v — highlight every one.
-            for (const v of verses) {
-                const els = document.querySelectorAll(`.verse-block[data-v="${v}"]`);
-                els.forEach((el) => {
-                    el.classList.add('search-highlight');
-                    if (!firstEl) firstEl = el;
-                });
+    /** Render a chapter doc through bibles' reference renderer (SAB DOM). PKF
+     *  languages take their options from app-config (red letters, verse-1
+     *  number, chapter number style, glossary words); other sources use the
+     *  renderer's defaults, minus glossary links (they have no glossary). */
+    function renderChapter(doc: Parameters<typeof renderChapterHtml>[0], bookCode: string, ch: number): RenderResult {
+        const base = pkfRenderOptions(appCfg);
+        const placed = media?.videos.filter(
+            (v) => v.placement?.bookCode === bookCode && v.placement?.chapter === ch
+        );
+        const figureUrls = pkfExtras?.figureUrls ?? {};
+        return renderChapterHtml(injectPlacementVideos(doc, placed), {
+            ...base,
+            ...(pkfExtras ? { keywordLinks: base.glossaryLinks !== false } : { glossaryLinks: false }),
+            direction: textDir,
+            figureUrl: (src) => figureUrls[src] ?? null,
+            showImages: $settings.showIllustrations,
+            showVideos: $settings.showVideos,
+            captions: captionModeFor(iso),
+            video: (id) => {
+                const v = media?.videos.find((x) => x.id === id);
+                return v ? { title: v.title, thumbnailUrl: v.thumbnailUrl } : null;
             }
-            if (firstEl) firstEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        });
+    }
+
+    /** The rendered chapter's phrases (`div.seltxt[data-verse]`) covering any
+     *  of `verses`. A verse spread over several paragraphs (poetry) has one
+     *  phrase per paragraph; a range label ("2-3") counts for each verse. */
+    function phrasesFor(verses: number[]): HTMLElement[] {
+        const root = document.getElementById('content');
+        if (!root || !verses.length) return [];
+        return [...root.querySelectorAll<HTMLElement>('.seltxt[data-verse]')].filter((el) =>
+            verses.some((n) => verseLabelIncludes(el.dataset.verse ?? '', n))
+        );
+    }
+
+    function setPhraseClass(cls: string, els: HTMLElement[]) {
+        document.querySelectorAll(`#content .${cls}`).forEach((el) => el.classList.remove(cls));
+        els.forEach((el) => el.classList.add(cls));
+    }
+
+    function highlightVersesInDom(verses: number[]) {
+        requestAnimationFrame(() => {
+            const els = phrasesFor(verses);
+            setPhraseClass('search-highlight', els);
+            els[0]?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         });
     }
 
@@ -287,11 +306,7 @@
     function highlightPlayingVerse(verseNum: number | null) {
         if (verseNum === lastHighlightedVerse) return;
         lastHighlightedVerse = verseNum;
-        document.querySelectorAll('.verse-block.audio-playing').forEach((el) =>
-            el.classList.remove('audio-playing'));
-        if (verseNum == null) return;
-        document.querySelectorAll(`.verse-block[data-v="${verseNum}"]`).forEach((el) =>
-            el.classList.add('audio-playing'));
+        setPhraseClass('audio-playing', verseNum == null ? [] : phrasesFor([verseNum]));
     }
 
     function handleAudioTimeUpdate(t: number) {
@@ -387,15 +402,15 @@
      *  card so it's always reachable on mobile and never obscures the verse
      *  the user just tapped (the SE/SAB pattern). */
     type Popover =
-        | { kind: 'note' | 'xref'; idx: number }
+        | { kind: 'note'; id: string }
         | { kind: 'glossary'; term: string; definition: string };
     let popover = $state<Popover | null>(null);
     let popoverEl: HTMLDivElement | null = $state(null);
+    let popoverNote = $derived(
+        popover?.kind === 'note' ? rendered?.notes.find((n) => n.id === (popover as { id: string }).id) : undefined
+    );
 
-    function openPopover(kind: 'note' | 'xref', idx: number, _anchor: HTMLElement) {
-        popover = { kind, idx };
-    }
-    function openGlossaryPopover(term: string, _anchor: HTMLElement) {
+    function openGlossaryPopover(term: string) {
         if (!glossaryLoaded) loadGlossaryOnce();
         const entry = lookupGlossary(glossary, term);
         if (!entry) return; // silent if no glossary entry
@@ -505,7 +520,7 @@
         const target = e.target as Node | null;
         if (popoverEl && target && popoverEl.contains(target)) return;
         // Ignore clicks on callers — their own handler manages the popover state.
-        if (target instanceof HTMLElement && target.closest('.note-caller, .xref-caller')) return;
+        if (target instanceof HTMLElement && target.closest('#content a.footnote-caller, #content a.glossary')) return;
         closePopover();
     }
     function onGlobalKey(e: KeyboardEvent) {
@@ -616,9 +631,9 @@
               : []
     );
     /** Videos attached to the current book+chapter. Split by whether they
-     * have a verse-level placement: ones with a verse go inline in the
-     * scripture text (emitted by the Sofria renderer), the rest go in the
-     * top strip above the chapter body. */
+     * have a verse-level placement: ones with a verse become the renderer's
+     * `div.video-block`s between paragraphs (injectPlacementVideos), the rest
+     * go in the top strip above the chapter body. */
     let videosForChapter = $derived<VideoEntry[]>(
         currentBook && media
             ? media.videos.filter(
@@ -628,16 +643,13 @@
               )
             : []
     );
-    let inlineVideos = $derived<VideoEntry[]>(
-        videosForChapter.filter((v) => v.placement?.verse != null)
-    );
     let topVideos = $derived<VideoEntry[]>(
         videosForChapter.filter((v) => v.placement?.verse == null)
     );
 
     /** Which top-strip video thumbnail has been clicked open; keyed by video.id.
-     * Inline videos (inside {@html}) are handled via imperative DOM replacement
-     * on click so the player element survives re-renders of neighbouring state. */
+     * In-text video blocks (inside {@html}) are handled via imperative DOM
+     * replacement on click so the player survives re-renders of neighbouring state. */
     let openedVideos = $state<Set<string>>(new Set());
     function openVideo(v: VideoEntry) {
         openedVideos = new Set([...openedVideos, v.id]);
@@ -722,11 +734,12 @@
         };
     }
 
-    /** Click / keydown delegation for the rendered scripture body. Handles:
-     *   - inline video thumbnails → replace in place with a real player
-     *   - footnote callers        → open popover
-     *   - cross-ref callers       → open popover
-     *   - verse-block taps        → toggle verse selection (visual highlight)
+    /** Click / keydown delegation for the rendered scripture body (SAB DOM
+     *  from render.js). Handles:
+     *   - video blocks        → replace in place with a real player
+     *   - footnote/xref callers (a.footnote-caller) → open popover
+     *   - glossary words (a.glossary[match])        → open popover
+     *   - phrase taps (.seltxt[data-verse])         → toggle verse selection
      */
     function handleBodyClick(e: MouseEvent | KeyboardEvent) {
         const target = e.target as HTMLElement | null;
@@ -739,55 +752,40 @@
         )
             return;
 
-        // Inline video thumbnail
-        const thumb = target.closest<HTMLElement>('.reader-inline-video[data-video-id]');
-        if (thumb) {
+        const videoBlock = target.closest<HTMLElement>('.video-block[data-video-id]');
+        if (videoBlock) {
             e.preventDefault();
-            const id = thumb.getAttribute('data-video-id');
-            if (!id) return;
-            const v = inlineVideos.find((x) => x.id === id);
-            if (!v) return;
-            thumb.replaceWith(buildPlayerElement(v));
+            const v = media?.videos.find((x) => x.id === videoBlock.dataset.videoId);
+            if (v) videoBlock.replaceWith(buildPlayerElement(v));
             return;
         }
 
-        // Footnote caller
-        const noteBtn = target.closest<HTMLElement>('.note-caller[data-note-idx]');
-        if (noteBtn) {
+        const caller = target.closest<HTMLElement>('a.footnote-caller[data-note]');
+        if (caller) {
             e.preventDefault();
-            const idx = parseInt(noteBtn.getAttribute('data-note-idx') ?? '', 10);
-            if (Number.isFinite(idx)) openPopover('note', idx, noteBtn);
+            popover = { kind: 'note', id: caller.dataset.note ?? '' };
             return;
         }
 
-        // Cross-ref caller
-        const xrefBtn = target.closest<HTMLElement>('.xref-caller[data-xref-idx]');
-        if (xrefBtn) {
+        // Glossary word (\w, and \k for PKF) — lazy-build the glossary map on first use.
+        const term = target.closest<HTMLElement>('a.glossary[match]');
+        if (term) {
             e.preventDefault();
-            const idx = parseInt(xrefBtn.getAttribute('data-xref-idx') ?? '', 10);
-            if (Number.isFinite(idx)) openPopover('xref', idx, xrefBtn);
+            const match = term.getAttribute('match') ?? '';
+            if (match) openGlossaryPopover(match);
             return;
         }
 
-        // Glossary term (\w or \k) — lazy-build the glossary map on first use.
-        const termBtn = target.closest<HTMLElement>('.glossary-term[data-term]');
-        if (termBtn) {
-            e.preventDefault();
-            const term = termBtn.getAttribute('data-term') ?? '';
-            if (term) openGlossaryPopover(term, termBtn);
-            return;
-        }
-
-        // Verse-block tap → toggle .selected. Imperative DOM toggle so opened
-        // inline video players are not disturbed by re-renders. A verse
-        // spanning multiple lines (poetry) shares its data-v across several
-        // blocks — toggle them together so the whole verse selects as one.
-        const verse = target.closest<HTMLElement>('.verse-block[data-v]');
-        if (verse) {
-            const v = verse.getAttribute('data-v');
-            const selecting = !verse.classList.contains('selected');
-            document.querySelectorAll(`.verse-block[data-v="${v}"]`).forEach((el) =>
-                el.classList.toggle('selected', selecting));
+        // Phrase tap → toggle .selected. Imperative DOM toggle so opened
+        // inline video players are not disturbed by re-renders. A verse has a
+        // phrase per paragraph it spans — toggle them together.
+        const phrase = target.closest<HTMLElement>('.seltxt[data-verse]');
+        if (phrase) {
+            const label = phrase.dataset.verse ?? '';
+            const selecting = !phrase.classList.contains('selected');
+            document
+                .querySelectorAll(`#content .seltxt[data-verse="${CSS.escape(label)}"]`)
+                .forEach((el) => el.classList.toggle('selected', selecting));
         }
     }
 </script>
@@ -910,6 +908,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <div
+                    id="content"
                     class="reader-body"
                     class:has-bottom-bar={audioInline && chapterAudio.length > 0}
                     onclick={handleBodyClick}
@@ -926,6 +925,12 @@
                     {:else if renderError}
                         <div class="alert alert-error text-sm">{renderError}</div>
                     {:else if rendered}
+                        {#if rendered.introduction}
+                            <details class="reader-intro">
+                                <summary>{tr('introduction')}</summary>
+                                {@html rendered.introduction}
+                            </details>
+                        {/if}
                         {@html displayHtml}
                     {:else}
                         <div class="text-sm text-base-content/60">{tr('noContent')}</div>
@@ -955,11 +960,11 @@
                 class:above-audio={audioInline && chapterAudio.length > 0}
                 bind:this={popoverEl}
                 role="dialog"
-                aria-label={popover.kind === 'note'
-                    ? tr('footnote')
-                    : popover.kind === 'xref'
+                aria-label={popover.kind === 'glossary'
+                    ? tr('glossary')
+                    : popoverNote?.kind === 'xref'
                       ? tr('crossRef')
-                      : tr('glossary')}
+                      : tr('footnote')}
             >
                 <button class="close" type="button" aria-label={tr('close')} onclick={closePopover}>
                     ×
@@ -967,12 +972,8 @@
                 {#if popover.kind === 'glossary'}
                     <div class="popover-term">{popover.term}</div>
                     <div class="note-body">{popover.definition}</div>
-                {:else if rendered}
-                    {@const pool = popover.kind === 'note' ? rendered.footnotes : rendered.xrefs}
-                    {@const entry = pool[popover.idx]}
-                    {#if entry}
-                        <div class="note-body">{@html entry.html}</div>
-                    {/if}
+                {:else if popoverNote}
+                    <div class="note-body">{@html popoverNote.html}</div>
                 {/if}
             </div>
         {/if}

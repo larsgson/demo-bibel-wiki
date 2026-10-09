@@ -112,6 +112,7 @@ export const zh = {
     tabVideo: "视频",
     footnote: "脚注",
     crossRef: "交叉引用",
+    introduction: "引言",
     glossary: "词汇表",
     close: "关闭",
     searchAria: "AI 搜索",
