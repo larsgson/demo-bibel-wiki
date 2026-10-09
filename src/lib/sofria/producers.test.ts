@@ -57,6 +57,13 @@ describe('helloAO (MAT 1 — prose + poetry mix)', () => {
       'After the exile to Babylon: Jeconiah was the father of Shealtiel, Shealtiel the father of Zerubbabel,',
     )
   })
+
+  it('gives each lineBreak-separated line its own paragraph, no blank lines', () => {
+    const html = renderChapterHtml(doc).html
+    // verse 12: prose line, then two q1 lines (same level, still separate)
+    expect(count(html, /<div class="q"[^>]*>/g)).toBeGreaterThanOrEqual(3)
+    expect(count(html, /<div class="b"/g)).toBe(0)
+  })
 })
 
 describe('helloAO (JHN 3 — top-level line_break, quote after a note)', () => {

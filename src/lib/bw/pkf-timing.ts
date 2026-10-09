@@ -46,10 +46,3 @@ export function verseAtTime(rows: TimingRow[], t: number): string | null {
   }
   return null
 }
-
-/** Resolve a possibly sub-verse label ("3a"/"3b") down to its base verse
- *  number, for matching against the reader's `.verse-block[data-v]` DOM. */
-export function baseVerseNumber(label: string): number | null {
-  const m = label.match(/^(\d+)/)
-  return m ? parseInt(m[1], 10) : null
-}

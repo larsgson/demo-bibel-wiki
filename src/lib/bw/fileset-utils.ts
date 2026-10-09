@@ -6,8 +6,6 @@ export function parseTextFilesetId(
   distinctId: string,
 ): string {
   if (!tField) return ""
-  // contrib-sourced text — no DBT fileset exists for it
-  if (tField.startsWith("contrib:")) return ""
   let raw = tField
   if (raw.endsWith(".txt")) {
     raw = raw.slice(0, -4)
@@ -26,8 +24,6 @@ export function parseAudioFilesetId(
   distinctId: string,
 ): string {
   if (!aField) return ""
-  // contrib-sourced audio — no DBT fileset exists
-  if (aField.startsWith("contrib:")) return ""
   let raw = aField
   if (raw.endsWith(".mp3")) {
     raw = raw.slice(0, -4)

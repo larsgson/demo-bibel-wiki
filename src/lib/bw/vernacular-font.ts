@@ -1,10 +1,10 @@
 /**
  * Vernacular font loading for surfaces that show a language's text OUTSIDE
  * the Bible reader's `#container` scope (which gets its font for free from
- * the `delta.css` `<link>` — see Reader.svelte). The story reader can show
- * TWO languages side by side (primary + secondary), so we can't just swap
- * one global stylesheet link the way the Bible reader does — each active
- * language needs its own, non-colliding `@font-face`.
+ * the `delta.css` `<link>` — see sofria/styles.ts): the reader's topbar and
+ * the Bible picker, and the story reader. The story reader can show TWO
+ * languages side by side (primary + secondary), so each active language
+ * needs its own, non-colliding `@font-face`.
  *
  * Strategy: fetch the language's `delta.css` (path from info.json's
  * `style_delta`), pull out only the `@font-face` rules (ignore the rest —

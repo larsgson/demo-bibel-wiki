@@ -103,10 +103,10 @@
   background: rgba(0, 11, 99, 0.045);
   color: rgb(0, 11, 99);
   font: inherit;
-  /* Book-tab cells show vernacular abbreviations — same "font1" convention
-   * as reader.css's .reader-topbar-title (only resolves while the current
-   * language's bundle.css link is active; harmless no-op otherwise). */
-  font-family: font1, inherit;
+  /* Book-tab cells show vernacular abbreviations — same
+   * --bible-vernacular-font as reader.css's .reader-topbar-select (set by
+   * Reader.svelte; unset for languages without their own font). */
+  font-family: var(--bible-vernacular-font, inherit);
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;

@@ -92,12 +92,9 @@
     border: none;
     background: none;
     font: inherit;
-    /* Vernacular book name lives outside #container (the scope bundle.css's
-     * font-face targets), so name the language's font explicitly. "font1"
-     * only resolves while that language's bundle.css link is active
-     * (Reader.svelte swaps it per iso) — falls through otherwise, so this
-     * is safe for every language. */
-    font-family: font1, system-ui, sans-serif;
+    /* Vernacular book name lives outside #container (delta.css's font scope):
+     * Reader.svelte sets --bible-vernacular-font from vernacular-font.ts. */
+    font-family: var(--bible-vernacular-font, system-ui), system-ui, sans-serif;
     font-weight: 600;
     font-size: 0.95em;
     color: inherit;

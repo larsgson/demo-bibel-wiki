@@ -10,7 +10,7 @@
     import { chapterCount, type Catalog, type CatalogDoc } from './catalog';
     import { loadReaderCatalog } from './readerCatalog';
     import { loadDocSet, isLoaded } from './store';
-    import { renderChapterHtml, injectPlacementVideos, verseLabelIncludes, type RenderResult } from '../sofria';
+    import { renderChapterHtml, injectPlacementVideos, verseLabelIncludes, verseLabelStart, type RenderResult } from '../sofria';
     import { pkfRenderOptions } from '../sofria/pkf';
     import { captionModeFor } from '../data/figureCaptions';
     import { loadChapterDoc } from '../bw/chapter-doc';
@@ -30,7 +30,8 @@
     import { $activePane as activePaneStore } from '../../stores/branch-view-store';
     import { loadAppConfig, parseStartRef, type AppConfig } from '../data/app-config';
     import { resolveChapterAudioUrl, loadBookTiming, type ResolvedAudio } from '../bw/dbt-media';
-    import { loadChapterTiming, verseAtTime, baseVerseNumber, type TimingRow } from '../bw/pkf-timing';
+    import { loadChapterTiming, verseAtTime, type TimingRow } from '../bw/pkf-timing';
+    import { loadVernacularFontFace } from '../bw/vernacular-font';
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
@@ -114,6 +115,15 @@
         // The shared SAB scripture sheet, plus this language's delta.css
         // (fonts + colours) for PKF languages — replacing any other language's.
         ensureSabStyles(pkfExtras?.styleUrls ?? []);
+        // Book names in the topbar and the Bible picker sit outside #container,
+        // so delta.css's scoped font doesn't reach them: register the
+        // language's @font-face under its own family and expose it as a
+        // variable (reader.css, bible-picker.css).
+        loadVernacularFontFace(iso).then((family) => {
+            const root = document.documentElement.style;
+            if (family) root.setProperty('--bible-vernacular-font', family);
+            else root.removeProperty('--bible-vernacular-font');
+        });
         document.addEventListener('click', onGlobalClick);
         document.addEventListener('keydown', onGlobalKey);
         loadBookmarks();
@@ -301,7 +311,7 @@
     function handleAudioTimeUpdate(t: number) {
         if (audioTimingRows) {
             const label = verseAtTime(audioTimingRows, t);
-            highlightPlayingVerse(label ? baseVerseNumber(label) : null);
+            highlightPlayingVerse(label ? verseLabelStart(label) : null);
             return;
         }
         if (dbtTimingVerses) {

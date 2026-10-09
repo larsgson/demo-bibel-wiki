@@ -1,6 +1,6 @@
 {
   "repo": "bcv-commons/bibles",
-  "commit": "a35466b429d6b574a82c97d08c30a1c4edd73b44",
+  "commit": "755d38694af5dc4fcadb74a4558ed95a2d759404",
   "fetchedAt": "2026-10-09",
   "files": {
     "render.js": {
@@ -21,7 +21,7 @@
     },
     "helloao/helloao_to_usj.mjs": {
       "upstream": "tools/helloao-to-sofria/helloao_to_usj.mjs",
-      "sha256": "ac62349fbfbd95aa2a794204798f8edb61706b6a09946c733945bc4b330f2fd0"
+      "sha256": "aabb8f0d4701333e98ab92fa44a5a64fdda6d377a05d51d8e1e48517dab82f44"
     },
     "helloao/usj_to_sofria_native.mjs": {
       "upstream": "tools/helloao-to-sofria/usj_to_sofria_native.mjs",
