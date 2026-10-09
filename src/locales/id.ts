@@ -133,7 +133,6 @@ export const id = {
     chooseBookChapter: "Pilih kitab dan pasal",
     fontSize: "Ukuran huruf",
     lineHeight: "Jarak baris",
-    theme: "Tema",
     showIllustrations: "Tampilkan ilustrasi",
     showVideos: "Tampilkan video",
     closeSettings: "Tutup pengaturan",

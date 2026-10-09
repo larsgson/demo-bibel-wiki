@@ -31,12 +31,13 @@ export interface PkfAssets {
   media: any
 }
 
-// se-regional-data's shared `sab-scripture.css` is not yet scoped to
-// `#container`/`.reader-root` (bare `a:link`, `div.p`, `table`, `img`…), so
-// loading it would restyle the app chrome. Until it is, reader.css covers the
-// scripture rules and only the (already scoped) delta.css is loaded. See
-// internal-docs/sofria-rendering-migration.md, Phase 0.
-const LOAD_SHARED_STYLESHEET = false
+// se-regional-data's shared `sab-scripture.css` (SAB's scripture rules) is
+// scoped to `#container`/`.reader-root` since 2026-10-09, so it can't touch
+// the app chrome. Switched on ahead of Phase 3 for a browser check: the reader
+// still renders the old DOM, whose class names overlap SAB's, so expect it to
+// mix with reader.css until then. Set false to go back to delta.css only. See
+// internal-docs/sofria-rendering-migration.md.
+const LOAD_SHARED_STYLESHEET = true
 
 /** Resolve a path from info.json (relative to `/pkf/<iso>/`) to a fetchable
  *  URL, keeping it root-relative when no PUBLIC_PKF_BASE_URL is set. */

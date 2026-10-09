@@ -858,13 +858,14 @@
             </div>
         {/if}
 
-        <!-- id="container" + data-iso scope the CDN styles/delta.css (fonts + the
-             per-theme colour variables under #container[data-color-theme]). -->
+        <!-- id="container" + data-iso scope the CDN styles/delta.css (fonts + colour
+             variables). delta.css keys its palette on data-color-theme; only the
+             Normal one is used. -->
         <div
             id="container"
             class="reader-root"
             data-iso={iso}
-            data-color-theme={$settings.theme}
+            data-color-theme="Normal"
             dir={textDir}
             style={`font-size:${$settings.fontSize}px;line-height:${$settings.lineHeight}`}
         >

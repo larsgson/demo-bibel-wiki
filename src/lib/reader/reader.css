@@ -3,8 +3,7 @@
  *
  * The scripture-body rules are modelled on Scripture Earth's sab-app.css
  * (light theme values), adapted to use CSS custom properties so per-language
- * delta.css files can tweak typography and so alternative themes can be
- * dropped in later by redefining the variables. Class names match the SE /
+ * delta.css files can tweak typography and colours. Class names match the SE /
  * SAB conventions exactly (.p, .q, .q1, .q2, .s, .mt, .v, .c-drop, .wj, ...)
  * so markup emitted by the Sofria renderer styles identically to what SE
  * ships.
@@ -20,34 +19,6 @@
     --FootnoteBackgroundColor: #F0F0F0;
     --CrossRefColor: #2E7D32;
     --WordsOfJesusColor: #D32F2F;
-}
-
-/* Per-theme variable overrides — applied on #container[data-color-theme=…],
- * matching the client-data contract (spec §7). For PKF languages the CDN's
- * styles/bundle.css redefines these same selectors with the identical palette;
- * these blocks are the fallback for English/BSB, which ships no bundle.css.
- * Values are the CDN's exact Sepia/Dark palettes. */
-#container[data-color-theme="Sepia"] {
-    --TextColor: #5A4129;
-    --TitlesColor: #513A24;
-    --VerseNumberColor: #8D6E63;
-    --BackgroundColor: #E9D8BA;
-    --TextHighlightColor: #FFFF99;
-    --LinkColor: #513A24;
-    --FootnoteBackgroundColor: #E9D8BA;
-    --CrossRefColor: #5D4037;
-    --WordsOfJesusColor: #B71C1C;
-}
-#container[data-color-theme="Dark"] {
-    --TextColor: #E0E0E0;
-    --TitlesColor: #E0E0E0;
-    --VerseNumberColor: #E6C7BF;
-    --BackgroundColor: #000000;
-    --TextHighlightColor: #404040;
-    --LinkColor: #E6C7BF;
-    --FootnoteBackgroundColor: #1A1A1A;
-    --CrossRefColor: #A5D6A7;
-    --WordsOfJesusColor: #EF9A9A;
 }
 
 .reader-root {
@@ -792,23 +763,6 @@ html[data-ui-level="2"] .reader-audio-bottom {
 .settings-label { min-width: 5em; color: inherit; opacity: 0.85; }
 .settings-value { font-size: 0.85em; color: inherit; opacity: 0.75; min-width: 3em; text-align: end; }
 .settings-row input[type="range"] { flex: 1 1 160px; accent-color: var(--VerseNumberColor); }
-.settings-segmented {
-    display: flex;
-    border: 1px solid rgb(209 213 219);
-    border-radius: 4px;
-    overflow: hidden;
-}
-.settings-segmented button {
-    background: transparent; border: 0; padding: 0.3em 0.7em; cursor: pointer;
-    color: inherit; font-size: 0.85em;
-    border-right: 1px solid rgb(229 231 235);
-}
-.settings-segmented button:last-child { border-right: 0; }
-.settings-segmented button.active {
-    background: var(--VerseNumberColor);
-    color: white;
-}
-.settings-segmented button:hover:not(.active) { background: rgb(243 244 246); }
 .toggle-label {
     display: inline-flex;
     align-items: center;

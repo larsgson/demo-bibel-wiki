@@ -48,9 +48,11 @@ describe('pkfStyleUrls', () => {
     expect(urls.at(-1)).toMatch(/\/pkf\/ind\/styles\/delta\.css$/)
   })
 
-  it('does not load the unscoped shared sheet yet', () => {
+  it('loads the shared sheet first, then delta.css', () => {
     const urls = pkfStyleUrls('ind', { style_shared: '../_styles/sab-scripture.css', style_delta: 'styles/delta.css' })
-    expect(urls.some((u) => u.includes('sab-scripture.css'))).toBe(false)
+    expect(urls).toHaveLength(2)
+    expect(urls[0]).toMatch(/\/pkf\/_styles\/sab-scripture\.css$/)
+    expect(urls[1]).toMatch(/\/pkf\/ind\/styles\/delta\.css$/)
   })
 
   it('defaults to styles/delta.css when info.json has no style_delta', () => {

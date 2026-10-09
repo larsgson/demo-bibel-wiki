@@ -743,8 +743,7 @@ body.focus-mode .verse-focus-active {
  * variable family to this app's --text/--bg/--accent family, scoped to
  * just this wrapper, so the excerpt follows the SAME theme (light/dark)
  * the rest of the story UI is already in rather than reader.css's
- * defaults (which are only ever redefined on #container[data-color-theme],
- * an element that doesn't exist on story pages). */
+ * :root defaults. */
 .listen-verse-reader-excerpt {
   --TextColor: var(--text);
   --TitlesColor: var(--accent, var(--text));
@@ -892,7 +891,6 @@ body.focus-mode .verse-focus-active {
 .bible-picker-cell.active::after,
 .tb-icon.active::after,
 .reader-format-tabs button.active::after,
-.settings-segmented button.active::after,
 .lang-filter-chip.active::after,
 .node-row.active::after,
 .root-row.active::after {

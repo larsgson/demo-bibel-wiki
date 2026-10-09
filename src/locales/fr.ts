@@ -135,7 +135,6 @@ export const fr = {
     chooseBookChapter: "Choisir le livre et le chapitre",
     fontSize: "Taille du texte",
     lineHeight: "Interligne",
-    theme: "Thème",
     showIllustrations: "Afficher les illustrations",
     showVideos: "Afficher les vidéos",
     closeSettings: "Fermer les paramètres",

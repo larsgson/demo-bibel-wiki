@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { settings, type Theme } from './settings';
+    import { settings } from './settings';
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
@@ -8,12 +8,6 @@
 
     const uiLang = uiLangForRegion(activeRegionStore.get());
     const tr = (k: string) => t(uiLang, 'reader.' + k);
-
-    const THEMES: Array<{ value: Theme; label: string }> = [
-        { value: 'Normal', label: 'Normal' },
-        { value: 'Sepia', label: 'Sepia' },
-        { value: 'Dark', label: 'Dark' }
-    ];
 </script>
 
 <div class="settings-panel" role="dialog" aria-label="Reader settings">
@@ -53,21 +47,6 @@
             bind:value={$settings.lineHeight}
         />
         <span class="settings-value tabular-nums">{$settings.lineHeight.toFixed(1)}</span>
-    </div>
-
-    <div class="settings-row">
-        <span class="settings-label">{tr('theme')}</span>
-        <div class="settings-segmented">
-            {#each THEMES as t (t.value)}
-                <button
-                    type="button"
-                    class:active={$settings.theme === t.value}
-                    onclick={() => ($settings.theme = t.value)}
-                >
-                    {t.label}
-                </button>
-            {/each}
-        </div>
     </div>
 
     <div class="settings-row">

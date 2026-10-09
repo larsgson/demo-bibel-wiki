@@ -1,22 +1,12 @@
 /**
- * Reader-level user preferences: theme, font size, and content-visibility
+ * Reader-level user preferences: font size, line height and content-visibility
  * toggles. Persisted to localStorage so they survive reloads but are never
  * required — the defaults are safe for SSR.
  */
 import { writable, type Writable } from 'svelte/store';
 const browser = typeof window !== "undefined";
 
-/** Theme ids match the CDN contract's `themeNames` (app-config §6.6). */
-export type Theme = 'Normal' | 'Sepia' | 'Dark';
-
-/** Migrate legacy stored values (light/sepia/dark) to the contract ids. */
-const LEGACY_THEME: Record<string, Theme> = {
-    light: 'Normal', sepia: 'Sepia', dark: 'Dark',
-    Normal: 'Normal', Sepia: 'Sepia', Dark: 'Dark',
-};
-
 export type ReaderSettings = {
-    theme: Theme;
     /** Scripture-body font size in pixels; overrides the per-language
      *  delta.css default. */
     fontSize: number;
@@ -29,7 +19,6 @@ export type ReaderSettings = {
 };
 
 const DEFAULTS: ReaderSettings = {
-    theme: 'Normal',
     fontSize: 20,
     lineHeight: 1.6,
     showIllustrations: true,
@@ -43,10 +32,9 @@ function loadInitial(): ReaderSettings {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return DEFAULTS;
-        const parsed = JSON.parse(raw);
-        const merged = { ...DEFAULTS, ...parsed };
-        merged.theme = LEGACY_THEME[merged.theme] ?? 'Normal';
-        return merged;
+        // Drop the removed `theme` setting from older stored values.
+        const { theme: _theme, ...parsed } = JSON.parse(raw);
+        return { ...DEFAULTS, ...parsed };
     } catch {
         return DEFAULTS;
     }

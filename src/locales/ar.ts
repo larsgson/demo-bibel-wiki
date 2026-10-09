@@ -132,7 +132,6 @@ export const ar = {
     chooseBookChapter: "اختر السفر والإصحاح",
     fontSize: "حجم الخط",
     lineHeight: "تباعد الأسطر",
-    theme: "المظهر",
     showIllustrations: "إظهار الرسوم التوضيحية",
     showVideos: "إظهار مقاطع الفيديو",
     closeSettings: "إغلاق الإعدادات",

@@ -132,7 +132,6 @@ export const zh = {
     chooseBookChapter: "选择书卷和章节",
     fontSize: "字体大小",
     lineHeight: "行间距",
-    theme: "主题",
     showIllustrations: "显示插图",
     showVideos: "显示视频",
     closeSettings: "关闭设置",

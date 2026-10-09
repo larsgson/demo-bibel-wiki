@@ -137,12 +137,6 @@ export function navLabel(navBase: NavBase | null, key: string, fallback = ""): s
 
 // ── Derived helpers ─────────────────────────────────────────────────────────
 
-/** The default theme id from `themeNames` (falls back to "Normal"). */
-export function defaultTheme(cfg: AppConfig | null): string {
-  const named = cfg?.themeNames?.find((t) => t.default) ?? cfg?.themeNames?.[0]
-  return named?.id ?? "Normal"
-}
-
 /**
  * Group books by canonical section, preserving the array order given by the
  * contract (spec §6.4: "Array order is canonical"). Returns sections in first-

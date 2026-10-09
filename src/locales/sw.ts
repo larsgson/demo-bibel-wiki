@@ -133,7 +133,6 @@ export const sw = {
     chooseBookChapter: "Chagua kitabu na sura",
     fontSize: "Ukubwa wa maandishi",
     lineHeight: "Nafasi ya mistari",
-    theme: "Mandhari",
     showIllustrations: "Onyesha michoro",
     showVideos: "Onyesha video",
     closeSettings: "Funga mipangilio",

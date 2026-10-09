@@ -133,7 +133,6 @@ export const ru = {
     chooseBookChapter: "Выбрать книгу и главу",
     fontSize: "Размер шрифта",
     lineHeight: "Межстрочный интервал",
-    theme: "Тема",
     showIllustrations: "Показывать иллюстрации",
     showVideos: "Показывать видео",
     closeSettings: "Закрыть настройки",

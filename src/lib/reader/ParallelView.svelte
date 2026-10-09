@@ -540,12 +540,6 @@
     .parallel-word-hover-blue {
         background-color: rgba(147, 197, 253, 0.55);
     }
-    :global(#container[data-color-theme='Dark']) .parallel-word-hover {
-        background-color: rgba(217, 119, 6, 0.35);
-    }
-    :global(#container[data-color-theme='Dark']) .parallel-word-hover-blue {
-        background-color: rgba(59, 130, 246, 0.3);
-    }
     @media (min-width: 640px) {
         .parallel-view {
             flex-direction: row;
