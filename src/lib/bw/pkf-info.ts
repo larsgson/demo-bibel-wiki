@@ -14,6 +14,10 @@ export interface PkfInfo {
   assets?: Array<{ kind: string; base: string; name: string }>
   figure_urls?: Record<string, string>
   media?: any
+  /** Shared SAB scripture sheet, relative to `/pkf/<iso>/` (e.g. `../_styles/sab-scripture.css`). */
+  style_shared?: string
+  /** Per-language fonts + theme palettes, relative to `/pkf/<iso>/` (e.g. `styles/delta.css`). */
+  style_delta?: string
   [key: string]: unknown
 }
 
@@ -21,9 +25,36 @@ export interface PkfAssets {
   docSetId: string
   pkfUrl: string
   catalogUrl: string | null
-  styleUrl: string
+  /** Stylesheets to `<link>` for this language, in cascade order. */
+  styleUrls: string[]
   figureUrls: Record<string, string>
   media: any
+}
+
+// se-regional-data's shared `sab-scripture.css` is not yet scoped to
+// `#container`/`.reader-root` (bare `a:link`, `div.p`, `table`, `img`…), so
+// loading it would restyle the app chrome. Until it is, reader.css covers the
+// scripture rules and only the (already scoped) delta.css is loaded. See
+// internal-docs/sofria-rendering-migration.md, Phase 0.
+const LOAD_SHARED_STYLESHEET = false
+
+/** Resolve a path from info.json (relative to `/pkf/<iso>/`) to a fetchable
+ *  URL, keeping it root-relative when no PUBLIC_PKF_BASE_URL is set. */
+function resolvePkfPath(iso: string, rel: string): string {
+  const dummy = "http://pkf.invalid"
+  const url = new URL(rel, new URL(pkfUrl(`/pkf/${iso}/`), dummy))
+  return url.origin === dummy ? url.pathname : url.href
+}
+
+/** The stylesheets this language's info.json points at: the per-language
+ *  `delta.css` (fonts + all three theme palettes, scoped to
+ *  `:is(#container,.reader-root)[data-iso]`), preceded by the shared sheet
+ *  once that is safe to load. */
+export function pkfStyleUrls(iso: string, info: PkfInfo | null): string[] {
+  const urls: string[] = []
+  if (LOAD_SHARED_STYLESHEET && info?.style_shared) urls.push(resolvePkfPath(iso, info.style_shared))
+  urls.push(resolvePkfPath(iso, info?.style_delta ?? "styles/delta.css"))
+  return urls
 }
 
 const infoCache = new Map<string, Promise<PkfInfo | null>>()
@@ -62,9 +93,7 @@ export function pkfAssetsOf(iso: string, info: PkfInfo | null): PkfAssets | null
     docSetId: pkfAsset.base,
     pkfUrl: pkfUrl(`/pkf/${iso}/${pkfAsset.name}`),
     catalogUrl: catalogAsset ? pkfUrl(`/pkf/${iso}/${catalogAsset.name}`) : null,
-    // The authoritative reader stylesheet (spec §7/§10.4): fonts + all three
-    // theme palettes, scoped entirely to #container. Supersedes style_delta.
-    styleUrl: pkfUrl(`/pkf/${iso}/styles/bundle.css`),
+    styleUrls: pkfStyleUrls(iso, info),
     figureUrls: info.figure_urls ?? {},
     media: info.media ?? { videos: [], audio: { base_url: null, items: [] } },
   }

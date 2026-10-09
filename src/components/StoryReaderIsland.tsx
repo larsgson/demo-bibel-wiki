@@ -239,7 +239,7 @@ export default function StoryReaderIsland({
 
   // Vernacular fonts for the primary/secondary text, if the CDN ships real
   // @font-face for this language (see vernacular-font.ts for why this can't
-  // just reuse the Bible reader's bundle.css <link> swap — two languages can
+  // just reuse the Bible reader's delta.css <link> swap — two languages can
   // be on screen at once here).
   useEffect(() => {
     let cancelled = false

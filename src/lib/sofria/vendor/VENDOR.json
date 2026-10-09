@@ -1,0 +1,31 @@
+{
+  "repo": "bcv-commons/bibles",
+  "commit": "8c9b471c93e1c05d964d45afaac4cd2fe6e42b17",
+  "fetchedAt": "2026-10-09",
+  "files": {
+    "render.js": {
+      "upstream": "tools/sofria-render/src/render.js",
+      "sha256": "2f5fb5e2d4f0eb681d0e412bebab9e8408bef6c049dcb827a9d7257cedd83f06"
+    },
+    "verses.js": {
+      "upstream": "tools/sofria-render/src/verses.js",
+      "sha256": "ca575e1783fce816e886e50af6e582d93678f1bb7cd6f613674fe8c7f2c12dec"
+    },
+    "index.js": {
+      "upstream": "tools/sofria-render/src/index.js",
+      "sha256": "9e4caf2cd0886ce8691b7a4bc725192c08ff1b42ff90e7a36260ad99d0c1aa93"
+    },
+    "sources/pkf.js": {
+      "upstream": "tools/sofria-render/src/sources/pkf.js",
+      "sha256": "e99cf53154cfb53c056533d9821abbfb475b188fab3953ae1f1f3e3c12549723"
+    },
+    "helloao/helloao_to_usj.mjs": {
+      "upstream": "tools/helloao-to-sofria/helloao_to_usj.mjs",
+      "sha256": "ac62349fbfbd95aa2a794204798f8edb61706b6a09946c733945bc4b330f2fd0"
+    },
+    "helloao/usj_to_sofria_native.mjs": {
+      "upstream": "tools/helloao-to-sofria/usj_to_sofria_native.mjs",
+      "sha256": "28d4571ae1c8094704e3015ebfca19ab8acc0a7799d8d74a4073c238ddbca5b7"
+    }
+  }
+}

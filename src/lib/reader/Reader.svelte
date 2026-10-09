@@ -82,8 +82,8 @@
         return lvl === '2' || lvl === '3';
     }
 
-    const LINK_ID = 'bw-lang-css';
-    let linkEl: HTMLLinkElement | null = null;
+    const LINK_ATTR = 'data-bw-lang-css';
+    let linkEls: HTMLLinkElement[] = [];
 
     onMount(async () => {
         saveLastIso(iso);
@@ -107,17 +107,18 @@
         pkfExtras = pkfEdition?.pkf ?? null;
 
         if (!pkfExtras && nameFor(iso)?.d === 'rtl') textDir = 'rtl';
-        if (pkfExtras?.styleUrl) {
-            // Swap in this language's CSS bundle. Any previously-injected link with
-            // the same id gets removed first so only one language's styles are live.
-            const existing = document.getElementById(LINK_ID);
-            if (existing) existing.remove();
-            linkEl = document.createElement('link');
-            linkEl.rel = 'stylesheet';
-            linkEl.href = pkfExtras.styleUrl;
-            linkEl.id = LINK_ID;
-            linkEl.dataset.iso = iso;
-            document.head.appendChild(linkEl);
+        if (pkfExtras?.styleUrls.length) {
+            // Swap in this language's stylesheets. Any previously-injected links
+            // are removed first so only one language's styles are live.
+            document.querySelectorAll(`link[${LINK_ATTR}]`).forEach((el) => el.remove());
+            linkEls = pkfExtras.styleUrls.map((href) => {
+                const el = document.createElement('link');
+                el.rel = 'stylesheet';
+                el.href = href;
+                el.setAttribute(LINK_ATTR, iso);
+                document.head.appendChild(el);
+                return el;
+            });
         }
         document.addEventListener('click', onGlobalClick);
         document.addEventListener('keydown', onGlobalKey);
@@ -203,8 +204,8 @@
 
     onDestroy(() => {
         if (!browser) return;
-        if (linkEl && linkEl.parentNode) linkEl.parentNode.removeChild(linkEl);
-        linkEl = null;
+        linkEls.forEach((el) => el.remove());
+        linkEls = [];
         document.removeEventListener('click', onGlobalClick);
         document.removeEventListener('keydown', onGlobalKey);
     });
@@ -857,7 +858,7 @@
             </div>
         {/if}
 
-        <!-- id="container" scopes the CDN styles/bundle.css (fonts + the
+        <!-- id="container" + data-iso scope the CDN styles/delta.css (fonts + the
              per-theme colour variables under #container[data-color-theme]). -->
         <div
             id="container"

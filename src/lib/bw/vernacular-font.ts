@@ -1,29 +1,44 @@
 /**
  * Vernacular font loading for surfaces that show a language's text OUTSIDE
  * the Bible reader's `#container` scope (which gets its font for free from
- * the `bundle.css` `<link>` — see Reader.svelte). The story reader can show
+ * the `delta.css` `<link>` — see Reader.svelte). The story reader can show
  * TWO languages side by side (primary + secondary), so we can't just swap
  * one global stylesheet link the way the Bible reader does — each active
  * language needs its own, non-colliding `@font-face`.
  *
- * Strategy: fetch `<iso>/styles/bundle.css`, pull out only the `@font-face`
- * rules (ignore the rest — theme colours, layout, SAB app-shell styles that
- * don't apply here), rename the family to a per-iso-unique name, rewrite the
- * relative `url(./fonts/...)` paths to absolute CDN URLs (they resolve
- * against the *document*, not the original stylesheet, once extracted), and
- * inject as a scoped `<style>` tag. Returns the family name to apply via
- * inline style / CSS custom property; null when the language has no real
- * `@font-face` (system-ui-only bundle, or no bundle at all).
+ * Strategy: fetch the language's `delta.css` (path from info.json's
+ * `style_delta`), pull out only the `@font-face` rules (ignore the rest —
+ * theme colours scoped to `#container`), rename the family to a per-iso-unique
+ * name, resolve every relative `url(...)` against the stylesheet URL (fonts
+ * live at `../../_fonts/…`, and once extracted they would otherwise resolve
+ * against the *document*), and inject as a `<style>` tag. Returns the family
+ * name to apply via inline style / CSS custom property; null when the
+ * language has no real `@font-face` (system-ui only, or no PKF data at all).
  */
 
-import { pkfUrl } from "./pkf-url"
+import { loadPkfInfo, pkfStyleUrls } from "./pkf-info"
 
 const FONT_FACE_RE = /@font-face\s*\{[^}]*\}/g
-const FAMILY_RE = /font-family\s*:\s*([^;]+);/
-const URL_RE = /url\(\s*(['"]?)\.\/fonts\//g
+const FAMILY_RE = /font-family\s*:\s*([^;}]+)(;|(?=\}))/
+const URL_RE = /url\(\s*(['"]?)([^'")]+)\1\s*\)/g
 
 function familyName(iso: string): string {
   return `vf-${iso}`
+}
+
+/** Pure: the `@font-face` rules of `css`, renamed to `family`, with every
+ *  `url(...)` made absolute against `cssUrl` (which must itself be absolute).
+ *  Empty string when there are none. */
+export function extractFontFaces(css: string, cssUrl: string, family: string): string {
+  const faces = css.match(FONT_FACE_RE)
+  if (!faces?.length) return ""
+  return faces
+    .map((block) =>
+      block
+        .replace(FAMILY_RE, `font-family: ${family}$2`)
+        .replace(URL_RE, (_m, quote: string, path: string) => `url(${quote}${new URL(path, cssUrl).href}${quote})`),
+    )
+    .join("\n")
 }
 
 const cache = new Map<string, Promise<string | null>>()
@@ -34,30 +49,22 @@ export function loadVernacularFontFace(iso: string): Promise<string | null> {
   const cached = cache.get(iso)
   if (cached) return cached
 
-  const p = fetch(pkfUrl(`/pkf/${iso}/styles/bundle.css`))
-    .then((r) => (r.ok ? r.text() : null))
-    .then((css) => {
-      if (!css) return null
-      const faces = css.match(FONT_FACE_RE)
-      if (!faces?.length) return null
+  const p = (async () => {
+    const info = await loadPkfInfo(iso)
+    if (!info) return null
+    const cssUrl = new URL(pkfStyleUrls(iso, info).at(-1)!, window.location.href).href
+    const resp = await fetch(cssUrl)
+    if (!resp.ok) return null
+    const family = familyName(iso)
+    const faces = extractFontFaces(await resp.text(), cssUrl, family)
+    if (!faces) return null
 
-      const family = familyName(iso)
-      const base = pkfUrl(`/pkf/${iso}/styles/`)
-      const rewritten = faces
-        .map((block) =>
-          block
-            .replace(FAMILY_RE, `font-family: ${family};`)
-            .replace(URL_RE, (_m, quote) => `url(${quote}${base}fonts/`),
-        )
-        .join("\n")
-
-      const tag = document.createElement("style")
-      tag.dataset.vernacularFont = iso
-      tag.textContent = rewritten
-      document.head.appendChild(tag)
-      return family
-    })
-    .catch(() => null)
+    const tag = document.createElement("style")
+    tag.dataset.vernacularFont = iso
+    tag.textContent = faces
+    document.head.appendChild(tag)
+    return family
+  })().catch(() => null)
 
   cache.set(iso, p)
   return p

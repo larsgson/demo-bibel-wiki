@@ -11,6 +11,7 @@
     "dev": "astro dev --host",
     "fetch:data": "node scripts/fetch-data.mjs",
     "update-pkf-langs": "node scripts/update-pkf-langs.mjs",
+    "sync:sofria": "node scripts/sync-sofria-render.mjs",
     "prebuild": "node scripts/fetch-data.mjs",
     "build": "astro build",
     "preview": "astro preview --host",

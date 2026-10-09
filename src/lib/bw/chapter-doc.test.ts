@@ -55,7 +55,7 @@ function pkfEdition(id: string, canon: 'nt' | 'ot' = 'nt') {
         id,
         canon,
         via: 'test',
-        pkf: { docSetId: id, pkfUrl: `https://x/${id}.pkf`, catalogUrl: null, styleUrl: '', figureUrls: {}, media: {} },
+        pkf: { docSetId: id, pkfUrl: `https://x/${id}.pkf`, catalogUrl: null, styleUrls: [], figureUrls: {}, media: {} },
     }
 }
 

@@ -1,61 +1,18 @@
 import { getProskomma } from './store';
 
-/**
- * Sofria JSON returned by Proskomma's `document.sofria(chapter: N)` query.
- * Shape summary (abbreviated to what we actually consume):
- *
- *   { sequence: { type, blocks: [Block] } }
- *
- *   Block     = Paragraph | Graft
- *   Paragraph = { type: "paragraph", subtype: "usfm:p" | "usfm:q1" | ..., content: [Content] }
- *   Graft     = { type: "graft", sequence: InnerSeq }
- *             -- top-level grafts (title/heading/remark, one per chapter
- *                pericope) carry NO `subtype` of their own; the type lives
- *                on `sequence.type` instead ("title" | "heading" | …).
- *                Inline grafts nested in paragraph content (footnote/xref)
- *                DO set `subtype` directly — confirmed against live data,
- *                this asymmetry is a real quirk of the upstream renderer,
- *                not a typo here.
- *
- *   Content   = string
- *             | { type: "mark",    subtype: "verses_label" | "chapter_label", atts: { number } }
- *             | { type: "wrapper", subtype: "chapter" | "verses" | "usfm:wj" | ..., content: [Content] }
- *             | { type: "graft",   subtype: "footnote" | "xref" | "note_caller", sequence: InnerSeq }
- *
- *   InnerSeq  = { type, blocks: [Block] }   -- recursive
- */
-
-export type SofriaDoc = {
-    sequence: SofriaSeq;
-};
-
-// Exported (2026-09) so non-PKF sources can build hand-crafted, structurally
-// compatible SofriaDoc objects — see src/lib/reader/sofriaEmulate.ts. These
-// were module-private until then, since only this file's own renderer
-// consumed them.
-export type SofriaSeq = {
-    type: string;
-    blocks?: SofriaBlock[];
-};
-
-export type SofriaParagraph = { type: 'paragraph'; subtype?: string; content: SofriaContent[] };
-export type SofriaGraft = { type: 'graft'; subtype?: string; sequence: SofriaSeq };
-
-export type SofriaBlock = SofriaParagraph | SofriaGraft;
-
-export type SofriaMark = { type: 'mark'; subtype?: string; atts?: Record<string, string> };
-export type SofriaWrapper = {
-    type: 'wrapper';
-    subtype?: string;
-    content?: SofriaContent[];
-    atts?: Record<string, string | string[]>;
-};
-
-export type SofriaContent =
-    | string
-    | SofriaMark
-    | SofriaWrapper
-    | SofriaGraft;
+// Sofria types live in src/lib/sofria/types.ts (re-exported here for the
+// modules that still import them from this file).
+import type { SofriaDoc, SofriaSeq, SofriaContent } from '../sofria/types';
+export type {
+    SofriaDoc,
+    SofriaSeq,
+    SofriaParagraph,
+    SofriaGraft,
+    SofriaBlock,
+    SofriaMark,
+    SofriaWrapper,
+    SofriaContent
+} from '../sofria/types';
 
 export function fetchSofria(
     docSetId: string,

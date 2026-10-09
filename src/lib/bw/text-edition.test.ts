@@ -225,7 +225,7 @@ describe('rankTextEditions — ind (PKF for NT; OT drops a source-catalog id med
         docSetId: 'ind_C01',
         pkfUrl: 'https://cdn.bibel.wiki/pkf/ind/ind_C01.pkf',
         catalogUrl: 'https://cdn.bibel.wiki/pkf/ind/ind_C01.json',
-        styleUrl: 'https://cdn.bibel.wiki/pkf/ind/styles/bundle.css',
+        styleUrls: ['https://cdn.bibel.wiki/pkf/ind/styles/delta.css'],
         figureUrls: {},
         media: {},
       },
@@ -260,7 +260,7 @@ describe('rankTextEditions — precedence + dedupe', () => {
   it('an explicit preferredText config beats everything else, including PKF', () => {
     const inputs = baseInputs({
       preferredText: { source: 'helloao', id: 'FORCED' },
-      pkfAssets: { docSetId: 'x', pkfUrl: '', catalogUrl: null, styleUrl: '', figureUrls: {}, media: {} },
+      pkfAssets: { docSetId: 'x', pkfUrl: '', catalogUrl: null, styleUrls: [], figureUrls: {}, media: {} },
     })
     const ranked = rankTextEditions(inputs)
     expect(ranked[0]).toMatchObject({ provider: 'helloao', id: 'FORCED', via: 'preferred-text' })
