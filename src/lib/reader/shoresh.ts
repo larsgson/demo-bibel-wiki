@@ -1,5 +1,5 @@
 /**
- * Client for the shoresh.up.qombi.com interlinear backend — word-level
+ * Client for the shoresh interlinear backend (PUBLIC_SHORESH_API_URL) — word-level
  * Hebrew (OT) / Greek (NT) text with Strong's codes, used as the "original
  * language" panel in the parallel view. One endpoint serves both testaments
  * (it resolves Hebrew vs Greek internally from the book code) — see
@@ -11,7 +11,7 @@
  * BBCCCVVVWW — book(2) chapter(3) verse(3) word-in-verse(2).
  */
 
-const SHORESH_API = 'https://shoresh.up.qombi.com/interlinear';
+const SHORESH_API = (import.meta.env.PUBLIC_SHORESH_API_URL ?? '').replace(/\/$/, '');
 
 export interface ShoreshWord {
     id: number;
@@ -42,6 +42,7 @@ export function groupWordsByVerse(words: ShoreshWord[]): Array<{ verse: number; 
 }
 
 export async function fetchShoreshChapter(bookCode: string, chapter: number): Promise<ShoreshWord[] | null> {
+    if (!SHORESH_API) return null;
     try {
         const resp = await fetch(`${SHORESH_API}/chapter/${bookCode}/${chapter}`);
         if (!resp.ok) return null;

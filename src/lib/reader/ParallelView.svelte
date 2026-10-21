@@ -2,7 +2,7 @@
     /**
      * Two-panel parallel/interlinear view: the left panel defaults to
      * original-language text (Hebrew OT / Greek NT, from
-     * shoresh.up.qombi.com — see ./shoresh.ts) but can be switched to any
+     * PUBLIC_SHORESH_API_URL — see ./shoresh.ts) but can be switched to any
      * modern-translation language via the small picker button in its
      * corner; the right panel shows the currently-selected reading
      * language's plain verse text. Both sides scroll-synced (./scrollSync.ts,

@@ -101,7 +101,10 @@ export function pkfAssetsOf(iso: string, info: PkfInfo | null): PkfAssets | null
     pkfUrl: pkfUrl(`/pkf/${iso}/${pkfAsset.name}`),
     catalogUrl: catalogAsset ? pkfUrl(`/pkf/${iso}/${catalogAsset.name}`) : null,
     styleUrls: pkfStyleUrls(iso, info),
-    sofriaUrl: info.formats?.sofria?.path ? resolvePkfPath(iso, info.formats.sofria.path) : null,
+    // URL resolution percent-encodes the template's `<BOOK>`/`<chapter>`; keep them literal.
+    sofriaUrl: info.formats?.sofria?.path
+      ? resolvePkfPath(iso, info.formats.sofria.path).replace(/%3C(\w+)%3E/gi, "<$1>")
+      : null,
     glossaryUrl: info.glossary ? resolvePkfPath(iso, info.glossary) : null,
     figureUrls: info.figure_urls ?? {},
     media: info.media ?? { videos: [], audio: { base_url: null, items: [] } },
