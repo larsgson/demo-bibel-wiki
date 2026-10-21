@@ -1,13 +1,18 @@
 import { defineConfig } from "astro/config"
-import { loadEnv } from "vite"
 import svelte from "@astrojs/svelte"
 import react from "@astrojs/react"
 import tailwind from "@astrojs/tailwind"
 import prerenderIsos from "./config/prerender-isos.json" with { type: "json" }
 
 const prerendered = new Set(prerenderIsos)
-// Dev only: proxy /api to the bcv-query backend named in .env.
-const { PUBLIC_API_BASE_URL } = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "")
+// Dev only: proxy /api to the bcv-query backend named in .env (Node's own
+// loader; variables already set in the environment win).
+try {
+  process.loadEnvFile()
+} catch {
+  // no .env
+}
+const { PUBLIC_API_BASE_URL } = process.env
 
 export default defineConfig({
   output: "static",
