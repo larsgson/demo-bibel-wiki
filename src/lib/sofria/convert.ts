@@ -7,7 +7,7 @@
  *     poetry or notes): one paragraph, one verse marker per entry, labels
  *     kept as given ("2-3" for a DBT range).
  */
-import { chapterToUsj, type Usj } from "./vendor/helloao/helloao_to_usj.mjs"
+import { chapterToUsj, type Usj } from "./vendor/verse-text/helloao_to_usj.mjs"
 import { usjChapterToSofriaNative } from "./vendor/helloao/usj_to_sofria_native.mjs"
 import type { SofriaDoc } from "./types"
 

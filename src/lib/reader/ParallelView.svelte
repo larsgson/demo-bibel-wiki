@@ -27,7 +27,6 @@
     import type { ChapterVerse } from '../sofria';
     import { nameFor } from '../data/languageNames';
     import {
-        translationIdForSource,
         getChapterAlignment,
         alignVerseTokens,
         tokensForVerse,
@@ -300,24 +299,21 @@
 
         // Best-effort alignment fetch, after the panels already have their
         // text — this only ever ADDS hover-highlight on top of what's
-        // already showing, never blocks the initial render. Reads
-        // getChapterSource() only now, AFTER loadChapter has resolved for
-        // both panels above — that's what actually reports which edition
-        // each panel's text came from (chapter-store.ts's own tier
-        // resolution, not a guess derived separately — see
-        // wordAlignment.ts's module doc). Not attempted for the left side
+        // already showing, never blocks the initial render. Each panel's
+        // alignment is verified against the exact verses it shows (chapter
+        // fingerprint, see wordAlignment.ts); the edition its text came from
+        // (getChapterSource, known only now that loadChapter has resolved)
+        // is just the first one tried. Not attempted for the left side
         // when it's the original-text panel — see originalOrdinalMap below
         // for what links THAT into the hover system instead.
         const currentBookId = getBookByCode(book)?.id ?? null;
         if (currentBookId !== null) {
-            const leftTid =
-                leftLang === 'original' ? null : translationIdForSource(getChapterSource(book, ch, leftLang));
-            const rightTid = translationIdForSource(getChapterSource(book, ch, langCode));
+            const hint = (lang: string) => getChapterSource(book, ch, lang)?.id ?? null;
             const [leftAl, rightAl] = await Promise.all([
-                leftLang === 'original'
+                leftLang === 'original' || !left
                     ? Promise.resolve(null)
-                    : getChapterAlignment(leftLang, leftTid, currentBookId, ch),
-                getChapterAlignment(langCode, rightTid, currentBookId, ch)
+                    : getChapterAlignment(leftLang, left, hint(leftLang), currentBookId, ch),
+                verses ? getChapterAlignment(langCode, verses, hint(langCode), currentBookId, ch) : Promise.resolve(null)
             ]);
             // Guard against a stale response landing after the user already
             // navigated to a different chapter/language.

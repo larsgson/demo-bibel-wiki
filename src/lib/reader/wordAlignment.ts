@@ -14,35 +14,19 @@
  * lookup here degrades to `null`/no-highlight rather than an error when a
  * translation isn't covered, by design.
  *
- * Edition-id caveat specific to THIS app (the example app didn't have to
- * deal with this): compact-alignments keys its data by a specific published
- * *edition* id (e.g. "BSB", "ind_ayt"). A target-token INDEX only means
- * anything if it was computed against the exact text being displayed;
- * alignment data for a different edition of the "same" language produces
- * confident-looking but WRONG matches (different word order, different word
- * count per verse), not just missing ones — worse than no highlight at all.
- * So this only ever attempts alignment when the edition is actually known
- * to match, via three paths, in priority order:
- *   1. `manualEditionForLang()` — ../data/alignment-editions.json, a small
- *      hand-curated `{iso: editionId}` map for cases nothing below can
- *      figure out automatically (chiefly PKF, whose bundles carry no
- *      edition id at all) but a human happens to know for certain — e.g.
- *      knowing this app's Indonesian PKF content is the "INDTSI" printing.
- *      Take the same care adding an entry here as picking a wrong one
- *      produces confidently WRONG word matches, not just missing ones.
- *   2. `translationIdForSource()` — chapter-doc.ts's own
- *      `getChapterSource()` (surfaced via chapter-store.ts) reports which
- *      provider resolved the CURRENTLY DISPLAYED text; helloAO and DBT
- *      both carry a real, externally-published edition id (a helloAO
- *      translation id / DBT distinct-id) that lines up 1:1 with
- *      compact-alignments' own edition-folder naming, so those are trusted
- *      outright. PKF and openbible report null — genuinely unknown, not a guess.
- *   3. `discoverEditionForLang()` — for whatever's left unknown, ONLY when
- *      that language has EXACTLY ONE published compact-alignments edition
- *      at all. With a single candidate there's no "which of several editions
- *      matches" guess to get wrong; with two or more, this deliberately
- *      returns nothing rather than pick one and risk exactly the
- *      wrong-word-highlighted bug this replaced.
+ * Which edition's alignment belongs to the text on screen is VERIFIED, never
+ * guessed: alignment positions index the exact tokens of one text, so an
+ * alignment computed for a different edition (or an older printing of the
+ * same one) produces confident-looking but WRONG matches. compact-alignments
+ * names each book file by a fingerprint of its text (README "The text
+ * fingerprint", text fingerprint v1 on tokenizer v2 — bibles' verse-text tools,
+ * vendored under ../sofria/vendor/verse-text), and publishes per edition the
+ * latest version's chapter fingerprints (`_fingerprints.txt` in
+ * compact-alignments-meta). So: fingerprint the displayed chapter from the
+ * same verse text the panel shows (`chapterVerses`, bibles' extraction rule),
+ * and use the edition whose published fingerprint for this book/chapter is
+ * the same — the source's own edition id (helloAO/DBT id, PKF docSet such as
+ * `ind_C01`) is only tried first. No match: no alignment, plain text.
  *
  * Deliberately shoresh-free: the example app matched translation tokens to
  * shoresh's own Hebrew/Greek word ids by walking both word lists in lockstep
@@ -68,10 +52,17 @@
  */
 
 import { getBookById, type Book } from '../bw/bible-books';
-import manualEditions from '../../data/alignment-editions.json';
+import type { ChapterVerse } from '../sofria';
+import { tokenize } from '../sofria/vendor/verse-text/tokenize.js';
+import { fingerprints } from '../sofria/vendor/verse-text/text_fingerprint.mjs';
+
+export { tokenize };
 
 const HF_BASE_URL = 'https://huggingface.co/datasets/bcv-commons/compact-alignments/resolve/main';
 const HF_TREE_BASE_URL = 'https://huggingface.co/api/datasets/bcv-commons/compact-alignments/tree/main';
+const HF_META_URL = 'https://huggingface.co/datasets/bcv-commons/compact-alignments-meta/resolve/main';
+/** Hex digits of a chapter fingerprint in `_fingerprints.txt`. */
+const CHAPTER_FP_HEX = 5;
 
 /** A stable key for one "content lexeme" slot in a specific verse — a
  *  position in the published lexemes.json sequence, not a shoresh word id.
@@ -102,125 +93,99 @@ export function decodeSourceKey(key: number): SourceKeyRef {
     };
 }
 
-/**
- * A hand-curated override for a language whose edition can't be determined
- * any other way (typically PKF, which carries no edition id at all) — see
- * ../data/alignment-editions.json and the module doc comment. Checked
- * FIRST, ahead of both the automatic source-based lookup and discovery, so
- * an entry here always wins even if e.g. discoverEditionForLang would
- * otherwise refuse due to multiple published editions.
- */
-export function manualEditionForLang(iso: string): string | null {
-    return (manualEditions as Record<string, string>)[iso] ?? null;
-}
-
-/**
- * The KNOWN published edition id for whatever chapter-doc.ts actually
- * resolved — see the module doc comment. `source` should come straight from
- * chapter-store.ts's `getChapterSource()` (a thin wrapper over
- * chapter-doc.ts's own), called for the SAME (book, chapter, langCode)
- * that was just loaded, so this reflects the exact text on screen, not a
- * guess about it.
- *
- * Only "helloao" and "dbt" carry a real, externally-published edition
- * identifier (a helloAO translation id / DBT distinct-id) — both are
- * trustworthy 1:1 with compact-alignments' own edition-folder naming
- * convention (iso + that same id). "pkf" (Proskomma bundles have no
- * corresponding id in any external alignment dataset) and "openbible"
- * return null — not a guess, a genuine "unknown", same as no source info
- * at all. `getChapterAlignment` falls back to `discoverEditionForLang` in
- * that case, which only succeeds when the language has exactly one
- * published edition — see that function's comment.
- */
-export function translationIdForSource(source: { provider: string; id?: string } | null): string | null {
-    if (!source?.id) return null;
-    if (source.provider === 'helloao' || source.provider === 'dbt') return source.id;
-    return null;
-}
-
-/**
- * The published edition folder name for a given (iso, translationId) pair —
- * "iso-prefixed unless it already carries one". E.g. iso=eng,
- * translationId=BSB -> "eng_BSB"; iso=ind, translationId=ind_ayt -> "ind_ayt".
- */
-export function deriveEditionFolder(iso: string, translationId: string): string {
-    return translationId.startsWith(`${iso}_`) ? translationId : `${iso}_${translationId}`;
-}
-
-// bookCode -> exact published filename (content-hash suffix included),
-// cached per (iso, edition) for the life of this page — content-addressed/
-// append-only, so a filename never goes stale once observed.
-const editionFileIndexCache = new Map<string, Map<string, string> | null>();
-
-async function getEditionFileIndex(iso: string, edition: string): Promise<Map<string, string> | null> {
-    const cacheKey = `${iso}/${edition}`;
-    const cached = editionFileIndexCache.get(cacheKey);
-    if (cached !== undefined) return cached;
-
-    try {
-        const path = `${iso[0]}/${iso}/${edition}`;
-        const response = await fetch(`${HF_TREE_BASE_URL}/${path}`);
-        if (!response.ok) {
-            editionFileIndexCache.set(cacheKey, null);
-            return null;
-        }
-        const entries: { type: string; path: string }[] = await response.json();
-        const index = new Map<string, string>();
-        for (const entry of entries) {
-            if (entry.type !== 'file') continue;
-            const filename = entry.path.split('/').pop()!;
-            // Each book now publishes THREE sibling files (added 2026-09-07):
-            // "{book}_{hash}.json" (the compact-array data this module reads),
-            // plus "{book}_{hash}.meta.json" (per-verse alignment-method
-            // quality codes) and "{book}_{hash}.extra.json" (supplementary
-            // alignments) — neither of which this module consumes. All three
-            // share the same book-code prefix, so indexing by
-            // `filename.split('_')[0]` alone (the old, single-file-per-book
-            // logic) lets whichever of the three the API lists LAST for a
-            // book silently overwrite the correct one — observed picking
-            // .meta.json, whose content isn't alignment spans at all, which
-            // silently broke every lookup for that (iso, edition, book).
-            if (!/\.json$/.test(filename) || /\.(meta|extra)\.json$/.test(filename)) continue;
-            const bookCode = filename.split('_')[0];
-            index.set(bookCode, filename);
-        }
-        editionFileIndexCache.set(cacheKey, index);
-        return index;
-    } catch {
-        editionFileIndexCache.set(cacheKey, null);
-        return null;
+const cachedFetch = <T>(cache: Map<string, Promise<T | null>>, key: string, load: () => Promise<T | null>) => {
+    let p = cache.get(key);
+    if (!p) {
+        p = load().catch(() => null);
+        cache.set(key, p);
     }
+    return p;
+};
+
+/** A language's published edition folders ("eng_BSB", "INDTSI", "ind_C01", …). */
+const editionsCache = new Map<string, Promise<string[] | null>>();
+function languageEditions(iso: string): Promise<string[] | null> {
+    return cachedFetch(editionsCache, iso, async () => {
+        const response = await fetch(`${HF_TREE_BASE_URL}/${iso[0]}/${iso}`);
+        if (!response.ok) return null;
+        const entries: { type: string; path: string }[] = await response.json();
+        return entries.filter((e) => e.type === 'directory').map((e) => e.path.split('/').pop()!);
+    });
 }
 
-// iso -> the language's one-and-only published edition folder (e.g.
-// "fra_fob"), or null when there's no published edition OR more than one —
-// see the module doc comment for why "more than one" is deliberately
-// treated the same as "none": with a single candidate there's nothing to
-// guess between (it MUST be that edition, or nothing), but with several,
-// picking one is exactly the kind of unverifiable guess that produces a
-// confidently wrong word match instead of no match.
-const editionDiscoveryCache = new Map<string, string | null>();
+/** One book's line in an edition's `_fingerprints.txt`: the latest version's
+ *  file hash and its chapter fingerprints (first 5 hex). */
+export interface BookFingerprints {
+    fileHash: string;
+    chapters: Map<number, string>;
+}
 
-async function discoverEditionForLang(iso: string): Promise<string | null> {
-    const cached = editionDiscoveryCache.get(iso);
-    if (cached !== undefined) return cached;
-
-    try {
-        const path = `${iso[0]}/${iso}`;
-        const response = await fetch(`${HF_TREE_BASE_URL}/${path}`);
-        if (!response.ok) {
-            editionDiscoveryCache.set(iso, null);
-            return null;
+/** Parse `_fingerprints.txt`: "<BOOK> <file hash> <date> <chapter fp>…", the
+ *  chapter fingerprints in chapter order, "n:xxxxx" where the sequence breaks. */
+export function parseFingerprints(text: string): Map<string, BookFingerprints> {
+    const books = new Map<string, BookFingerprints>();
+    for (const line of text.split('\n')) {
+        const [book, fileHash, _date, ...fps] = line.trim().split(/\s+/);
+        if (!book || !fileHash) continue;
+        const chapters = new Map<number, string>();
+        let chapter = 0;
+        for (const fp of fps) {
+            const [n, hex] = fp.includes(':') ? fp.split(':') : [String(chapter + 1), fp];
+            chapter = Number(n);
+            chapters.set(chapter, hex);
         }
-        const entries: { type: string; path: string }[] = await response.json();
-        const editionFolders = entries.filter((e) => e.type !== 'file').map((e) => e.path.split('/').pop()!);
-        const editionFolder = editionFolders.length === 1 ? editionFolders[0] : null;
-        editionDiscoveryCache.set(iso, editionFolder);
-        return editionFolder;
-    } catch {
-        editionDiscoveryCache.set(iso, null);
-        return null;
+        books.set(book, { fileHash, chapters });
     }
+    return books;
+}
+
+const fingerprintsCache = new Map<string, Promise<Map<string, BookFingerprints> | null>>();
+function editionFingerprints(iso: string, edition: string): Promise<Map<string, BookFingerprints> | null> {
+    return cachedFetch(fingerprintsCache, `${iso}/${edition}`, async () => {
+        const response = await fetch(`${HF_META_URL}/${iso[0]}/${iso}/${edition}/_fingerprints.txt`);
+        return response.ok ? parseFingerprints(await response.text()) : null;
+    });
+}
+
+/** The chapter fingerprint (first 5 hex) of the verses a panel shows: verse
+ *  text by its first verse number (a "2-3" range counts under 2), tokenized
+ *  with tokenizer v2 — the same definition compact-alignments publishes.
+ *  Null when the chapter has no tokens at all. */
+export async function chapterFingerprint(chapter: number, verses: ChapterVerse[]): Promise<string | null> {
+    const byVerse = new Map<string, string>();
+    for (const v of verses) {
+        if (v.num == null) continue;
+        const key = `${chapter}:${v.num}`;
+        const prev = byVerse.get(key);
+        byVerse.set(key, prev ? `${prev} ${v.text}` : v.text);
+    }
+    const { chapters } = await fingerprints(byVerse);
+    return chapters[chapter]?.slice(0, CHAPTER_FP_HEX) ?? null;
+}
+
+/** The edition (and its book file name) whose latest published text of this
+ *  chapter is exactly ours, or null. `hint` — the source's own edition id —
+ *  is checked first; the language's other editions only if it doesn't match. */
+async function findAlignedEdition(
+    iso: string,
+    bookCode: string,
+    chapter: number,
+    fp: string,
+    hint: string | null
+): Promise<{ edition: string; file: string } | null> {
+    const editions = await languageEditions(iso);
+    if (!editions?.length) return null;
+    const matches = async (edition: string) => {
+        const book = (await editionFingerprints(iso, edition))?.get(bookCode);
+        return book?.chapters.get(chapter) === fp ? { edition, file: `${bookCode}_${book.fileHash}.json` } : null;
+    };
+    const hinted = hint ? editions.filter((e) => e === hint || e === `${iso}_${hint}`) : [];
+    for (const edition of hinted) {
+        const m = await matches(edition);
+        if (m) return m;
+    }
+    const rest = await Promise.all(editions.filter((e) => !hinted.includes(e)).map(matches));
+    return rest.find((m) => m !== null) ?? null;
 }
 
 // verse ref ("BOOK C:V") -> ordered lexeme-number array, published once per
@@ -255,35 +220,13 @@ export async function getVerseLexemes(bookCode: string, chapter: number, verse: 
     return lexemesByRef?.[`${bookCode} ${chapter}:${verse}`] ?? null;
 }
 
-// (iso, edition, bookCode) -> the edition's own compact-array file.
-const compactArrayCache = new Map<string, string[] | null>();
-
-async function getCompactArray(iso: string, edition: string, bookCode: string): Promise<string[] | null> {
-    const cacheKey = `${iso}/${edition}/${bookCode}`;
-    const cached = compactArrayCache.get(cacheKey);
-    if (cached !== undefined) return cached;
-
-    const fileIndex = await getEditionFileIndex(iso, edition);
-    const filename = fileIndex?.get(bookCode);
-    if (!filename) {
-        compactArrayCache.set(cacheKey, null);
-        return null;
-    }
-
-    try {
-        const path = `${iso[0]}/${iso}/${edition}/${filename}`;
-        const response = await fetch(`${HF_BASE_URL}/${path}`);
-        if (!response.ok) {
-            compactArrayCache.set(cacheKey, null);
-            return null;
-        }
-        const data = await response.json();
-        compactArrayCache.set(cacheKey, data);
-        return data;
-    } catch {
-        compactArrayCache.set(cacheKey, null);
-        return null;
-    }
+// (iso, edition, file) -> the edition's compact-array file for one book.
+const compactArrayCache = new Map<string, Promise<string[] | null>>();
+function getCompactArray(iso: string, edition: string, file: string): Promise<string[] | null> {
+    return cachedFetch(compactArrayCache, `${iso}/${edition}/${file}`, async () => {
+        const response = await fetch(`${HF_BASE_URL}/${iso[0]}/${iso}/${edition}/${file}`);
+        return response.ok ? response.json() : null;
+    });
 }
 
 export interface VerseAlignment {
@@ -292,26 +235,20 @@ export interface VerseAlignment {
 }
 
 /**
- * Fetches one chapter's compact alignment strings for (iso, translationId),
- * keyed by verse number. `translationId` should come from
- * `translationIdForSource` — pass `null` when it returned null (no KNOWN
- * edition for this language). Tries, in order: `manualEditionForLang(iso)`
- * (a human-confirmed override, see ../data/alignment-editions.json),
- * `translationId` if given, then `discoverEditionForLang` — which only
- * succeeds when the language has exactly one published edition (see the
- * module doc comment for why an ambiguous case gets no alignment rather
- * than a guess).
+ * One chapter's compact alignment strings for the text a panel shows, keyed
+ * by verse number — only when a published edition's text of this chapter is
+ * verified identical to `verses` (see the module doc); null otherwise, and
+ * callers render plain, unaligned text. `hint` is the source's own edition id
+ * (chapter-doc's `getChapterSource().id`), tried first.
  *
  * `_index/{book}_lexemes.json` is fetched only to learn the ORDER of verse
  * refs (the position that lines each verse up with its entry in the
- * edition's own compact-array file) — its lexeme content itself is no
- * longer consumed, see the module doc comment. Returns `null` if no path
- * resolves an edition, or it doesn't cover this book — callers should
- * render plain, unaligned text in that case, not treat it as an error.
+ * edition's compact-array file).
  */
 export async function getChapterAlignment(
     iso: string,
-    translationId: string | null,
+    verses: ChapterVerse[],
+    hint: string | null,
     bookId: number,
     chapter: number
 ): Promise<Map<number, VerseAlignment> | null> {
@@ -319,69 +256,48 @@ export async function getChapterAlignment(
     if (!book) return null;
     const bookCode = book.code;
 
-    let edition: string | null = null;
-
-    const manual = manualEditionForLang(iso);
-    if (manual) {
-        const manualExists = await getEditionFileIndex(iso, manual);
-        if (manualExists) edition = manual;
-    }
-    if (!edition && translationId) {
-        const known = deriveEditionFolder(iso, translationId);
-        const knownExists = await getEditionFileIndex(iso, known);
-        if (knownExists) edition = known;
-    }
-    if (!edition) {
-        edition = await discoverEditionForLang(iso);
-    }
-    if (!edition) return null;
+    const fp = await chapterFingerprint(chapter, verses);
+    if (!fp) return null;
+    const found = await findAlignedEdition(iso, bookCode, chapter, fp, hint);
+    if (!found) return null;
 
     const [verseRefIndex, compactArray] = await Promise.all([
         getBookLexemes(bookCode),
-        getCompactArray(iso, edition, bookCode)
+        getCompactArray(iso, found.edition, found.file)
     ]);
     if (!verseRefIndex || !compactArray) return null;
 
     const refs = Object.keys(verseRefIndex);
     const result = new Map<number, VerseAlignment>();
     for (let i = 0; i < refs.length; i++) {
-        const ref = refs[i];
-        const match = /^\S+ (\d+):(\d+)$/.exec(ref);
-        if (!match) continue;
-        const refChapter = Number(match[1]);
-        if (refChapter !== chapter) continue;
-        const verse = Number(match[2]);
-        result.set(verse, { compact: compactArray[i] ?? '' });
+        const match = /^\S+ (\d+):(\d+)$/.exec(refs[i]);
+        if (!match || Number(match[1]) !== chapter) continue;
+        result.set(Number(match[2]), { compact: compactArray[i] ?? '' });
     }
     return result;
 }
 
 /**
- * Splits a target-language verse's own text into the tokens
- * `compact-alignments`' target-span indices address — NOT whitespace or
- * punctuation splitting. A token is a maximal run of Unicode letters +
- * combining marks (`\p{L}\p{M}`); punctuation, whitespace, and digits are
- * all separators and produce no token at all.
+ * A verse's text as display pieces, in order (rejoined they give the text
+ * back), each with the target-token positions it covers — positions as
+ * compact-alignments counts them: tokenizer v2 (`tokenize`, vendored), where
+ * a token is a run of letters/marks with combining marks stripped, and
+ * unspaced scripts are split further (Han per character, Japanese at kana/
+ * script boundaries, Myanmar per syllable). Such a split run is shown as one
+ * piece per token; punctuation, digits and spaces are pieces with no token.
  */
-export function tokenize(text: string): string[] {
-    return text.normalize('NFC').match(/[\p{L}\p{M}]+/gu) ?? [];
-}
-
-/**
- * Splits text into the full ordered sequence of runs (both letter/mark runs
- * AND everything between them), so re-joining every segment's text
- * reconstructs the original exactly — only the letter/mark runs are ever
- * alignment targets. Used for display: punctuation/digits/whitespace still
- * need to render, just never carry a word id.
- */
-export function segmentForDisplay(text: string): string[] {
-    return text.normalize('NFC').match(/[\p{L}\p{M}]+|[^\p{L}\p{M}]+/gu) ?? [];
-}
-
-/** Whether a `segmentForDisplay` segment is a possible alignment target
- *  (a letter/mark run), as opposed to punctuation/digit/whitespace between them. */
-export function isAlignableSegment(segment: string): boolean {
-    return /[\p{L}\p{M}]/u.test(segment);
+export function displayPieces(text: string): Array<{ text: string; tokens: number[] }> {
+    const out: Array<{ text: string; tokens: number[] }> = [];
+    let next = 0;
+    for (const run of text.normalize('NFC').match(/[\p{L}\p{M}]+|[^\p{L}\p{M}]+/gu) ?? []) {
+        const toks = /[\p{L}\p{M}]/u.test(run) ? tokenize(run) : [];
+        if (toks.length > 1 && toks.join('') === run) {
+            for (const t of toks) out.push({ text: t, tokens: [next++] });
+        } else {
+            out.push({ text: run, tokens: toks.map(() => next++) });
+        }
+    }
+    return out;
 }
 
 function decodeSpan(span: string): number[] {
@@ -454,17 +370,13 @@ export interface DisplayToken {
     wordIds: number[] | null;
 }
 
-/** Combines segmentForDisplay + alignVerseTokens' result into the ordered
- *  render-ready segment list for one verse: every segment carries its text,
- *  and alignable segments carry whatever word id(s) (if any) align to them. */
+/** Combines displayPieces + alignVerseTokens' result into the ordered
+ *  render-ready piece list for one verse: every piece carries its text, and
+ *  a piece covering aligned tokens carries their word ids. */
 export function tokensForVerse(verseText: string, verseAlignment: Map<number, number[]>): DisplayToken[] {
-    const segments = segmentForDisplay(verseText);
-    let tokenIdx = 0;
-    return segments.map((seg) => {
-        if (!isAlignableSegment(seg)) return { text: seg, wordIds: null };
-        const wordIds = verseAlignment.get(tokenIdx) ?? null;
-        tokenIdx++;
-        return { text: seg, wordIds };
+    return displayPieces(verseText).map(({ text, tokens }) => {
+        const ids = tokens.flatMap((i) => verseAlignment.get(i) ?? []);
+        return { text, wordIds: ids.length ? [...new Set(ids)] : null };
     });
 }
 

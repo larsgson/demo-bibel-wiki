@@ -28,8 +28,10 @@ const FILES = {
   "verses.js": "tools/sofria-render/src/verses.js",
   "index.js": "tools/sofria-render/src/index.js",
   "sources/pkf.js": "tools/sofria-render/src/sources/pkf.js",
-  "helloao/helloao_to_usj.mjs": "tools/helloao-to-sofria/helloao_to_usj.mjs",
   "helloao/usj_to_sofria_native.mjs": "tools/helloao-to-sofria/usj_to_sofria_native.mjs",
+  "verse-text/helloao_to_usj.mjs": "tools/verse-text/js/helloao_to_usj.mjs",
+  "verse-text/tokenize.js": "tools/verse-text/js/tokenize.js",
+  "verse-text/text_fingerprint.mjs": "tools/verse-text/js/text_fingerprint.mjs",
 }
 
 const sha256 = (buf) => createHash("sha256").update(buf).digest("hex")

@@ -1,7 +1,7 @@
 {
   "repo": "bcv-commons/bibles",
-  "commit": "755d38694af5dc4fcadb74a4558ed95a2d759404",
-  "fetchedAt": "2026-10-09",
+  "commit": "172f53bbf3d0c9a01857a2813253eb6a398cb4b4",
+  "fetchedAt": "2026-10-21",
   "files": {
     "render.js": {
       "upstream": "tools/sofria-render/src/render.js",
@@ -19,13 +19,21 @@
       "upstream": "tools/sofria-render/src/sources/pkf.js",
       "sha256": "e99cf53154cfb53c056533d9821abbfb475b188fab3953ae1f1f3e3c12549723"
     },
-    "helloao/helloao_to_usj.mjs": {
-      "upstream": "tools/helloao-to-sofria/helloao_to_usj.mjs",
-      "sha256": "aabb8f0d4701333e98ab92fa44a5a64fdda6d377a05d51d8e1e48517dab82f44"
-    },
     "helloao/usj_to_sofria_native.mjs": {
       "upstream": "tools/helloao-to-sofria/usj_to_sofria_native.mjs",
-      "sha256": "28d4571ae1c8094704e3015ebfca19ab8acc0a7799d8d74a4073c238ddbca5b7"
+      "sha256": "71fb250b548834f75225aa9482874fc1c34343dfb1a3df44011dd669219d3bad"
+    },
+    "verse-text/helloao_to_usj.mjs": {
+      "upstream": "tools/verse-text/js/helloao_to_usj.mjs",
+      "sha256": "480e859a7bae73f44637347975e4c4535595526696916175c2dcbf96143f24f5"
+    },
+    "verse-text/tokenize.js": {
+      "upstream": "tools/verse-text/js/tokenize.js",
+      "sha256": "667cf0ff0e68556391f3640ddaa644cdca6271258e24af42026720e84c44edf9"
+    },
+    "verse-text/text_fingerprint.mjs": {
+      "upstream": "tools/verse-text/js/text_fingerprint.mjs",
+      "sha256": "643822fff5adff7c4ee265b6afeba725626f7d3af1a698b84120725442033359"
     }
   }
 }
