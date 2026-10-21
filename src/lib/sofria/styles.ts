@@ -15,6 +15,9 @@ const abs = (href: string) => new URL(href, document.baseURI).href
 function addLink(href: string, kind: "shared" | "lang") {
   const el = document.createElement("link")
   el.rel = "stylesheet"
+  // CORS mode, so the cached copy carries Access-Control-Allow-Origin and
+  // vernacular-font.ts can fetch() the same sheet without being blocked.
+  el.crossOrigin = "anonymous"
   el.href = href
   el.setAttribute(ATTR, kind)
   document.head.appendChild(el)
