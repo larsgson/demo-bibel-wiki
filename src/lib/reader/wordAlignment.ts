@@ -20,13 +20,13 @@
  * same one) produces confident-looking but WRONG matches. compact-alignments
  * names each book file by a fingerprint of its text (README "The text
  * fingerprint", text fingerprint v1 on tokenizer v2 — bibles' verse-text tools,
- * vendored under ../sofria/vendor/verse-text), and publishes per edition the
- * latest version's chapter fingerprints (`_fingerprints.txt` in
- * compact-alignments-meta). So: fingerprint the displayed chapter from the
+ * vendored under ../sofria/vendor/verse-text), and publishes per language
+ * every edition's latest chapter fingerprints (`<l>/<iso>/_fingerprints.txt`
+ * in compact-alignments-meta). So: fingerprint the displayed chapter from the
  * same verse text the panel shows (`chapterVerses`, bibles' extraction rule),
  * and use the edition whose published fingerprint for this book/chapter is
  * the same — the source's own edition id (helloAO/DBT id, PKF docSet such as
- * `ind_C01`) is only tried first. No match: no alignment, plain text.
+ * `ind_C01`) only breaks a tie. No match: no alignment, plain text.
  *
  * Deliberately shoresh-free: the example app matched translation tokens to
  * shoresh's own Hebrew/Greek word ids by walking both word lists in lockstep
@@ -59,7 +59,6 @@ import { fingerprints } from '../sofria/vendor/verse-text/text_fingerprint.mjs';
 export { tokenize };
 
 const HF_BASE_URL = 'https://huggingface.co/datasets/bcv-commons/compact-alignments/resolve/main';
-const HF_TREE_BASE_URL = 'https://huggingface.co/api/datasets/bcv-commons/compact-alignments/tree/main';
 const HF_META_URL = 'https://huggingface.co/datasets/bcv-commons/compact-alignments-meta/resolve/main';
 /** Hex digits of a chapter fingerprint in `_fingerprints.txt`. */
 const CHAPTER_FP_HEX = 5;
@@ -102,31 +101,24 @@ const cachedFetch = <T>(cache: Map<string, Promise<T | null>>, key: string, load
     return p;
 };
 
-/** A language's published edition folders ("eng_BSB", "INDTSI", "ind_C01", …). */
-const editionsCache = new Map<string, Promise<string[] | null>>();
-function languageEditions(iso: string): Promise<string[] | null> {
-    return cachedFetch(editionsCache, iso, async () => {
-        const response = await fetch(`${HF_TREE_BASE_URL}/${iso[0]}/${iso}`);
-        if (!response.ok) return null;
-        const entries: { type: string; path: string }[] = await response.json();
-        return entries.filter((e) => e.type === 'directory').map((e) => e.path.split('/').pop()!);
-    });
-}
-
-/** One book's line in an edition's `_fingerprints.txt`: the latest version's
- *  file hash and its chapter fingerprints (first 5 hex). */
+/** One book's line in a `_fingerprints.txt`: the latest version's file hash
+ *  and its chapter fingerprints (first 5 hex). */
 export interface BookFingerprints {
     fileHash: string;
     chapters: Map<number, string>;
 }
 
-/** Parse `_fingerprints.txt`: "<BOOK> <file hash> <date> <chapter fp>…", the
- *  chapter fingerprints in chapter order, "n:xxxxx" where the sequence breaks. */
-export function parseFingerprints(text: string): Map<string, BookFingerprints> {
-    const books = new Map<string, BookFingerprints>();
+/** edition folder ("eng_BSB", "INDTSI", …) -> book code -> its fingerprints. */
+export type LanguageFingerprints = Map<string, Map<string, BookFingerprints>>;
+
+/** Parse a language's `_fingerprints.txt`: "<edition> <BOOK> <file hash>
+ *  <date> <chapter fp>…", the chapter fingerprints in chapter order, "n:xxxxx"
+ *  where the sequence breaks. */
+export function parseFingerprints(text: string): LanguageFingerprints {
+    const editions: LanguageFingerprints = new Map();
     for (const line of text.split('\n')) {
-        const [book, fileHash, _date, ...fps] = line.trim().split(/\s+/);
-        if (!book || !fileHash) continue;
+        const [edition, book, fileHash, _date, ...fps] = line.trim().split(/\s+/);
+        if (!edition || !book || !fileHash) continue;
         const chapters = new Map<number, string>();
         let chapter = 0;
         for (const fp of fps) {
@@ -134,15 +126,18 @@ export function parseFingerprints(text: string): Map<string, BookFingerprints> {
             chapter = Number(n);
             chapters.set(chapter, hex);
         }
-        books.set(book, { fileHash, chapters });
+        if (!editions.has(edition)) editions.set(edition, new Map());
+        editions.get(edition)!.set(book, { fileHash, chapters });
     }
-    return books;
+    return editions;
 }
 
-const fingerprintsCache = new Map<string, Promise<Map<string, BookFingerprints> | null>>();
-function editionFingerprints(iso: string, edition: string): Promise<Map<string, BookFingerprints> | null> {
-    return cachedFetch(fingerprintsCache, `${iso}/${edition}`, async () => {
-        const response = await fetch(`${HF_META_URL}/${iso[0]}/${iso}/${edition}/_fingerprints.txt`);
+/** Every edition's fingerprints for one language, in one file; null (404)
+ *  when the language has no alignments. */
+const fingerprintsCache = new Map<string, Promise<LanguageFingerprints | null>>();
+function languageFingerprints(iso: string): Promise<LanguageFingerprints | null> {
+    return cachedFetch(fingerprintsCache, iso, async () => {
+        const response = await fetch(`${HF_META_URL}/${iso[0]}/${iso}/_fingerprints.txt`);
         return response.ok ? parseFingerprints(await response.text()) : null;
     });
 }
@@ -164,8 +159,8 @@ export async function chapterFingerprint(chapter: number, verses: ChapterVerse[]
 }
 
 /** The edition (and its book file name) whose latest published text of this
- *  chapter is exactly ours, or null. `hint` — the source's own edition id —
- *  is checked first; the language's other editions only if it doesn't match. */
+ *  chapter is exactly ours, or null. When several editions have the same
+ *  text, `hint` — the source's own edition id — decides. */
 async function findAlignedEdition(
     iso: string,
     bookCode: string,
@@ -173,19 +168,14 @@ async function findAlignedEdition(
     fp: string,
     hint: string | null
 ): Promise<{ edition: string; file: string } | null> {
-    const editions = await languageEditions(iso);
-    if (!editions?.length) return null;
-    const matches = async (edition: string) => {
-        const book = (await editionFingerprints(iso, edition))?.get(bookCode);
-        return book?.chapters.get(chapter) === fp ? { edition, file: `${bookCode}_${book.fileHash}.json` } : null;
-    };
-    const hinted = hint ? editions.filter((e) => e === hint || e === `${iso}_${hint}`) : [];
-    for (const edition of hinted) {
-        const m = await matches(edition);
-        if (m) return m;
+    const editions = await languageFingerprints(iso);
+    if (!editions) return null;
+    const matching: Array<{ edition: string; file: string }> = [];
+    for (const [edition, books] of editions) {
+        const book = books.get(bookCode);
+        if (book?.chapters.get(chapter) === fp) matching.push({ edition, file: `${bookCode}_${book.fileHash}.json` });
     }
-    const rest = await Promise.all(editions.filter((e) => !hinted.includes(e)).map(matches));
-    return rest.find((m) => m !== null) ?? null;
+    return matching.find((m) => hint && (m.edition === hint || m.edition === `${iso}_${hint}`)) ?? matching[0] ?? null;
 }
 
 // verse ref ("BOOK C:V") -> ordered lexeme-number array, published once per

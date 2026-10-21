@@ -38,7 +38,11 @@ describe('chapterFingerprint', () => {
 
 describe('parseFingerprints', () => {
     it('reads file hash and chapter fingerprints, "n:" restarting the sequence', () => {
-        const books = parseFingerprints('RUT 44f46079 2026-10-12 262a1 8a8c3 ccd3c 8f71d\nJOL abcdef12 2026-10-12 aaaaa 3:bbbbb ccccc\n');
+        const editions = parseFingerprints(
+            'eng_BSB RUT 44f46079 2026-10-12 262a1 8a8c3 ccd3c 8f71d\neng_BSB JOL abcdef12 2026-10-12 aaaaa 3:bbbbb ccccc\nENGWEB RUT 11111111 2026-10-14 99999\n'
+        );
+        expect([...editions.keys()]).toEqual(['eng_BSB', 'ENGWEB']);
+        const books = editions.get('eng_BSB')!;
         expect(books.get('RUT')).toEqual({
             fileHash: '44f46079',
             chapters: new Map([[1, '262a1'], [2, '8a8c3'], [3, 'ccd3c'], [4, '8f71d']])
@@ -88,21 +92,17 @@ describe('getChapterAlignment (verified edition lookup)', () => {
 
     // Book 64 = 3JN. Two editions; only <iso>_lsg's published chapter 1 is
     // `lsgFp`. A different iso per test: the module caches per language.
-    function stubHub(iso: string, lsgFp: string) {
+    function stubHub(iso: string, lsgFp: string, otherFp = '99999') {
         const calls: string[] = [];
         vi.stubGlobal('fetch', async (url: string) => {
             calls.push(url);
             const ok = (body: unknown) => ({ ok: true, json: async () => body, text: async () => String(body) });
             const dir = `f/${iso}`;
-            if (url.endsWith(`/tree/main/${dir}`))
-                return ok([
-                    { type: 'directory', path: `${dir}/${iso}_other` },
-                    { type: 'directory', path: `${dir}/${iso}_lsg` }
-                ]);
-            if (url.endsWith(`${iso}_lsg/_fingerprints.txt`)) return ok(`3JN 6e149a85 2026-10-12 ${lsgFp}`);
-            if (url.endsWith(`${iso}_other/_fingerprints.txt`)) return ok('3JN 11111111 2026-10-12 99999');
+            if (url.endsWith(`/${dir}/_fingerprints.txt`))
+                return ok(`${iso}_other 3JN 11111111 2026-10-12 ${otherFp}\n${iso}_lsg 3JN 6e149a85 2026-10-12 ${lsgFp}\n`);
             if (url.endsWith('/_index/3JN_lexemes.json')) return ok({ '3JN 1:1': [], '3JN 1:2': [] });
             if (url.endsWith(`/${dir}/${iso}_lsg/3JN_6e149a85.json`)) return ok(['0:1', '1:0']);
+            if (url.endsWith(`/${dir}/${iso}_other/3JN_11111111.json`)) return ok(['9:9', '9:9']);
             return { ok: false };
         });
         return calls;
@@ -110,16 +110,22 @@ describe('getChapterAlignment (verified edition lookup)', () => {
 
     it('uses the edition whose published chapter fingerprint equals ours', async () => {
         const calls = stubHub('fra', '0848e');
-        const al = await getChapterAlignment('fra', lsg, 'lsg', 64, 1);
+        const al = await getChapterAlignment('fra', lsg, null, 64, 1);
         expect(al?.get(1)).toEqual({ compact: '0:1' });
         expect(al?.get(2)).toEqual({ compact: '1:0' });
-        // the hint matched, so the other edition's fingerprints were never needed
-        expect(calls.some((u) => u.includes('fra_other'))).toBe(false);
+        // one fingerprint file for the whole language, no folder listing
+        expect(calls.filter((u) => u.includes('_fingerprints.txt'))).toHaveLength(1);
+        expect(calls.some((u) => u.includes('/api/'))).toBe(false);
     });
 
-    it('finds the matching edition without a hint, among several', async () => {
-        stubHub('frb', '0848e');
-        expect((await getChapterAlignment('frb', lsg, null, 64, 1))?.get(1)).toEqual({ compact: '0:1' });
+    it('lets the source edition decide when several editions have our text', async () => {
+        stubHub('frb', '0848e', '0848e');
+        expect((await getChapterAlignment('frb', lsg, 'lsg', 64, 1))?.get(1)).toEqual({ compact: '0:1' });
+    });
+
+    it('gives nothing for a language without alignments (404)', async () => {
+        stubHub('frd', '0848e');
+        expect(await getChapterAlignment('xyz', lsg, null, 64, 1)).toBeNull();
     });
 
     it('gives nothing when no edition has exactly our text', async () => {
