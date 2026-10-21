@@ -353,10 +353,14 @@ export async function getChapterAlignment(
     const folder = full
         ? `${full.base}/${iso[0]}/${iso}/${full.layer.id}`
         : `${HF_BASE_URL}/${iso[0]}/${iso}/${found.edition}`;
-    const [verseRefIndex, main, meta] = await Promise.all([
+    // A layer can leave verses out entirely (Clear's Hindi gold: 128 of 1533
+    // Genesis verses); those take the statistical alignment of the same text.
+    const statistical = full && !layerOnly ? `${HF_BASE_URL}/${iso[0]}/${iso}/${found.edition}/${found.file}` : null;
+    const [verseRefIndex, main, meta, fallback] = await Promise.all([
         getBookLexemes(bookCode),
         fetchJson(`${folder}/${found.file}`) as Promise<string[] | null>,
-        full ? (fetchJson(`${folder}/${found.file.replace(/\.json$/, '.meta.json')}`) as Promise<{ fn?: string[] | null } | null>) : null
+        full ? (fetchJson(`${folder}/${found.file.replace(/\.json$/, '.meta.json')}`) as Promise<{ fn?: string[] | null } | null>) : null,
+        statistical ? (fetchJson(statistical) as Promise<string[] | null>) : null
     ]);
     if (!verseRefIndex || !main) return null;
 
@@ -366,7 +370,9 @@ export async function getChapterAlignment(
         const match = /^\S+ (\d+):(\d+)$/.exec(refs[i]);
         if (!match || Number(match[1]) !== chapter) continue;
         const fn = meta?.fn?.[i];
-        result.set(Number(match[2]), fn ? { compact: main[i] ?? '', fn } : { compact: main[i] ?? '' });
+        const verse = Number(match[2]);
+        if (!main[i] && !fn && fallback?.[i]) result.set(verse, { compact: fallback[i] });
+        else result.set(verse, fn ? { compact: main[i] ?? '', fn } : { compact: main[i] ?? '' });
     }
     const edition = (full as { edition?: string } | null)?.edition ?? found.edition;
     return { verses: result, edition, layer: full?.layer ?? null };

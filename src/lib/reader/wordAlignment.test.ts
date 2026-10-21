@@ -175,10 +175,8 @@ describe('getChapterAlignment (verified edition lookup)', () => {
     it('prefers a full-alignment layer of exactly that file, CC0 before CC BY', async () => {
         stubHub('frf', '0848e');
         const stubbed = globalThis.fetch;
-        const calls: string[] = [];
         const layer = (license: string, books: Record<string, string>) => ({ edition: 'frf_lsg', source: license === 'CC0-1.0' ? 'bsb-tables' : 'clear', license, books });
         vi.stubGlobal('fetch', async (url: string) => {
-            calls.push(url);
             const ok = (body: unknown) => ({ ok: true, json: async () => body });
             if (url.includes('full-alignments-manual/resolve/main/manifest.json'))
                 return ok({
@@ -192,8 +190,9 @@ describe('getChapterAlignment (verified edition lookup)', () => {
                         }
                     }
                 });
-            if (url.endsWith('/f/frf/frf_lsg+manual+tables/3JN_6e149a85.json')) return ok(['0:1-2', '1:0']);
+            if (url.endsWith('/f/frf/frf_lsg+manual+tables/3JN_6e149a85.json')) return ok(['0:1-2', '']);
             if (url.endsWith('/f/frf/frf_lsg+manual+tables/3JN_6e149a85.meta.json')) return ok({ fn: ['0:3 !1', ''] });
+            if (url.endsWith('/f/frf/frf_lsg/3JN_6e149a85.json')) return ok(['0:9', '1:0']);
             return stubbed(url);
         });
         vi.resetModules(); // earlier tests cached "no manifest"
@@ -201,8 +200,8 @@ describe('getChapterAlignment (verified edition lookup)', () => {
         const al = await fresh.getChapterAlignment('frf', lsg, null, 64, 1);
         expect(al?.layer).toEqual({ id: 'frf_lsg+manual+tables', kind: 'manual', source: 'bsb-tables', license: 'CC0-1.0' });
         expect(al?.verses.get(1)).toEqual({ compact: '0:1-2', fn: '0:3 !1' });
+        // verse 2 is empty in the layer: the statistical alignment fills it
         expect(al?.verses.get(2)).toEqual({ compact: '1:0' });
-        expect(calls.some((u) => u.includes('/f/frf/frf_lsg/3JN_'))).toBe(false); // the statistical file isn't needed
     });
 
     it('uses an edition that only has a full-alignment layer ("<dataset>/<layer id>" line)', async () => {
