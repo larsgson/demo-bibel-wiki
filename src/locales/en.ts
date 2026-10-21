@@ -146,6 +146,7 @@ export const en = {
     parallelSearchLangs: "Search languages…",
     parallelNoLangsFound: "No languages found for",
     parallelOriginalNotFound: "Original word not found",
+    parallelAlignmentCredit: "Word alignment",
   },
 
   picker: {

@@ -60,20 +60,31 @@ export { tokenize };
 
 const HF_BASE_URL = 'https://huggingface.co/datasets/bcv-commons/compact-alignments/resolve/main';
 const HF_META_URL = 'https://huggingface.co/datasets/bcv-commons/compact-alignments-meta/resolve/main';
+/** Full-alignment datasets, best first: hand-made (the share-alike Door43
+ *  layers are a dataset of their own), then model-checked. Same paths and
+ *  file names as compact-alignments (a layer folder per edition). Licences
+ *  needing attribution are credited in the parallel view (layerCredit). */
+const FULL_LAYER_DATASETS = [
+    'https://huggingface.co/datasets/bcv-commons/full-alignments-manual/resolve/main',
+    'https://huggingface.co/datasets/bcv-commons/full-alignments-manual-sa/resolve/main',
+    'https://huggingface.co/datasets/bcv-commons/full-alignments-llm/resolve/main'
+];
 /** Hex digits of a chapter fingerprint in `_fingerprints.txt`. */
 const CHAPTER_FP_HEX = 5;
 
-/** A stable key for one "content lexeme" slot in a specific verse — a
- *  position in the published lexemes.json sequence, not a shoresh word id.
- *  Packed the same way shoresh's word ids are (BBCCCVVVWW) purely so the
- *  two remain visually similar in devtools; the values are NOT
- *  interchangeable with shoresh ids. */
+/** Function-word ordinals (`_index/<BOOK>_fn.json`, full-alignment layers'
+ *  `fn` channel) share one ordinal space with content ordinals, offset by this. */
+export const FN_ORDINAL_BASE = 500;
+
+/** A stable key for one source-word slot in a specific verse — a position in
+ *  the published `_index/` sequence (content ordinal, or FN_ORDINAL_BASE +
+ *  function-word ordinal), not a shoresh word id. */
 export function sourceKey(bookId: number, chapter: number, verse: number, ordinal: number): number {
-    return bookId * 1_00_000_000 + chapter * 1_00_000 + verse * 100 + ordinal;
+    return bookId * 1_000_000_000 + chapter * 1_000_000 + verse * 1000 + ordinal;
 }
 
 export function verseOfSourceKey(key: number): number {
-    return Math.floor(key / 100) % 1000;
+    return Math.floor(key / 1000) % 1000;
 }
 
 export interface SourceKeyRef {
@@ -85,10 +96,10 @@ export interface SourceKeyRef {
 
 export function decodeSourceKey(key: number): SourceKeyRef {
     return {
-        bookId: Math.floor(key / 1_00_000_000),
-        chapter: Math.floor(key / 1_00_000) % 1000,
-        verse: Math.floor(key / 100) % 1000,
-        ordinal: key % 100
+        bookId: Math.floor(key / 1_000_000_000),
+        chapter: Math.floor(key / 1_000_000) % 1000,
+        verse: Math.floor(key / 1000) % 1000,
+        ordinal: key % 1000
     };
 }
 
@@ -181,59 +192,117 @@ async function findAlignedEdition(
 // verse ref ("BOOK C:V") -> ordered lexeme-number array, published once per
 // book and shared by every language/edition that aligns to it — cached by
 // book only, never by language.
-const bookLexemesCache = new Map<string, Record<string, string[]> | null>();
-
-async function getBookLexemes(bookCode: string): Promise<Record<string, string[]> | null> {
-    const cached = bookLexemesCache.get(bookCode);
-    if (cached !== undefined) return cached;
-
-    try {
-        const response = await fetch(`${HF_BASE_URL}/_index/${bookCode}_lexemes.json`);
-        if (!response.ok) {
-            bookLexemesCache.set(bookCode, null);
-            return null;
-        }
-        const data = await response.json();
-        bookLexemesCache.set(bookCode, data);
-        return data;
-    } catch {
-        bookLexemesCache.set(bookCode, null);
-        return null;
-    }
-}
-
-/** One verse's ordered lexeme-code sequence (e.g. ["H1254a", "H853", ...]) —
- *  reuses `getBookLexemes`' whole-book cache, so this is free after the
- *  first call for any verse in that book. */
-export async function getVerseLexemes(bookCode: string, chapter: number, verse: number): Promise<string[] | null> {
-    const lexemesByRef = await getBookLexemes(bookCode);
-    return lexemesByRef?.[`${bookCode} ${chapter}:${verse}`] ?? null;
-}
-
-// (iso, edition, file) -> the edition's compact-array file for one book.
-const compactArrayCache = new Map<string, Promise<string[] | null>>();
-function getCompactArray(iso: string, edition: string, file: string): Promise<string[] | null> {
-    return cachedFetch(compactArrayCache, `${iso}/${edition}/${file}`, async () => {
-        const response = await fetch(`${HF_BASE_URL}/${iso[0]}/${iso}/${edition}/${file}`);
+// `_index/<BOOK>_lexemes.json` (content words) and `_fn.json` (function
+// words): verse ref -> the source words' Strong's numbers, in ordinal order.
+const indexCache = new Map<string, Promise<Record<string, string[]> | null>>();
+function getBookIndex(bookCode: string, kind: 'lexemes' | 'fn'): Promise<Record<string, string[]> | null> {
+    return cachedFetch(indexCache, `${bookCode}_${kind}`, async () => {
+        const response = await fetch(`${HF_BASE_URL}/_index/${bookCode}_${kind}.json`);
         return response.ok ? response.json() : null;
     });
 }
+const getBookLexemes = (bookCode: string) => getBookIndex(bookCode, 'lexemes');
+
+/** One verse's ordered lexeme-code sequence (e.g. ["H1254a", "H853", ...]) —
+ *  reuses the whole-book cache, so this is free after the first call for any
+ *  verse in that book. `fn`: the function words' sequence instead. */
+export async function getVerseLexemes(bookCode: string, chapter: number, verse: number, fn = false): Promise<string[] | null> {
+    const lexemesByRef = await getBookIndex(bookCode, fn ? 'fn' : 'lexemes');
+    return lexemesByRef?.[`${bookCode} ${chapter}:${verse}`] ?? null;
+}
+
+const jsonCache = new Map<string, Promise<any>>();
+const fetchJson = (url: string) =>
+    cachedFetch(jsonCache, url, async () => {
+        const response = await fetch(url);
+        return response.ok ? response.json() : null;
+    });
+
+/** A full-alignment layer of an edition (`<edition>+manual+clear`, …). */
+export interface AlignmentLayer {
+    id: string;
+    /** "manual" (made by people) or "llm" (model-checked). */
+    kind: 'manual' | 'llm';
+    /** Who made it: "clear", "bsb-tables", "helfi", "sword", or the model. */
+    source: string;
+    license: string | null;
+}
+
+interface LayerManifestEntry {
+    books: Record<string, string>;
+    edition: string;
+    license?: string | null;
+    source: string;
+}
+
+const OPEN_LICENSES = new Set(['CC0-1.0', 'Public Domain']);
+
+/** The best full-alignment layer built on exactly this book file of `edition`
+ *  (the manifest names the same `<BOOK>_<hash>.json`), with its dataset URL. */
+async function findFullLayer(
+    iso: string,
+    edition: string,
+    file: string,
+    bookCode: string
+): Promise<{ base: string; layer: AlignmentLayer } | null> {
+    for (const base of FULL_LAYER_DATASETS) {
+        const manifest = await fetchJson(`${base}/manifest.json`);
+        const layers = Object.entries<LayerManifestEntry>(manifest?.languages?.[iso]?.layers ?? {})
+            .filter(([, l]) => l.edition === edition && l.books?.[bookCode] === file)
+            // Public-domain and CC0 layers first: nothing to attribute.
+            .sort(([, a], [, b]) => Number(OPEN_LICENSES.has(b.license ?? '')) - Number(OPEN_LICENSES.has(a.license ?? '')));
+        if (layers.length) {
+            const [id, l] = layers[0];
+            return { base, layer: { id, kind: id.includes('+llm+') ? 'llm' : 'manual', source: l.source, license: l.license ?? null } };
+        }
+    }
+    return null;
+}
+
+const LAYER_SOURCES: Record<string, string> = {
+    clear: 'Clear Bible',
+    'bsb-tables': 'Berean Standard Bible translation tables',
+    helfi: 'HELFI, University of Helsinki',
+    sword: 'SWORD',
+    door43: 'unfoldingWord® / Door43 contributors'
+};
+
+/** Who made a layer, with its licence: the credit a CC BY layer requires. */
+export function layerCredit(layer: AlignmentLayer): string {
+    const who = LAYER_SOURCES[layer.source] ?? layer.source;
+    // "CC-BY-SA-4.0" -> "CC BY-SA 4.0"
+    const name = layer.license?.replace(/^CC-/, 'CC ').replace(/-(\d)/, ' $1');
+    const license = name && layer.license !== 'Public Domain' ? ` (${name})` : '';
+    return layer.kind === 'llm' ? `${who}, model-checked` : `${who}${license}`;
+}
 
 export interface VerseAlignment {
-    /** Raw "srcOrdinal:targetSpan ..." string for this verse (may be ""). */
+    /** Content words: "srcOrdinal:targetSpan ..." for this verse (may be ""). */
     compact: string;
+    /** Function words (full-alignment layers only): "fnOrdinal:targetSpan ...". */
+    fn?: string;
+}
+
+export interface ChapterAlignment {
+    verses: Map<number, VerseAlignment>;
+    edition: string;
+    /** The full-alignment layer used, or null for the statistical compact file. */
+    layer: AlignmentLayer | null;
 }
 
 /**
- * One chapter's compact alignment strings for the text a panel shows, keyed
- * by verse number — only when a published edition's text of this chapter is
- * verified identical to `verses` (see the module doc); null otherwise, and
- * callers render plain, unaligned text. `hint` is the source's own edition id
- * (chapter-doc's `getChapterSource().id`), tried first.
+ * One chapter's alignment strings for the text a panel shows, keyed by verse
+ * number — only when a published edition's text of this chapter is verified
+ * identical to `verses` (see the module doc); null otherwise, and callers
+ * render plain, unaligned text. `hint` is the source's own edition id
+ * (chapter-doc's `getChapterSource().id`), which breaks ties.
+ *
+ * A full alignment of that same text (every word, function words included;
+ * hand-made where one exists) replaces the statistical compact file: same
+ * format, same file name, function words in its `.meta.json` `fn` channel.
  *
  * `_index/{book}_lexemes.json` is fetched only to learn the ORDER of verse
- * refs (the position that lines each verse up with its entry in the
- * edition's compact-array file).
+ * refs (the position that lines each verse up with its entry in the file).
  */
 export async function getChapterAlignment(
     iso: string,
@@ -241,7 +310,7 @@ export async function getChapterAlignment(
     hint: string | null,
     bookId: number,
     chapter: number
-): Promise<Map<number, VerseAlignment> | null> {
+): Promise<ChapterAlignment | null> {
     const book: Book | undefined = getBookById(bookId);
     if (!book) return null;
     const bookCode = book.code;
@@ -251,20 +320,26 @@ export async function getChapterAlignment(
     const found = await findAlignedEdition(iso, bookCode, chapter, fp, hint);
     if (!found) return null;
 
-    const [verseRefIndex, compactArray] = await Promise.all([
+    const full = await findFullLayer(iso, found.edition, found.file, bookCode).catch(() => null);
+    const folder = full
+        ? `${full.base}/${iso[0]}/${iso}/${full.layer.id}`
+        : `${HF_BASE_URL}/${iso[0]}/${iso}/${found.edition}`;
+    const [verseRefIndex, main, meta] = await Promise.all([
         getBookLexemes(bookCode),
-        getCompactArray(iso, found.edition, found.file)
+        fetchJson(`${folder}/${found.file}`) as Promise<string[] | null>,
+        full ? (fetchJson(`${folder}/${found.file.replace(/\.json$/, '.meta.json')}`) as Promise<{ fn?: string[] | null } | null>) : null
     ]);
-    if (!verseRefIndex || !compactArray) return null;
+    if (!verseRefIndex || !main) return null;
 
     const refs = Object.keys(verseRefIndex);
     const result = new Map<number, VerseAlignment>();
     for (let i = 0; i < refs.length; i++) {
         const match = /^\S+ (\d+):(\d+)$/.exec(refs[i]);
         if (!match || Number(match[1]) !== chapter) continue;
-        result.set(Number(match[2]), { compact: compactArray[i] ?? '' });
+        const fn = meta?.fn?.[i];
+        result.set(Number(match[2]), fn ? { compact: main[i] ?? '', fn } : { compact: main[i] ?? '' });
     }
-    return result;
+    return { verses: result, edition: found.edition, layer: full?.layer ?? null };
 }
 
 /**
@@ -290,21 +365,28 @@ export function displayPieces(text: string): Array<{ text: string; tokens: numbe
     return out;
 }
 
-function decodeSpan(span: string): number[] {
-    if (span.includes('-')) {
-        const [lo, hi] = span.split('-').map(Number);
-        return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+/** Target positions of a span: `5`, `5-7`, `5,9`, `1,4-5`, an ordered list
+ *  `L3,1,2`; `!` (explicitly no target word) and `~` (unplaced) give none. */
+export function decodeSpan(span: string): number[] {
+    const out: number[] = [];
+    for (const part of span.replace(/^L/, '').split(',')) {
+        const m = /^(\d+)(?:-(\d+))?$/.exec(part);
+        if (!m) continue;
+        const lo = Number(m[1]);
+        const hi = m[2] === undefined ? lo : Number(m[2]);
+        for (let i = lo; i <= hi; i++) out.push(i);
     }
-    if (span.includes(',')) return span.split(',').map(Number);
-    return [Number(span)];
+    return out;
 }
 
+/** The links of one alignment string, source ordinal -> span. Other entries of
+ *  full-alignment decision lists (`!6`, `u9@10`, `e6`, `+1>5`) are skipped. */
 export function parseCompactString(compact: string): Map<number, string> {
     const pairs = new Map<number, string>();
     if (!compact) return pairs;
     for (const part of compact.split(' ')) {
-        const [ordinal, span] = part.split(':');
-        pairs.set(Number(ordinal), span);
+        const m = /^(\d+):(.+)$/.exec(part);
+        if (m) pairs.set(Number(m[1]), m[2]);
     }
     return pairs;
 }
@@ -323,6 +405,14 @@ export function compactHasOrdinal(compact: string, ordinal: number): boolean {
     return parseCompactString(compact).has(ordinal);
 }
 
+/** compactHasOrdinal over a verse's content and function-word strings. */
+export function verseHasOrdinal(alignment: VerseAlignment | undefined, ordinal: number): boolean {
+    if (!alignment) return false;
+    return ordinal >= FN_ORDINAL_BASE
+        ? !!alignment.fn && compactHasOrdinal(alignment.fn, ordinal - FN_ORDINAL_BASE)
+        : compactHasOrdinal(alignment.compact, ordinal);
+}
+
 /**
  * Aligns one verse's target-language tokens to `sourceKey`s — purely from
  * the edition's own `compact` string, no shoresh/original-word lookup
@@ -337,21 +427,24 @@ export function alignVerseTokens(
     bookId: number,
     chapter: number,
     verse: number,
-    compact: string,
+    alignment: VerseAlignment,
     targetTokenCount: number
 ): Map<number, number[]> {
-    const pairs = parseCompactString(compact);
     const result = new Map<number, number[]>();
-    for (const [ordinal, span] of pairs) {
-        const indices = decodeSpan(span);
-        if (indices.some((i) => i < 0 || i >= targetTokenCount)) continue;
-        const key = sourceKey(bookId, chapter, verse, ordinal);
-        for (const i of indices) {
-            const existing = result.get(i);
-            if (existing) existing.push(key);
-            else result.set(i, [key]);
+    const add = (compact: string, base: number) => {
+        for (const [ordinal, span] of parseCompactString(compact)) {
+            const indices = decodeSpan(span);
+            if (indices.some((i) => i < 0 || i >= targetTokenCount)) continue;
+            const key = sourceKey(bookId, chapter, verse, base + ordinal);
+            for (const i of indices) {
+                const existing = result.get(i);
+                if (existing) existing.push(key);
+                else result.set(i, [key]);
+            }
         }
-    }
+    };
+    add(alignment.compact, 0);
+    if (alignment.fn) add(alignment.fn, FN_ORDINAL_BASE);
     return result;
 }
 

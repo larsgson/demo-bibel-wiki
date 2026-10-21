@@ -1,10 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+    alignVerseTokens,
     chapterFingerprint,
+    decodeSourceKey,
+    decodeSpan,
     displayPieces,
+    FN_ORDINAL_BASE,
     getChapterAlignment,
+    layerCredit,
+    parseCompactString,
     parseFingerprints,
-    tokensForVerse
+    sourceKey,
+    tokensForVerse,
+    verseHasOrdinal
 } from './wordAlignment';
 import { chapterVerses } from '../sofria';
 import { helloaoToSofria } from '../sofria/convert';
@@ -48,6 +56,41 @@ describe('parseFingerprints', () => {
             chapters: new Map([[1, '262a1'], [2, '8a8c3'], [3, 'ccd3c'], [4, '8f71d']])
         });
         expect([...books.get('JOL')!.chapters]).toEqual([[1, 'aaaaa'], [3, 'bbbbb'], [4, 'ccccc']]);
+    });
+});
+
+describe('alignment strings (compact and full-alignment layers)', () => {
+    it('decodes every span form; ! and ~ give no positions', () => {
+        expect(decodeSpan('5')).toEqual([5]);
+        expect(decodeSpan('5-7')).toEqual([5, 6, 7]);
+        expect(decodeSpan('5,9')).toEqual([5, 9]);
+        expect(decodeSpan('1,4-5')).toEqual([1, 4, 5]);
+        expect(decodeSpan('L3,1,2')).toEqual([3, 1, 2]);
+        expect(decodeSpan('!')).toEqual([]);
+        expect(decodeSpan('~')).toEqual([]);
+    });
+
+    it('keeps only links, skipping decision-list entries', () => {
+        // JHN 3:16 fn channel of eng_BSB+manual+bsb-tables, and a main string with a list entry
+        expect([...parseCompactString('0:2 1:0 3:4 !5 u2@0,6@9 +1>5,10')]).toEqual([[0, '2'], [1, '0'], [3, '4']]);
+        expect([...parseCompactString('0:24 1:19-23 e6')]).toEqual([[0, '24'], [1, '19-23']]);
+    });
+
+    it('aligns function words in their own ordinal range', () => {
+        const map = alignVerseTokens(43, 3, 16, { compact: '0:3 4:10-12', fn: '0:2 !5' }, 30);
+        expect(map.get(3)).toEqual([sourceKey(43, 3, 16, 0)]);
+        expect(map.get(11)).toEqual([sourceKey(43, 3, 16, 4)]);
+        expect(map.get(2)).toEqual([sourceKey(43, 3, 16, FN_ORDINAL_BASE)]);
+        expect(decodeSourceKey(sourceKey(43, 3, 16, FN_ORDINAL_BASE + 12))).toEqual({ bookId: 43, chapter: 3, verse: 16, ordinal: FN_ORDINAL_BASE + 12 });
+        expect(verseHasOrdinal({ compact: '0:3', fn: '2:7' }, FN_ORDINAL_BASE + 2)).toBe(true);
+        expect(verseHasOrdinal({ compact: '0:3', fn: '2:7' }, 2)).toBe(false);
+    });
+
+    it('credits a layer with its licence', () => {
+        expect(layerCredit({ id: 'x', kind: 'manual', source: 'clear', license: 'CC-BY-4.0' })).toBe('Clear Bible (CC BY 4.0)');
+        expect(layerCredit({ id: 'x', kind: 'manual', source: 'door43', license: 'CC-BY-SA-4.0' })).toBe('unfoldingWord® / Door43 contributors (CC BY-SA 4.0)');
+        expect(layerCredit({ id: 'x', kind: 'manual', source: 'bsb-tables', license: 'CC0-1.0' })).toBe('Berean Standard Bible translation tables (CC0 1.0)');
+        expect(layerCredit({ id: 'x', kind: 'manual', source: 'sword', license: 'Public Domain' })).toBe('SWORD');
     });
 });
 
@@ -111,8 +154,9 @@ describe('getChapterAlignment (verified edition lookup)', () => {
     it('uses the edition whose published chapter fingerprint equals ours', async () => {
         const calls = stubHub('fra', '0848e');
         const al = await getChapterAlignment('fra', lsg, null, 64, 1);
-        expect(al?.get(1)).toEqual({ compact: '0:1' });
-        expect(al?.get(2)).toEqual({ compact: '1:0' });
+        expect(al?.verses.get(1)).toEqual({ compact: '0:1' });
+        expect(al?.verses.get(2)).toEqual({ compact: '1:0' });
+        expect(al?.layer).toBeNull();
         // one fingerprint file for the whole language, no folder listing
         expect(calls.filter((u) => u.includes('_fingerprints.txt'))).toHaveLength(1);
         expect(calls.some((u) => u.includes('/api/'))).toBe(false);
@@ -120,12 +164,45 @@ describe('getChapterAlignment (verified edition lookup)', () => {
 
     it('lets the source edition decide when several editions have our text', async () => {
         stubHub('frb', '0848e', '0848e');
-        expect((await getChapterAlignment('frb', lsg, 'lsg', 64, 1))?.get(1)).toEqual({ compact: '0:1' });
+        expect((await getChapterAlignment('frb', lsg, 'lsg', 64, 1))?.verses.get(1)).toEqual({ compact: '0:1' });
     });
 
     it('gives nothing for a language without alignments (404)', async () => {
         stubHub('frd', '0848e');
         expect(await getChapterAlignment('xyz', lsg, null, 64, 1)).toBeNull();
+    });
+
+    it('prefers a full-alignment layer of exactly that file, CC0 before CC BY', async () => {
+        stubHub('frf', '0848e');
+        const stubbed = globalThis.fetch;
+        const calls: string[] = [];
+        const layer = (license: string, books: Record<string, string>) => ({ edition: 'frf_lsg', source: license === 'CC0-1.0' ? 'bsb-tables' : 'clear', license, books });
+        vi.stubGlobal('fetch', async (url: string) => {
+            calls.push(url);
+            const ok = (body: unknown) => ({ ok: true, json: async () => body });
+            if (url.includes('full-alignments-manual/resolve/main/manifest.json'))
+                return ok({
+                    languages: {
+                        frf: {
+                            layers: {
+                                'frf_lsg+manual+clear': layer('CC-BY-4.0', { '3JN': '3JN_6e149a85.json' }),
+                                'frf_lsg+manual+tables': layer('CC0-1.0', { '3JN': '3JN_6e149a85.json' }),
+                                'frf_lsg+manual+old': layer('CC0-1.0', { '3JN': '3JN_00000000.json' })
+                            }
+                        }
+                    }
+                });
+            if (url.endsWith('/f/frf/frf_lsg+manual+tables/3JN_6e149a85.json')) return ok(['0:1-2', '1:0']);
+            if (url.endsWith('/f/frf/frf_lsg+manual+tables/3JN_6e149a85.meta.json')) return ok({ fn: ['0:3 !1', ''] });
+            return stubbed(url);
+        });
+        vi.resetModules(); // earlier tests cached "no manifest"
+        const fresh = await import('./wordAlignment');
+        const al = await fresh.getChapterAlignment('frf', lsg, null, 64, 1);
+        expect(al?.layer).toEqual({ id: 'frf_lsg+manual+tables', kind: 'manual', source: 'bsb-tables', license: 'CC0-1.0' });
+        expect(al?.verses.get(1)).toEqual({ compact: '0:1-2', fn: '0:3 !1' });
+        expect(al?.verses.get(2)).toEqual({ compact: '1:0' });
+        expect(calls.some((u) => u.includes('/f/frf/frf_lsg/3JN_'))).toBe(false); // the statistical file isn't needed
     });
 
     it('gives nothing when no edition has exactly our text', async () => {

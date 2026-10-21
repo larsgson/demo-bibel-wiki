@@ -31,13 +31,16 @@
         alignVerseTokens,
         tokensForVerse,
         tokenize,
-        compactHasOrdinal,
+        verseHasOrdinal,
+        FN_ORDINAL_BASE,
         sourceKey,
         decodeSourceKey,
         getVerseLexemes,
         matchOriginalWordAtOrdinal,
         buildWordOrdinalMap,
         type VerseAlignment,
+        type AlignmentLayer,
+        layerCredit,
         type DisplayToken
     } from './wordAlignment';
 
@@ -86,6 +89,8 @@
     // wordAlignment.ts's module doc.
     let leftAlignment = $state<Map<number, VerseAlignment> | null>(null);
     let rightAlignment = $state<Map<number, VerseAlignment> | null>(null);
+    // Full-alignment layers in use (shown as a credit line), null = statistical.
+    let alignmentLayers = $state<AlignmentLayer[]>([]);
     let bookId = $derived(getBookByCode(bookCode)?.id ?? null);
 
     let isOriginal = $derived($parallelLeftLangStore === 'original');
@@ -102,7 +107,7 @@
             const verseAlignment = v.num != null ? alignment.get(v.num) : undefined;
             const targetTokenCount = tokenize(v.text).length;
             const aligned = verseAlignment
-                ? alignVerseTokens(bookId!, chapter, v.num!, verseAlignment.compact, targetTokenCount)
+                ? alignVerseTokens(bookId!, chapter, v.num!, verseAlignment, targetTokenCount)
                 : new Map<number, number[]>();
             return { label: v.label, num: v.num, tokens: tokensForVerse(v.text, aligned) };
         });
@@ -117,8 +122,7 @@
     // or rescanned token structures involved.
     function ordinalConfirmed(alignment: Map<number, VerseAlignment> | null, key: number): boolean {
         const ref = decodeSourceKey(key);
-        const compact = alignment?.get(ref.verse)?.compact;
-        return !!compact && compactHasOrdinal(compact, ref.ordinal);
+        return verseHasOrdinal(alignment?.get(ref.verse), ref.ordinal);
     }
 
     // The color (if any) a given rendered TRANSLATION token should show for
@@ -188,8 +192,9 @@
             clickedOriginal = 'not-found';
             return;
         }
+        const isFn = ref.ordinal >= FN_ORDINAL_BASE;
         const [lexemes, words] = await Promise.all([
-            getVerseLexemes(book.code, ref.chapter, ref.verse),
+            getVerseLexemes(book.code, ref.chapter, ref.verse, isFn),
             fetchShoreshChapter(book.code, ref.chapter)
         ]);
         if (!lexemes || !words) {
@@ -197,7 +202,7 @@
             return;
         }
         const verseWords = words.filter((w) => verseOfWordId(w.id) === ref.verse);
-        const match = matchOriginalWordAtOrdinal(verseWords, lexemes, ref.ordinal);
+        const match = matchOriginalWordAtOrdinal(verseWords, lexemes, isFn ? ref.ordinal - FN_ORDINAL_BASE : ref.ordinal);
         clickedOriginal = match
             ? { text: match.text, isRtl: getTestament(book.code) === 'ot', ref: `${book.name} ${ref.chapter}:${ref.verse}` }
             : 'not-found';
@@ -271,6 +276,7 @@
         targetVerses = null;
         leftAlignment = null;
         rightAlignment = null;
+        alignmentLayers = [];
         closeClickedOriginal();
 
         // Shoresh is only fetched when the left panel actually wants to
@@ -318,8 +324,9 @@
             // Guard against a stale response landing after the user already
             // navigated to a different chapter/language.
             if (book === bookCode && ch === chapter && langCode === iso && leftLang === $parallelLeftLangStore) {
-                leftAlignment = leftAl;
-                rightAlignment = rightAl;
+                leftAlignment = leftAl?.verses ?? null;
+                rightAlignment = rightAl?.verses ?? null;
+                alignmentLayers = [leftAl?.layer, rightAl?.layer].filter((l): l is AlignmentLayer => !!l);
             }
         }
 
@@ -327,14 +334,28 @@
         // same staleness guard, same "never blocks the text that's already
         // showing" principle. One getVerseLexemes call per verse (cheap:
         // they all share one cached whole-book fetch after the first).
+        // Function words get ordinals too when the alignment has them (a
+        // full-alignment layer), offset by FN_ORDINAL_BASE.
         if (leftLang === 'original' && words) {
+            const hasFn = [...(rightAlignment?.values() ?? [])].some((v) => v.fn);
             const groups = groupWordsByVerse(words);
             const perVerseMaps = await Promise.all(
-                groups.map((g) => getVerseLexemes(book, ch, g.verse).then((lexemes) => (lexemes ? buildWordOrdinalMap(g.words, lexemes) : null)))
+                groups.map(async (g) => {
+                    const [lexemes, fnLexemes] = await Promise.all([
+                        getVerseLexemes(book, ch, g.verse),
+                        hasFn ? getVerseLexemes(book, ch, g.verse, true) : null
+                    ]);
+                    const map = lexemes ? buildWordOrdinalMap(g.words, lexemes) : new Map<number, number>();
+                    if (fnLexemes) {
+                        for (const [wordId, fnOrdinal] of buildWordOrdinalMap(g.words, fnLexemes)) {
+                            if (!map.has(wordId)) map.set(wordId, FN_ORDINAL_BASE + fnOrdinal);
+                        }
+                    }
+                    return map;
+                })
             );
             const combined = new Map<number, number>();
             for (const m of perVerseMaps) {
-                if (!m) continue;
                 for (const [wordId, ordinal] of m) combined.set(wordId, ordinal);
             }
             if (book === bookCode && ch === chapter && langCode === iso && leftLang === $parallelLeftLangStore) {
@@ -440,6 +461,11 @@
                 <p class="parallel-verse" data-verse={v.num}><span class="v">{v.label}</span> {v.text}</p>
             {/each}
         {/if}
+        {#if alignmentLayers.length}
+            <p class="parallel-credit">
+                {tr('parallelAlignmentCredit')}: {[...new Set(alignmentLayers.map(layerCredit))].join('; ')}
+            </p>
+        {/if}
     </section>
 </div>
 
@@ -509,6 +535,11 @@
     .parallel-panel-greek {
         font-family: 'SBL Greek', 'Gentium Plus', system-ui, sans-serif;
         font-size: 0.85em;
+    }
+    .parallel-credit {
+        margin-top: 1.5em;
+        font-size: 0.75em;
+        opacity: 0.6;
     }
     .parallel-verse {
         margin: 0 0 0.6em;
