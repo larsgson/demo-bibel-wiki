@@ -205,6 +205,42 @@ describe('getChapterAlignment (verified edition lookup)', () => {
         expect(calls.some((u) => u.includes('/f/frf/frf_lsg/3JN_'))).toBe(false); // the statistical file isn't needed
     });
 
+    it('uses an edition that only has a full-alignment layer ("<dataset>/<layer id>" line)', async () => {
+        vi.resetModules();
+        const fresh = await import('./wordAlignment');
+        const layerId = 'frg_glt+manual+door43';
+        const manifest = (books: Record<string, string>) => ({
+            languages: { frg: { layers: { [layerId]: { edition: 'frg_glt', source: 'door43', license: 'CC-BY-SA-4.0', books } } } }
+        });
+        const run = async (books: Record<string, string>, dataset = 'full-alignments-manual-sa') => {
+            vi.stubGlobal('fetch', async (url: string) => {
+                const ok = (body: unknown) => ({ ok: true, json: async () => body, text: async () => String(body) });
+                if (url.endsWith('/f/frg/_fingerprints.txt')) return ok(`${dataset}/${layerId} 3JN 6e149a85 2026-10-16 0848e\n`);
+                if (url.endsWith('/_index/3JN_lexemes.json')) return ok({ '3JN 1:1': [], '3JN 1:2': [] });
+                if (url.includes(`/bcv-commons/${dataset}/resolve/main/manifest.json`)) return ok(manifest(books));
+                if (url.endsWith(`/${dataset}/resolve/main/f/frg/${layerId}/3JN_6e149a85.json`)) return ok(['0:1', '1:0']);
+                if (url.endsWith(`/${dataset}/resolve/main/f/frg/${layerId}/3JN_6e149a85.meta.json`)) return ok({ fn: null });
+                return { ok: false };
+            });
+            return fresh.getChapterAlignment('frg', lsg, null, 64, 1);
+        };
+        const al = await run({ '3JN': '3JN_6e149a85.json' });
+        expect(al?.edition).toBe('frg_glt');
+        expect(al?.layer).toEqual({ id: layerId, kind: 'manual', source: 'door43', license: 'CC-BY-SA-4.0' });
+        expect(al?.verses.get(1)).toEqual({ compact: '0:1' });
+    });
+
+    it('ignores a layer-only line from a dataset we do not use', async () => {
+        vi.resetModules();
+        const fresh = await import('./wordAlignment');
+        vi.stubGlobal('fetch', async (url: string) => {
+            const ok = (body: unknown) => ({ ok: true, json: async () => body, text: async () => String(body) });
+            if (url.endsWith('/f/frh/_fingerprints.txt')) return ok('some-other-dataset/x+manual+y 3JN 6e149a85 2026-10-16 0848e\n');
+            return { ok: false };
+        });
+        expect(await fresh.getChapterAlignment('frh', lsg, null, 64, 1)).toBeNull();
+    });
+
     it('gives nothing when no edition has exactly our text', async () => {
         stubHub('frc', 'fffff');
         expect(await getChapterAlignment('frc', lsg, 'lsg', 64, 1)).toBeNull();

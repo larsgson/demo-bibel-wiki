@@ -186,7 +186,11 @@ async function findAlignedEdition(
         const book = books.get(bookCode);
         if (book?.chapters.get(chapter) === fp) matching.push({ edition, file: `${bookCode}_${book.fileHash}.json` });
     }
-    return matching.find((m) => hint && (m.edition === hint || m.edition === `${iso}_${hint}`)) ?? matching[0] ?? null;
+    // Compact editions before "<dataset>/<layer id>" lines (editions that only
+    // have a full-alignment layer); the hint compares the edition part.
+    matching.sort((a, b) => Number(a.edition.includes('/')) - Number(b.edition.includes('/')));
+    const editionOf = (m: { edition: string }) => m.edition.split('/').pop()!.split('+')[0];
+    return matching.find((m) => hint && (editionOf(m) === hint || editionOf(m) === `${iso}_${hint}`)) ?? matching[0] ?? null;
 }
 
 // verse ref ("BOOK C:V") -> ordered lexeme-number array, published once per
@@ -239,6 +243,27 @@ const OPEN_LICENSES = new Set(['CC0-1.0', 'Public Domain']);
 
 /** The best full-alignment layer built on exactly this book file of `edition`
  *  (the manifest names the same `<BOOK>_<hash>.json`), with its dataset URL. */
+function layerFromManifest(id: string, l: LayerManifestEntry): AlignmentLayer {
+    return { id, kind: id.includes('+llm+') ? 'llm' : 'manual', source: l.source, license: l.license ?? null };
+}
+
+/** A `<dataset>/<layer id>` line of the fingerprint map: an edition with only
+ *  a full-alignment layer. Only datasets we use, and only a layer the
+ *  dataset's manifest lists with this very book file (licence included). */
+async function layerOnlyEdition(
+    iso: string,
+    entry: string,
+    file: string,
+    bookCode: string
+): Promise<{ base: string; layer: AlignmentLayer; edition: string } | null> {
+    const [dataset, id] = entry.split('/');
+    const base = FULL_LAYER_DATASETS.find((b) => b.includes(`/bcv-commons/${dataset}/`));
+    if (!base) return null;
+    const l: LayerManifestEntry | undefined = (await fetchJson(`${base}/manifest.json`))?.languages?.[iso]?.layers?.[id];
+    if (!l || l.books?.[bookCode] !== file) return null;
+    return { base, layer: layerFromManifest(id, l), edition: l.edition };
+}
+
 async function findFullLayer(
     iso: string,
     edition: string,
@@ -253,7 +278,7 @@ async function findFullLayer(
             .sort(([, a], [, b]) => Number(OPEN_LICENSES.has(b.license ?? '')) - Number(OPEN_LICENSES.has(a.license ?? '')));
         if (layers.length) {
             const [id, l] = layers[0];
-            return { base, layer: { id, kind: id.includes('+llm+') ? 'llm' : 'manual', source: l.source, license: l.license ?? null } };
+            return { base, layer: layerFromManifest(id, l) };
         }
     }
     return null;
@@ -320,7 +345,11 @@ export async function getChapterAlignment(
     const found = await findAlignedEdition(iso, bookCode, chapter, fp, hint);
     if (!found) return null;
 
-    const full = await findFullLayer(iso, found.edition, found.file, bookCode).catch(() => null);
+    const layerOnly = found.edition.includes('/');
+    const full = layerOnly
+        ? await layerOnlyEdition(iso, found.edition, found.file, bookCode).catch(() => null)
+        : await findFullLayer(iso, found.edition, found.file, bookCode).catch(() => null);
+    if (layerOnly && !full) return null;
     const folder = full
         ? `${full.base}/${iso[0]}/${iso}/${full.layer.id}`
         : `${HF_BASE_URL}/${iso[0]}/${iso}/${found.edition}`;
@@ -339,7 +368,8 @@ export async function getChapterAlignment(
         const fn = meta?.fn?.[i];
         result.set(Number(match[2]), fn ? { compact: main[i] ?? '', fn } : { compact: main[i] ?? '' });
     }
-    return { verses: result, edition: found.edition, layer: full?.layer ?? null };
+    const edition = (full as { edition?: string } | null)?.edition ?? found.edition;
+    return { verses: result, edition, layer: full?.layer ?? null };
 }
 
 /**
