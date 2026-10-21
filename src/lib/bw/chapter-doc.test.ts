@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 
 const mockResolveTextEditions = vi.fn()
 const mockFetchHelloaoChapter = vi.fn()
@@ -50,13 +50,13 @@ function helloaoEdition(id: string, canon: 'nt' | 'ot' = 'nt') {
 function dbtEdition(id: string, canon: 'nt' | 'ot' = 'nt') {
     return { provider: 'dbt' as const, id, canon, via: 'test' }
 }
-function pkfEdition(id: string, canon: 'nt' | 'ot' = 'nt') {
+function pkfEdition(id: string, canon: 'nt' | 'ot' = 'nt', sofriaUrl: string | null = null) {
     return {
         provider: 'pkf' as const,
         id,
         canon,
         via: 'test',
-        pkf: { docSetId: id, pkfUrl: `https://x/${id}.pkf`, catalogUrl: null, styleUrls: [], figureUrls: {}, media: {} },
+        pkf: { docSetId: id, pkfUrl: `https://x/${id}.pkf`, catalogUrl: null, styleUrls: [], sofriaUrl, glossaryUrl: null, figureUrls: {}, media: {} },
     }
 }
 
@@ -201,6 +201,46 @@ describe('loadChapterDoc — PKF catalog gate', () => {
 
         await loadChapterDoc('xx9', 'JHN', 1)
         expect(mockLoadDocSet).not.toHaveBeenCalled()
+    })
+})
+
+describe('loadChapterDoc — PKF per-chapter Sofria', () => {
+    const doc = { sequence: { type: 'main', blocks: [] } }
+    const template = 'https://x/sofria/<BOOK>/<chapter>.sofria.json'
+    afterEach(() => vi.unstubAllGlobals())
+
+    it('fetches the chapter file and never loads the .pkf', async () => {
+        const fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => doc }))
+        vi.stubGlobal('fetch', fetchMock)
+        mockResolveTextEditions.mockResolvedValue([pkfEdition('lang_C04', 'nt', template)])
+        mockLoadPkfCatalog.mockResolvedValue(null)
+
+        const res = await loadChapterDoc('xx10', 'JHN', 3)
+        expect(res?.doc).toEqual(doc)
+        expect(res?.source).toEqual({ provider: 'pkf', id: 'lang_C04' })
+        expect(fetchMock).toHaveBeenCalledWith('https://x/sofria/JHN/3.sofria.json')
+        expect(mockLoadDocSet).not.toHaveBeenCalled()
+    })
+
+    it('treats a 404 as no chapter, without falling back to the .pkf', async () => {
+        vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 404 })))
+        mockResolveTextEditions.mockResolvedValue([pkfEdition('lang_C05', 'nt', template)])
+        mockLoadPkfCatalog.mockResolvedValue(null)
+
+        expect(await loadChapterDoc('xx11', 'JHN', 99)).toBeNull()
+        expect(mockLoadDocSet).not.toHaveBeenCalled()
+    })
+
+    it('falls back to the .pkf when the chapter file cannot be fetched', async () => {
+        vi.stubGlobal('fetch', vi.fn(async () => { throw new TypeError('network') }))
+        mockResolveTextEditions.mockResolvedValue([pkfEdition('lang_C06', 'nt', template)])
+        mockLoadPkfCatalog.mockResolvedValue(null)
+        mockIsLoaded.mockReturnValue(false)
+        mockLoadDocSet.mockResolvedValue(undefined)
+        mockPkfChapterSofria.mockReturnValue(doc)
+
+        expect((await loadChapterDoc('xx12', 'JHN', 1))?.doc).toEqual(doc)
+        expect(mockLoadDocSet).toHaveBeenCalledWith('lang_C06', 'https://x/lang_C06.pkf')
     })
 })
 

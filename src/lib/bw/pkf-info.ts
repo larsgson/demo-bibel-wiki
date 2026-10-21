@@ -18,6 +18,10 @@ export interface PkfInfo {
   style_shared?: string
   /** Per-language fonts + theme palettes, relative to `/pkf/<iso>/` (e.g. `styles/delta.css`). */
   style_delta?: string
+  /** Per-chapter Sofria, relative to `/pkf/<iso>/` (`sofria/<BOOK>/<chapter>.sofria.json`). */
+  formats?: { sofria?: { path?: string; granularity?: string } }
+  /** Glossary as `{term: definition}` JSON, relative to `/pkf/<iso>/`. */
+  glossary?: string
   [key: string]: unknown
 }
 
@@ -27,6 +31,10 @@ export interface PkfAssets {
   catalogUrl: string | null
   /** Stylesheets to `<link>` for this language, in cascade order. */
   styleUrls: string[]
+  /** Per-chapter Sofria URL template (`<BOOK>`, `<chapter>`), or null when
+   *  only the whole `.pkf` is published. */
+  sofriaUrl: string | null
+  glossaryUrl: string | null
   figureUrls: Record<string, string>
   media: any
 }
@@ -93,6 +101,8 @@ export function pkfAssetsOf(iso: string, info: PkfInfo | null): PkfAssets | null
     pkfUrl: pkfUrl(`/pkf/${iso}/${pkfAsset.name}`),
     catalogUrl: catalogAsset ? pkfUrl(`/pkf/${iso}/${catalogAsset.name}`) : null,
     styleUrls: pkfStyleUrls(iso, info),
+    sofriaUrl: info.formats?.sofria?.path ? resolvePkfPath(iso, info.formats.sofria.path) : null,
+    glossaryUrl: info.glossary ? resolvePkfPath(iso, info.glossary) : null,
     figureUrls: info.figure_urls ?? {},
     media: info.media ?? { videos: [], audio: { base_url: null, items: [] } },
   }

@@ -24,7 +24,7 @@
     import AudioPlayer from './AudioPlayer.svelte';
     import ReaderTopBar from './ReaderTopBar.svelte';
     import { getProskomma } from './store';
-    import { loadGlossary, lookup as lookupGlossary, type Glossary } from './glossary';
+    import { glossaryFromJson, loadGlossary, lookup as lookupGlossary, type Glossary } from './glossary';
     import { saveLastPosition, loadLastPosition, hasLastPosition, resolvePosition, saveLastIso } from './position';
     import { $bibleHighlights as bibleHighlightsStore } from '../../stores/bible-highlight-store';
     import { $activePane as activePaneStore } from '../../stores/branch-view-store';
@@ -133,9 +133,9 @@
             loadError = e instanceof Error ? e.message : String(e);
             return;
         }
-        // Eagerly load the PKF binary in the background so the first chapter
-        // open is instant instead of waiting for fetch + parse.
-        if (pkfExtras) ensurePkf();
+        // Without per-chapter Sofria, chapters come from the whole PKF binary:
+        // load it in the background so the first chapter open doesn't wait.
+        if (pkfExtras && !pkfExtras.sofriaUrl) ensurePkf();
 
         // Initial visibility from the current pane — the default can be
         // overridden by a ?pane= signal (e.g. arriving on the study pane), which
@@ -409,8 +409,8 @@
         popover?.kind === 'note' ? rendered?.notes.find((n) => n.id === (popover as { id: string }).id) : undefined
     );
 
-    function openGlossaryPopover(term: string) {
-        if (!glossaryLoaded) loadGlossaryOnce();
+    async function openGlossaryPopover(term: string) {
+        await loadGlossaryOnce();
         const entry = lookupGlossary(glossary, term);
         if (!entry) return; // silent if no glossary entry
         popover = { kind: 'glossary', term: entry.term, definition: entry.definition };
@@ -421,13 +421,21 @@
 
     /** Glossary map — lazy-loaded on first glossary-term click. */
     let glossary = $state<Glossary | null>(null);
-    let glossaryLoaded = $state(false);
-    function loadGlossaryOnce() {
-        if (glossaryLoaded) return;
-        glossaryLoaded = true;
-        // Needs the pkf to be thawed first; assume caller runs after ensurePkf().
-        if (!pkfExtras || !isLoaded(pkfExtras.docSetId)) return;
-        glossary = loadGlossary(getProskomma(), pkfExtras.docSetId);
+    let glossaryLoad: Promise<void> | null = null;
+    function loadGlossaryOnce(): Promise<void> {
+        glossaryLoad ??= (async () => {
+            const extras = pkfExtras;
+            if (!extras) return;
+            if (extras.glossaryUrl) {
+                const response = await fetch(extras.glossaryUrl).catch(() => null);
+                if (response?.ok) glossary = glossaryFromJson(await response.json());
+                return;
+            }
+            // Older deployments: the glossary book inside the .pkf.
+            await ensurePkf();
+            glossary = loadGlossary(getProskomma(), extras.docSetId);
+        })();
+        return glossaryLoad;
     }
 
     /** Settings drawer visibility toggle. */

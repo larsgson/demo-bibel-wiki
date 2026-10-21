@@ -11,6 +11,9 @@
  * that cost, but starts paying it earlier, overlapping it with the page
  * navigation instead of happening entirely after.
  *
+ * Languages with per-chapter Sofria (info.json `formats.sofria`) never need
+ * the .pkf for text, so for them this only warms info.json.
+ *
  * Safe to call speculatively and often: loadDocSet() dedupes by docSetId (an
  * already-loaded or in-flight language is a no-op), and Reader.svelte's own
  * ensurePkf() on mount will just see isLoaded() === true and skip re-fetching.
@@ -29,7 +32,8 @@ export function prefetchPkfText(iso: string): void {
   loadPkfInfo(iso)
     .then((info) => {
       const assets = pkfAssetsOf(iso, info)
-      if (!assets || isLoaded(assets.docSetId)) return
+      // Per-chapter Sofria makes the whole .pkf unnecessary.
+      if (!assets || assets.sofriaUrl || isLoaded(assets.docSetId)) return
       return loadDocSet(assets.docSetId, assets.pkfUrl)
     })
     .catch(() => {

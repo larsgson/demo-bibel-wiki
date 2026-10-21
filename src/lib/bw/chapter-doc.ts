@@ -33,6 +33,20 @@ export interface ChapterDoc {
   edition: TextEdition
 }
 
+/** A PKF chapter's published Sofria: null when the chapter isn't there (404),
+ *  undefined when the file couldn't be fetched (fall back to the .pkf). */
+async function fetchPkfChapterSofria(template: string, book: string, chapter: number): Promise<SofriaDoc | null | undefined> {
+  const url = template.replace("<BOOK>", book).replace("<chapter>", String(chapter))
+  try {
+    const response = await fetch(url)
+    if (response.status === 404) return null
+    if (!response.ok) return undefined
+    return (await response.json()) as SofriaDoc
+  } catch {
+    return undefined
+  }
+}
+
 async function fetchDocFor(iso: string, edition: TextEdition, book: string, chapter: number): Promise<SofriaDoc | null> {
   switch (edition.provider) {
     case "pkf": {
@@ -43,6 +57,12 @@ async function fetchDocFor(iso: string, edition: TextEdition, book: string, chap
       // language's docSet doesn't actually cover.
       const catalog = await loadPkfCatalog(iso)
       if (catalog && !catalog.documents.some((d) => d.bookCode === book)) return null
+      // The chapter's own Sofria file when published (a few KB, vs. the
+      // whole .pkf); the .pkf only if that file can't be fetched.
+      if (pkf.sofriaUrl) {
+        const doc = await fetchPkfChapterSofria(pkf.sofriaUrl, book, chapter)
+        if (doc !== undefined) return doc
+      }
       try {
         if (!isLoaded(pkf.docSetId)) await loadDocSet(pkf.docSetId, pkf.pkfUrl)
         return pkfChapterSofria(getProskomma(), pkf.docSetId, book, chapter)

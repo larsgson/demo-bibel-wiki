@@ -6,6 +6,8 @@
  *
  * We walk the glossary book once per language on first glossary-term click
  * and build a Map<normalized-term, { term, definition }> for O(1) lookups.
+ * Languages whose info.json names a `glossary.json` use that instead
+ * (glossaryFromJson), so the .pkf isn't needed.
  */
 
 export type GlossaryEntry = {
@@ -36,6 +38,16 @@ export function normalizeTerm(s: string): string {
 export function lookup(glossary: Glossary | null, term: string): GlossaryEntry | null {
     if (!glossary) return null;
     return glossary.get(normalizeTerm(term)) ?? null;
+}
+
+/** The published `glossary.json` (`{term: definition}`), keyed like loadGlossary. */
+export function glossaryFromJson(entries: Record<string, string>): Glossary {
+    const map: Glossary = new Map();
+    for (const [term, definition] of Object.entries(entries)) {
+        const key = normalizeTerm(term);
+        if (key && definition?.trim()) map.set(key, { term: term.trim(), definition: definition.trim() });
+    }
+    return map;
 }
 
 type Block = {
