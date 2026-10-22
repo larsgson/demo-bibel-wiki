@@ -60,6 +60,12 @@
   force = true
 
 [[redirects]]
+  from = "https://tz.demo.bibel.wiki/"
+  to = "/r/tz/"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "https://za.demo.bibel.wiki/"
   to = "/r/za/"
   status = 200

@@ -1,0 +1,142 @@
+# Tanzania — regional entry point.   Subdomain: tz.demo.bibel.wiki   ·   Path: /r/tz
+#
+# Single source of truth for the region (mirrors config/regions/ke.toml).
+# Drives the region landing page, the picker, and any sub-region subdomains.
+#
+# Scope note: this is NOT "every language of Tanzania" (there are 120+). It's
+# the Tanzania-tagged ISO 639-3 codes (Wikidata P17=Tanzania, 131 rows,
+# checked 2026-10-22) plus Yao (yao, which Wikidata files under
+# Malawi/Mozambique only), kept where at least one of this app's content
+# sources has a real fileset: cdn.bibel.wiki/catalog/langs.json (DBT text
+# and/or audio, NT or OT), PKF (config/pkf-langs.json — no Tanzanian
+# language has one) or helloAO (bible.helloao.org/api/available_translations
+# .json). 83 of the 132 resolve; 76 are listed below.
+#
+# Left out of the 83:
+#   - Kiswahili (swh) and English (eng): the trade languages below.
+#   - Over-tagged in Wikidata, with no meaningful Tanzanian community: Gusii
+#     (guz), Kalenjin (kln) and Pökoot (pko) — all in ke.toml — and Tumbuka
+#     (tum, Malawi/Zambia).
+#   - Kirundi (run): Burundi's national language, in Tanzania mostly through
+#     refugee settlements in Kigoma — out of scope like ke.toml's diaspora
+#     languages. Ha (haq), the closely related local language, is listed.
+# No content in any source (48, incl. Arabic and the Swahili macrolanguage
+# code swa): aas acx ara ayh bdp bmb bou ccl dhs doe fip gmx gow gwe han hka
+# kcu ked kiv kqh mgs mgy mgz mhd mjh mvw ngo ngq now nsg pbr piw rnw rof rui
+# rwk sbm seg soz suj suw swa tny tza vin wka wun ymk — among them sizeable
+# languages such as Fipa (fip), Ngoni (ngo), Rombo (rof), Rwa (rwk), Sumbwa
+# (suw) and Kerewe (ked).
+#
+# Seven listed languages (hts, kcz, nkt, nxi, rwl, wbh, wbj — all audio-only)
+# have no entry in bibles' language-name catalog yet, so the picker shows
+# their ISO code until one is added upstream (same gap as in ml.toml/zm.toml).
+#
+# Shared with ke.toml (cross-border communities): Digo (dig), Kuria (kuj),
+# Dholuo (luo), Maasai (mas), Shambala (ksb).
+#
+# Grouped by Tanzania's geographic zones (Northern, Lake, Western, Central,
+# Eastern, Southern Highlands, Southern) — the common ethnolinguistic
+# reference frame, as Kenya's former provinces are for ke.toml. Placement is
+# by main area; languages spanning two zones are listed once.
+
+code = "tz"
+name = { en = "Tanzania", sw = "Tanzania" }
+title = { en = "Your Tanzanian Bible", sw = "Biblia Yako ya Tanzania" }  # header title; hidden if unset
+defaultLanguage = "swh"   # primary language when entering with none chosen
+uiLanguage = "sw"         # entering this region DEFAULTS the UI to Swahili
+                          # (src/locales/sw.ts)
+
+# Bridge/trade languages — surfaced first; natural audio/study fallback.
+# Kiswahili is Tanzania's national and official language; English is the
+# other official language.
+tradeLanguages = ["swh", "eng"]
+
+# Every language in this region (ISO 639-3). 76 languages — see the scope
+# note above for why this isn't exhaustive.
+languages = [
+  "asa", "bds", "bez", "cwa", "cwe", "dig", "dne", "gog", "haq", "hay",
+  "heh", "hts", "ikz", "irk", "isn", "jit", "jmc", "kcz", "kdc", "kde",
+  "kiz", "kki", "ksb", "kuj", "kya", "lag", "lai", "luo", "mas", "mgh",
+  "mgq", "mgr", "mgv", "mgw", "mpa", "mwe", "mwn", "ndg", "ndh", "ndj",
+  "ngp", "nih", "nim", "njd", "nkt", "nnq", "ntk", "nww", "nxi", "nym",
+  "nyy", "old", "poy", "reg", "rim", "ruf", "rwl", "sad", "sbk", "sbp",
+  "ssc", "suk", "tcc", "vid", "vmw", "vun", "wbh", "wbi", "wbj", "xnj",
+  "yao", "zaj", "zak", "zga", "zin", "ziw",
+]
+
+# ── Groupings ────────────────────────────────────────────────────────────────
+# Two kinds, by the `navigable` flag:
+#   navigable = false → a picker FILTER for language selection (no URL).
+#                       Auto-generated and ACTIVE.
+#   navigable = true  → a sub-region SUBDOMAIN  tz.<slug>.bibel.wiki  (hierarchical).
+#                       ALWAYS generated COMMENTED-OUT — uncomment a group to make
+#                       its subdomain valid. Never auto-enabled.
+#
+# Only ONE grouping is ever rendered (whichever `[picker].filterBy` names) —
+# see src/pages/r/[region]/index.astro.
+
+# --- By zone (picker filter; active) ---
+[[grouping]]
+id = "zone"
+navigable = false
+name = { en = "By zone", sw = "Kwa kanda" }
+
+  [[grouping.group]]
+  slug = "northern"
+  name = { en = "Northern", sw = "Kaskazini" }
+  # Arusha, Kilimanjaro, Manyara, Tanga
+  languages = ["asa", "dig", "hts", "irk", "jmc", "ksb", "mas", "old", "tcc", "vun", "ziw"]
+  [[grouping.group]]
+  slug = "lake"
+  name = { en = "Lake", sw = "Ziwa" }
+  # Mwanza, Mara, Kagera, Geita, Shinyanga, Simiyu
+  languages = ["cwa", "hay", "ikz", "jit", "kuj", "kya", "luo", "ntk", "reg", "ssc", "suk", "zak", "zin"]
+  [[grouping.group]]
+  slug = "western"
+  name = { en = "Western", sw = "Magharibi" }
+  # Kigoma, Tabora, Katavi
+  languages = ["haq", "kcz", "nym"]
+  [[grouping.group]]
+  slug = "central"
+  name = { en = "Central", sw = "Kati" }
+  # Dodoma, Singida
+  languages = ["bds", "gog", "isn", "lag", "nim", "rim", "sad", "wbj"]
+  [[grouping.group]]
+  slug = "eastern"
+  name = { en = "Eastern", sw = "Mashariki" }
+  # Dar es Salaam, Pwani, Morogoro
+  languages = ["cwe", "kdc", "kki", "ndg", "ndj", "ngp", "poy", "ruf", "vid", "zaj"]
+  [[grouping.group]]
+  slug = "southern-highlands"
+  name = { en = "Southern Highlands", sw = "Nyanda za Juu Kusini" }
+  # Iringa, Njombe, Mbeya, Songwe, Rukwa
+  languages = ["bez", "heh", "kiz", "lai", "mgq", "mgr", "mwn", "ndh", "nih", "nkt", "nyy", "rwl", "sbk", "sbp", "wbh", "wbi", "zga"]
+  [[grouping.group]]
+  slug = "southern"
+  name = { en = "Southern", sw = "Kusini" }
+  # Lindi, Mtwara, Ruvuma
+  languages = ["dne", "kde", "mgh", "mgv", "mgw", "mpa", "mwe", "njd", "nnq", "nww", "nxi", "vmw", "xnj", "yao"]
+
+# ── Region landing page (/r/tz) ──────────────────────────────────────────────
+# TODO: heroImage — no photo sourced yet (see mx-hero.jpg / id-hero.jpg for
+# the pattern: a free-to-use Unsplash photo + heroCredit). Landing page falls
+# back to a plain accent-color background until one is added.
+
+[landing]
+accentColor = "#1EB53A"   # Tanzania flag green
+headline = { en = "The Bible in the languages of Tanzania", sw = "Biblia katika lugha za Tanzania" }
+subhead  = { en = "Read and listen to Scripture in Tanzania's regional languages.", sw = "Soma na usikilize Maandiko katika lugha za kanda za Tanzania." }
+
+# ── Picker "this region" tier ────────────────────────────────────────────────
+
+[picker]
+tierLabel = { en = "Languages of Tanzania", sw = "Lugha za Tanzania" }
+filterBy = "zone"   # which grouping powers the picker filter chips
+
+# ── Study + SEO ──────────────────────────────────────────────────────────────
+
+[study]
+defaultStudyLanguage = "swh"
+
+[seo]
+host = "tz.demo.bibel.wiki"
