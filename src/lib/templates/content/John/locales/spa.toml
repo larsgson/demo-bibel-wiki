@@ -3,11 +3,13 @@
 title = "El Evangelio de Juan"
 longTitle = "Las Buenas Nuevas según Juan"
 description = "El discípulo amado de Jesús, Juan, nos habla del que existía desde el principio. Por medio de Jesús, Dios nos dio gracia y verdad. Por medio de Él nos hacemos hijos de Dios."
-# "Life of Jesus (Gospel of John)", Jesus Film Project — the same full film
-# and times as eng.toml. It has a Spanish audio track, but YouTube offers no
-# way for the page to choose it: viewers pick it in the player's settings
-# (gear menu, "Audio track"). The original English track plays first.
-video_url = "https://www.youtube.com/watch?v=TGwlXdNewnM"
+
+# Video: "Life of Jesus (Gospel of John)" from the Jesus Film Project's
+# Arclight service, in Latin American Spanish (language 21028) — its own stream with the
+# dubbed audio built in. The same cut as the YouTube upload
+# (TGwlXdNewnM), whose chapter marks give each story's video_start /
+# video_end below (stories 14, 15, 16 and 19 estimated).
+arclight = { id = "2_GOJ-0-0", language = 21028 }
 
 [01]
 title = "La Palabra entre nosotros"

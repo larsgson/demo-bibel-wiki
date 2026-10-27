@@ -207,7 +207,7 @@ export default function StoryReaderIsland({
           entries = sceneEntriesFromSegments(await loadObsProducedTiming(lang, storyId), sections.length, timed.offset)
         }
         if (!entries.length) entries = singleSceneEntries(timed.offset)
-        const credit = obs && media?.channel ? { name: media.channel, url: media.channel_url ?? null } : null
+        const credit = obs && media?.channel ? { name: `${media.channel} (YouTube)`, url: media.channel_url ?? null } : null
         const soundtrackOffset = obs ? obs.offset : null
         if (!cancelled) setYtVideo({ videoUrl: timed.videoUrl, entries: withImages(entries), credit, soundtrackOffset })
         return
@@ -230,7 +230,7 @@ export default function StoryReaderIsland({
       })
       let entries = chapters.size === 1 ? sceneEntriesByVerses(spans, own.start, own.end) : []
       if (!entries.length) entries = singleSceneEntries(own.start, own.end)
-      if (!cancelled) setYtVideo({ videoUrl: own.videoUrl, entries: withImages(entries) })
+      if (!cancelled) setYtVideo({ videoUrl: own.videoUrl, entries: withImages(entries), credit: own.credit ?? null })
     })()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1153,7 +1153,6 @@ export default function StoryReaderIsland({
           ))}
           {ytMode && ytVideo?.credit && (
             <span className="ml-2 text-xs opacity-70">
-              YouTube:{" "}
               {ytVideo.credit.url
                 ? <a href={ytVideo.credit.url} target="_blank" rel="noopener noreferrer" className="underline">{ytVideo.credit.name}</a>
                 : ytVideo.credit.name}

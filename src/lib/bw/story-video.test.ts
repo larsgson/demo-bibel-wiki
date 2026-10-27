@@ -12,6 +12,8 @@ import {
   shiftSegments,
   entryIndexAt,
   sceneEntriesByVerses,
+  arclightVideoUrl,
+  parseArclightUrl,
 } from "./story-video"
 
 describe("parseYouTubeId", () => {
@@ -163,5 +165,25 @@ describe("sceneEntriesByVerses", () => {
   it("is empty without an end or verses", () => {
     expect(sceneEntriesByVerses([{ first: 1, last: 3 }], 0, null)).toEqual([])
     expect(sceneEntriesByVerses([null], 0, 100)).toEqual([])
+  })
+})
+
+describe("Arclight films", () => {
+  it("round-trips arclight: video URLs", () => {
+    expect(arclightVideoUrl("2_GOJ-0-0", 496)).toBe("arclight:2_GOJ-0-0/496")
+    expect(parseArclightUrl("arclight:2_GOJ-0-0/496")).toEqual({ mediaComponentId: "2_GOJ-0-0", languageId: 496 })
+    expect(parseArclightUrl("https://youtu.be/RHs-mOkjXSg")).toBeNull()
+  })
+  it("prefers the locale's Arclight film over its YouTube link, with a credit", () => {
+    const locale = {
+      arclight: { id: "2_GOJ-0-0", language: 496 },
+      video_url: "https://www.youtube.com/watch?v=TGwlXdNewnM",
+      "01": { "05": { video_start: 2079, video_end: 2594 } },
+    }
+    expect(localeStoryVideo(locale, "01", "05")).toEqual({
+      videoUrl: "arclight:2_GOJ-0-0/496", start: 2079, end: 2594,
+      credit: { name: "Jesus Film Project", url: "https://www.jesusfilm.org/watch/" },
+    })
+    expect(localeStoryVideo({ arclight: locale.arclight }, "01", "05")).toBeNull()
   })
 })

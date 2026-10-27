@@ -11,7 +11,8 @@ import {
   $audioToast,
   type VerseEntry,
 } from "./audio-store"
-import { isYouTubeUrl, parseYouTubeId } from "../lib/bw/story-video"
+import { isYouTubeUrl, parseArclightUrl, parseYouTubeId } from "../lib/bw/story-video"
+import { detachStream, playStreamIn, resolveArclightStream } from "../lib/bw/arclight"
 import {
   setYouTubeHandlers,
   youTubeSlot,
@@ -99,6 +100,8 @@ export function isYouTubeVideoActive(): boolean {
 
 let primaryVideo: HTMLVideoElement | null = null
 let primaryVideoSrc = ""
+/** Where to start once the stream being resolved/loaded can play. */
+let pendingStart = 0
 
 /** The element to show the chapter video in: the mp4 <video> element, or
  *  for a YouTube video the placeholder slot the player is laid over. */
@@ -145,10 +148,29 @@ function seekAndPlayVideo(url: string, startTime: number) {
     return
   }
   const v = getFileVideoElement()
+  pendingStart = startTime
   if (primaryVideoSrc === url) {
+    // Still resolving/loading a stream: it starts at pendingStart.
+    if (v.readyState === 0) return
     v.currentTime = startTime
     v.play().catch(() => {})
+  } else if (parseArclightUrl(url)) {
+    // A Jesus Film Project film: resolve its stream, then play it here.
+    primaryVideoSrc = url
+    const fail = () => {
+      if (primaryVideoSrc !== url) return
+      primaryVideoSrc = ""
+      stopVideo()
+      $audioToast.set("videoUnavailable")
+      $videoFailed.set(url)
+    }
+    resolveArclightStream(url).then((stream) => {
+      if (primaryVideoSrc !== url) return
+      if (!stream) return fail()
+      playStreamIn(v, stream, pendingStart, fail)
+    })
   } else {
+    detachStream()
     primaryVideoSrc = url
     v.src = url
     v.addEventListener("canplay", function onCanPlay() {

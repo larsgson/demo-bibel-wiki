@@ -3,11 +3,13 @@
 title = "The Gospel of John"
 longTitle = "The Good News according to John"
 description = "Jesus' beloved disciple John tells us about the One who was from the beginning. Through Jesus, God gave us grace and truth. Through Him we become children of God."
-# "Life of Jesus (Gospel of John)", Jesus Film Project — the full film; each
-# story below gives where its chapter starts and ends in it (seconds), from
-# the chapter marks in the video description unless marked "estimated"
-# (interpolated by verse count between the nearest marks).
-video_url = "https://www.youtube.com/watch?v=TGwlXdNewnM"
+
+# Video: "Life of Jesus (Gospel of John)" from the Jesus Film Project's
+# Arclight service, in English (language 529) — its own stream with the
+# dubbed audio built in. The same cut as the YouTube upload
+# (TGwlXdNewnM), whose chapter marks give each story's video_start /
+# video_end below (stories 14, 15, 16 and 19 estimated).
+arclight = { id = "2_GOJ-0-0", language = 529 }
 
 [01]
 title = "The Word Among Us"

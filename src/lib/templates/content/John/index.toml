@@ -21,16 +21,18 @@ image = "VB-John13v18.jpg"
 id = "03"
 image = "VB-John18v24.jpg"
 
-# Videos (YouTube), per language in locales/<iso>.toml — shown behind an
-# audio/video toggle on the story page, audio being the default:
-#   video_url = "…"            top level: one film for the whole Gospel;
-#                              used for a story only where that story gives
-#                              its start in it:
+# Videos, per language in locales/<iso>.toml — shown behind an audio/video
+# toggle on the story page, audio being the default. One film for the whole
+# Gospel, at the top level of the file:
+#   arclight = { id = "2_GOJ-0-0", language = 496 }   the Jesus Film
+#                              Project's stream in that language (resolved
+#                              by netlify/functions/arclight-proxy.cjs), or
+#   video_url = "…"            a YouTube link;
+# used for a story only where that story gives its start in it:
 #   [01.05]
 #   video_start = 1234         seconds into the film (video_end optional)
-#   video_url = "…"            or: a video of this story alone
-# See src/lib/bw/story-video.ts (localeStoryVideo). English, French and
-# Spanish have the Jesus Film Project's full film with per-story times (its
-# French/Spanish audio tracks can only be picked in YouTube's own settings
-# menu); the other locales' links were all unavailable on YouTube as of
-# 2026-10-27.
+#   video_url = "…"            or: a YouTube video of this story alone.
+# See src/lib/bw/story-video.ts (localeStoryVideo). eng, fra, deu, spa and
+# por use Arclight's "Life of Jesus (Gospel of John)"; nor, ron and swe
+# only have YouTube links that were unavailable as of 2026-10-27 (Arclight
+# has no Norwegian, Romanian or Swedish version of this film).

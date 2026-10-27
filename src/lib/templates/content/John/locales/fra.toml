@@ -3,11 +3,13 @@
 title = "L'Évangile de Jean"
 longTitle = "La Bonne Nouvelle selon Jean"
 description = "Le disciple bien-aimé de Jésus, Jean, nous parle de Celui qui existait depuis le commencement. Par Jésus, Dieu nous a donné la grâce et la vérité. Par Lui, nous devenons enfants de Dieu."
-# "Life of Jesus (Gospel of John)", Jesus Film Project — the same full film
-# and times as eng.toml. It has a French audio track, but YouTube offers no
-# way for the page to choose it: viewers pick it in the player's settings
-# (gear menu, "Audio track"). The original English track plays first.
-video_url = "https://www.youtube.com/watch?v=TGwlXdNewnM"
+
+# Video: "Life of Jesus (Gospel of John)" from the Jesus Film Project's
+# Arclight service, in French (language 496) — its own stream with the
+# dubbed audio built in. The same cut as the YouTube upload
+# (TGwlXdNewnM), whose chapter marks give each story's video_start /
+# video_end below (stories 14, 15, 16 and 19 estimated).
+arclight = { id = "2_GOJ-0-0", language = 496 }
 
 [01]
 title = "La Parole parmi nous"

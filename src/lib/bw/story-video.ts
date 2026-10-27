@@ -49,6 +49,19 @@ export function youTubeWatchUrl(id: string): string {
   return `https://www.youtube.com/watch?v=${id}`
 }
 
+/** A film on the Jesus Film Project's Arclight service, in one language
+ *  (each language is its own stream, its dubbed audio built in). Written
+ *  as `arclight:<mediaComponentId>/<languageId>` wherever a video URL goes;
+ *  arclight.ts resolves it to the stream. */
+export function arclightVideoUrl(mediaComponentId: string, languageId: number): string {
+  return `arclight:${mediaComponentId}/${languageId}`
+}
+
+export function parseArclightUrl(url: string | null | undefined): { mediaComponentId: string; languageId: number } | null {
+  const m = url?.match(/^arclight:([0-9A-Za-z_-]+)\/(\d+)$/)
+  return m ? { mediaComponentId: m[1], languageId: Number(m[2]) } : null
+}
+
 /** A story's YouTube video: where the story starts in it (seconds) and,
  *  optionally, where it ends. `offset` shifts per-segment audio timing onto
  *  the video when the audio was cut from it (OBS's youtube_offset). */
@@ -56,6 +69,8 @@ export interface StoryVideo {
   videoUrl: string
   start: number
   end?: number | null
+  /** Who made the video, shown next to the toggle. */
+  credit?: { name: string; url: string | null } | null
 }
 
 /**
@@ -223,11 +238,12 @@ export function obsStoryVideo(
  * A story's YouTube video from a template locale file (parsed TOML):
  *  - `[<cat>.<story>] video_url = "…"` — a video of this story alone
  *    (optional `video_start` / `video_end` within it);
- *  - otherwise the file's top-level `video_url` (one film for the whole
- *    collection, as John has), but ONLY when the story says where it
- *    starts in that film (`[<cat>.<story>] video_start = <seconds>`) —
- *    without that, the toggle would play the film from its beginning on
- *    every story.
+ *  - otherwise one film for the whole collection, as John has — the
+ *    file's top-level `arclight = { id = "…", language = <n> }` (the Jesus
+ *    Film Project's own stream in that language), else its top-level
+ *    `video_url` — but ONLY when the story says where it starts in that
+ *    film (`[<cat>.<story>] video_start = <seconds>`); without that, the
+ *    toggle would play the film from its beginning on every story.
  */
 export function localeStoryVideo(
   locale: Record<string, unknown> | null | undefined,
@@ -244,7 +260,17 @@ export function localeStoryVideo(
   const end = num(story?.video_end)
   const own = typeof story?.video_url === "string" ? parseYouTubeId(story.video_url) : null
   if (own) return { videoUrl: youTubeWatchUrl(own), start: start ?? 0, end }
+  if (start == null) return null
+  const arc = locale.arclight as { id?: unknown; language?: unknown } | undefined
+  if (arc && typeof arc.id === "string" && typeof arc.language === "number") {
+    return {
+      videoUrl: arclightVideoUrl(arc.id, arc.language),
+      start,
+      end,
+      credit: { name: "Jesus Film Project", url: "https://www.jesusfilm.org/watch/" },
+    }
+  }
   const film = typeof locale.video_url === "string" ? parseYouTubeId(locale.video_url) : null
-  if (film && start != null) return { videoUrl: youTubeWatchUrl(film), start, end }
+  if (film) return { videoUrl: youTubeWatchUrl(film), start, end }
   return null
 }
