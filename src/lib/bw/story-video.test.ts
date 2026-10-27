@@ -11,6 +11,7 @@ import {
   videoTimingToSegments,
   shiftSegments,
   entryIndexAt,
+  sceneEntriesByVerses,
 } from "./story-video"
 
 describe("parseYouTubeId", () => {
@@ -146,5 +147,21 @@ describe("entryIndexAt", () => {
     const withGap = [{ verseStart: 1, verseEnd: 1, startTime: 0, endTime: 0 }, ...sceneEntriesFromSegments({ "2": [5, 9] }, 2)]
     expect(entryIndexAt(withGap, 3)).toBe(-1)
     expect(entryIndexAt(withGap, 6)).toBe(1)
+  })
+})
+
+describe("sceneEntriesByVerses", () => {
+  it("gives each section its verses' share of the chapter's time", () => {
+    // 10 verses over 100 s; a heading section without verses in between
+    const entries = sceneEntriesByVerses([{ first: 1, last: 1 }, null, { first: 2, last: 5 }, { first: 6, last: 10 }], 1000, 1100)
+    expect(entries.map((e) => [e.sectionIndex, e.startTime, e.endTime])).toEqual([
+      [0, 1000, 1010],
+      [2, 1010, 1050],
+      [3, 1050, 1100],
+    ])
+  })
+  it("is empty without an end or verses", () => {
+    expect(sceneEntriesByVerses([{ first: 1, last: 3 }], 0, null)).toEqual([])
+    expect(sceneEntriesByVerses([null], 0, 100)).toEqual([])
   })
 })

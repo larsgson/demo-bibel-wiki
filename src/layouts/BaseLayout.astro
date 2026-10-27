@@ -544,8 +544,15 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
             const hasImage = !clone.querySelector(".listen-verse-noimage-fallback")
             focusPanelControls.classList.toggle("no-image", !hasImage)
             if ($playerMediaKind.get() === "video") {
-              const imagesWrap = clone.querySelector(".listen-verse-images")
-              if (imagesWrap) placeVideoInto(imagesWrap)
+              // A section without pictures (a heading, a text-only part)
+              // still needs somewhere to show the video.
+              let imagesWrap = clone.querySelector(".listen-verse-images")
+              if (!imagesWrap) {
+                imagesWrap = document.createElement("div")
+                imagesWrap.className = "listen-verse-images"
+                clone.prepend(imagesWrap)
+              }
+              placeVideoInto(imagesWrap)
             } else {
               applyKenBurnsToImages()
             }

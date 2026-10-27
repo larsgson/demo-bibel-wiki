@@ -39,6 +39,7 @@ import {
   debugVideoOverride,
   entryIndexAt,
   obsStoryVideo,
+  sceneEntriesByVerses,
   sceneEntriesFromSegments,
   sceneIndexForSection,
   shiftSegments,
@@ -212,9 +213,24 @@ export default function StoryReaderIsland({
         return
       }
       const own = youtubeByLang?.[lang]
-      if (!cancelled) {
-        setYtVideo(own ? { videoUrl: own.videoUrl, entries: withImages(singleSceneEntries(own.start, own.end)) } : null)
-      }
+      if (!own) { if (!cancelled) setYtVideo(null); return }
+      // A story that is one chapter of a longer film: spread its sections
+      // over the chapter's time by verse (sceneEntriesByVerses).
+      const chapters = new Set<number>()
+      const spans = sections.map((section) => {
+        const refs = section.reference ? splitReference(section.reference).map(parseReference).filter((r) => r != null) : []
+        if (!refs.length) return null
+        const verses: number[] = []
+        for (const r of refs) {
+          chapters.add(r.chapter)
+          if (r.verses) verses.push(...r.verses)
+          else if (r.verseStart != null) verses.push(r.verseStart, r.verseEnd ?? r.verseStart)
+        }
+        return verses.length ? { first: Math.min(...verses), last: Math.max(...verses) } : null
+      })
+      let entries = chapters.size === 1 ? sceneEntriesByVerses(spans, own.start, own.end) : []
+      if (!entries.length) entries = singleSceneEntries(own.start, own.end)
+      if (!cancelled) setYtVideo({ videoUrl: own.videoUrl, entries: withImages(entries) })
     })()
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps

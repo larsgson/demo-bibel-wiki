@@ -123,6 +123,37 @@ export function shiftSegments(
   return out
 }
 
+/**
+ * Scenes for a story that is one chapter of a film with only the chapter's
+ * start and end known (John): each section gets the share of that time its
+ * verses have in the chapter — approximate (verses differ in length), but
+ * enough for the pictures to follow the film. `spans[i]` is section i's
+ * first and last verse, or null for a section without a reference. Returns
+ * [] when there is no end or no verse spans.
+ */
+export function sceneEntriesByVerses(
+  spans: ({ first: number; last: number } | null)[],
+  start: number,
+  end: number | null | undefined,
+): VerseEntry[] {
+  if (end == null || !(end > start) || !Number.isFinite(end)) return []
+  const lastVerse = Math.max(0, ...spans.map((v) => v?.last ?? 0))
+  if (!lastVerse) return []
+  const perVerse = (end - start) / lastVerse
+  const out: VerseEntry[] = []
+  spans.forEach((v, i) => {
+    if (!v) return
+    out.push({
+      verseStart: v.first,
+      verseEnd: v.last,
+      startTime: start + (v.first - 1) * perVerse,
+      endTime: start + v.last * perVerse,
+      sectionIndex: i,
+    })
+  })
+  return out
+}
+
 /** One scene covering the whole story — for a video with no per-section
  *  timing. With no end, it plays to the end of the video. */
 export function singleSceneEntries(start: number, end?: number | null): VerseEntry[] {
