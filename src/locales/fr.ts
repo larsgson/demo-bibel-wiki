@@ -51,6 +51,13 @@ export const fr = {
     seek: "Rechercher",
     loadingAudio: "Chargement audio...",
     noTimingAvailable: "Le minutage audio n'est pas encore disponible pour cette section",
+    videoUnavailable: "Cette vidéo ne peut pas être lue ici ; l'histoire repasse en audio",
+  },
+
+  storyMedia: {
+    label: "Écouter ou regarder",
+    audio: "Audio",
+    video: "Vidéo",
   },
 
   fullPlayingPane: {

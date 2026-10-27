@@ -49,6 +49,13 @@ export const pt = {
     seek: "Buscar",
     loadingAudio: "Carregando áudio...",
     noTimingAvailable: "Temporização de áudio ainda não disponível para esta seção",
+    videoUnavailable: "Este vídeo não pode ser reproduzido aqui; a história volta ao áudio",
+  },
+
+  storyMedia: {
+    label: "Ouvir ou assistir",
+    audio: "Áudio",
+    video: "Vídeo",
   },
 
   fullPlayingPane: {

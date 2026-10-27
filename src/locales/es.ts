@@ -49,6 +49,13 @@ export const es = {
     seek: "Buscar",
     loadingAudio: "Cargando audio...",
     noTimingAvailable: "La sincronización de audio aún no está disponible para esta sección",
+    videoUnavailable: "Este video no se puede reproducir aquí; la historia vuelve al audio",
+  },
+
+  storyMedia: {
+    label: "Escuchar o ver",
+    audio: "Audio",
+    video: "Video",
   },
 
   fullPlayingPane: {

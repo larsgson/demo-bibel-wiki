@@ -1,6 +1,8 @@
 import fs from "node:fs"
 import path from "node:path"
 import siteConfig from "../../../site.config.json"
+import { parse as parseToml } from "smol-toml"
+import { localeStoryVideo, type StoryVideo } from "./story-video"
 import type {
   TemplateStructure,
   TemplateCategory,
@@ -535,6 +537,35 @@ export function loadVideoManifest(
         : `/templates/${templateName}/video/${iso}/${storyId}.mp4`,
       timingUrl: `/templates/${templateName}/timing/${iso}/${storyId}.json`,
     }
+  }
+  return result
+}
+
+/**
+ * YouTube videos for a story, per language, from the template's locale
+ * files (`video_url` / `video_start` / `video_end` — see story-video.ts's
+ * localeStoryVideo). Only languages where the story has a usable video are
+ * included. These stories also have audio, so the reader shows the video
+ * behind an audio/video toggle.
+ */
+export function loadStoryYouTube(
+  templateName: string,
+  categoryId: string,
+  storyId: string,
+  isos: string[],
+): Record<string, StoryVideo> {
+  const result: Record<string, StoryVideo> = {}
+  for (const iso of isos) {
+    const filePath = path.join(SRC_TEMPLATES_DIR, templateName, "locales", `${iso}.toml`)
+    if (!fs.existsSync(filePath)) continue
+    let locale: Record<string, unknown>
+    try {
+      locale = parseToml(fs.readFileSync(filePath, "utf-8")) as Record<string, unknown>
+    } catch {
+      continue
+    }
+    const video = localeStoryVideo(locale, categoryId, storyId)
+    if (video) result[iso] = video
   }
   return result
 }

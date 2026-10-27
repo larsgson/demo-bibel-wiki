@@ -11,6 +11,15 @@ import {
   $audioToast,
   type VerseEntry,
 } from "./audio-store"
+import { isYouTubeUrl, parseYouTubeId } from "../lib/bw/story-video"
+import {
+  setYouTubeHandlers,
+  youTubeSlot,
+  ytLoadAndPlay,
+  ytPause,
+  ytPlay,
+  ytStop,
+} from "../lib/bw/youtube-player"
 
 /**
  * Chapter-video playback — the same "click a section, it plays through
@@ -49,6 +58,38 @@ export const $playerMediaKind = atom<PlayerMediaKind>("audio")
  *  once via setVideoForChapter, not per-entry. */
 const $activeVideoUrl = atom<string | null>(null)
 
+/** Set to the video URL when a YouTube video can't be played (removed,
+ *  private, embedding not allowed, API blocked). The story reader listens
+ *  and switches the story back to audio. */
+export const $videoFailed = atom<string | null>(null)
+
+/** The listener's choice for stories that have both audio and a YouTube
+ *  video (OBS, John): audio by default; remembered in this browser. */
+const PREFER_VIDEO_KEY = "bw-story-media"
+export const $preferVideo = atom<boolean>(readPreferVideo())
+
+function readPreferVideo(): boolean {
+  try {
+    return typeof localStorage !== "undefined" && localStorage.getItem(PREFER_VIDEO_KEY) === "video"
+  } catch {
+    return false
+  }
+}
+
+export function setPreferVideo(video: boolean) {
+  $preferVideo.set(video)
+  try {
+    localStorage.setItem(PREFER_VIDEO_KEY, video ? "video" : "audio")
+  } catch {}
+}
+
+/** True when the active chapter video is a YouTube video rather than an
+ *  mp4 file — BaseLayout then leaves it in the focus panel (see
+ *  youtube-player.ts for why it can't move to the mini-player). */
+export function isYouTubeVideoActive(): boolean {
+  return isYouTubeUrl($activeVideoUrl.get())
+}
+
 // ---- Video element singleton ----
 // Lazily created, kept out of the DOM until BaseLayout re-parents it into
 // the active slot (mini-player vs focus-panel) — see BaseLayout.astro's
@@ -58,7 +99,14 @@ const $activeVideoUrl = atom<string | null>(null)
 let primaryVideo: HTMLVideoElement | null = null
 let primaryVideoSrc = ""
 
-export function getVideoElement(): HTMLVideoElement {
+/** The element to show the chapter video in: the mp4 <video> element, or
+ *  for a YouTube video the placeholder slot the player is laid over. */
+export function getVideoElement(): HTMLElement {
+  if (isYouTubeVideoActive()) return youTubeSlot()
+  return getFileVideoElement()
+}
+
+function getFileVideoElement(): HTMLVideoElement {
   if (!primaryVideo) {
     primaryVideo = document.createElement("video")
     primaryVideo.playsInline = true
@@ -73,8 +121,29 @@ export function getVideoElement(): HTMLVideoElement {
   return primaryVideo
 }
 
+setYouTubeHandlers({
+  onTime: (t) => handleVideoTime(t),
+  onEnded: () => onVideoEnded(),
+  onError: (code) => {
+    console.warn("YouTube error:", code)
+    const url = $activeVideoUrl.get()
+    stopVideo()
+    $audioToast.set("videoUnavailable")
+    $videoFailed.set(url)
+  },
+})
+
 function seekAndPlayVideo(url: string, startTime: number) {
-  const v = getVideoElement()
+  const ytId = parseYouTubeId(url)
+  if (ytId && isYouTubeUrl(url)) {
+    ytLoadAndPlay(ytId, startTime).catch(() => {
+      stopVideo()
+      $audioToast.set("videoUnavailable")
+      $videoFailed.set(url)
+    })
+    return
+  }
+  const v = getFileVideoElement()
   if (primaryVideoSrc === url) {
     v.currentTime = startTime
     v.play().catch(() => {})
@@ -93,20 +162,29 @@ function updateVideoPlayerCardInfo(idx: number) {
   // No book/verse concept for video — keep whatever title the page set
   // (see setVideoForChapter) and clear imageUrl so BaseLayout's existing
   // "if (imageUrl) show <img>" branch stays a no-op; the video element
-  // itself is what's visible.
+  // itself is what's visible. A YouTube video stays in the focus panel
+  // (see youtube-player.ts), so the mini-player shows the scene's picture
+  // or the video's thumbnail instead.
   const title = $playerCardInfo.get().title
-  $playerCardInfo.set({ title, imageUrl: null })
+  let imageUrl: string | null = null
+  if (isYouTubeVideoActive()) {
+    const id = parseYouTubeId($activeVideoUrl.get())
+    imageUrl = $currentVerseEntries.get()[idx]?.imageUrl ?? (id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null)
+  }
+  $playerCardInfo.set({ title, imageUrl })
 }
 
 // ---- Timeupdate handling (scene-boundary detection + auto-advance) ----
 
 function onVideoTimeUpdate() {
-  if ($playerMediaKind.get() !== "video" || $audioPlayState.get() === "idle") return
-  const v = primaryVideo
-  const entries = $currentVerseEntries.get()
-  if (!v || !entries.length) return
+  if (primaryVideo) handleVideoTime(primaryVideo.currentTime)
+}
 
-  const currentTime = v.currentTime
+function handleVideoTime(currentTime: number) {
+  if ($playerMediaKind.get() !== "video" || $audioPlayState.get() === "idle") return
+  const entries = $currentVerseEntries.get()
+  if (!entries.length) return
+
   const idx = $currentVerseIdx.get()
   const entry = entries[idx]
   if (!entry) return
@@ -168,7 +246,8 @@ export function playScene(idx: number) {
 }
 
 export function pauseVideoPlayback() {
-  primaryVideo?.pause()
+  if (isYouTubeVideoActive()) ytPause()
+  else primaryVideo?.pause()
   $pausedState.set({ verseIdx: $currentVerseIdx.get(), wasSecondary: false })
   $audioPlayState.set("idle")
   // playerVisible stays true when paused, matching audio-store's pausePlayback
@@ -176,15 +255,18 @@ export function pauseVideoPlayback() {
 
 export function resumeVideoPlayback() {
   const paused = $pausedState.get()
-  if (!paused || !primaryVideo) return
+  const yt = isYouTubeVideoActive()
+  if (!paused || (!yt && !primaryVideo)) return
   $currentVerseIdx.set(paused.verseIdx)
   $audioPlayState.set("playing_primary")
-  primaryVideo.play().catch(() => {})
+  if (yt) ytPlay()
+  else primaryVideo!.play().catch(() => {})
   $pausedState.set(null)
 }
 
 export function stopVideo() {
   primaryVideo?.pause()
+  ytStop()
   $audioPlayState.set("idle")
   $pausedState.set(null)
   $focusMode.set(false)
@@ -207,6 +289,7 @@ export function setVideoForChapter(params: {
   sceneEntries: VerseEntry[]
 }) {
   if ($audioPlayState.get() !== "idle") stopVideo()
+  $videoFailed.set(null)
   $activeVideoUrl.set(params.videoUrl)
   $currentVerseEntries.set(params.sceneEntries)
   $audioPageStory.set(params.storyKey)

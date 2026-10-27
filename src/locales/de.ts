@@ -50,6 +50,13 @@ export const de = {
     seek: "Suchen",
     loadingAudio: "Audio wird geladen...",
     noTimingAvailable: "Audio-Timing für diesen Abschnitt noch nicht verfügbar",
+    videoUnavailable: "Dieses Video kann hier nicht abgespielt werden – zurück zum Audio",
+  },
+
+  storyMedia: {
+    label: "Hören oder ansehen",
+    audio: "Audio",
+    video: "Video",
   },
 
   fullPlayingPane: {

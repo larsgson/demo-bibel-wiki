@@ -317,11 +317,13 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       import {
         $playerMediaKind,
         getVideoElement,
+        isYouTubeVideoActive,
         playScene,
         pauseVideoPlayback,
         resumeVideoPlayback,
         stopVideo,
       } from "../stores/video-store"
+      import { attachYouTubeHost } from "../lib/bw/youtube-player"
       import { t } from "../lib/bw/ui-locales"
 
       import { $selectedIso } from "../stores/iso-store"
@@ -470,6 +472,9 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       function initAudioUI() {
         const focusBackdrop = document.getElementById("focus-backdrop")!
         const focusPanel = document.getElementById("focus-panel")!
+        // A YouTube chapter video's iframe lives here for good, laid over
+        // whatever slot shows it (see youtube-player.ts).
+        attachYouTubeHost(focusPanel)
         const focusPanelContent = document.getElementById("focus-panel-content")!
         const focusPanelControls = document.getElementById("focus-panel-controls")!
         const focusPlayBtn = document.getElementById("focus-play-btn")!
@@ -507,6 +512,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
           // scene), so without this guard this would yank the video out of
           // the focus panel and into the (hidden) mini-player every time.
           if ($playerMediaKind.get() !== "video" || $focusMode.get()) return
+          if (isYouTubeVideoActive()) return
           const video = getVideoElement()
           video.className = "chapter-video"
           if (video.parentElement !== playerImage) {
@@ -657,7 +663,7 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
         })
 
         $playerCardInfo.subscribe(({ title, imageUrl }) => {
-          if ($playerMediaKind.get() === "video") {
+          if ($playerMediaKind.get() === "video" && !isYouTubeVideoActive()) {
             syncMiniPlayerVideo()
           } else if (imageUrl) {
             playerImage.innerHTML = `<img src="${imageUrl}" alt="${title}">`

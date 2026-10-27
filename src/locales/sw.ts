@@ -49,6 +49,13 @@ export const sw = {
     seek: "Tafuta",
     loadingAudio: "Inapakia sauti...",
     noTimingAvailable: "Muda wa sauti bado haupatikani kwa sehemu hii",
+    videoUnavailable: "Video hii haiwezi kuchezwa hapa, kwa hiyo hadithi imerudi kwenye sauti",
+  },
+
+  storyMedia: {
+    label: "Sikiliza au tazama",
+    audio: "Sauti",
+    video: "Video",
   },
 
   fullPlayingPane: {

@@ -20,3 +20,14 @@ image = "VB-John13v18.jpg"
 [[categories]]
 id = "03"
 image = "VB-John18v24.jpg"
+
+# Videos (YouTube), per language in locales/<iso>.toml — shown behind an
+# audio/video toggle on the story page, audio being the default:
+#   video_url = "…"            top level: one film for the whole Gospel;
+#                              used for a story only where that story gives
+#                              its start in it:
+#   [01.05]
+#   video_start = 1234         seconds into the film (video_end optional)
+#   video_url = "…"            or: a video of this story alone
+# See src/lib/bw/story-video.ts (localeStoryVideo). The top-level links in
+# the locale files were all unavailable on YouTube as of 2026-10-27.

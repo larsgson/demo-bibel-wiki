@@ -18,9 +18,31 @@ import {
   playVerse,
   setAudioForChapter,
   unlockAudio,
+  stopAll,
   type VerseEntry,
 } from "../stores/audio-store"
-import { playScene, setVideoForChapter } from "../stores/video-store"
+import {
+  $playerMediaKind,
+  $preferVideo,
+  $videoFailed,
+  playScene,
+  setPreferVideo,
+  setVideoForChapter,
+  stopVideo,
+} from "../stores/video-store"
+import {
+  debugVideoOverride,
+  obsStoryVideo,
+  sceneEntriesFromSegments,
+  sceneIndexForSection,
+  shiftSegments,
+  singleSceneEntries,
+  type StoryVideo,
+} from "../lib/bw/story-video"
+import { preloadYouTubeApi } from "../lib/bw/youtube-player"
+import { t } from "../lib/bw/ui-locales"
+import { uiLangForRegion } from "../lib/data/region-config"
+import { $activeRegion } from "../stores/region-store"
 import { parseMarkdownIntoSections } from "../lib/bw/markdown-parser"
 import { parseReference, splitReference, getTestament } from "../lib/bw/bible-utils"
 import { loadReferenceHtml } from "../lib/bw/reference-html"
@@ -34,7 +56,7 @@ import { loadLanguageMedia, loadBookTiming, availabilityFor, resolveChapterAudio
 import { loadVernacularFontFace } from "../lib/bw/vernacular-font"
 import { pkfUrl } from "../lib/bw/pkf-url"
 import { loadPkfInfo } from "../lib/bw/pkf-info"
-import { loadObsMedia, fetchDoor43Story, loadObsProducedTiming, loadObsProducedAudioBlobUrl, type Door43Story } from "../lib/bw/door43-obs"
+import { loadObsMedia, fetchDoor43Story, loadObsProducedTiming, loadObsVideoTiming, loadObsProducedAudioBlobUrl, type Door43Story } from "../lib/bw/door43-obs"
 import languageStyles from "../data/language-styles.json"
 
 interface Props {
@@ -57,6 +79,12 @@ interface Props {
    *  when it has none (today, only "kir" does), falls back to whichever
    *  language IS available — see resolveVideoInfo below. */
   videoByLang?: Record<string, { videoUrl: string; timingUrl: string }> | null
+  /** YouTube video per language from the template's locale files (John —
+   *  see story-video.ts's localeStoryVideo). Unlike videoByLang, these
+   *  stories also have audio, so the video sits behind an audio/video
+   *  toggle with audio as the default. OBS's come from media.json at run
+   *  time instead. */
+  youtubeByLang?: Record<string, StoryVideo> | null
   allLocales: Record<string, LocaleData>
   imageConfig?: ImageConfig | null
   /** True for templates with a `[produced]` section (currently only OBS) —
@@ -75,6 +103,7 @@ export default function StoryReaderIsland({
   markdownContent,
   sceneBodies = null,
   videoByLang = null,
+  youtubeByLang = null,
   allLocales,
   imageConfig = null,
   producedContent = false,
@@ -123,7 +152,80 @@ export default function StoryReaderIsland({
     : null
   const audioSetupPromise = useRef<Promise<void> | null>(null)
 
+  // YouTube video behind the audio/video toggle (OBS, John) — not for
+  // templates whose only medium is the chapter video (videoInfo above).
+  const preferVideo = useStore($preferVideo)
+  const videoFailed = useStore($videoFailed)
+  const [ytVideo, setYtVideo] = useState<{
+    videoUrl: string
+    entries: VerseEntry[]
+    credit?: { name: string; url: string | null } | null
+  } | null>(null)
+  const ytAvailable = !videoInfo && !!ytVideo && videoFailed !== ytVideo.videoUrl
+  const ytMode = ytAvailable && preferVideo
+  const uiLang = uiLangForRegion(useStore($activeRegion))
+
   useEffect(() => setHydrated(true), [])
+
+  // Resolve this story's YouTube video and its scenes. Sources, first wins:
+  // ?ytid=…&ytoffset=… (local testing), OBS media.json's youtube_id, the
+  // template locale's video_url (youtubeByLang). OBS scenes come from the
+  // video's own picture timing (obs-video), else the produced-audio
+  // segment timing shifted by the offset; without timing, the whole story
+  // is one scene.
+  useEffect(() => {
+    if (videoInfo || !markdown) { setYtVideo(null); return }
+    let cancelled = false
+    const lang = selectedLang
+    ;(async () => {
+      const sections = parseMarkdownIntoSections(markdown, {}, localeData, engLocale).sections
+      const withImages = (entries: VerseEntry[]) => entries.map((e) => {
+        const section = sections[e.sectionIndex ?? 0]
+        return section?.imageUrls.length
+          ? { ...e, imageUrl: resolveMediumUrl(section.imageUrls[0], imageConfig, 640) }
+          : e
+      })
+      const override = typeof window !== "undefined" ? debugVideoOverride(window.location.search) : null
+      const media = producedContent ? await loadObsMedia(lang) : null
+      const obs = !override ? obsStoryVideo(media?.stories, storyId) : null
+      const timed = override ?? obs
+      if (timed) {
+        let entries: VerseEntry[] = []
+        if (obs) entries = sceneEntriesFromSegments(await loadObsVideoTiming(lang, storyId), sections.length)
+        if (!entries.length && producedContent) {
+          entries = sceneEntriesFromSegments(await loadObsProducedTiming(lang, storyId), sections.length, timed.offset)
+        }
+        if (!entries.length) entries = singleSceneEntries(timed.offset)
+        const credit = obs && media?.channel ? { name: media.channel, url: media.channel_url ?? null } : null
+        if (!cancelled) setYtVideo({ videoUrl: timed.videoUrl, entries: withImages(entries), credit })
+        return
+      }
+      const own = youtubeByLang?.[lang]
+      if (!cancelled) {
+        setYtVideo(own ? { videoUrl: own.videoUrl, entries: withImages(singleSceneEntries(own.start, own.end)) } : null)
+      }
+    })()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoInfo?.videoUrl, markdown, selectedLang, producedContent, storyId, youtubeByLang])
+
+  // Switching between audio and video: stop whatever plays, and hand the
+  // matching entries to the store — video scenes now, audio entries lazily
+  // on the next click (ensureAudioSetup runs again).
+  const prevYtMode = useRef(false)
+  useEffect(() => {
+    if (prevYtMode.current !== ytMode) {
+      prevYtMode.current = ytMode
+      audioSetupPromise.current = null
+      if ($playerMediaKind.get() === "video") stopVideo()
+      else stopAll()
+    }
+    if (!ytMode || !ytVideo) return
+    preloadYouTubeApi().catch(() => {})
+    const title = parseMarkdownIntoSections(markdown, {}, localeData, engLocale).title
+    setVideoForChapter({ storyKey: thisPageStory, title, videoUrl: ytVideo.videoUrl, sceneEntries: ytVideo.entries })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ytMode, ytVideo])
 
   // Fetch this chapter's per-scene [start, end] timing and hand it to
   // video-store, once — this is entirely independent of the Bible-verse
@@ -204,9 +306,14 @@ export default function StoryReaderIsland({
   }, [producedContent, storyId, selectedLangs[0]])
 
   const handleVideoSectionClick = (sectionIndex: number) => {
-    if (!videoSceneEntries) return
+    const scenes = videoInfo ? videoSceneEntries : ytVideo?.entries
+    if (!scenes) return
     unlockAudio()
-    const idx = videoSceneEntries.findIndex((e) => e.sectionIndex === sectionIndex)
+    // The chapter video has a scene per clickable section; a YouTube video
+    // may have one scene for the whole story — play the nearest one.
+    const idx = videoInfo
+      ? scenes.findIndex((e) => e.sectionIndex === sectionIndex)
+      : sceneIndexForSection(scenes, sectionIndex)
     if (idx < 0) return
     // playScene() FIRST — it sets $playerMediaKind to "video" synchronously,
     // and $focusMode.set(true) below fires populateFocusPanel synchronously
@@ -511,7 +618,14 @@ export default function StoryReaderIsland({
           // release-download host doesn't support HTTP Range requests, so
           // the raw URL can't be seeked into until it's fully downloaded).
           const audioUrl = (await loadObsProducedAudioBlobUrl(audioLang, storyId, rawAudioUrl)) || rawAudioUrl
-          const timing = await loadObsProducedTiming(audioLang, storyId)
+          // A YouTube story's audio_url is the video's own soundtrack, so
+          // the video's picture timing (minus the offset) fits it too —
+          // these languages have no narration alignment of their own.
+          let timing = await loadObsProducedTiming(audioLang, storyId)
+          if (!timing && media.stories[storyId]?.youtube_id) {
+            const videoTiming = await loadObsVideoTiming(audioLang, storyId)
+            if (videoTiming) timing = shiftSegments(videoTiming, -(media.stories[storyId]?.youtube_offset ?? 0))
+          }
           const tempSections = parseMarkdownIntoSections(markdown, {}, localeData, engLocale, sceneBodiesForLang(selectedLang))
           overlayProducedText(tempSections.sections, producedStories[audioLang] ?? null)
           const verseEntries: VerseEntry[] = tempSections.sections.map((section, i) => {
@@ -944,7 +1058,34 @@ export default function StoryReaderIsland({
         <h1 className="text-xl font-bold">{storyTitle}</h1>
       </div>
 
-      {audioWarning && !videoInfo && (
+      {ytAvailable && (
+        <div className="mb-4 flex items-center gap-2 text-sm" role="group" aria-label={t(uiLang, "storyMedia.label")}>
+          {([false, true] as const).map((video) => (
+            <button
+              key={String(video)}
+              type="button"
+              aria-pressed={ytMode === video}
+              onClick={() => setPreferVideo(video)}
+              className="px-3 py-1 rounded-full border"
+              style={ytMode === video
+                ? { background: "var(--accent, #2980b9)", borderColor: "var(--accent, #2980b9)", color: "#fff" }
+                : { borderColor: "var(--border, #ccc)", color: "var(--text)" }}
+            >
+              {video ? "▶ " : "♪ "}{t(uiLang, video ? "storyMedia.video" : "storyMedia.audio")}
+            </button>
+          ))}
+          {ytMode && ytVideo?.credit && (
+            <span className="ml-2 text-xs opacity-70">
+              YouTube:{" "}
+              {ytVideo.credit.url
+                ? <a href={ytVideo.credit.url} target="_blank" rel="noopener noreferrer" className="underline">{ytVideo.credit.name}</a>
+                : ytVideo.credit.name}
+            </span>
+          )}
+        </div>
+      )}
+
+      {audioWarning && !videoInfo && !ytMode && (
         <div className="mb-4 px-3 py-2 rounded-md bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 text-sm">
           {audioWarning}
         </div>
@@ -964,7 +1105,7 @@ export default function StoryReaderIsland({
             sectionIndex={index}
             selectedLanguages={langsToRender}
             sectionsMap={sectionsMap}
-            onSectionClick={videoInfo ? handleVideoSectionClick : handleSectionClick}
+            onSectionClick={videoInfo || ytMode ? handleVideoSectionClick : handleSectionClick}
             imageConfig={imageConfig}
             isVideoSection={videoInfo ? isVideoSection : undefined}
             referenceHtml={referenceHtml}

@@ -43,10 +43,14 @@
  */
 
 import { pkfUrl } from "./pkf-url"
+import { videoTimingToSegments } from "./story-video"
 
 export interface ObsIndexEntry {
   hasText: boolean
   hasAudio: boolean
+  /** "v" in the index row: every story has a YouTube video (see
+   *  ObsStoryMedia.youtube_id). */
+  hasVideo: boolean
   /** Number of distinct door43 repos for this iso, when more than one
    *  (undefined/1 otherwise) — see media.json's own note on this. */
   repoCount?: number
@@ -64,6 +68,12 @@ export interface ObsStoryMedia {
   /** Audio-sync's own narration-segment count claim, optional enrichment
    *  only present alongside audio_url — null/absent doesn't mean no audio. */
   segmentCount?: number
+  /** YouTube video of the story (OBS4All languages, media "atv" in the
+   *  index): its audio_url is the video's own soundtrack, starting
+   *  youtube_offset seconds into the video (none has one yet). Read via
+   *  story-video.ts's obsStoryVideo; timing via loadObsVideoTiming. */
+  youtube_id?: string | null
+  youtube_offset?: number | null
 }
 
 export type ObsContentLayout = "md" | "ts-desktop"
@@ -92,6 +102,11 @@ export interface ObsMedia {
   audioStoriesSet?: string[]
   timingStoriesSet?: string[]
   stories: Record<string, ObsStoryMedia>
+  /** The language's YouTube playlist (not in story order — use the story
+   *  keys) and channel, for attribution. */
+  youtube_playlist?: string | null
+  channel?: string | null
+  channel_url?: string | null
 }
 
 /** `{ [segment]: [startSeconds, endSeconds] }`, 1-indexed to match a
@@ -112,6 +127,7 @@ export function loadObsIndex(): Promise<Map<string, ObsIndexEntry>> {
         out.set(iso, {
           hasText: media.includes("t"),
           hasAudio: media.includes("a"),
+          hasVideo: media.includes("v"),
           repoCount: count,
         })
       }
@@ -230,6 +246,24 @@ export function loadObsProducedTiming(iso: string, storyId: string): Promise<Obs
     })
     .catch(() => null)
   producedTimingCache.set(key, p)
+  return p
+}
+
+const videoTimingCache = new Map<string, Promise<ObsProducedTiming | null>>()
+
+/** Which OBS picture is on screen when, in a story's YouTube video —
+ *  detected from the video frames (cdn.bibel.wiki/obs-video). Keyed by
+ *  picture = section number, in VIDEO seconds; the audio_url soundtrack
+ *  uses the same times minus youtube_offset. */
+export function loadObsVideoTiming(iso: string, storyId: string): Promise<ObsProducedTiming | null> {
+  const key = `${iso}/${storyId}`
+  const cached = videoTimingCache.get(key)
+  if (cached) return cached
+  const p = fetch(pkfUrl(`/obs-video/${iso}/${storyId}_timing.json`))
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => videoTimingToSegments(data))
+    .catch(() => null)
+  videoTimingCache.set(key, p)
   return p
 }
 

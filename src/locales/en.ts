@@ -49,6 +49,13 @@ export const en = {
     seek: "Seek",
     loadingAudio: "Loading audio...",
     noTimingAvailable: "Audio timing not yet available for this section",
+    videoUnavailable: "This video can't be played here, so the story is back to audio",
+  },
+
+  storyMedia: {
+    label: "Listen or watch",
+    audio: "Audio",
+    video: "Video",
   },
 
   fullPlayingPane: {
