@@ -3,57 +3,85 @@
 title = "El Evangelio de Juan"
 longTitle = "Las Buenas Nuevas según Juan"
 description = "El discípulo amado de Jesús, Juan, nos habla del que existía desde el principio. Por medio de Jesús, Dios nos dio gracia y verdad. Por medio de Él nos hacemos hijos de Dios."
-video_url = "https://www.youtube.com/embed/tMQGOEzlK6c"
+# "Life of Jesus (Gospel of John)", Jesus Film Project — the same full film
+# and times as eng.toml. It has a Spanish audio track, but YouTube offers no
+# way for the page to choose it: viewers pick it in the player's settings
+# (gear menu, "Audio track"). The original English track plays first.
+video_url = "https://www.youtube.com/watch?v=TGwlXdNewnM"
 
 [01]
 title = "La Palabra entre nosotros"
 description = "Capítulos 1–12: Desde la encarnación del Verbo hasta la entrada de Jesús en Jerusalén"
 
 [01.01]
+video_start = 0   # 0:00:00 Introduction to the Gospel of John
+video_end = 777
 title = "La Palabra Viva de Dios"
 description = "El Verbo de Dios se hizo carne y habitó entre nosotros. Juan el Bautista dio testimonio de él. Andrés se lo dijo a Simón Pedro y siguieron a Jesús."
 
 [01.02]
+video_start = 777   # 0:12:57 first miracle at a wedding
+video_end = 1212
 title = "Bodas de Caná"
 description = "Jesús convirtió el agua en vino en una boda. Expulsó a los cambistas del templo. Dijo: \"Destruyan este templo y lo levantaré.\""
 
 [01.03]
+video_start = 1212   # 0:20:12 Jesus and Nicodemus
+video_end = 1536
 title = "Nicodemo"
 description = "Jesús le dijo a Nicodemo: \"Nace de nuevo. El que cree en el Hijo tendrá vida eterna.\" Juan el Bautista dijo: \"Él está por encima de todos.\""
 
 [01.04]
+video_start = 1536   # 0:25:36 the Samaritan woman
+video_end = 2079
 title = "Mujer Samaritana"
 description = "Jesús habló con una mujer samaritana acerca de sus maridos. Ella dijo: \"¿Será éste el Cristo?\" Muchos creyeron. Sanó al hijo de un funcionario."
 
 [01.05]
+video_start = 2079   # 0:34:39 heals the paralyzed man
+video_end = 2594
 title = "Cojo Sanado"
 description = "Jesús sanó a un hombre en Betesda. Dijo: \"El Hijo sólo hace lo que ve hacer al Padre. Mis obras y las Escrituras dan testimonio.\""
 
 [01.06]
+video_start = 2594   # 0:43:14 feeds the 5000
+video_end = 3460
 title = "Pan de Vida"
 description = "Jesús alimentó a 5.000 hombres y caminó a través del mar. Dijo: \"Yo soy el pan de vida. Mi carne es verdadero alimento.\" Muchos discípulos se apartaron."
 
 [01.07]
+video_start = 3460   # 0:57:40 Jesus and His brothers
+video_end = 3912
 title = "Ríos de Agua Viva"
 description = "Jesús fue a la fiesta. La gente decía: \"¿Es éste el Cristo?\" Los sumos sacerdotes intentaron arrestarlo. Él gritó: \"Vengan y beban.\""
 
 [01.08]
+video_start = 3912   # 1:05:12 the woman caught in adultery
+video_end = 4567
 title = "Descendientes de Abraham"
 description = "Jesús no condenó a una mujer sorprendida en adulterio. Los fariseos lo interrogaron. Él dijo: \"Si Dios fuera su Padre, me amarían.\""
 
 [01.09]
+video_start = 4567   # 1:16:07 heals a man born blind
+video_end = 5057
 title = "Ciego Sanado"
 description = "Jesús curó a un ciego en sábado. Los fariseos llamaron al hombre y lo echaron fuera. Jesús dijo: \"He venido para que los ciegos vean.\""
 
 [01.10]
+video_start = 5057   # 1:24:17 the parable of the shepherd
+video_end = 5437
 title = "Rebaño-Pastor"
 description = "Jesús dijo: \"Yo soy el buen pastor. Yo doy mi vida por las ovejas.\" Le preguntaron: \"¿Eres tú el Cristo?\" Él dijo: \"Mis ovejas me siguen.\""
 
 [01.11]
+video_start = 5437   # 1:30:37 the death of Lazarus
+video_end = 6052
 title = "Lázaro"
 description = "Lázaro murió. Jesús fue al sepulcro y dijo: \"Lázaro, sal fuera.\" Lázaro salió. Los sumos sacerdotes conspiraron para dar muerte a Jesús."
 
 [01.12]
+video_start = 6052   # 1:40:52 anointed at Bethany
+video_end = 6661
 title = "Entrada a Jerusalén"
 description = "Jesús entró en Jerusalén a caballo. La multitud gritó: \"¡Hosanna!\" Él dijo: \"Es necesario que el Hijo del Hombre sea levantado. Yo he venido a salvar al mundo.\""
 
@@ -62,22 +90,32 @@ title = "Jesús y sus discípulos"
 description = "Capítulos 13–17: La Última Cena, discursos de despedida y la oración de Jesús"
 
 [02.13]
+video_start = 6661   # 1:51:01 Jesus washes His disciples' feet
+video_end = 7205
 title = "Lavado de Pies"
 description = "Jesús les lavó los pies a los discípulos. Dijo: \"Uno de ustedes me va a entregar.\" Judas se fue. Jesús dijo: \"Amaos los unos a los otros como yo os he amado.\""
 
 [02.14]
+video_start = 7205   # estimated: no mark; 13:36 is at 1:59:41
+video_end = 7492
 title = "Camino-Verdad-Vida"
 description = "\"Yo soy el camino, la verdad y la vida. Yo estoy en el Padre y el Padre en mí. Él os dará el Espíritu Santo. No tengan miedo.\""
 
 [02.15]
+video_start = 7492   # estimated: no mark; 15:18 is at 2:07:36
+video_end = 7748
 title = "Vid-Ramos"
 description = "\"Yo soy la vid, ustedes son los sarmientos. Ustedes son mis amigos si hacen lo que yo les mando. Si me persiguieron a mí, los perseguirán a ustedes.\""
 
 [02.16]
+video_start = 7748   # estimated: no mark; between 2:07:36 (15:18) and 2:14:35 (17:1)
+video_end = 8075
 title = "La Venida del Espíritu Santo"
 description = "\"El Espíritu convencerá al mundo de pecado. Él los guiará a toda la verdad. Su tristeza se convertirá en alegría. Yo voy al Padre.\""
 
 [02.17]
+video_start = 8075   # 2:14:35 Jesus prays for His disciples
+video_end = 8334
 title = "Cristo Partirá"
 description = "Jesús dijo: \"Padre, he revelado tu nombre a los que me diste. Santifícalos en la verdad. Que todos los que crean en mí sean uno.\""
 
@@ -86,18 +124,26 @@ title = "Cruz y Resurrección"
 description = "Capítulos 18–21: Arresto, crucifixión, resurrección y restauración"
 
 [03.18]
+video_start = 8334   # 2:18:54 the arrest of Jesus
+video_end = 8905
 title = "Arresto y Juicios"
 description = "Judas entregó a Jesús a los sumos sacerdotes. Pedro lo negó. Fue enviado ante Pilato. Jesús dijo: \"Mi reino no es de este mundo.\""
 
 [03.19]
+video_start = 8905   # estimated: no mark; between 2:24:24 (18:28) and 2:33:38 (19:16)
+video_end = 9653
 title = "Muerte por los pecados"
 description = "Los soldados tomaron a Jesús y lo crucificaron. Él dijo: \"Todo está cumplido.\" Entregó el espíritu. Un soldado le atravesó el costado con una lanza."
 
 [03.20]
+video_start = 9653   # 2:40:53 the empty tomb
+video_end = 10061
 title = "Resurrección"
 description = "María fue al sepulcro y lo encontró vacío. Jesús la encontró. Se acercó y se puso en medio de los discípulos. Tomás dijo: \"¡Señor mío y Dios mío!\""
 
 [03.21]
+video_start = 10061   # 2:47:41 Jesus appears to seven disciples
+video_end = 10434
 title = "Mar de Tiberio"
 description = "Jesús se apareció mientras los discípulos pescaban. Le dijo a Pedro: \"¿Me amas? Apacienta mis ovejas.\" El discípulo amado ha dado testimonio."
 

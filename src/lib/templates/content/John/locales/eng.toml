@@ -3,57 +3,85 @@
 title = "The Gospel of John"
 longTitle = "The Good News according to John"
 description = "Jesus' beloved disciple John tells us about the One who was from the beginning. Through Jesus, God gave us grace and truth. Through Him we become children of God."
-video_url = "https://www.youtube.com/embed/RHs-mOkjXSg"
+# "Life of Jesus (Gospel of John)", Jesus Film Project — the full film; each
+# story below gives where its chapter starts and ends in it (seconds), from
+# the chapter marks in the video description unless marked "estimated"
+# (interpolated by verse count between the nearest marks).
+video_url = "https://www.youtube.com/watch?v=TGwlXdNewnM"
 
 [01]
 title = "The Word Among Us"
 description = "Chapters 1–12: From the incarnation of the Word to Jesus' entry into Jerusalem"
 
 [01.01]
+video_start = 0   # 0:00:00 Introduction to the Gospel of John
+video_end = 777
 title = "The Living Word of God"
 description = "The Word of God became flesh and dwelt with us. John the Baptist bore witness to him. Andrew told Simon Peter and they followed Jesus."
 
 [01.02]
+video_start = 777   # 0:12:57 first miracle at a wedding
+video_end = 1212
 title = "Cana Wedding"
 description = "Jesus turned water into wine at a wedding. He drove money-changers from the temple. He said, \"Destroy this temple and I will raise it.\""
 
 [01.03]
+video_start = 1212   # 0:20:12 Jesus and Nicodemus
+video_end = 1536
 title = "Nicodemus"
 description = "Jesus told Nicodemus, \"Be born again. Whoever believes in the Son will have eternal life.\" John the Baptist said, \"He is above all.\""
 
 [01.04]
+video_start = 1536   # 0:25:36 the Samaritan woman
+video_end = 2079
 title = "Samaritan Woman"
 description = "Jesus spoke with a Samaritan woman about her husbands. She said, \"Can this be the Christ?\" Many believed. He healed an official's son."
 
 [01.05]
+video_start = 2079   # 0:34:39 heals the paralyzed man
+video_end = 2594
 title = "Lame Man Healed"
 description = "Jesus healed a man at Bethesda. He said, \"The Son only does what he sees the Father doing. My works and the Scriptures bear witness.\""
 
 [01.06]
+video_start = 2594   # 0:43:14 feeds the 5000
+video_end = 3460
 title = "Bread of Life"
 description = "Jesus fed 5,000 men and walked across the sea. He said, \"I am the bread of life. My flesh is true food.\" Many disciples turned back."
 
 [01.07]
+video_start = 3460   # 0:57:40 Jesus and His brothers
+video_end = 3912
 title = "Rivers of Living Water"
 description = "Jesus went to the feast. The people said, \"Is this the Christ?\" The chief priests tried to arrest him. He called out, \"Come and drink.\""
 
 [01.08]
+video_start = 3912   # 1:05:12 the woman caught in adultery
+video_end = 4567
 title = "Abraham's Descendants"
 description = "Jesus did not condemn a woman caught in adultery. The Pharisees questioned him. He said, \"If God were your Father you would love me.\""
 
 [01.09]
+video_start = 4567   # 1:16:07 heals a man born blind
+video_end = 5057
 title = "Blind Man Healed"
 description = "Jesus healed a blind man on the Sabbath. The Pharisees called the man and threw him out. Jesus said, \"I came that the blind may see.\""
 
 [01.10]
+video_start = 5057   # 1:24:17 the parable of the shepherd
+video_end = 5437
 title = "Sheepfold-Shepherd"
 description = "Jesus said, \"I am the good shepherd. I give my life for the sheep.\" They asked, \"Are you the Christ?\" He said, \"My sheep follow me.\""
 
 [01.11]
+video_start = 5437   # 1:30:37 the death of Lazarus
+video_end = 6052
 title = "Lazarus"
 description = "Lazarus died. Jesus went to the tomb and said, \"Lazarus, come out.\" Lazarus came out. The chief priests plotted to put Jesus to death."
 
 [01.12]
+video_start = 6052   # 1:40:52 anointed at Bethany
+video_end = 6661
 title = "Entrance Into Jerusalem"
 description = "Jesus rode into Jerusalem. The crowd shouted, \"Hosanna!\" He said, \"The Son of Man must be lifted up. I have come to save the world.\""
 
@@ -62,22 +90,32 @@ title = "Jesus and His Disciples"
 description = "Chapters 13–17: The Last Supper, farewell discourses, and Jesus' prayer"
 
 [02.13]
+video_start = 6661   # 1:51:01 Jesus washes His disciples' feet
+video_end = 7205
 title = "Foot Washing"
 description = "Jesus washed the disciples' feet. He said, \"One of you will betray me.\" Judas left. Jesus said, \"Love each other as I have loved you.\""
 
 [02.14]
+video_start = 7205   # estimated: no mark; 13:36 is at 1:59:41
+video_end = 7492
 title = "Way-Truth-Life"
 description = "\"I am the way, the truth, and the life. I am in the Father and the Father in me. He will give you the Holy Spirit. Do not be afraid.\""
 
 [02.15]
+video_start = 7492   # estimated: no mark; 15:18 is at 2:07:36
+video_end = 7748
 title = "Vine-Branches"
 description = "\"I am the vine, you are the branches. You are my friends if you do what I command. If they persecuted me, they will also persecute you.\""
 
 [02.16]
+video_start = 7748   # estimated: no mark; between 2:07:36 (15:18) and 2:14:35 (17:1)
+video_end = 8075
 title = "The Coming of the Holy Spirit"
 description = "\"The Spirit will convict the world of sin. He will guide you into all truth. Your sorrow will turn to joy. I am going to the Father.\""
 
 [02.17]
+video_start = 8075   # 2:14:35 Jesus prays for His disciples
+video_end = 8334
 title = "Christ to Depart"
 description = "Jesus said, \"Father, I have revealed your name to those you gave me. Sanctify them in the truth. May all who believe in me be one.\""
 
@@ -86,18 +124,26 @@ title = "Cross & Resurrection"
 description = "Chapters 18–21: Arrest, crucifixion, resurrection, and restoration"
 
 [03.18]
+video_start = 8334   # 2:18:54 the arrest of Jesus
+video_end = 8905
 title = "Arrest and Trials"
 description = "Judas betrayed Jesus to the chief priests. Peter denied him. He was sent before Pilate. Jesus said, \"My kingdom is not of this world.\""
 
 [03.19]
+video_start = 8905   # estimated: no mark; between 2:24:24 (18:28) and 2:33:38 (19:16)
+video_end = 9653
 title = "Death for Sins"
 description = "The soldiers took Jesus and crucified him. He said, \"It is finished.\" He gave up his spirit. A soldier pierced his side with a spear."
 
 [03.20]
+video_start = 9653   # 2:40:53 the empty tomb
+video_end = 10061
 title = "Resurrection"
 description = "Mary went to the tomb and found it empty. Jesus met her. He came and stood among the disciples. Thomas said, \"My Lord and my God!\""
 
 [03.21]
+video_start = 10061   # 2:47:41 Jesus appears to seven disciples
+video_end = 10434
 title = "Sea of Tiberius"
 description = "Jesus appeared as the disciples were fishing. He said to Peter, \"Do you love me? Feed my sheep.\" The beloved disciple has testified."
 

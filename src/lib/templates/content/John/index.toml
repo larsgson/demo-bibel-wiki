@@ -29,5 +29,8 @@ image = "VB-John18v24.jpg"
 #   [01.05]
 #   video_start = 1234         seconds into the film (video_end optional)
 #   video_url = "…"            or: a video of this story alone
-# See src/lib/bw/story-video.ts (localeStoryVideo). The top-level links in
-# the locale files were all unavailable on YouTube as of 2026-10-27.
+# See src/lib/bw/story-video.ts (localeStoryVideo). English, French and
+# Spanish have the Jesus Film Project's full film with per-story times (its
+# French/Spanish audio tracks can only be picked in YouTube's own settings
+# menu); the other locales' links were all unavailable on YouTube as of
+# 2026-10-27.

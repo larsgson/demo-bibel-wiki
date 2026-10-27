@@ -3,57 +3,85 @@
 title = "L'Évangile de Jean"
 longTitle = "La Bonne Nouvelle selon Jean"
 description = "Le disciple bien-aimé de Jésus, Jean, nous parle de Celui qui existait depuis le commencement. Par Jésus, Dieu nous a donné la grâce et la vérité. Par Lui, nous devenons enfants de Dieu."
-video_url = "https://www.youtube.com/embed/WMAfkYVlSoQ"
+# "Life of Jesus (Gospel of John)", Jesus Film Project — the same full film
+# and times as eng.toml. It has a French audio track, but YouTube offers no
+# way for the page to choose it: viewers pick it in the player's settings
+# (gear menu, "Audio track"). The original English track plays first.
+video_url = "https://www.youtube.com/watch?v=TGwlXdNewnM"
 
 [01]
 title = "La Parole parmi nous"
 description = "Chapitres 1–12 : De l'incarnation de la Parole à l'entrée de Jésus à Jérusalem"
 
 [01.01]
+video_start = 0   # 0:00:00 Introduction to the Gospel of John
+video_end = 777
 title = "La Parole Vivante de Dieu"
 description = "La Parole de Dieu s'est faite chair et a habité parmi nous. Jean-Baptiste a rendu témoignage de lui. André l'a dit à Simon Pierre et ils ont suivi Jésus."
 
 [01.02]
+video_start = 777   # 0:12:57 first miracle at a wedding
+video_end = 1212
 title = "Les Noces de Cana"
 description = "Jésus a converti l'eau en vin lors d'un mariage. Il a expulsé les changeurs du temple. Il a dit : « Détruisez ce temple et je le relèverai. »"
 
 [01.03]
+video_start = 1212   # 0:20:12 Jesus and Nicodemus
+video_end = 1536
 title = "Nicodème"
 description = "Jésus a dit à Nicodème : « Il faut naître de nouveau. Quiconque croit au Fils aura la vie éternelle. » Jean-Baptiste a dit : « Il est au-dessus de tous. »"
 
 [01.04]
+video_start = 1536   # 0:25:36 the Samaritan woman
+video_end = 2079
 title = "La Samaritaine"
 description = "Jésus a parlé avec une Samaritaine de ses maris. Elle a dit : « Serait-ce le Christ ? » Beaucoup ont cru. Il a guéri le fils d'un officier."
 
 [01.05]
+video_start = 2079   # 0:34:39 heals the paralyzed man
+video_end = 2594
 title = "Guérison d'un infirme"
 description = "Jésus a guéri un homme à Béthesda. Il a dit : « Le Fils ne fait que ce qu'il voit le Père faire. Mes œuvres et les Écritures rendent témoignage. »"
 
 [01.06]
+video_start = 2594   # 0:43:14 feeds the 5000
+video_end = 3460
 title = "Le Pain de Vie"
 description = "Jésus a nourri 5 000 hommes et a marché sur la mer. Il a dit : « Je suis le pain de vie. Ma chair est une vraie nourriture. » Beaucoup de disciples se retirèrent."
 
 [01.07]
+video_start = 3460   # 0:57:40 Jesus and His brothers
+video_end = 3912
 title = "Des fleuves d'eau vive"
 description = "Jésus est allé à la fête. Le peuple disait : « Est-ce le Christ ? » Les grands prêtres ont tenté de l'arrêter. Il a crié : « Venez et buvez. »"
 
 [01.08]
+video_start = 3912   # 1:05:12 the woman caught in adultery
+video_end = 4567
 title = "Les descendants d'Abraham"
 description = "Jésus n'a pas condamné une femme surprise en adultère. Les pharisiens l'ont interrogé. Il a dit : « Si Dieu était votre Père, vous m'aimeriez. »"
 
 [01.09]
+video_start = 4567   # 1:16:07 heals a man born blind
+video_end = 5057
 title = "Guérison d'un aveugle"
 description = "Jésus a guéri un aveugle le jour du sabbat. Les pharisiens ont chassé cet homme. Jésus a dit : « Je suis venu pour que les aveugles voient. »"
 
 [01.10]
+video_start = 5057   # 1:24:17 the parable of the shepherd
+video_end = 5437
 title = "Le Bon Berger"
 description = "Jésus a dit : « Je suis le bon berger. Je donne ma vie pour les brebis. » Ils demandèrent : « Es-tu le Christ ? » Il dit : « Mes brebis me suivent. »"
 
 [01.11]
+video_start = 5437   # 1:30:37 the death of Lazarus
+video_end = 6052
 title = "Lazare"
 description = "Lazare mourut. Jésus alla au tombeau et dit : « Lazare, sors ! » Lazare sortit. Les grands prêtres complotèrent de mettre Jésus à mort."
 
 [01.12]
+video_start = 6052   # 1:40:52 anointed at Bethany
+video_end = 6661
 title = "L'entrée à Jérusalem"
 description = "Jésus entra à Jérusalem à cheval. La foule criait : « Hosanna ! » Il dit : « Il faut que le Fils de l'homme soit élevé. Je suis venu pour sauver le monde. »"
 
@@ -62,22 +90,32 @@ title = "Jésus et ses disciples"
 description = "Chapitres 13–17 : La Cène, les discours d'adieu et la prière de Jésus"
 
 [02.13]
+video_start = 6661   # 1:51:01 Jesus washes His disciples' feet
+video_end = 7205
 title = "Le lavement des pieds"
 description = "Jésus lava les pieds des disciples. Il dit : « L'un de vous me trahira. » Judas partit. Jésus dit : « Aimez-vous les uns les autres comme je vous ai aimés. »"
 
 [02.14]
+video_start = 7205   # estimated: no mark; 13:36 is at 1:59:41
+video_end = 7492
 title = "Le Chemin, la Vérité et la Vie"
 description = "« Je suis le chemin, la vérité et la vie. Je suis dans le Père et le Père en moi. Il vous enverra le Saint-Esprit. N'ayez pas peur. »"
 
 [02.15]
+video_start = 7492   # estimated: no mark; 15:18 is at 2:07:36
+video_end = 7748
 title = "La Vigne et les sarments"
 description = "« Je suis la vigne, vous êtes les sarments. Vous êtes mes amis si vous faites ce que je vous commande. S'ils m'ont persécuté, ils vous persécuteront aussi. »"
 
 [02.16]
+video_start = 7748   # estimated: no mark; between 2:07:36 (15:18) and 2:14:35 (17:1)
+video_end = 8075
 title = "La venue du Saint-Esprit"
 description = "« L'Esprit convaincra le monde de péché. Il vous conduira dans toute la vérité. Votre tristesse se changera en joie. Je vais vers le Père. »"
 
 [02.17]
+video_start = 8075   # 2:14:35 Jesus prays for His disciples
+video_end = 8334
 title = "La prière de Jésus pour ses disciples"
 description = "Jésus dit : « Père, j'ai révélé ton nom à ceux que tu m'as donnés. Sanctifie-les dans la vérité. Que tous ceux qui croient en moi soient un. »"
 
@@ -86,18 +124,26 @@ title = "Croix et Résurrection"
 description = "Chapitres 18–21 : Arrestation, crucifixion, résurrection et restauration"
 
 [03.18]
+video_start = 8334   # 2:18:54 the arrest of Jesus
+video_end = 8905
 title = "Arrestation et procès"
 description = "Judas livra Jésus aux grands prêtres. Pierre le renia. Il fut envoyé devant Pilate. Jésus dit : « Mon royaume n'est pas de ce monde. »"
 
 [03.19]
+video_start = 8905   # estimated: no mark; between 2:24:24 (18:28) and 2:33:38 (19:16)
+video_end = 9653
 title = "La mort pour les péchés"
 description = "Les soldats prirent Jésus et le crucifièrent. Il dit : « Tout est accompli. » Il rendit l'esprit. Un soldat lui perça le côté d'une lance."
 
 [03.20]
+video_start = 9653   # 2:40:53 the empty tomb
+video_end = 10061
 title = "La Résurrection"
 description = "Marie alla au tombeau et le trouva vide. Jésus lui apparut. Il vint et se tint au milieu des disciples. Thomas dit : « Mon Seigneur et mon Dieu ! »"
 
 [03.21]
+video_start = 10061   # 2:47:41 Jesus appears to seven disciples
+video_end = 10434
 title = "La mer de Tibériade"
 description = "Jésus apparut tandis que les disciples pêchaient. Il dit à Pierre : « M'aimes-tu ? Pais mes brebis. » Le disciple bien-aimé a rendu ce témoignage."
 
