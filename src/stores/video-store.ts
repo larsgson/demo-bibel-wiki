@@ -194,7 +194,13 @@ function handleVideoTime(currentTime: number) {
   // just a later range, unless it's the last scene).
   if (entry.endTime > entry.startTime && currentTime >= entry.endTime) {
     const nextIdx = idx + 1
-    if (nextIdx < entries.length && entries[nextIdx].endTime > entries[nextIdx].startTime) {
+    const next = entries[nextIdx]
+    if (next && next.endTime > next.startTime && Math.abs(next.startTime - currentTime) < 1.5) {
+      // The next scene follows on: the video is already there, so just
+      // move along — seeking would make YouTube flash its controls again.
+      $currentVerseIdx.set(nextIdx)
+      updateVideoPlayerCardInfo(nextIdx)
+    } else if (next && next.endTime > next.startTime) {
       playScene(nextIdx)
     } else {
       stopVideo()
