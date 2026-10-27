@@ -199,6 +199,10 @@ export async function ytLoadAndPlay(videoId: string, start: number) {
   })
 }
 
+export function ytCurrentTime(): number | null {
+  return player && currentId ? player.getCurrentTime() : null
+}
+
 export function ytPlay() {
   player?.playVideo()
 }

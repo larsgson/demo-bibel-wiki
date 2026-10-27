@@ -290,7 +290,10 @@ function onSecondaryEnded() {
 
 // ---- Public actions ----
 
-export function playVerse(idx: number) {
+/** `at`: start here (seconds) instead of the entry's start — used to
+ *  resume at the same moment when switching from a story's video to its
+ *  soundtrack. */
+export function playVerse(idx: number, at?: number) {
   const entries = $currentVerseEntries.get()
   const entry = entries[idx]
   const audioUrl = entry?.audioUrl || $cachedAudioUrl.get()
@@ -317,7 +320,7 @@ export function playVerse(idx: number) {
 
   updatePlayerCardInfo(idx)
 
-  seekAndPlay(pa, primaryAudioSrc, audioUrl, entry.startTime, (s) => {
+  seekAndPlay(pa, primaryAudioSrc, audioUrl, at ?? entry.startTime, (s) => {
     primaryAudioSrc = s
   }, true)
 }
@@ -353,6 +356,11 @@ export function advanceToNextVerse() {
   }
   playVerse(nextIdx)
   // scrollToVerse is handled by the page subscriber
+}
+
+/** Position of the primary audio (seconds), or null when there is none. */
+export function getPrimaryAudioTime(): number | null {
+  return primaryAudio && primaryAudioSrc ? primaryAudio.currentTime : null
 }
 
 export function stopAll() {

@@ -19,12 +19,17 @@ import {
   setAudioForChapter,
   unlockAudio,
   stopAll,
+  getPrimaryAudioTime,
+  $audioPlayState,
+  $currentVerseIdx,
+  $pausedState,
   type VerseEntry,
 } from "../stores/audio-store"
 import {
   $playerMediaKind,
   $preferVideo,
   $videoFailed,
+  getVideoTime,
   playScene,
   setPreferVideo,
   setVideoForChapter,
@@ -32,6 +37,7 @@ import {
 } from "../stores/video-store"
 import {
   debugVideoOverride,
+  entryIndexAt,
   obsStoryVideo,
   sceneEntriesFromSegments,
   sceneIndexForSection,
@@ -160,6 +166,10 @@ export default function StoryReaderIsland({
     videoUrl: string
     entries: VerseEntry[]
     credit?: { name: string; url: string | null } | null
+    /** Set when the story's audio is this video's own soundtrack (OBS's
+     *  YouTube languages): audio time + soundtrackOffset = video time, so
+     *  switching can continue at the same moment. */
+    soundtrackOffset?: number | null
   } | null>(null)
   const ytAvailable = !videoInfo && !!ytVideo && videoFailed !== ytVideo.videoUrl
   const ytMode = ytAvailable && preferVideo
@@ -197,7 +207,8 @@ export default function StoryReaderIsland({
         }
         if (!entries.length) entries = singleSceneEntries(timed.offset)
         const credit = obs && media?.channel ? { name: media.channel, url: media.channel_url ?? null } : null
-        if (!cancelled) setYtVideo({ videoUrl: timed.videoUrl, entries: withImages(entries), credit })
+        const soundtrackOffset = obs ? obs.offset : null
+        if (!cancelled) setYtVideo({ videoUrl: timed.videoUrl, entries: withImages(entries), credit, soundtrackOffset })
         return
       }
       const own = youtubeByLang?.[lang]
@@ -209,9 +220,50 @@ export default function StoryReaderIsland({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoInfo?.videoUrl, markdown, selectedLang, producedContent, storyId, youtubeByLang])
 
+  // Where playback was when the toggle was pressed, to continue there in
+  // the other medium: the section, and the exact moment when the audio is
+  // the video's soundtrack (see switchMedia).
+  const pendingResume = useRef<{ section: number; time: number | null; focused: boolean } | null>(null)
+
+  const switchMedia = (video: boolean) => {
+    if (video === ytMode) return
+    const active = $audioPlayState.get() !== "idle" || !!$pausedState.get()
+    if (active) {
+      const entry = $currentVerseEntries.get()[$currentVerseIdx.get()]
+      const offset = ytVideo?.soundtrackOffset
+      let time: number | null = null
+      if (offset != null) {
+        const t = video ? getPrimaryAudioTime() : getVideoTime()
+        if (t != null) time = video ? t + offset : Math.max(0, t - offset)
+      }
+      pendingResume.current = { section: entry?.sectionIndex ?? 0, time, focused: $focusMode.get() }
+    }
+    setPreferVideo(video)
+  }
+
+  // Continue a switched-from playback (pendingResume) in the medium now
+  // showing: at the same moment if known, else from the same section.
+  const resumeIn = (entries: VerseEntry[], play: (idx: number, at?: number) => void) => {
+    const r = pendingResume.current
+    pendingResume.current = null
+    if (!r || !entries.length) return
+    let idx = r.time != null ? entryIndexAt(entries, r.time) : -1
+    const at = idx >= 0 ? r.time! : undefined
+    if (idx < 0) idx = sceneIndexForSection(entries, r.section)
+    play(idx, at)
+    if (r.focused) {
+      if ($focusMode.get()) {
+        window.dispatchEvent(new CustomEvent("focus-panel-refresh", { detail: { idx: r.section } }))
+      } else {
+        $focusMode.set(true)
+      }
+    }
+  }
+
   // Switching between audio and video: stop whatever plays, and hand the
   // matching entries to the store — video scenes now, audio entries lazily
-  // on the next click (ensureAudioSetup runs again).
+  // on the next click (ensureAudioSetup runs again) — then continue where
+  // the other medium was, if it was playing.
   const prevYtMode = useRef(false)
   useEffect(() => {
     if (prevYtMode.current !== ytMode) {
@@ -219,11 +271,20 @@ export default function StoryReaderIsland({
       audioSetupPromise.current = null
       if ($playerMediaKind.get() === "video") stopVideo()
       else stopAll()
+      if (!ytMode && pendingResume.current) {
+        $audioPageStory.set(thisPageStory)
+        ensureAudioSetup().then(() => {
+          const entries = $currentVerseEntries.get().filter((e) => e.audioUrl)
+          const all = $currentVerseEntries.get()
+          resumeIn(entries, (i, at) => playVerse(all.indexOf(entries[i]), at))
+        })
+      }
     }
     if (!ytMode || !ytVideo) return
     preloadYouTubeApi().catch(() => {})
     const title = parseMarkdownIntoSections(markdown, {}, localeData, engLocale).title
     setVideoForChapter({ storyKey: thisPageStory, title, videoUrl: ytVideo.videoUrl, sceneEntries: ytVideo.entries })
+    resumeIn(ytVideo.entries, playScene)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ytMode, ytVideo])
 
@@ -1065,7 +1126,7 @@ export default function StoryReaderIsland({
               key={String(video)}
               type="button"
               aria-pressed={ytMode === video}
-              onClick={() => setPreferVideo(video)}
+              onClick={() => switchMedia(video)}
               className="px-3 py-1 rounded-full border"
               style={ytMode === video
                 ? { background: "var(--accent, #2980b9)", borderColor: "var(--accent, #2980b9)", color: "#fff" }

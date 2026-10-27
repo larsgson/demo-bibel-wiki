@@ -149,6 +149,18 @@ export function sceneIndexForSection(entries: VerseEntry[], sectionIndex: number
   return best
 }
 
+/** Index of the entry playing at `t` seconds: the last one starting at or
+ *  before `t` (entries are in time order). -1 when `t` is before them all. */
+export function entryIndexAt(entries: VerseEntry[], t: number): number {
+  let found = -1
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i]
+    if (e.startTime === 0 && e.endTime === 0) continue
+    if (e.startTime <= t) found = i
+  }
+  return found
+}
+
 /**
  * `?ytid=<id or link>&ytoffset=<seconds>` — try any YouTube video against a
  * story before the real ids are published (local testing only; there is no

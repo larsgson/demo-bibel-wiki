@@ -18,6 +18,7 @@ import {
   ytLoadAndPlay,
   ytPause,
   ytPlay,
+  ytCurrentTime,
   ytStop,
 } from "../lib/bw/youtube-player"
 
@@ -222,7 +223,9 @@ function onVideoEnded() {
 
 // ---- Public actions ----
 
-export function playScene(idx: number) {
+/** `at`: start here (seconds) instead of the scene's start — used to
+ *  resume at the same moment when switching from audio to video. */
+export function playScene(idx: number, at?: number) {
   const entries = $currentVerseEntries.get()
   const entry = entries[idx]
   const videoUrl = $activeVideoUrl.get()
@@ -242,7 +245,13 @@ export function playScene(idx: number) {
   $playerVisible.set(true)
 
   updateVideoPlayerCardInfo(idx)
-  seekAndPlayVideo(videoUrl, entry.startTime)
+  seekAndPlayVideo(videoUrl, at ?? entry.startTime)
+}
+
+/** Position of the chapter video (seconds), or null when none is loaded. */
+export function getVideoTime(): number | null {
+  if (isYouTubeVideoActive()) return ytCurrentTime()
+  return primaryVideo && primaryVideoSrc ? primaryVideo.currentTime : null
 }
 
 export function pauseVideoPlayback() {

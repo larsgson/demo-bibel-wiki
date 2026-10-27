@@ -10,6 +10,7 @@ import {
   localeStoryVideo,
   videoTimingToSegments,
   shiftSegments,
+  entryIndexAt,
 } from "./story-video"
 
 describe("parseYouTubeId", () => {
@@ -131,5 +132,19 @@ describe("videoTimingToSegments", () => {
 describe("shiftSegments", () => {
   it("moves video time to audio time, never below 0", () => {
     expect(shiftSegments({ "1": [2, 10], "2": [10, 20] }, -5)).toEqual({ "1": [0, 5], "2": [5, 15] })
+  })
+})
+
+describe("entryIndexAt", () => {
+  const entries = sceneEntriesFromSegments({ "1": [0, 34], "2": [34, 52.25], "3": [52.25, 65] }, 3)
+  it("finds the entry playing at a moment", () => {
+    expect(entryIndexAt(entries, 40)).toBe(1)
+    expect(entryIndexAt(entries, 52.25)).toBe(2)
+    expect(entryIndexAt(entries, 0)).toBe(0)
+  })
+  it("ignores untimed entries and is -1 before the first", () => {
+    const withGap = [{ verseStart: 1, verseEnd: 1, startTime: 0, endTime: 0 }, ...sceneEntriesFromSegments({ "2": [5, 9] }, 2)]
+    expect(entryIndexAt(withGap, 3)).toBe(-1)
+    expect(entryIndexAt(withGap, 6)).toBe(1)
   })
 })
