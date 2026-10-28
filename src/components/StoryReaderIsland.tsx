@@ -58,7 +58,6 @@ import StorySection from "./StorySection"
 import { buildLangHref } from "../lib/bw/url-utils"
 import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
 import { resolveImageUrl, resolveMediumUrl } from "../lib/bw/image-utils"
-import { shouldProbePkf } from "../lib/bw/language-list"
 import { loadLanguageMedia, loadAudioChapterTiming, editionHasTiming, availabilityFor, resolveChapterAudioUrl } from "../lib/bw/dbt-media"
 import { loadVernacularFontFace } from "../lib/bw/vernacular-font"
 import { pkfUrl } from "../lib/bw/pkf-url"
@@ -771,7 +770,6 @@ export default function StoryReaderIsland({
 
       // Collect all unique book+chapter combinations from sections
       const chapterRefs = new Map<string, { book: string; chapter: number }>()
-      const neededBooks = new Set<string>()
       for (const section of tempSections.sections) {
         if (!section.reference) continue
         for (const ref of splitReference(section.reference)) {
@@ -779,7 +777,6 @@ export default function StoryReaderIsland({
           if (p) {
             const key = `${p.book}.${p.chapter}`
             if (!chapterRefs.has(key)) chapterRefs.set(key, { book: p.book, chapter: p.chapter })
-            neededBooks.add(p.book)
           }
         }
       }
@@ -798,16 +795,16 @@ export default function StoryReaderIsland({
       const audioUrlMap = new Map<string, string | null>()
       // Verse timing per chapter that comes with the resolved audio:
       // helloAO's own start times (source "helloao", e.g. English's
-      // BSB/hays edition), or loadAudioChapterTiming for DBT audio (audio-sync,
-      // else DBT's timestamps) — keyed by the audio fileset that will
-      // actually play, so no other edition's timestamps get attached.
+      // BSB/hays edition), or loadAudioChapterTiming for DBT and PKF audio
+      // (PKF's, audio-sync's, then DBT's timestamps) — for the audio fileset
+      // that will actually play, so no other recording's timing gets attached.
       const chapterTimingByKey = new Map<string, Record<string, [number, number]>>()
       if (audioLang) {
         await Promise.all(
           [...chapterRefs.entries()].map(async ([key, { book, chapter }]) => {
             const resolved = await resolveChapterAudioUrl(audioLang, book, chapter)
             audioUrlMap.set(key, resolved?.url ?? null)
-            if (resolved?.source === "dbt" && resolved.editionId) {
+            if ((resolved?.source === "dbt" || resolved?.source === "pkf") && resolved.editionId) {
               const timing = await loadAudioChapterTiming(audioLang, resolved.editionId, resolved.filesetId, book, chapter)
               if (timing) chapterTimingByKey.set(key, timing)
             } else if (resolved?.source === "helloao" && resolved.verseStarts?.length) {
@@ -822,14 +819,6 @@ export default function StoryReaderIsland({
             }
           }),
         )
-      }
-
-      // PKF (Scripture Earth) languages carry their own timing, used for
-      // chapters whose audio didn't bring any (chapterTimingByKey).
-      let timingData = null
-      if (audioLang && (await shouldProbePkf(audioLang))) {
-        const pkfTiming = await fetchPkfTimingData(audioLang, [...neededBooks])
-        if (pkfTiming) timingData = pkfTiming
       }
 
 
@@ -911,9 +900,7 @@ export default function StoryReaderIsland({
           currentBook = p.book
           currentChapter = p.chapter
           const chapterVerses = chapterTimingByKey.get(chapterKey)
-          const timing = chapterVerses
-            ? timingFromVerseMap(chapterVerses, p.verseStart, p.verseEnd)
-            : findTimingForReference(timingData, "", ref)
+          const timing = chapterVerses ? timingFromVerseMap(chapterVerses, p.verseStart, p.verseEnd) : null
           if (timing) {
             startTime = Math.min(startTime, timing.startTime)
             endTime = Math.max(endTime, timing.endTime)
@@ -1195,60 +1182,10 @@ async function loadPkfMedia(langCode: string): Promise<any | null> {
   return info?.media ?? null
 }
 
-async function fetchPkfTimingData(
-  langCode: string,
-  neededBooks: string[],
-): Promise<Record<string, any> | null> {
-  const media = await loadPkfMedia(langCode)
-  if (!media?.audio?.items) return null
-
-  const merged: Record<string, any> = {}
-  const pkfKey = `pkf_${langCode}`
-
-  for (const book of neededBooks) {
-    const chapters = new Set(
-      media.audio.items
-        .filter((i: any) => i.bookCode === book)
-        .map((i: any) => i.chapter)
-    )
-
-    for (const chapter of chapters) {
-      try {
-        const resp = await fetch(pkfUrl(`/pkf/${langCode}/timing/${book}-${chapter}.json`))
-        if (!resp.ok) continue
-        const rows: [number, number, string][] = await resp.json()
-
-        const verseMap: Record<string, [number, number]> = {}
-        for (const [start, end, tag] of rows) {
-          if (tag.startsWith("s")) continue
-          const verseNum = parseInt(tag, 10)
-          if (isNaN(verseNum)) continue
-          const key = String(verseNum)
-          if (verseMap[key]) {
-            verseMap[key][0] = Math.min(verseMap[key][0], start)
-            verseMap[key][1] = Math.max(verseMap[key][1], end)
-          } else {
-            verseMap[key] = [start, end]
-          }
-        }
-
-        if (!merged[pkfKey]) merged[pkfKey] = {}
-        if (!merged[pkfKey][pkfKey]) merged[pkfKey][pkfKey] = {}
-        // Key by book-chapter (e.g. "MAT-2") so different books that share a
-        // chapter number (MAT 2 vs LUK 2) don't collide.
-        merged[pkfKey][pkfKey][`${book}-${chapter}`] = verseMap
-      } catch { continue }
-    }
-  }
-
-  return Object.keys(merged).length > 0 ? merged : null
-}
-
 /**
- * Same range-collection logic as findTimingForReference below, but against
- * a flat verse → [start, end] map for one chapter (helloAO's or
- * loadAudioChapterTiming's, resolved alongside the audio URL — see
- * chapterTimingByKey above).
+ * Start and end of a verse range in one chapter's verse → [start, end]
+ * map (helloAO's or loadAudioChapterTiming's, resolved alongside the audio
+ * URL — see chapterTimingByKey above).
  */
 function timingFromVerseMap(
   verses: Record<string, [number, number]>,
@@ -1271,56 +1208,5 @@ function timingFromVerseMap(
     }
   }
   return found ? { startTime, endTime } : null
-}
-
-/**
- * Search timing data for a matching Bible reference.
- * Format: fileset → book-chapter (or bare chapter, for pkf) → verse → [start, end]
- */
-function findTimingForReference(
-  timingData: Record<string, any> | null,
-  audioFilesetId: string,
-  reference: string,
-): { startTime: number; endTime: number } | null {
-  if (!timingData) return null
-
-  const parsed = parseReference(reference)
-  if (!parsed) return null
-
-  const chapter = String(parsed.chapter)
-  const bookChapter = `${parsed.book}-${parsed.chapter}`
-  const vs = parsed.verseStart
-  if (!vs) return null
-  const ve = parsed.verseEnd ?? vs
-
-  // Search through all fileset keys — audioFilesetId is a hint, not a
-  // requirement; any fileset present can match, same tolerance the
-  // previous story-nested search had.
-  for (const key of Object.keys(timingData)) {
-    if (key === "warnings") continue
-    const filesetData = timingData[key]
-    if (!filesetData) continue
-
-    // Prefer the book-chapter key (pkf); fall back to chapter-only (DBT).
-    const chapterData = filesetData[bookChapter] ?? filesetData[chapter]
-    if (!chapterData) continue
-
-    // Collect start/end across all verses in the range
-    let startTime = Infinity
-    let endTime = 0
-    let found = false
-
-    for (let v = vs; v <= ve; v++) {
-      const entry = chapterData[String(v)]
-      if (Array.isArray(entry)) {
-        startTime = Math.min(startTime, entry[0])
-        endTime = Math.max(endTime, entry[1])
-        found = true
-      }
-    }
-
-    if (found) return { startTime, endTime }
-  }
-  return null
 }
 

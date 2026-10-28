@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { editionHasTiming, timingFromStarts, type FilesetEntry } from "./dbt-media"
+import { editionHasTiming, type FilesetEntry } from "./dbt-media"
 
 describe("editionHasTiming", () => {
   const wtc: FilesetEntry = {
@@ -25,19 +25,5 @@ describe("editionHasTiming", () => {
   })
   it("is false for audio-only editions", () => {
     expect(editionHasTiming({ id: "SPADHH", media: "a" }, "SPADHHN1DA", "MAT")).toBe(false)
-  })
-})
-
-describe("timingFromStarts", () => {
-  it("ends each verse where the next starts and the last at the end of the audio", () => {
-    expect(timingFromStarts([["1", 6.14], ["2", 9.42], ["3", 18.28]])).toEqual({
-      "1": [6.14, 9.42],
-      "2": [9.42, 18.28],
-      "3": [18.28, Number.POSITIVE_INFINITY],
-    })
-  })
-  it("skips verses without a time and returns null when none has one", () => {
-    expect(timingFromStarts([["1", 1], ["2", NaN], ["3", 5]])).toEqual({ "1": [1, 5], "3": [5, Infinity] })
-    expect(timingFromStarts([])).toBeNull()
   })
 })

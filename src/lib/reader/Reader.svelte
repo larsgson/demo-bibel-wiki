@@ -580,9 +580,9 @@
 
     // Verse-sync highlighting for DBT-sourced audio — a separate timing
     // system from the PKF-native one above (§9): one chapter's
-    // {[verse]: [start, end]} from loadAudioChapterTiming (audio-sync, else
-    // DBT's timestamps). Only attempted for source "dbt" (raw/contrib
-    // fileset ids follow a non-DBT naming scheme).
+    // {[verse]: [start, end]} from loadAudioChapterTiming (PKF's, then
+    // audio-sync's, then DBT's timestamps). Only attempted for sources
+    // "dbt" and "pkf" (raw/contrib fileset ids follow a non-DBT scheme).
     //
     // Source "helloao" (see dbt-media.ts's module doc comment — currently
     // just BSB/hays) carries its own real per-verse start times directly
@@ -614,7 +614,7 @@
             return;
         }
 
-        if (audio.source !== 'dbt' || !audio.editionId) return;
+        if ((audio.source !== 'dbt' && audio.source !== 'pkf') || !audio.editionId) return;
         let cancelled = false;
         loadAudioChapterTiming(iso, audio.editionId, audio.filesetId, book, ch).then((timing) => {
             if (cancelled) return;

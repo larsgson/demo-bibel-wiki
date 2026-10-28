@@ -17,12 +17,11 @@
  *   - `/dbt/<iso>/media.json`      — per-language detail: every fileset per
  *     canon (translation id, text-fileset id, audio-fileset ids, sources).
  *   - verse timing, one chapter at a time, from where it is made
- *     (bibles' doc/dbt-timing.md): audio-sync's
+ *     (bibles' doc/dbt-timing.md): PKF's own (audio-timing.ts), then
+ *     audio-sync's
  *     `/align/<canon>/<iso>/<edition>/<BOOK>/<BOOK>_<NNN>_<audio fileset>_timing.json`,
- *     else DBT's own timestamps through dbt-proxy — see loadAudioChapterTiming.
+ *     then DBT's own timestamps through dbt-proxy — see loadAudioChapterTiming.
  *     media.json's `timingOnly`/`timingExcept` say which books have it.
- *     The old per-book `/dbt/<iso>/timing/<BOOK>.json` (retired 2026-09,
- *     still up for the books it had) is the last fallback.
  *
  * Plus direct, keyless audio files at `/audio/<iso>/<filesetId>/<BOOK>_<ch>.mp3`
  * for languages whose canon sources include "contrib" (raw CDN-hosted audio,
@@ -78,7 +77,9 @@
 import { pkfUrl } from "./pkf-url"
 import { getTestament } from "./bible-utils"
 import { fetchDbtAudioUrl } from "./dbt-audio"
-import { loadPkfInfo } from "./pkf-info"
+import {
+  loadPkfChapterTiming, pkfOwnChapterAudio, pkfOwnId, pkfTimedFilesets, timingFromStarts, type ChapterTiming,
+} from "./audio-timing"
 import languagePreferences from "../../data/language-preferences.json"
 
 const HELLOAO_API_BASE = "https://bible.helloao.org"
@@ -225,17 +226,18 @@ export interface FilesetEntry {
   /** Present when this fileset's AUDIO isn't a real DBT edition at all —
    *  it looks like one (has an `a` id, sits in `filesets[]` normally) but
    *  that id 404s against the real DBT API; the real audio comes from
-   *  `source` instead (currently always "helloao"). See the module doc
+   *  `source` instead ("helloao", or "pkf" for PKF's own audio, the
+   *  `<ISO>PKF` edition). See the module doc
    *  comment's "helloAO-backed editions" section — this is the SAME case
    *  that comment describes for a preferredFileset id absent from
    *  `filesets[]` entirely, except media.json has since been backfilled to
    *  carry it directly on the normal entry instead (confirmed live for
    *  "ENGBSBHAY", 2026-09-16) — resolveChapterAudioUrl must check both. */
-  audioSource?: { source: "helloao"; translation?: string; id?: string; reader?: string }
+  audioSource?: { source: "helloao" | "pkf"; translation?: string; id?: string; reader?: string }
   /** Same idea as audioSource, for TEXT — not consumed by this file (audio-
    *  only), kept here only so callers reading FilesetEntry directly don't
    *  need a second, incompatible type. */
-  textSource?: { source: "helloao"; id?: string; verified?: boolean }
+  textSource?: { source: "helloao" | "pkf" | "dbt-other"; id?: string; verified?: boolean; likely?: string; score?: number; tier?: number }
   /** Per audio fileset id: the only books with verse timing (`[]`: none). */
   timingOnly?: Record<string, string[]>
   /** Per audio fileset id: the books without verse timing. */
@@ -269,8 +271,7 @@ export function loadLanguageMedia(iso: string): Promise<LanguageMedia | null> {
 
 // ── Verse timing ─────────────────────────────────────────────────────────────
 
-/** One chapter's verse timing: `{ [verse]: [startSec, endSec] }`. */
-export type ChapterTiming = Record<string, [number, number]>
+export { timingFromStarts, type ChapterTiming }
 
 /**
  * Whether an edition has verse timing for `book` in `audioFileset`, from
@@ -286,18 +287,6 @@ export function editionHasTiming(edition: FilesetEntry, audioFileset: string, bo
   return except ? !except.includes(book) : true
 }
 
-/** Verse start times (verse 1 first) → ChapterTiming. A verse ends where the
- *  next starts; the last one at the end of the audio (Infinity). */
-export function timingFromStarts(starts: [string, number][]): ChapterTiming | null {
-  const rows = starts.filter(([, t]) => Number.isFinite(t))
-  if (!rows.length) return null
-  const out: ChapterTiming = {}
-  rows.forEach(([verse, start], i) => {
-    out[verse] = [start, i + 1 < rows.length ? rows[i + 1][1] : Number.POSITIVE_INFINITY]
-  })
-  return out
-}
-
 async function getJsonOrNull<T>(url: string): Promise<T | null> {
   try {
     const r = await fetch(url)
@@ -311,9 +300,10 @@ const chapterTimingCache = new Map<string, Promise<ChapterTiming | null>>()
 
 /**
  * Verse timing for one chapter of an edition's audio fileset, from the
- * first source that has it: audio-sync's `align/` (no key), DBT's
- * timestamps (through dbt-proxy, needs DBT_API_KEY), then the retired
- * per-book file. null when none has it.
+ * first source that has it (bibles' doc/dbt-timing.md): PKF's, when PKF
+ * timed this recording; audio-sync's `align/` (no key); DBT's timestamps
+ * (through dbt-proxy, needs DBT_API_KEY). The last two only where
+ * media.json says the book has timing. null when none has it.
  */
 export function loadAudioChapterTiming(
   iso: string,
@@ -327,6 +317,13 @@ export function loadAudioChapterTiming(
   if (cached) return cached
   const p = (async () => {
     const canon = getTestament(bookCode)
+    const edition = (await loadLanguageMedia(iso))?.canons[canon]?.filesets?.find((f) => f.id === editionId)
+    if (edition?.audioSource?.source !== "helloao") {
+      const fromPkf = await loadPkfChapterTiming(iso, audioFileset, bookCode, chapter)
+      if (fromPkf || audioFileset === pkfOwnId(iso)) return fromPkf
+    }
+    if (edition && !editionHasTiming(edition, audioFileset, bookCode)) return null
+
     const nnn = String(chapter).padStart(3, "0")
     const align = await getJsonOrNull<{ pos?: number[] }>(
       pkfUrl(`/align/${canon}/${iso}/${editionId}/${bookCode}/${bookCode}_${nnn}_${audioFileset}_timing.json`),
@@ -339,83 +336,13 @@ export function loadAudioChapterTiming(
       `/.netlify/functions/dbt-proxy?${q}`,
     )
     const rows = (dbt?.data ?? []).filter((x) => x.verse_start && x.verse_start !== "0" && x.timestamp != null)
-    const fromDbt = timingFromStarts(rows.map((x) => [String(parseInt(x.verse_start!, 10)), Number(x.timestamp)]))
-    if (fromDbt) return fromDbt
-
-    const legacy = await loadBookTiming(iso, bookCode)
-    return legacy?.[audioFileset]?.[String(chapter)] ?? null
+    return timingFromStarts(rows.map((x) => [String(parseInt(x.verse_start!, 10)), Number(x.timestamp)]))
   })()
   chapterTimingCache.set(key, p)
   return p
 }
 
-// The retired per-book file (/dbt/<iso>/timing/<BOOK>.json): bibles keeps
-// it up for the books it had but adds none (doc/dbt-timing.md).
-
-/** `{ [audioFilesetId]: { [chapter]: { [verse]: [startSec, endSec] } } }` */
-export type BookTiming = Record<string, Record<string, Record<string, [number, number]>>>
-
-const timingCache = new Map<string, Promise<BookTiming | null>>()
-
-export function loadBookTiming(iso: string, bookCode: string): Promise<BookTiming | null> {
-  const key = `${iso}/${bookCode}`
-  const cached = timingCache.get(key)
-  if (cached) return cached
-  const p = fetch(pkfUrl(`/dbt/${iso}/timing/${bookCode}.json`))
-    .then((r) => (r.ok ? (r.json() as Promise<Record<string, unknown>>) : null))
-    .then((d) => {
-      if (!d) return null
-      // Strip the non-fileset "iso"/"book" string fields, keep fileset→chapter→verse maps.
-      const out: BookTiming = {}
-      for (const [k, v] of Object.entries(d)) {
-        if (k === "iso" || k === "book") continue
-        out[k] = v as BookTiming[string]
-      }
-      return out
-    })
-    .catch(() => null)
-  timingCache.set(key, p)
-  return p
-}
-
 // ── Audio URL resolution (whole-chapter) ─────────────────────────────────────
-
-interface PkfAudioItem {
-  bookCode?: string
-  chapter?: number
-  url?: string
-}
-
-const pkfAudioMediaCache = new Map<string, Promise<PkfAudioItem[] | null>>()
-
-/**
- * Scripture Earth's own per-language audio, when that language has it —
- * checked first, ahead of raw/dbt, matching the priority order every other
- * "does language X have audio" decision in this app already uses (PKF >
- * everything else). "eng" never has PKF data (not a Scripture Earth
- * language) and shouldProbePkf(iso) says this language has no .pkf bundle
- * at all (config/pkf-langs.json's known 589-language list — the same gate
- * pkf-info.ts's loadPkfInfo and language-list.ts's other PKF checks
- * already use) — both skipped outright rather than spending a request
- * (and, for most languages with no PKF data, a guaranteed 404) finding
- * that out every time.
- */
-async function loadPkfAudioItems(iso: string): Promise<PkfAudioItem[] | null> {
-  const cached = pkfAudioMediaCache.get(iso)
-  if (cached) return cached
-  const p = (async () => {
-    const info = await loadPkfInfo(iso)
-    return info?.media?.audio?.items ?? null
-  })()
-  pkfAudioMediaCache.set(iso, p)
-  return p
-}
-
-async function pkfAudioUrl(iso: string, bookCode: string, chapter: number): Promise<string | null> {
-  const items = await loadPkfAudioItems(iso)
-  const item = items?.find((i) => i.bookCode === bookCode && i.chapter === chapter)
-  return item?.url ?? null
-}
 
 async function rawAudioUrl(iso: string, filesetId: string, bookCode: string, chapter: number): Promise<string | null> {
   const url = pkfUrl(`/audio/${iso}/${filesetId}/${bookCode}_${chapter}.mp3`)
@@ -429,13 +356,13 @@ async function rawAudioUrl(iso: string, filesetId: string, bookCode: string, cha
 
 export interface ResolvedAudio {
   url: string
-  /** The fileset id the URL was resolved against — needed to look up verse
-   *  timing (loadBookTiming's result is keyed by this same id, but only for
-   *  source "dbt": raw/contrib fileset ids follow a different, non-DBT
-   *  naming scheme and aren't guaranteed to appear in the DBT timing file). */
+  /** The audio fileset id the URL was resolved against (`<ISO>PKF` for
+   *  PKF's own audio) — what loadAudioChapterTiming needs, for sources
+   *  "dbt" and "pkf". raw/contrib ids follow a non-DBT naming scheme. */
   filesetId: string
-  /** For source "dbt": the edition (media.json's `filesets[].id`) the audio
-   *  fileset belongs to — audio-sync files its timing under it. */
+  /** For sources "dbt" and "pkf": the edition (media.json's
+   *  `filesets[].id`) the audio fileset belongs to — audio-sync files its
+   *  timing under it. */
   editionId?: string
   source: "pkf" | "raw" | "dbt" | "helloao"
   /** Only for source "helloao" — real per-verse start times (seconds),
@@ -630,6 +557,15 @@ function decodeAudioVariantId(distinctId: string, variant: RawAudioVariant): str
   return null
 }
 
+/** An edition's DBT audio fileset ids from catalog/audio.json, for editions
+ *  media.json lists without an `a` list. Bitrate variants ("-opus16") left out. */
+async function catalogAudioIds(iso: string, canon: "nt" | "ot", distinctId: string): Promise<string[]> {
+  const variants = (await loadDbtAudioCatalog())?.entries?.[`${iso}:${canon}`]?.[distinctId] ?? []
+  return variants
+    .map((v) => decodeAudioVariantId(distinctId, v))
+    .filter((id): id is string => !!id && !id.includes("-"))
+}
+
 /** "FRNTLSN2DA" -> "FRNTLSN1DA" — swaps the drama-indicating "2" for the
  *  non-drama "1", keeping the testament letter and whatever the trailing
  *  D/S(+bitrate suffix) letter is unchanged. A CANDIDATE only, from a
@@ -742,10 +678,12 @@ export async function resolveChapterAudioUrl(
   //    has it. Checked after the explicit-preference override above (that
   //    should always win outright once configured) but ahead of raw/dbt,
   //    matching this app's general "pkf > helloao > dbt" default priority.
-  const pkfUrlResult = await pkfAudioUrl(iso, bookCode, chapter)
-  if (pkfUrlResult) {
-    if (debug) console.log(`[readerdebug/audio] resolved via pkf:`, pkfUrlResult)
-    return { url: pkfUrlResult, filesetId: "", source: "pkf" }
+  //    PKF's own audio is media.json's `<ISO>PKF` edition; its URL comes
+  //    from info.json (audio-timing.ts pkfOwnChapterAudio).
+  const pkfOwn = await pkfOwnChapterAudio(iso, bookCode, chapter)
+  if (pkfOwn) {
+    if (debug) console.log(`[readerdebug/audio] resolved via pkf:`, pkfOwn.url)
+    return { url: pkfOwn.url, filesetId: pkfOwnId(iso), editionId: pkfOwnId(iso), source: "pkf" }
   }
 
   // 2. Raw/contrib — direct CDN file, no key, tried against each fileset id
@@ -780,9 +718,15 @@ export async function resolveChapterAudioUrl(
   // 404 (see tier 0's comment); tier 0 above already tried the preferred
   // one directly, so this only skips re-trying the SAME known-bad id (or
   // a different non-preferred helloAO-backed edition) here.
+  // Per edition, the recording PKF uses for this chapter first (its choice
+  // is usually reviewed by hand); an edition with no `a` list has its ids
+  // in catalog/audio.json.
+  const pkfChosen = await pkfTimedFilesets(iso, bookCode, chapter)
   for (const f of filesets) {
     if (f.audioSource) continue
-    for (const audioId of f.a ?? []) {
+    const ids = f.a ?? (await catalogAudioIds(iso, canon, f.id))
+    const ordered = [...ids.filter((id) => pkfChosen.includes(id)), ...ids.filter((id) => !pkfChosen.includes(id))]
+    for (const audioId of ordered) {
       // Prefer a confirmed-real, confirmed-timed non-drama ("SA") sibling
       // over a dramatized ("DA") id, when one exists — see
       // preferConfirmedNonDramaAudio's own doc comment. A no-op today for
