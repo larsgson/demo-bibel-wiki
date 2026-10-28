@@ -59,7 +59,7 @@ import { buildLangHref } from "../lib/bw/url-utils"
 import type { Section, LocaleData, ImageConfig } from "../lib/bw/types"
 import { resolveImageUrl, resolveMediumUrl } from "../lib/bw/image-utils"
 import { shouldProbePkf } from "../lib/bw/language-list"
-import { loadLanguageMedia, loadBookTiming, availabilityFor, resolveChapterAudioUrl } from "../lib/bw/dbt-media"
+import { loadLanguageMedia, loadAudioChapterTiming, editionHasTiming, availabilityFor, resolveChapterAudioUrl } from "../lib/bw/dbt-media"
 import { loadVernacularFontFace } from "../lib/bw/vernacular-font"
 import { pkfUrl } from "../lib/bw/pkf-url"
 import { loadPkfInfo } from "../lib/bw/pkf-info"
@@ -495,20 +495,15 @@ export default function StoryReaderIsland({
         console.log(`[readerdebug/text] refs:`, [...refs], `sections:`, tempSections.sections.length)
       }
 
-      // Real per-book timing (cdn.bibel.wiki/dbt/<iso>/timing/<BOOK>.json)
-      // for at least one needed book — the authoritative ground truth
-      // ensureAudioSetup's own fetchTimingData will use later regardless,
-      // so worth checking here directly rather than only trusting a
-      // summary count. Needed because bibles' own availability.json/
-      // media.json `timingBooks` rollup can under-report real coverage
-      // (confirmed live 2026-09-16: French's real GEN timing exists and
-      // plays, but both files list no timingBooks for French at all) —
-      // without this, a language with genuinely working timed audio could
-      // get wrongly gated out here before ever reaching the real fetch.
+      // Verse timing for at least one needed book, per media.json's
+      // per-edition `timingOnly`/`timingExcept` (bibles' doc/dbt-timing.md)
+      // — the same editions resolveChapterAudioUrl plays, so worth checking
+      // here directly rather than only trusting the availability summary.
       async function hasRealBookTiming(iso: string): Promise<boolean> {
+        const media = await loadLanguageMedia(iso)
         for (const book of neededBooksForGating) {
-          const timing = await loadBookTiming(iso, book)
-          if (timing && Object.keys(timing).length > 0) return true
+          const editions = media?.canons[getTestament(book)]?.filesets ?? []
+          if (editions.some((e) => (e.a ?? []).some((a) => editionHasTiming(e, a, book)))) return true
         }
         return false
       }
@@ -544,7 +539,7 @@ export default function StoryReaderIsland({
         }
       }
 
-      // Also check real per-book timing directly (see hasRealBookTiming's
+      // Also check per-edition timing directly (see hasRealBookTiming's
       // comment above) — catches languages the summary undercounts.
       if (!primaryHasTimedAudio) {
         primaryHasTimedAudio = await hasRealBookTiming(selectedLangs[0])
@@ -801,26 +796,20 @@ export default function StoryReaderIsland({
       // separate, duplicate resolution logic (which had drifted out of
       // sync — see dbt-media.ts's module doc comment).
       const audioUrlMap = new Map<string, string | null>()
-      // Only a real DBT fileset id is useful as a timing-lookup hint below
-      // (loadBookTiming's own keys); pkf/raw/helloao ids follow different,
-      // non-DBT-timing-file naming schemes, so those aren't recorded here.
-      const dbtFilesetIdsByCanon: Record<string, string> = {}
-      // Real per-verse start times straight from helloAO itself (source
-      // "helloao", e.g. English's BSB/hays edition) — these do NOT live in
-      // any DBT timing file, so they must be kept alongside the audio URL
-      // and used directly below, the same way Reader.svelte's chapterAudio
-      // effect does for the main reader. Falling through to a DBT/pkf
-      // timing lookup for a helloao-sourced chapter would silently attach
-      // some OTHER edition's verse timestamps to this audio — wrong offsets.
-      const helloaoTimingByChapterKey = new Map<string, Record<string, [number, number]>>()
+      // Verse timing per chapter that comes with the resolved audio:
+      // helloAO's own start times (source "helloao", e.g. English's
+      // BSB/hays edition), or loadAudioChapterTiming for DBT audio (audio-sync,
+      // else DBT's timestamps) — keyed by the audio fileset that will
+      // actually play, so no other edition's timestamps get attached.
+      const chapterTimingByKey = new Map<string, Record<string, [number, number]>>()
       if (audioLang) {
         await Promise.all(
           [...chapterRefs.entries()].map(async ([key, { book, chapter }]) => {
             const resolved = await resolveChapterAudioUrl(audioLang, book, chapter)
             audioUrlMap.set(key, resolved?.url ?? null)
-            if (resolved?.source === "dbt") {
-              const canon = getTestament(book)
-              if (!dbtFilesetIdsByCanon[canon]) dbtFilesetIdsByCanon[canon] = resolved.filesetId
+            if (resolved?.source === "dbt" && resolved.editionId) {
+              const timing = await loadAudioChapterTiming(audioLang, resolved.editionId, resolved.filesetId, book, chapter)
+              if (timing) chapterTimingByKey.set(key, timing)
             } else if (resolved?.source === "helloao" && resolved.verseStarts?.length) {
               const starts = resolved.verseStarts
               const verses: Record<string, [number, number]> = {}
@@ -829,27 +818,20 @@ export default function StoryReaderIsland({
                 const end = i + 1 < starts.length ? starts[i + 1] : start + 30
                 verses[String(i + 1)] = [start, end]
               }
-              helloaoTimingByChapterKey.set(key, verses)
+              chapterTimingByKey.set(key, verses)
             }
           }),
         )
       }
 
-      // Fetch timing data. PKF (Scripture Earth) languages carry their own
-      // timing, so prefer it and skip the live-DBT path entirely — avoids a
-      // spurious timing fetch for pkf languages.
+      // PKF (Scripture Earth) languages carry their own timing, used for
+      // chapters whose audio didn't bring any (chapterTimingByKey).
       let timingData = null
       if (audioLang && (await shouldProbePkf(audioLang))) {
         const pkfTiming = await fetchPkfTimingData(audioLang, [...neededBooks])
         if (pkfTiming) timingData = pkfTiming
       }
 
-      // Fall back to live DBT timing (cdn.bibel.wiki/dbt/<iso>/timing/<BOOK>.json)
-      // for non-pkf languages (or pkf langs that turned out to have none).
-      if (!timingData && audioLang) {
-        const timingResult = await fetchTimingData(audioLang, [...neededBooks], dbtFilesetIdsByCanon)
-        timingData = timingResult?.data || null
-      }
 
       // Build verse entries: expand multi-reference sections into separate entries
       // that share the same sectionIndex, so audio plays each reference sequentially
@@ -865,6 +847,8 @@ export default function StoryReaderIsland({
       // would seek all the way back to the start of the whole chapter's
       // audio file instead of somewhere near where they actually occur.
       const lastEndTimeByChapter: Record<string, number> = {}
+      // A chapter's last verse ends at Infinity (the end of the audio).
+      const finiteOr = (t: number, fallback: number) => (Number.isFinite(t) ? t : fallback)
       const resolveStartTime = (chapterKey: string, rawStartTime: number): number =>
         rawStartTime === Infinity ? (lastEndTimeByChapter[chapterKey] ?? 0) : rawStartTime
 
@@ -916,7 +900,7 @@ export default function StoryReaderIsland({
               chapter: currentChapter,
               imageUrl: sectionImageUrl,
             })
-            lastEndTimeByChapter[currentChapterKey] = Math.max(endTime, resolvedStart)
+            lastEndTimeByChapter[currentChapterKey] = finiteOr(Math.max(endTime, resolvedStart), resolvedStart)
             startTime = Infinity
             endTime = 0
             vs = 0
@@ -926,14 +910,10 @@ export default function StoryReaderIsland({
           currentChapterKey = chapterKey
           currentBook = p.book
           currentChapter = p.chapter
-          const refTestament = getTestament(p.book)
-          const helloaoVerses = helloaoTimingByChapterKey.get(chapterKey)
-          const timing = helloaoVerses
-            ? timingFromVerseMap(helloaoVerses, p.verseStart, p.verseEnd)
-            : (() => {
-                const refFilesetId = dbtFilesetIdsByCanon[refTestament] || Object.values(dbtFilesetIdsByCanon)[0] || ""
-                return findTimingForReference(timingData, refFilesetId, ref)
-              })()
+          const chapterVerses = chapterTimingByKey.get(chapterKey)
+          const timing = chapterVerses
+            ? timingFromVerseMap(chapterVerses, p.verseStart, p.verseEnd)
+            : findTimingForReference(timingData, "", ref)
           if (timing) {
             startTime = Math.min(startTime, timing.startTime)
             endTime = Math.max(endTime, timing.endTime)
@@ -955,7 +935,7 @@ export default function StoryReaderIsland({
             chapter: currentChapter,
             imageUrl: sectionImageUrl,
           })
-          lastEndTimeByChapter[currentChapterKey] = Math.max(endTime, resolvedStart)
+          lastEndTimeByChapter[currentChapterKey] = finiteOr(Math.max(endTime, resolvedStart), resolvedStart)
         } else {
           verseEntries.push({
             verseStart: 0, verseEnd: 0, startTime: 0, endTime: 0,
@@ -1265,58 +1245,10 @@ async function fetchPkfTimingData(
 }
 
 /**
- * Live verse-timing lookup for story mode, via cdn.bibel.wiki's own
- * per-book DBT timing endpoint (src/lib/bw/dbt-media.ts's loadBookTiming) —
- * the same source config/regions/*.toml's own research already established
- * as authoritative, instead of a separate pre-baked snapshot bundled by
- * bible-story-builder (which turned out to duplicate this exact data, see
- * the investigation that led to this change: same fileset IDs, same verse
- * timings modulo minor drift from the CDN's own timing being periodically
- * re-generated after bible-story-builder's copy was taken).
- */
-async function fetchTimingData(
-  iso: string,
-  neededBooks: string[],
-  audioFilesetIds: Record<string, string>,
-): Promise<{ data: Record<string, any>; filesetIds: Record<string, string>; books: Set<string> } | null> {
-  const merged: Record<string, any> = {}
-  // Track the actual audio fileset IDs found in timing data, keyed by canon
-  const filesetIds: Record<string, string> = {}
-  const books = new Set<string>()
-
-  for (const book of neededBooks) {
-    const canon = getTestament(book)
-    const bookTiming = await loadBookTiming(iso, book)
-    if (!bookTiming) continue
-
-    // Prefer whichever fileset the language's own resolved audio already
-    // uses (keeps timing aligned with the audio that will actually play);
-    // otherwise take the first fileset this book has — arbitrary but
-    // deterministic, same tie-break convention scripts/fetch-data.mjs's
-    // own source-catalog resolution uses.
-    const preferred = audioFilesetIds[canon]
-    const fileset = preferred && bookTiming[preferred] ? preferred : Object.keys(bookTiming)[0]
-    if (!fileset) continue
-
-    books.add(book)
-    if (!filesetIds[canon]) filesetIds[canon] = fileset
-    if (!merged[fileset]) merged[fileset] = {}
-    for (const [chapter, verses] of Object.entries(bookTiming[fileset])) {
-      // Key by book-chapter ("MAT-2") so books sharing a chapter number
-      // (MAT 2 vs LUK 2) don't collide when the lookup searches by chapter.
-      const ck = `${book}-${chapter}`
-      merged[fileset][ck] = { ...(merged[fileset][ck] ?? {}), ...verses }
-    }
-  }
-
-  return Object.keys(merged).length > 0 ? { data: merged, filesetIds, books } : null
-}
-
-/**
  * Same range-collection logic as findTimingForReference below, but against
- * a flat verse → [start, end] map for one chapter (helloAO's own real
- * per-verse timing, already resolved alongside the audio URL — see
- * helloaoTimingByChapterKey above).
+ * a flat verse → [start, end] map for one chapter (helloAO's or
+ * loadAudioChapterTiming's, resolved alongside the audio URL — see
+ * chapterTimingByKey above).
  */
 function timingFromVerseMap(
   verses: Record<string, [number, number]>,

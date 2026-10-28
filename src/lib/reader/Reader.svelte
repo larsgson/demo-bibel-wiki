@@ -29,7 +29,7 @@
     import { $bibleHighlights as bibleHighlightsStore } from '../../stores/bible-highlight-store';
     import { $activePane as activePaneStore } from '../../stores/branch-view-store';
     import { loadAppConfig, parseStartRef, type AppConfig } from '../data/app-config';
-    import { resolveChapterAudioUrl, loadBookTiming, type ResolvedAudio } from '../bw/dbt-media';
+    import { resolveChapterAudioUrl, loadAudioChapterTiming, type ResolvedAudio } from '../bw/dbt-media';
     import { loadChapterTiming, verseAtTime, type TimingRow } from '../bw/pkf-timing';
     import { loadVernacularFontFace } from '../bw/vernacular-font';
     import { t } from '../bw/ui-locales';
@@ -579,16 +579,16 @@
     });
 
     // Verse-sync highlighting for DBT-sourced audio — a separate timing
-    // system from the PKF-native one above (§9), keyed by DBT audio fileset
-    // id: {[filesetId]: {[chapter]: {[verse]: [start, end]}}}. Only
-    // attempted for source "dbt" (raw/contrib fileset ids follow a
-    // non-DBT naming scheme, not guaranteed to appear in this file).
+    // system from the PKF-native one above (§9): one chapter's
+    // {[verse]: [start, end]} from loadAudioChapterTiming (audio-sync, else
+    // DBT's timestamps). Only attempted for source "dbt" (raw/contrib
+    // fileset ids follow a non-DBT naming scheme).
     //
     // Source "helloao" (see dbt-media.ts's module doc comment — currently
     // just BSB/hays) carries its own real per-verse start times directly
     // on the ResolvedAudio itself (verseStarts), fetched alongside the
     // audio URL in the same call — no separate lookup needed, unlike DBT's
-    // loadBookTiming. Converted to the same {[verse]: [start, end]} shape
+    // loadAudioChapterTiming. Converted to the same {[verse]: [start, end]} shape
     // here: verse N's end = verse N+1's start; the last verse has no known
     // end (helloAO doesn't publish one), so it gets the same "+30s, no
     // real end known" fallback convention used elsewhere in this app for
@@ -614,11 +614,11 @@
             return;
         }
 
-        if (audio.source !== 'dbt') return;
+        if (audio.source !== 'dbt' || !audio.editionId) return;
         let cancelled = false;
-        loadBookTiming(iso, book).then((timing) => {
+        loadAudioChapterTiming(iso, audio.editionId, audio.filesetId, book, ch).then((timing) => {
             if (cancelled) return;
-            dbtTimingVerses = timing?.[audio.filesetId]?.[String(ch)] ?? null;
+            dbtTimingVerses = timing;
         });
         return () => { cancelled = true; };
     });

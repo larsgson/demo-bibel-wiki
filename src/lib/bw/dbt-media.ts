@@ -16,8 +16,13 @@
  *     of this code treated "t" here as a timing flag.
  *   - `/dbt/<iso>/media.json`      — per-language detail: every fileset per
  *     canon (translation id, text-fileset id, audio-fileset ids, sources).
- *   - `/dbt/<iso>/timing/<BOOK>.json` — per-book verse timing, keyed by audio
- *     fileset id: `{ [filesetId]: { [chapter]: { [verse]: [start, end] } } }`.
+ *   - verse timing, one chapter at a time, from where it is made
+ *     (bibles' doc/dbt-timing.md): audio-sync's
+ *     `/align/<canon>/<iso>/<edition>/<BOOK>/<BOOK>_<NNN>_<audio fileset>_timing.json`,
+ *     else DBT's own timestamps through dbt-proxy — see loadAudioChapterTiming.
+ *     media.json's `timingOnly`/`timingExcept` say which books have it.
+ *     The old per-book `/dbt/<iso>/timing/<BOOK>.json` (retired 2026-09,
+ *     still up for the books it had) is the last fallback.
  *
  * Plus direct, keyless audio files at `/audio/<iso>/<filesetId>/<BOOK>_<ch>.mp3`
  * for languages whose canon sources include "contrib" (raw CDN-hosted audio,
@@ -231,6 +236,10 @@ export interface FilesetEntry {
    *  only), kept here only so callers reading FilesetEntry directly don't
    *  need a second, incompatible type. */
   textSource?: { source: "helloao"; id?: string; verified?: boolean }
+  /** Per audio fileset id: the only books with verse timing (`[]`: none). */
+  timingOnly?: Record<string, string[]>
+  /** Per audio fileset id: the books without verse timing. */
+  timingExcept?: Record<string, string[]>
 }
 
 export interface CanonMedia {
@@ -258,7 +267,90 @@ export function loadLanguageMedia(iso: string): Promise<LanguageMedia | null> {
   return p
 }
 
-// ── Per-book verse timing (/dbt/<iso>/timing/<BOOK>.json) ───────────────────
+// ── Verse timing ─────────────────────────────────────────────────────────────
+
+/** One chapter's verse timing: `{ [verse]: [startSec, endSec] }`. */
+export type ChapterTiming = Record<string, [number, number]>
+
+/**
+ * Whether an edition has verse timing for `book` in `audioFileset`, from
+ * media.json alone: `timingOnly` lists the books with timing, `timingExcept`
+ * the books without, neither means every book of the testament. Only
+ * "at" editions have any. A listed book can still lack a chapter.
+ */
+export function editionHasTiming(edition: FilesetEntry, audioFileset: string, book: string): boolean {
+  if (edition.media !== "at") return false
+  const only = edition.timingOnly?.[audioFileset]
+  if (only) return only.includes(book)
+  const except = edition.timingExcept?.[audioFileset]
+  return except ? !except.includes(book) : true
+}
+
+/** Verse start times (verse 1 first) → ChapterTiming. A verse ends where the
+ *  next starts; the last one at the end of the audio (Infinity). */
+export function timingFromStarts(starts: [string, number][]): ChapterTiming | null {
+  const rows = starts.filter(([, t]) => Number.isFinite(t))
+  if (!rows.length) return null
+  const out: ChapterTiming = {}
+  rows.forEach(([verse, start], i) => {
+    out[verse] = [start, i + 1 < rows.length ? rows[i + 1][1] : Number.POSITIVE_INFINITY]
+  })
+  return out
+}
+
+async function getJsonOrNull<T>(url: string): Promise<T | null> {
+  try {
+    const r = await fetch(url)
+    return r.ok ? ((await r.json()) as T) : null
+  } catch {
+    return null
+  }
+}
+
+const chapterTimingCache = new Map<string, Promise<ChapterTiming | null>>()
+
+/**
+ * Verse timing for one chapter of an edition's audio fileset, from the
+ * first source that has it: audio-sync's `align/` (no key), DBT's
+ * timestamps (through dbt-proxy, needs DBT_API_KEY), then the retired
+ * per-book file. null when none has it.
+ */
+export function loadAudioChapterTiming(
+  iso: string,
+  editionId: string,
+  audioFileset: string,
+  bookCode: string,
+  chapter: number,
+): Promise<ChapterTiming | null> {
+  const key = `${iso}/${editionId}/${audioFileset}/${bookCode}/${chapter}`
+  const cached = chapterTimingCache.get(key)
+  if (cached) return cached
+  const p = (async () => {
+    const canon = getTestament(bookCode)
+    const nnn = String(chapter).padStart(3, "0")
+    const align = await getJsonOrNull<{ pos?: number[] }>(
+      pkfUrl(`/align/${canon}/${iso}/${editionId}/${bookCode}/${bookCode}_${nnn}_${audioFileset}_timing.json`),
+    )
+    const fromAlign = align?.pos?.length ? timingFromStarts(align.pos.map((t, i) => [String(i + 1), t])) : null
+    if (fromAlign) return fromAlign
+
+    const q = new URLSearchParams({ type: "timecode", fileset_id: audioFileset, book_id: bookCode, chapter_id: String(chapter) })
+    const dbt = await getJsonOrNull<{ data?: { verse_start?: string; timestamp?: number | string | null }[] }>(
+      `/.netlify/functions/dbt-proxy?${q}`,
+    )
+    const rows = (dbt?.data ?? []).filter((x) => x.verse_start && x.verse_start !== "0" && x.timestamp != null)
+    const fromDbt = timingFromStarts(rows.map((x) => [String(parseInt(x.verse_start!, 10)), Number(x.timestamp)]))
+    if (fromDbt) return fromDbt
+
+    const legacy = await loadBookTiming(iso, bookCode)
+    return legacy?.[audioFileset]?.[String(chapter)] ?? null
+  })()
+  chapterTimingCache.set(key, p)
+  return p
+}
+
+// The retired per-book file (/dbt/<iso>/timing/<BOOK>.json): bibles keeps
+// it up for the books it had but adds none (doc/dbt-timing.md).
 
 /** `{ [audioFilesetId]: { [chapter]: { [verse]: [startSec, endSec] } } }` */
 export type BookTiming = Record<string, Record<string, Record<string, [number, number]>>>
@@ -342,6 +434,9 @@ export interface ResolvedAudio {
    *  source "dbt": raw/contrib fileset ids follow a different, non-DBT
    *  naming scheme and aren't guaranteed to appear in the DBT timing file). */
   filesetId: string
+  /** For source "dbt": the edition (media.json's `filesets[].id`) the audio
+   *  fileset belongs to — audio-sync files its timing under it. */
+  editionId?: string
   source: "pkf" | "raw" | "dbt" | "helloao"
   /** Only for source "helloao" — real per-verse start times (seconds),
    *  index 0 = verse 1, straight from helloAO's own thisChapterAudioTimings
@@ -552,10 +647,10 @@ function nonDramaCandidate(audioId: string): string | null {
 /**
  * A same-edition, non-drama ("1") sibling of a dramatized ("2") DBT audio
  * fileset id, when — and only when — real, verified per-verse timing has
- * ALREADY been published for that exact "1" id (loadBookTiming, the
- * confirmed answer — never DBT's own unverified `dbtTiming` catalog
- * claim, which catalog-audio.md explicitly warns is a weaker, unconfirmed
- * signal). Returns null (keep the "2" id) whenever the "1" sibling
+ * ALREADY been published for that exact "1" id (media.json lists it in
+ * the edition's `a[]` with timing for this book — never DBT's own
+ * unverified `dbtTiming` catalog claim, which catalog-audio.md explicitly
+ * warns is a weaker, unconfirmed signal). Returns null (keep the "2" id) whenever the "1" sibling
  * doesn't exist, isn't a real catalog-confirmed variant, or has no
  * confirmed timing yet — confirmed true for French right now: DBT's real
  * catalog doesn't even list an "N1" variant for "FRNTLS" at all (only
@@ -569,10 +664,11 @@ function nonDramaCandidate(audioId: string): string | null {
 async function preferConfirmedNonDramaAudio(
   iso: string,
   canon: "nt" | "ot",
-  distinctId: string,
+  edition: FilesetEntry,
   dramaAudioId: string,
   bookCode: string,
 ): Promise<string | null> {
+  const distinctId = edition.id
   const candidate = nonDramaCandidate(dramaAudioId)
   if (!candidate) return null
 
@@ -582,8 +678,7 @@ async function preferConfirmedNonDramaAudio(
   const realIds = variants.map((v) => decodeAudioVariantId(distinctId, v))
   if (!realIds.includes(candidate)) return null
 
-  const timing = await loadBookTiming(iso, bookCode)
-  if (!timing?.[candidate]) return null
+  if (!edition.a?.includes(candidate) || !editionHasTiming(edition, candidate, bookCode)) return null
 
   return candidate
 }
@@ -675,7 +770,9 @@ export async function resolveChapterAudioUrl(
     const url = await fetchDbtAudioUrl(preferredAudio, bookCode, chapter)
     if (url) {
       if (debug) console.log(`[readerdebug/audio] resolved via preferred audio id:`, preferredAudio, url)
-      return { url, filesetId: preferredAudio, source: "dbt" }
+      const edition = canonMedia.filesets.find((f) => f.a?.includes(preferredAudio))
+        ?? canonMedia.filesets.find((f) => preferredAudio.startsWith(f.id))
+      return { url, filesetId: preferredAudio, editionId: edition?.id, source: "dbt" }
     }
   }
   // Skip filesets media.json itself already marked non-DBT (audioSource
@@ -691,7 +788,7 @@ export async function resolveChapterAudioUrl(
       // preferConfirmedNonDramaAudio's own doc comment. A no-op today for
       // every language (no SA recording has confirmed timing yet), so
       // this always falls through to audioId unchanged right now.
-      const preferred = await preferConfirmedNonDramaAudio(iso, canon, f.id, audioId, bookCode)
+      const preferred = await preferConfirmedNonDramaAudio(iso, canon, f, audioId, bookCode)
       const finalId = preferred ?? audioId
       const url = await fetchDbtAudioUrl(finalId, bookCode, chapter)
       if (url) {
@@ -702,7 +799,7 @@ export async function resolveChapterAudioUrl(
             url,
           )
         }
-        return { url, filesetId: finalId, source: "dbt" }
+        return { url, filesetId: finalId, editionId: f.id, source: "dbt" }
       }
     }
   }
