@@ -32,6 +32,7 @@
     import { resolveChapterAudioUrl, loadAudioChapterTiming, type ResolvedAudio } from '../bw/dbt-media';
     import { loadChapterTiming, verseAtTime, type TimingRow } from '../bw/pkf-timing';
     import { loadVernacularFontFace } from '../bw/vernacular-font';
+    import { singingBibleUrl, SINGING_BIBLE_LINK_ENABLED } from '../bw/singing-bible';
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
@@ -817,6 +818,7 @@
             onMenu={openSidebar}
             onParallelView={toggleParallelView}
             parallelViewActive={$parallelViewStore}
+            sungUrl={SINGING_BIBLE_LINK_ENABLED ? singingBibleUrl(iso, currentBook.bookCode, currentChapter) : null}
         />
 
         <!-- Floating side arrows: vertically centred on the viewport, hidden on

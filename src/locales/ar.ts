@@ -233,6 +233,7 @@ export const ar = {
     textAppearance: "مظهر النص",
     about: "حول",
     parallelView: "العرض المتوازي",
+    listenSung: "استمع إليه مُرنَّمًا (TheSinging.Bible)",
   },
 
   branches: {

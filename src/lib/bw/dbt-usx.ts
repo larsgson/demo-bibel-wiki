@@ -64,8 +64,10 @@ export async function loadDbtUsxSofria(
   filesetId: string,
   book: string,
   chapter: number,
+  /** The text_usx fileset itself, when known (text-route.json's id). */
+  knownUsxId?: string,
 ): Promise<SofriaDoc | null> {
-  const usxFilesetId = await dbtUsxFilesetId(iso, canon, filesetId)
+  const usxFilesetId = knownUsxId ?? (await dbtUsxFilesetId(iso, canon, filesetId))
   if (!usxFilesetId) return null
 
   const docSetId = await ensureBookImported(iso, usxFilesetId, book)

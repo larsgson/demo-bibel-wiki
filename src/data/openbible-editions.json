@@ -1,4 +1,4 @@
 {
-  "_comment": "Allow-list of openbible editions this app offers, in preference order: \"<iso>/<abbr>\" (e.g. \"ekk/OECV\") or a project id. What exists, its books, license and CDN path come from bcv-commons/bibles' catalog/openbible-editions.json (see src/lib/bw/openbible-text.ts); enabling an edition is a licensing decision made here.",
+  "_comment": "Allow-list of Biblica's openbible editions this app offers: \"<iso>/<abbr>\" (e.g. \"ekk/OECV\"). Which editions exist and where they are comes from bcv-commons/bibles' per-language text-route.json (src/lib/bw/text-route.ts) and each edition's _meta.json (src/lib/bw/published-text.ts); enabling an edition is a licensing decision made here. Other published sources (audiobiblia, eBible, CrossWire, Door43) need no entry.",
   "enabled": []
 }

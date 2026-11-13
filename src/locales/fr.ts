@@ -244,6 +244,7 @@ export const fr = {
     textAppearance: "Apparence du texte",
     about: "À propos",
     parallelView: "Vue parallèle",
+    listenSung: "L’écouter chanté (TheSinging.Bible)",
   },
 
   branches: {

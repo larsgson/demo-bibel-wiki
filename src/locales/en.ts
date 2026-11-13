@@ -242,6 +242,7 @@ export const en = {
     textAppearance: "Text Appearance",
     about: "About",
     parallelView: "Parallel view",
+    listenSung: "Listen to it sung (TheSinging.Bible)",
   },
 
   branches: {

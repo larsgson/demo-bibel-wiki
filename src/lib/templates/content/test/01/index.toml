@@ -2,44 +2,44 @@ level = "chapter"
 id = "01"
 
 [image]
-filename = "01/01.jpg"
+filename = "01/t0019660.jpg"
 
 [[stories]]
 id = "01"
-image = "01/01.jpg"
+image = "01/t0019660.jpg"
 
 [[stories]]
 id = "02"
-image = "02/01.jpg"
+image = "02/t0007880.jpg"
 
 [[stories]]
 id = "03"
-image = "03/02.jpg"
+image = "03/t0028896.jpg"
 
 [[stories]]
 id = "04"
-image = "04/02.jpg"
+image = "04/t0025437.jpg"
 
 [[stories]]
 id = "05"
-image = "05/01.jpg"
+image = "05/t0032604.jpg"
 
 [[stories]]
 id = "06"
-image = "06/02.jpg"
+image = "06/t0025958.jpg"
 
 [[stories]]
 id = "07"
-image = "07/02.jpg"
+image = "07/t0043577.jpg"
 
 [[stories]]
 id = "08"
-image = "08/02.jpg"
+image = "08/t0015104.jpg"
 
 [[stories]]
 id = "09"
-image = "09/02.jpg"
+image = "09/t0017208.jpg"
 
 [[stories]]
 id = "10"
-image = "10/02.jpg"
+image = "10/t0018542.jpg"

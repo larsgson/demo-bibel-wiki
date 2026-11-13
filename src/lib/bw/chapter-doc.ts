@@ -6,7 +6,7 @@ import { loadPkfCatalog } from "./pkf-info"
 import { fetchHelloaoChapter, fetchDbtText, fetchDbtSofria } from "./content-sources"
 import { dbtSofriaFilesetId } from "./dbt-text-catalog"
 import { loadDbtUsxSofria } from "./dbt-usx"
-import { fetchOpenbibleChapter } from "./openbible-text"
+import { fetchPublishedChapter } from "./published-text"
 import { getTestament } from "./bible-utils"
 import { resolveTextEditions, type TextEdition } from "./text-edition"
 
@@ -15,8 +15,9 @@ import { resolveTextEditions, type TextEdition } from "./text-edition"
  * ParallelView) goes through this instead of maintaining its own fetch/tier
  * logic. Given (iso, book, chapter): resolve the canon's edition candidates
  * (text-edition.ts), try each in priority order, and return the first that
- * actually has this chapter as a SofriaDoc — native for PKF, openbible and
- * DBT's own "text_json"/"text_usx" filesets (fetchDbtSofria / dbt-usx.ts);
+ * actually has this chapter as a SofriaDoc — native for PKF, bibles' own
+ * published editions (published-text.ts) and DBT's own "text_json"/
+ * "text_usx" filesets (fetchDbtSofria / dbt-usx.ts);
  * converted by bibles' vendored helloAO→USJ→Sofria converter for helloAO
  * and DBT's flat text_plain (src/lib/sofria). See
  * internal-docs/sofria-rendering-migration.md.
@@ -76,6 +77,20 @@ async function fetchDocFor(iso: string, edition: TextEdition, book: string, chap
       return helloaoToSofria(json, book, { lang: iso, abbr: edition.id })
     }
     case "dbt": {
+      // text-route.json's route, when it names one: exactly that fileset,
+      // read that way (USX where DBT's Sofria is known to drop text).
+      const route = edition.route
+      if (route?.id) {
+        if (route.route === "sofria") {
+          const seq = await fetchDbtSofria(route.id, book, chapter)
+          return seq ? { sequence: seq } : null
+        }
+        if (route.route === "usx") return loadDbtUsxSofria(iso, edition.canon, edition.id, book, chapter, route.id)
+        if (route.route === "plain") {
+          const verses = await fetchDbtText(route.id, book, chapter)
+          return verses?.length ? flatVersesToSofria(book, chapter, verses, { lang: iso, abbr: route.id }) : null
+        }
+      }
       // Prefer DBT's own native Sofria structure (headings/poetry/footnotes)
       // when this fileset has one — the exact fileset id comes from the
       // published text-format catalog (dbt-text-catalog.ts), NEVER guessed
@@ -97,8 +112,8 @@ async function fetchDocFor(iso: string, edition: TextEdition, book: string, chap
       if (!verses || verses.length === 0) return null
       return flatVersesToSofria(book, chapter, verses, { lang: iso, abbr: edition.id })
     }
-    case "openbible": {
-      return edition.openbible ? fetchOpenbibleChapter(edition.openbible, book, chapter) : null
+    case "published": {
+      return edition.path ? fetchPublishedChapter(edition.path, book, chapter) : null
     }
   }
 }

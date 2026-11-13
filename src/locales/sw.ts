@@ -236,6 +236,7 @@ export const sw = {
     textAppearance: "Muonekano wa Maandishi",
     about: "Kuhusu",
     parallelView: "Mtazamo sambamba",
+    listenSung: "Sikiliza ukiimbwa (TheSinging.Bible)",
   },
 
   branches: {

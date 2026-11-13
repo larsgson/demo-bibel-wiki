@@ -12,7 +12,7 @@ import {
 import { resolveTextSource, type ResolvedSource } from "./source-catalog"
 import languagePreferences from "../../data/language-preferences.json"
 import openbibleAllow from "../../data/openbible-editions.json"
-import { loadOpenbibleCatalog, openbibleEditionsFor, type OpenbibleEdition } from "./openbible-text"
+import { loadTextRoutes, type TextRoute, type TextRoutes } from "./text-route"
 
 /**
  * THE single per-canon text-edition resolver — mirrors dbt-media.ts's
@@ -25,8 +25,12 @@ import { loadOpenbibleCatalog, openbibleEditionsFor, type OpenbibleEdition } fro
  * Confirmed precedence (explicit user decision, 2026-09-17):
  * explicit config > PKF > "paired" DBT text (the DBT fileset that also
  * carries this canon's real DBT audio, so text and narration stay one
- * edition) > everything else, in priority order pkf > helloao > dbt >
- * openbible.
+ * edition) > everything else, in bibles' priority order pkf > helloao >
+ * dbt > openbible > ebible > crosswire > door43.
+ *
+ * bibles' text-route.json (text-route.ts) says how to read each edition:
+ * which DBT fileset and route (Sofria, USX where DBT's Sofria is damaged,
+ * plain), and where its own published editions live (published-text.ts).
  *
  * Split in two, deliberately: gatherInputs() does all the IO (each already
  * cached by its own module); rankTextEditions() is a pure, synchronous
@@ -34,12 +38,13 @@ import { loadOpenbibleCatalog, openbibleEditionsFor, type OpenbibleEdition } fro
  * mocking five modules (see text-edition.test.ts).
  */
 
-export type TextProvider = "pkf" | "helloao" | "dbt" | "openbible"
+export type TextProvider = "pkf" | "helloao" | "dbt" | "published"
 
 export interface TextEdition {
   provider: TextProvider
   /** helloAO translation id | DBT text-fileset id (canon letter already
-   *  applied where needed) | openbible "<iso>/<abbr>" | PKF docSetId. */
+   *  applied where needed, or text-route's own id) | published edition's
+   *  source id ("o:BLL", "g:es-419_glt") | PKF docSetId. */
   id: string
   canon: "nt" | "ot"
   /** Which tier produced this candidate — for ?readerdebug tracing only. */
@@ -47,9 +52,11 @@ export interface TextEdition {
   /** Only set for provider "pkf" — the asset bundle loadChapterDoc needs to
    *  actually fetch/query the docSet. */
   pkf?: PkfAssets
-  /** Only set for provider "openbible" — the catalog entry loadChapterDoc
-   *  fetches chapters from. */
-  openbible?: OpenbibleEdition
+  /** For provider "dbt": text-route's route, when it has one — which DBT
+   *  fileset to read (`id`) and how (sofria / usx / plain). */
+  route?: TextRoute
+  /** For provider "published": the edition's CDN folder. */
+  path?: string
 }
 
 export function textFilesetIdFor(baseId: string, canon: "nt" | "ot"): string {
@@ -59,7 +66,8 @@ export function textFilesetIdFor(baseId: string, canon: "nt" | "ot"): string {
 // ── explicit config (tier 0) ─────────────────────────────────────────────
 
 export interface PreferredTextConfig {
-  source: "helloao" | "dbt" | "openbible"
+  /** "published": `id` is text-route's source id, e.g. "o:BLL". */
+  source: "helloao" | "dbt" | "published"
   id: string
 }
 
@@ -138,8 +146,25 @@ export interface TextEditionInputs {
    *  the "configured but not yet backfilled into media.json" case
    *  resolveChapterAudioUrl's own tier 0 sidecar fallback also handles. */
   preferredSidecarText: { source?: string; id?: string } | null
-  /** Published, allow-listed openbible editions for this (iso, canon). */
-  openbibleEditions: OpenbibleEdition[]
+  /** text-route.json's routes for this (iso, canon), by source id. */
+  routes: TextRoutes
+  /** openbible editions we offer ("<iso>/<abbr>") — a licensing decision,
+   *  src/data/openbible-editions.json. Other published sources need none. */
+  openbibleAllow: string[]
+}
+
+/** Our published sources, in bibles' priority order. */
+const PUBLISHED_SOURCES = ["o", "e", "c", "g"]
+const DBT_ROUTES = new Set(["sofria", "usx", "plain"])
+
+/** A published edition text-route lists for us to read (Sofria in a CDN
+ *  folder), or null. Biblica's openbible editions only when allow-listed. */
+function publishedRoute(sourceId: string, route: TextRoute, openbibleAllow: string[]): string | null {
+  if (route.route !== "sofria" || !route.path) return null
+  if (!PUBLISHED_SOURCES.includes(sourceId.split(":")[0])) return null
+  const folder = route.path.replace(/^\/+|\/+$/g, "")
+  if (folder.startsWith("openbible/") && !openbibleAllow.includes(folder.slice("openbible/".length))) return null
+  return folder + "/"
 }
 
 /**
@@ -159,7 +184,8 @@ export function rankTextEditions(inputs: TextEditionInputs): TextEdition[] {
     sourceCatalogSrc,
     overlap,
     preferredSidecarText,
-    openbibleEditions,
+    routes,
+    openbibleAllow,
   } = inputs
 
   const out: TextEdition[] = []
@@ -174,19 +200,21 @@ export function rankTextEditions(inputs: TextEditionInputs): TextEdition[] {
   function addDbt(baseId: string, via: string) {
     const twin = findVerifiedTwin(overlap, iso, canon, baseId)
     if (twin) add({ provider: "helloao", id: twin, canon, via: "dbt-twin" })
-    add({ provider: "dbt", id: textFilesetIdFor(baseId, canon), canon, via })
+    const route = routes[`d:${baseId}`]
+    if (route?.id && DBT_ROUTES.has(route.route)) add({ provider: "dbt", id: route.id, canon, via, route })
+    else add({ provider: "dbt", id: textFilesetIdFor(baseId, canon), canon, via })
+  }
+  function addPublished(sourceId: string, via: string) {
+    const route = routes[sourceId]
+    const path = route ? publishedRoute(sourceId, route, openbibleAllow) : null
+    if (path) add({ provider: "published", id: sourceId, canon, via, path })
   }
 
   // 0. Explicit text preference (language-preferences.json's preferredText).
   if (preferredText) {
     if (preferredText.source === "dbt") addDbt(preferredText.id, "preferred-text")
-    else if (preferredText.source === "openbible") {
-      // Only an allow-listed, published edition can be fetched at all.
-      const ob = openbibleEditions.find(
-        (e) => e.abbr === preferredText.id || `${iso}/${e.abbr}` === preferredText.id || e.projectId === preferredText.id,
-      )
-      if (ob) add({ provider: "openbible", id: `${iso}/${ob.abbr}`, canon, via: "preferred-text", openbible: ob })
-    } else add({ provider: preferredText.source, id: preferredText.id, canon, via: "preferred-text" })
+    else if (preferredText.source === "published") addPublished(preferredText.id, "preferred-text")
+    else add({ provider: preferredText.source, id: preferredText.id, canon, via: "preferred-text" })
   }
 
   // 1. Preferred fileset (preferredFileset) — helloAO-backed inline
@@ -234,6 +262,11 @@ export function rankTextEditions(inputs: TextEditionInputs): TextEdition[] {
     if (f.t && !f.textSource) addDbt(f.id, "media-dbt")
   }
 
+  // 5b. DBT editions only text-route lists (no media.json entry).
+  for (const sourceId of Object.keys(routes)) {
+    if (sourceId.startsWith("d:")) addDbt(sourceId.slice(2), "text-route-dbt")
+  }
+
   // 6. DBT via source-catalog.json — id used verbatim (source-catalog's own
   //    resolution already accounts for languages whose real id isn't
   //    derivable from media.json's base id at all, e.g. Norwegian's
@@ -248,9 +281,19 @@ export function rankTextEditions(inputs: TextEditionInputs): TextEdition[] {
     add({ provider: "helloao", id: tid, canon, via: "media-h" })
   }
 
-  // 8. openbible, in allow-list order.
-  for (const ob of openbibleEditions) {
-    add({ provider: "openbible", id: `${iso}/${ob.abbr}`, canon, via: "openbible", openbible: ob })
+  // 7b. helloAO translations only text-route lists.
+  for (const [sourceId, route] of Object.entries(routes)) {
+    if (sourceId.startsWith("h:") && route.route === "helloao") {
+      add({ provider: "helloao", id: sourceId.slice(2), canon, via: "text-route-helloao" })
+    }
+  }
+
+  // 8. Our published editions (openbible/audiobiblia, eBible, CrossWire,
+  //    Door43), in that order.
+  for (const src of PUBLISHED_SOURCES) {
+    for (const sourceId of Object.keys(routes)) {
+      if (sourceId.startsWith(`${src}:`)) addPublished(sourceId, "published")
+    }
   }
 
   return out
@@ -260,14 +303,12 @@ export function rankTextEditions(inputs: TextEditionInputs): TextEdition[] {
 
 async function gatherInputs(iso: string, canon: "nt" | "ot"): Promise<TextEditionInputs> {
   const preferred = preferredFilesetId(iso, canon)
-  const allow = (openbibleAllow as { enabled?: string[] }).enabled ?? []
-  const [media, pkfInfo, sourceCatalogSrc, overlap, openbibleCatalog] = await Promise.all([
+  const [media, pkfInfo, sourceCatalogSrc, overlap, routes] = await Promise.all([
     loadLanguageMedia(iso),
     loadPkfInfo(iso),
     resolveTextSource(iso, canon),
     loadOverlapCatalog(),
-    // Skipped entirely (no request) while nothing is allow-listed.
-    allow.length ? loadOpenbibleCatalog() : Promise.resolve(null),
+    loadTextRoutes(iso, canon),
   ])
   const canonMedia: CanonMedia | null = media?.canons?.[canon] ?? null
   const filesets = orderedByPreference(canonMedia?.filesets ?? [], preferred)
@@ -289,7 +330,8 @@ async function gatherInputs(iso: string, canon: "nt" | "ot"): Promise<TextEditio
     sourceCatalogSrc,
     overlap,
     preferredSidecarText,
-    openbibleEditions: openbibleEditionsFor(openbibleCatalog, iso, canon, allow),
+    routes,
+    openbibleAllow: (openbibleAllow as { enabled?: string[] }).enabled ?? [],
   }
 }
 

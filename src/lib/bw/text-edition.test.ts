@@ -18,7 +18,8 @@ function baseInputs(overrides: Partial<TextEditionInputs>): TextEditionInputs {
     sourceCatalogSrc: null,
     overlap: null,
     preferredSidecarText: null,
-    openbibleEditions: [],
+    routes: {},
+    openbibleAllow: [],
     ...overrides,
   }
 }
@@ -269,30 +270,41 @@ describe('rankTextEditions — precedence + dedupe', () => {
     expect(ranked[1]?.provider).toBe('pkf')
   })
 
-  const MGJ = {
-    projectId: 'p1',
-    abbr: 'MGJ',
-    path: 'openbible/xxx/MGJ/',
-    books: ['MAT'],
-    licenses: [{ type: 'CC BY-SA' }],
-    sofriaPattern: '<BOOK>/<chapter>.sofria.json',
-  }
-
-  it('openbible only ever appears last', () => {
-    const inputs = baseInputs({
-      openbibleEditions: [MGJ],
-      sourceCatalogSrc: { provider: 'helloao', id: 'some_tid' },
-    })
-    const ranked = rankTextEditions(inputs)
-    expect(ranked.at(-1)).toMatchObject({ provider: 'openbible', id: 'xxx/MGJ', openbible: MGJ })
+  it('reads DBT editions the way text-route says, and adds editions only it lists', () => {
+    const canonMedia: CanonMedia = { media: 'at', filesets: [{ id: 'SPAERV', media: 'at', a: ['SPNERVN1DA'], t: 'SPAERV' }] }
+    const ranked = rankTextEditions(baseInputs({
+      iso: 'spa',
+      canonMedia,
+      filesets: canonMedia.filesets!,
+      routes: {
+        'd:SPAERV': { route: 'plain', id: 'SPNERV' },
+        'd:CARBSS': { route: 'usx', id: 'CARBSSN_ET-usx', why: 'sofria_damaged' },
+        'h:spa_pdt': { route: 'helloao' },
+      },
+    }))
+    expect(ranked.map((e) => `${e.provider}:${e.id}`)).toEqual(['dbt:SPNERV', 'dbt:CARBSSN_ET-usx', 'helloao:spa_pdt'])
+    expect(ranked[1].route).toEqual({ route: 'usx', id: 'CARBSSN_ET-usx', why: 'sofria_damaged' })
   })
 
-  it('a preferred openbible text resolves only through an allow-listed edition', () => {
-    const preferredText = { source: 'openbible' as const, id: 'MGJ' }
-    expect(rankTextEditions(baseInputs({ preferredText, openbibleEditions: [MGJ] }))[0]).toMatchObject({
-      provider: 'openbible',
-      via: 'preferred-text',
-    })
+  it('adds published editions last, in the order o, e, c, g; openbible only when allow-listed', () => {
+    const routes = {
+      'g:es-419_glt': { route: 'sofria' as const, path: 'door43/spa/es-419_glt/' },
+      'c:ArmEastern': { route: 'sofria' as const, path: 'crosswire/hye/ArmEastern/' },
+      'o:BLL': { route: 'sofria' as const, path: 'audiobiblia/spa/BLL/' },
+      'o:MGJ': { route: 'sofria' as const, path: 'openbible/xxx/MGJ/' },
+      'c:KswSKMB': { route: 'usj' as const, path: 'crosswire/ksw/KswSKMB/' },
+    }
+    const ranked = rankTextEditions(baseInputs({ routes, sourceCatalogSrc: { provider: 'helloao', id: 'some_tid' } }))
+    expect(ranked.map((e) => e.id)).toEqual(['some_tid', 'o:BLL', 'c:ArmEastern', 'g:es-419_glt'])
+    expect(ranked[1]).toMatchObject({ provider: 'published', path: 'audiobiblia/spa/BLL/' })
+    const allowed = rankTextEditions(baseInputs({ routes, openbibleAllow: ['xxx/MGJ'] }))
+    expect(allowed.map((e) => e.id)).toContain('o:MGJ')
+  })
+
+  it('a preferred published text resolves through its text-route entry', () => {
+    const preferredText = { source: 'published' as const, id: 'g:es-419_glt' }
+    const routes = { 'g:es-419_glt': { route: 'sofria' as const, path: 'door43/spa/es-419_glt/' } }
+    expect(rankTextEditions(baseInputs({ preferredText, routes }))[0]).toMatchObject({ provider: 'published', via: 'preferred-text' })
     expect(rankTextEditions(baseInputs({ preferredText }))).toEqual([])
   })
 

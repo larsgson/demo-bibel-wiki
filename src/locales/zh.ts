@@ -233,6 +233,7 @@ export const zh = {
     textAppearance: "文字外观",
     about: "关于",
     parallelView: "并排视图",
+    listenSung: "收听演唱版 (TheSinging.Bible)",
   },
 
   branches: {

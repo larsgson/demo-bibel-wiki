@@ -15,6 +15,7 @@ import { buildStaticCatalog } from "./staticCatalog"
 import { resolveTextEditions } from "../bw/text-edition"
 import { loadPkfCatalog } from "../bw/pkf-info"
 import { loadBookList } from "../bw/book-list"
+import { loadPublishedMeta } from "../bw/published-text"
 import { getTestament } from "../bw/bible-utils"
 import staticBooks from "../bw/bible-books"
 
@@ -36,12 +37,16 @@ async function loadCanonDocs(iso: string, canon: "nt" | "ot"): Promise<CatalogDo
         if (docs.length) return docs
         continue
       }
-      // dbt / openbible — no live per-translation catalog; synthesize from
-      // the static 66-book table (with vernacular names when available).
+      // dbt / published — no live per-translation catalog; synthesize from
+      // the static 66-book table (with vernacular names when available),
+      // limited to a published edition's own books (its _meta.json).
+      const published = edition.provider === "published" && edition.path
+        ? new Set((await loadPublishedMeta(edition.path))?.books ?? [])
+        : null
       const bookList = await loadBookList(iso)
       const vernacular = bookList ? new Map(bookList.map((b) => [b.code, b.name])) : undefined
       const docs = buildStaticCatalog(iso, vernacular).documents.filter(
-        (d) => getTestament(d.bookCode) === canon,
+        (d) => getTestament(d.bookCode) === canon && (!published || published.has(d.bookCode)),
       )
       if (docs.length) return docs
     } catch {

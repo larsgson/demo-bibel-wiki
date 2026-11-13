@@ -6,7 +6,7 @@ const mockFetchDbtText = vi.fn()
 const mockFetchDbtSofria = vi.fn()
 const mockDbtSofriaFilesetId = vi.fn()
 const mockLoadDbtUsxSofria = vi.fn()
-const mockFetchOpenbibleChapter = vi.fn()
+const mockFetchPublishedChapter = vi.fn()
 const mockLoadPkfCatalog = vi.fn()
 const mockIsLoaded = vi.fn()
 const mockLoadDocSet = vi.fn()
@@ -26,8 +26,8 @@ vi.mock('./dbt-text-catalog', () => ({
 vi.mock('./dbt-usx', () => ({
     loadDbtUsxSofria: (...args: unknown[]) => mockLoadDbtUsxSofria(...args),
 }))
-vi.mock('./openbible-text', () => ({
-    fetchOpenbibleChapter: (...args: unknown[]) => mockFetchOpenbibleChapter(...args),
+vi.mock('./published-text', () => ({
+    fetchPublishedChapter: (...args: unknown[]) => mockFetchPublishedChapter(...args),
 }))
 vi.mock('./pkf-info', () => ({
     loadPkfCatalog: (...args: unknown[]) => mockLoadPkfCatalog(...args),
@@ -244,30 +244,50 @@ describe('loadChapterDoc — PKF per-chapter Sofria', () => {
     })
 })
 
-describe('loadChapterDoc — openbible', () => {
-    const edition = {
-        projectId: 'p1',
-        abbr: 'OECV',
-        path: 'openbible/ekk/OECV/',
-        books: ['JHN'],
-        licenses: [],
-        sofriaPattern: '<BOOK>/<chapter>.sofria.json',
-    }
-
-    it('fetches the chapter through the edition from the catalog', async () => {
+describe('loadChapterDoc — published editions', () => {
+    it('fetches the chapter from the edition folder', async () => {
         mockResolveTextEditions.mockResolvedValue([
-            { provider: 'openbible' as const, id: 'ekk/OECV', canon: 'nt' as const, via: 'test', openbible: edition },
+            { provider: 'published' as const, id: 'c:ArmEastern', canon: 'nt' as const, via: 'test', path: 'crosswire/hye/ArmEastern/' },
         ])
-        mockFetchOpenbibleChapter.mockResolvedValue({ sequence: { type: 'main', blocks: [] } })
+        mockFetchPublishedChapter.mockResolvedValue({ sequence: { type: 'main', blocks: [] } })
         const res = await loadChapterDoc('xxO1', 'JHN', 3)
-        expect(res?.source).toEqual({ provider: 'openbible', id: 'ekk/OECV' })
-        expect(mockFetchOpenbibleChapter).toHaveBeenCalledWith(edition, 'JHN', 3)
+        expect(res?.source).toEqual({ provider: 'published', id: 'c:ArmEastern' })
+        expect(mockFetchPublishedChapter).toHaveBeenCalledWith('crosswire/hye/ArmEastern/', 'JHN', 3)
     })
 
-    it('skips an openbible candidate without catalog details', async () => {
-        mockResolveTextEditions.mockResolvedValue([{ provider: 'openbible' as const, id: 'ekk/X', canon: 'nt' as const, via: 'test' }])
+    it('skips a published candidate without a folder', async () => {
+        mockResolveTextEditions.mockResolvedValue([{ provider: 'published' as const, id: 'c:X', canon: 'nt' as const, via: 'test' }])
         expect(await loadChapterDoc('xxO2', 'JHN', 3)).toBeNull()
-        expect(mockFetchOpenbibleChapter).not.toHaveBeenCalled()
+        expect(mockFetchPublishedChapter).not.toHaveBeenCalled()
+    })
+})
+
+describe('loadChapterDoc — DBT through text-route', () => {
+    it('reads exactly the routed fileset: Sofria, USX or plain', async () => {
+        const seq = { type: 'main', blocks: [] }
+        mockFetchDbtSofria.mockResolvedValue(seq)
+        mockResolveTextEditions.mockResolvedValue([
+            { provider: 'dbt' as const, id: 'SPNBDAN_ET-json', canon: 'nt' as const, via: 'test', route: { route: 'sofria' as const, id: 'SPNBDAN_ET-json' } },
+        ])
+        expect((await loadChapterDoc('xxR1', 'JHN', 1))?.doc).toEqual({ sequence: seq })
+        expect(mockFetchDbtSofria).toHaveBeenCalledWith('SPNBDAN_ET-json', 'JHN', 1)
+        expect(mockDbtSofriaFilesetId).not.toHaveBeenCalled()
+
+        const usxDoc = { sequence: { type: 'main', blocks: [] } }
+        mockLoadDbtUsxSofria.mockResolvedValue(usxDoc)
+        mockResolveTextEditions.mockResolvedValue([
+            { provider: 'dbt' as const, id: 'CARBSSN_ET-usx', canon: 'nt' as const, via: 'test', route: { route: 'usx' as const, id: 'CARBSSN_ET-usx', why: 'sofria_damaged' } },
+        ])
+        expect((await loadChapterDoc('xxR2', 'JHN', 1))?.doc).toBe(usxDoc)
+        expect(mockLoadDbtUsxSofria).toHaveBeenCalledWith('xxR2', 'nt', 'CARBSSN_ET-usx', 'JHN', 1, 'CARBSSN_ET-usx')
+
+        mockFetchDbtText.mockResolvedValue([{ label: '1', text: 'En el principio' }])
+        mockResolveTextEditions.mockResolvedValue([
+            { provider: 'dbt' as const, id: 'SPNERV', canon: 'nt' as const, via: 'test', route: { route: 'plain' as const, id: 'SPNERV' } },
+        ])
+        const verses = await loadChapterVerses('xxR3', 'JHN', 1)
+        expect(mockFetchDbtText).toHaveBeenCalledWith('SPNERV', 'JHN', 1)
+        expect(verses?.[0]?.text).toContain('En el principio')
     })
 })
 

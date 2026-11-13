@@ -19,6 +19,7 @@ What it uses from there:
 | **[bcv-query](https://github.com/bcv-commons/bcv-query)** | The backend for Browse, AI Search (free keyword search, premium Q&A at `/api/ask`), the chunk viewer, concordance and cross-references, and the Hebrew/Greek interlinear in the parallel view. |
 | **[lexeme-aligner](https://github.com/bcv-commons/lexeme-aligner)** | Word alignments between translations and the Hebrew/Greek original (Hugging Face datasets `bcv-commons/compact-alignments`, `full-alignments-*`), used to link words in the parallel view. |
 | **[audio-sync](https://github.com/bcv-commons/audio-sync)** | Verse timing for Bible and OBS audio, published through bibles' CDN. |
+| **[video-sync](https://github.com/bcv-commons/video-sync)** | Timing for OBS videos, worked out from the video frames: when each story picture is on screen. Published through bibles' CDN as `obs-video/<iso>/<story>_timing.json` and used to sync the YouTube videos in OBS stories. |
 | **[bible-story-builder](https://github.com/bcv-commons/bible-story-builder)** | Where the story templates (OBS, John, TGS…) come from. They're now kept in this repo under `src/lib/templates/content/`. |
 
 Other live apps built on the same commons: [bibel.wiki](https://bibel.wiki/)

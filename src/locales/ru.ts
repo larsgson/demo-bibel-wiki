@@ -229,6 +229,7 @@ export const ru = {
     textAppearance: "Внешний вид текста",
     about: "О приложении",
     parallelView: "Параллельный вид",
+    listenSung: "Послушать в пении (TheSinging.Bible)",
   },
 
   branches: {

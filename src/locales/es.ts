@@ -236,6 +236,7 @@ export const es = {
     textAppearance: "Apariencia del texto",
     about: "Acerca de",
     parallelView: "Vista paralela",
+    listenSung: "Escúchalo cantado (TheSinging.Bible)",
   },
 
   branches: {
