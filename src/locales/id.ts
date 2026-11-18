@@ -103,6 +103,7 @@ export const id = {
     loadingChapter: "Memuat pasal…",
     catalogFailed: "Gagal memuat katalog",
     noContent: "Tidak ada konten.",
+    chapterNotFound: "Tidak ada di Alkitab ini",
     noChapters: "tanpa pasal",
     chaptersShort: "ps.",
     prevChapter: "Pasal sebelumnya",

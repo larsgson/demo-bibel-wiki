@@ -33,6 +33,7 @@
     import { loadChapterTiming, verseAtTime, type TimingRow } from '../bw/pkf-timing';
     import { loadVernacularFontFace } from '../bw/vernacular-font';
     import { singingBibleUrl, SINGING_BIBLE_LINK_ENABLED } from '../bw/singing-bible';
+    import { biblePath, isReaderPath, parseBiblePath } from './bible-url';
     import { t } from '../bw/ui-locales';
     import { uiLangForRegion } from '../data/region-config';
     import { $activeRegion as activeRegionStore } from '../../stores/region-store';
@@ -67,6 +68,9 @@
     let renderError = $state<string | null>(null);
     let pkfLoaded = $state(false);
     let paneVisible = $state(true);
+    // Set when the address named a chapter this language's Bible doesn't
+    // have; cleared on the next chapter change.
+    let urlRefMissing = $state<string | null>(null);
 
     // Per-language config from the CDN contract: attribution, text direction,
     // and the default landing reference. Fetched once per language.
@@ -186,8 +190,17 @@
         // click through an extra screen just to see the picker exists. First-ever
         // visit (nothing saved yet) prefers the language's own start-at-reference
         // over the hardcoded Matthew-1 default.
+        // A chapter address (/eng/b/gen/2) wins over everything else; a book or
+        // chapter this Bible doesn't have falls through to the usual start.
+        const urlRef = parseBiblePath(window.location.pathname);
+        const urlDoc = urlRef?.iso === iso ? catalog?.documents.find((d) => d.bookCode === urlRef.book) : null;
         const hlMap = bibleHighlightsStore.get();
-        if (hlMap.size > 0) {
+        if (urlRef && urlDoc && urlRef.chapter <= chapterCount(urlDoc)) {
+            const verses = hlMap.get(`${urlRef.book}:${urlRef.chapter}`) ?? [];
+            openBookChapter(urlDoc, urlRef.chapter).then(() => {
+                if (verses.length) highlightVersesInDom(verses);
+            });
+        } else if (hlMap.size > 0) {
             const pos = loadLastPosition();
             const verses = hlMap.get(`${pos.book}:${pos.chapter}`) ?? [];
             const doc = catalog?.documents.find((d) => d.bookCode === pos.book);
@@ -203,7 +216,23 @@
             const available = catalog.documents.map((d) => ({ bookCode: d.bookCode, chapters: chapterCount(d) }));
             const resolved = resolvePosition(want, available);
             const doc = resolved ? catalog.documents.find((d) => d.bookCode === resolved.book) : null;
-            if (doc && resolved) openBookChapter(doc, resolved.chapter);
+            if (doc && resolved) await openBookChapter(doc, resolved.chapter);
+        }
+        if (urlRef?.iso === iso && !(urlDoc && urlRef.chapter <= chapterCount(urlDoc))) {
+            urlRefMissing = `${urlRef.book} ${urlRef.chapter}`;
+        }
+    });
+
+    // While the Bible pane shows, the address names its chapter
+    // (/eng/b/gen/2); when another pane takes over it goes back to /eng/.
+    // Only on the reader's own page, never on story or browse pages.
+    $effect(() => {
+        if (!browser || !isReaderPath(window.location.pathname, iso)) return;
+        const want = paneVisible && currentBook
+            ? biblePath(iso, { book: currentBook.bookCode, chapter: currentChapter })
+            : `/${iso}/`;
+        if (window.location.pathname !== want) {
+            history.replaceState(history.state, '', want + window.location.search + window.location.hash);
         }
     });
 
@@ -227,6 +256,7 @@
     async function openBookChapter(book: CatalogDoc, ch: number) {
         // Remember where the user was in the chapter they're leaving.
         saveScroll();
+        if (currentBook) urlRefMissing = null;
         currentBook = book;
         currentChapter = ch;
         rendered = null;
@@ -841,6 +871,12 @@
         >
             ›
         </button>
+
+        {#if urlRefMissing}
+            <div class="alert alert-warning text-sm reader-url-missing" role="status">
+                {tr('chapterNotFound')}: {urlRefMissing}
+            </div>
+        {/if}
 
         {#if showSettings}
             <SettingsPanel onclose={() => (showSettings = false)} />

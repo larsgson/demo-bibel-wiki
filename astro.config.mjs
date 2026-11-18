@@ -58,7 +58,12 @@ export default defineConfig({
               const rest = match[2] || ""
               // Only rewrite if it looks like an ISO (not a known route prefix)
               const knownPrefixes = ["src", "api", "app", "img"]
-              if (!prerendered.has(iso) && !knownPrefixes.includes(iso)) {
+              const [restPath, restQuery] = rest.split("?")
+              if (/^\/b(\/|$)/.test(restPath) && !knownPrefixes.includes(iso)) {
+                // Bible chapter addresses (/eng/b/gen/2): the language page,
+                // for prerendered ISOs too (as netlify.toml's /:iso/b/* rule).
+                req.url = `/l/?lang=${iso}${restQuery ? "&" + restQuery : ""}`
+              } else if (!prerendered.has(iso) && !knownPrefixes.includes(iso)) {
                 const sep = rest.includes("?") ? "&" : "?"
                 req.url = `/l${rest}${sep}lang=${iso}`
               }

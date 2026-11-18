@@ -102,6 +102,7 @@ export const ar = {
     loadingChapter: "جارٍ تحميل الإصحاح…",
     catalogFailed: "فشل تحميل الفهرس",
     noContent: "لا يوجد محتوى معروض.",
+    chapterNotFound: "غير موجود في هذا الكتاب المقدس",
     noChapters: "لا توجد إصحاحات",
     chaptersShort: "إص.",
     prevChapter: "الإصحاح السابق",

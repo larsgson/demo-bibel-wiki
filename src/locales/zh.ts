@@ -102,6 +102,7 @@ export const zh = {
     loadingChapter: "正在加载章节…",
     catalogFailed: "目录加载失败",
     noContent: "没有可显示的内容。",
+    chapterNotFound: "本圣经中没有此章",
     noChapters: "没有章节",
     chaptersShort: "章",
     prevChapter: "上一章",

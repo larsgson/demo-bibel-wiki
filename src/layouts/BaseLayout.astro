@@ -163,6 +163,15 @@ const bibleBooks: BibleBookEntry[] = books.map((b) => ({
       // ui-level-locked subdomain forces its own configured level the same
       // way (uiLevelLock was already persisted to localStorage above, so
       // this read picks it straight back up).
+      // A chapter address (/eng/b/gen/2) opens the Bible reader, which Simple
+      // mode doesn't have: raise a Simple (or new) visitor to Standard.
+      try {
+        if (!document.documentElement.dataset.templateLock && /^\/[a-z]{3}\/b(\/|$)/i.test(window.location.pathname)) {
+          var lvlNow = localStorage.getItem("bw-ui-level");
+          if (lvlNow !== "2" && lvlNow !== "3") localStorage.setItem("bw-ui-level", "2");
+        }
+      } catch (e) { /* stays at the saved level */ }
+
       try {
         if (document.documentElement.dataset.templateLock) {
           document.documentElement.dataset.uiLevel = "1";

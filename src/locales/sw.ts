@@ -110,6 +110,7 @@ export const sw = {
     loadingChapter: "Inapakia sura…",
     catalogFailed: "Imeshindwa kupakia orodha",
     noContent: "Hakuna maudhui yaliyoonyeshwa.",
+    chapterNotFound: "Haipo katika Biblia hii",
     noChapters: "hakuna sura",
     chaptersShort: "sura",
     prevChapter: "Sura iliyotangulia",

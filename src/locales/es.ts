@@ -110,6 +110,7 @@ export const es = {
     loadingChapter: "Cargando capítulo…",
     catalogFailed: "No se pudo cargar el catálogo",
     noContent: "Sin contenido.",
+    chapterNotFound: "No está en esta Biblia",
     noChapters: "sin capítulos",
     chaptersShort: "cap.",
     prevChapter: "Capítulo anterior",

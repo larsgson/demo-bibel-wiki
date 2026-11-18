@@ -103,6 +103,7 @@ export const ru = {
     loadingChapter: "Загрузка главы…",
     catalogFailed: "Не удалось загрузить каталог",
     noContent: "Контент не отображается.",
+    chapterNotFound: "Нет в этой Библии",
     noChapters: "нет глав",
     chaptersShort: "гл.",
     prevChapter: "Предыдущая глава",

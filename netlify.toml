@@ -556,6 +556,19 @@
   status = 301
 
 
+# Bible chapter addresses (/eng/b/gen/2, src/lib/reader/bible-url.ts) show
+# the language page, whose reader reads the chapter from the address. Before
+# the template rules, which would take "b" for a template name.
+[[redirects]]
+  from = "/:iso/b/*"
+  to = "/l/?lang=:iso"
+  status = 200
+
+[[redirects]]
+  from = "/:iso/b"
+  to = "/l/?lang=:iso"
+  status = 200
+
 # Non-prerendered ISOs fall through to the generic /l/ pages.
 # Netlify serves static files first, so prerendered pages take priority.
 [[redirects]]

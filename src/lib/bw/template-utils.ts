@@ -17,15 +17,34 @@ const PUBLIC_TEMPLATES_DIR = path.join(process.cwd(), "public/templates")
 
 // --- Template Discovery ---
 
+/**
+ * Words the app's own addresses use right after the language
+ * (`/<iso>/<word>/…`), so no template may be named one of them, in any case:
+ * `b` Bible chapters (src/lib/reader/bible-url.ts), `browse`, `c`, `search`.
+ */
+export const RESERVED_TEMPLATE_NAMES = ["b", "browse", "c", "search"]
+
+/** Fails the build when a template's folder name is reserved. */
+export function assertTemplateNameAllowed(name: string): void {
+  if (RESERVED_TEMPLATE_NAMES.includes(name.toLowerCase())) {
+    throw new Error(
+      `Template folder "${name}" (src/lib/templates/content/${name}/) uses a reserved name: ` +
+        `/<iso>/${name}/… is taken by the app (reserved: ${RESERVED_TEMPLATE_NAMES.join(", ")}, any case). Rename the folder.`,
+    )
+  }
+}
+
 function discoverTemplates(): string[] {
   if (!fs.existsSync(SRC_TEMPLATES_DIR)) return []
-  return fs.readdirSync(SRC_TEMPLATES_DIR).filter((d) => {
+  const names = fs.readdirSync(SRC_TEMPLATES_DIR).filter((d) => {
     const fullPath = path.join(SRC_TEMPLATES_DIR, d)
     return (
       fs.statSync(fullPath).isDirectory() &&
       fs.existsSync(path.join(fullPath, "index.toml"))
     )
   })
+  names.forEach(assertTemplateNameAllowed)
+  return names
 }
 
 

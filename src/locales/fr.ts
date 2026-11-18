@@ -112,6 +112,7 @@ export const fr = {
     loadingChapter: "Chargement du chapitre…",
     catalogFailed: "Échec du chargement du catalogue",
     noContent: "Aucun contenu affiché.",
+    chapterNotFound: "Absent de cette Bible",
     noChapters: "aucun chapitre",
     chaptersShort: "ch.",
     prevChapter: "Chapitre précédent",

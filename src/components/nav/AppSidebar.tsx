@@ -19,6 +19,7 @@ import { t as translate } from "../../lib/bw/ui-locales"
 import { uiLangForRegion } from "../../lib/data/region-config"
 import { $activeRegion } from "../../stores/region-store"
 import { shareCurrentPage } from "../../lib/bw/share"
+import { isReaderPath } from "../../lib/reader/bible-url"
 import { currentBookmarkKey, isBookmarked } from "../../lib/bw/bookmarks"
 import { loadVernacularNav, vernacularLabel, type VernacularStrings } from "../../lib/bw/vernacular-ui"
 
@@ -405,7 +406,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
   function onPanePage() {
     if (typeof window === "undefined") return false
     const p = window.location.pathname
-    return /^\/[a-z]{3}\/?$/.test(p) || /^\/l\/?$/.test(p)
+    return isReaderPath(p) || /^\/l\/?$/.test(p)
   }
 
   function openStudy() {
@@ -436,7 +437,7 @@ export function AppSidebar({ iso: isoProp, storyTree, bibleBooks }: Props) {
     setActiveBiblePos(pos)
     showBible()
     const readerPath = `/${iso}`
-    const onReaderPage = pathname.replace(/\/$/, "") === readerPath
+    const onReaderPage = isReaderPath(window.location.pathname, iso)
     if (onReaderPage) {
       window.dispatchEvent(new CustomEvent("navigate-to-chapter", { detail: { ...pos, highlightVerses: verses } }))
     } else {
